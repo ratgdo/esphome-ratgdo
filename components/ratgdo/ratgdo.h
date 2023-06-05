@@ -50,7 +50,12 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        bool doorIsObstructed { false };
+        uint8_t obstructionState = 2;
+        uint8_t motionState = 0;
+        uint8_t lockState = 2;
+        uint8_t lightState = 2;
+        uint8_t doorState = 0;
+
         bool dryContactDoorOpen { false };
         bool dryContactDoorClose { false };
         bool dryContactToggleLight { false };
@@ -73,8 +78,11 @@ namespace ratgdo {
         SoftwareSerial swSerial;
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
-        String doorState = "unknown"; // will be
-                                      // [online|offline|opening|open|closing|closed|obstructed|clear|reed_open|reed_closed]
+        String doorStates[6] = {"unknown","open","closed","stopped","opening","closing"};
+        String lightStates[3] = {"off","on","unknown"};
+        String lockStates[3] = {"unlocked","locked","unknown"};
+        String motionStates[2] = {"clear","detected"};
+        String obstructionStates[3] = {"obstructed","clear","unknown"};
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };

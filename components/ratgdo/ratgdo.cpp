@@ -87,55 +87,6 @@ namespace ratgdo {
 		}		
 	}
 
-    // Fire on RISING edge of RPM1
-    void IRAM_ATTR HOT RATGDOStore::isrRPM1(RATGDOStore *arg) { 
-        arg->rpm1Pulsed = true; 
-        ESP_LOGD(TAG, "isrRPM1 rpm1Pulsed");
-    }
-
-    // Fire on RISING edge of RPM2
-    // When RPM1 HIGH on RPM2 rising edge, door closing:
-    // RPM1: __|--|___
-    // RPM2: ___|--|__
-
-    // When RPM1 LOW on RPM2 rising edge, door opening:
-    // RPM1: ___|--|__
-    // RPM2: __|--|___
-    void IRAM_ATTR HOT RATGDOStore::isrRPM2(RATGDOStore *arg)
-    {
-        unsigned long currentMillis = millis();
-
-        // The encoder updates faster than the ESP wants to process, so by sampling
-        // every 5ms we get a more reliable curve The counter is behind the actual
-        // pulse counter, but it doesn't matter since we only need a reliable linear
-        // counter to determine the door direction
-        if (currentMillis - arg->lastPulse < 5) {
-            return;
-        }
-
-        // In rare situations, the rotary encoder can be parked so that RPM2
-        // continuously fires this ISR. This causes the door counter to change value
-        // even though the door isn't moving To solve this, check to see if RPM1
-        // pulsed. If not, do nothing. If yes, reset the pulsed flag
-        if (arg->rpm1Pulsed) {
-            arg->rpm1Pulsed = false;
-        } else {
-            return;
-        }
-
-        arg->lastPulse = currentMillis;
-
-        // If the RPM1 state is different from the RPM2 state, then the door is
-        // opening
-		if (arg->input_rpm1.digital_read()) {
-            ESP_LOGD(TAG, "isrRPM2 RPM1 HIGH");
-            arg->doorPositionCounter--;
-        } else {
-            ESP_LOGD(TAG, "isrRPM2 RPM1 LOW");
-            arg->doorPositionCounter++;
-        }
-    }
-
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore *arg)
     {
 		if (arg->input_obst.digital_read()) {
@@ -533,28 +484,6 @@ namespace ratgdo {
     void RATGDOComponent::sendObstructionStatus(){
         ESP_LOGD(TAG, "Obstruction state %d", this->store_.obstructionState);
         this->status_obst_pin_->digital_write(this->store_.obstructionState == 0);       
-    }
-
-    void RATGDOComponent::obstructionDetected()
-    {
-        static unsigned long lastInterruptTime = 0;
-        unsigned long interruptTime = millis();
-        // Anything less than 100ms is a bounce and is ignored
-        if (interruptTime - lastInterruptTime > 250) {
-            this->store_.doorIsObstructed = true;
-			this->status_obst_pin_->digital_write(true);
-            ESP_LOGD(TAG, "Obstruction Detected");
-        }
-        lastInterruptTime = interruptTime;
-    }
-
-    void RATGDOComponent::obstructionCleared()
-    {
-        if (this->store_.doorIsObstructed) {
-            this->store_.doorIsObstructed = false;
-			this->status_obst_pin_->digital_write(false);
-            ESP_LOGD(TAG, "Obstruction Cleared");
-        }
     }
 
     /************************* DOOR COMMUNICATION *************************/
