@@ -53,15 +53,15 @@ namespace ratgdo {
 
         this->swSerial.begin(9600, SWSERIAL_8N2, -1, this->output_gdo_pin_->get_pin(), true);
 
-		this->trigger_open_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-		this->trigger_close_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-		this->trigger_light_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-		this->status_door_pin_->set_mode(gpio::FLAG_OUTPUT);
-		this->status_obst_pin_->set_mode(gpio::FLAG_OUTPUT);
-		this->input_rpm1_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);  // set to pullup to add support for reed switches
-		this->input_rpm2_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);// make sure pin doesn't float when using reed switch
+		this->trigger_open_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->trigger_close_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->trigger_light_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
+		this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
+		this->input_rpm1_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);  // set to pullup to add support for reed switches
+		this->input_rpm2_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);// make sure pin doesn't float when using reed switch
                            // and fire interrupt by mistake
-		this->input_obst_pin_->set_mode(gpio::FLAG_INPUT);
+		this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
 
 		this->trigger_open_pin_->attach_interrupt(RATGDOComponent::isrDoorOpen, this, gpio::INTERRUPT_ANY_EDGE);
