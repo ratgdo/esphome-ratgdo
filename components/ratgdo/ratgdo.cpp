@@ -100,11 +100,13 @@ namespace ratgdo {
     // RPM2: __|--|___
     void IRAM_ATTR HOT RATGDOStore::isrRPM2(RATGDOStore *arg)
     {
+        unsigned long currentMillis = millis();
+
         // The encoder updates faster than the ESP wants to process, so by sampling
         // every 5ms we get a more reliable curve The counter is behind the actual
         // pulse counter, but it doesn't matter since we only need a reliable linear
         // counter to determine the door direction
-        if (millis() - arg->lastPulse < 5) {
+        if (currentMillis - arg->lastPulse < 5) {
             return;
         }
 
@@ -118,7 +120,7 @@ namespace ratgdo {
             return;
         }
 
-        arg->lastPulse = millis();
+        arg->lastPulse = currentMillis;
 
         // If the RPM1 state is different from the RPM2 state, then the door is
         // opening
