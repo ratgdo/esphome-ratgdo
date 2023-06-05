@@ -14,6 +14,8 @@
 #include "ratgdo.h"
 #include "esphome/core/log.h"
 
+#define CODE_LENGTH 19
+
 namespace esphome {
 namespace ratgdo {
 
