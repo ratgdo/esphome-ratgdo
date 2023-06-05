@@ -128,7 +128,7 @@ void RATGDOComponent::doorStateLoop() {
     this->doorState = "opening";
   }
 
-  if (this->lastDirectionChangeCounter - this->doorPositionCounter > 5) {
+  if (lastDirectionChangeCounter - this->doorPositionCounter > 5) {
     if (this->doorState != "closing") {
       ESP_LOGD(TAG, "Door Closing...");
     }
