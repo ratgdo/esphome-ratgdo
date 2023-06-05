@@ -13,6 +13,7 @@
 
 #pragma once
 #include "esphome/core/component.h"
+#include "esphome/core/preferences.h"
 
 
 #include "SoftwareSerial.h"
@@ -72,7 +73,7 @@ class RATGDOComponent : public Component {
 
     /********************************** FUNCTION DECLARATION
      * *****************************************/
-    void set_rolling_codes(bool useRollingCodes)
+    void set_rolling_codes(bool useRollingCodes);
     void transmit(byte *payload, unsigned int length);
     void sync();
     void openDoor();
