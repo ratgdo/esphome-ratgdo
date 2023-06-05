@@ -34,6 +34,109 @@ namespace ratgdo {
     static const unsigned char  LIGHT_CODE[] = { 0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
         0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1 };
 
+
+
+    /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
+     * ***************************/
+    void IRAM_ATTR HOT RATGDOStore::isrDoorOpen(RATGDOStore *arg) { 
+        unsigned long currentMillis = millis();
+        // Prevent ISR during the first 2 seconds after reboot
+        if (currentMillis < 2000)
+            return;
+
+		if (!arg->trigger_open.digital_read()) {
+			// save the time of the falling edge
+			arg->lastOpenDoorTime = currentMillis;
+		} else if (currentMillis - arg->lastOpenDoorTime > 500 && currentMillis - arg->lastOpenDoorTime < 10000) {
+			// now see if the rising edge was between 500ms and 10 seconds after the
+			// falling edge
+			arg->dryContactDoorOpen = true;
+		}
+	}
+
+    void IRAM_ATTR HOT RATGDOStore::isrDoorClose(RATGDOStore *arg) { 
+        unsigned long currentMillis = millis();
+        // Prevent ISR during the first 2 seconds after reboot
+        if (currentMillis < 2000)
+            return;
+			
+		if (!this->trigger_close.digital_read()) {
+			// save the time of the falling edge
+			arg->lastCloseDoorTime = currentMillis;
+		} else if (currentMillis - arg->lastCloseDoorTime > 500 && currentMillis - arg->lastCloseDoorTime < 10000) {
+			// now see if the rising edge was between 500ms and 10 seconds after the
+			// falling edge
+			arg->dryContactDoorClose = true;
+		}	
+	}
+
+    void IRAM_ATTR HOT RATGDOStore::isrLight(RATGDOStore *arg) { 
+        unsigned long currentMillis = millis();
+        // Prevent ISR during the first 2 seconds after reboot
+        if (currentMillis < 2000)
+            return;
+			
+		if (!arg->trigger_light.digital_read()) {
+			// save the time of the falling edge
+			arg->lastToggleLightTime = currentMillis;
+		} else if (currentMillis - arg->lastToggleLightTime > 500 && currentMillis - arg->lastToggleLightTime < 10000) {
+			// now see if the rising edge was between 500ms and 10 seconds after the
+			// falling edge
+			arg->dryContactToggleLight = true;
+		}		
+	}
+
+    // Fire on RISING edge of RPM1
+    void IRAM_ATTR HOT RATGDOStore::isrRPM1(RATGDOStore *arg) { arg->rpm1Pulsed = true; }
+
+    // Fire on RISING edge of RPM2
+    // When RPM1 HIGH on RPM2 rising edge, door closing:
+    // RPM1: __|--|___
+    // RPM2: ___|--|__
+
+    // When RPM1 LOW on RPM2 rising edge, door opening:
+    // RPM1: ___|--|__
+    // RPM2: __|--|___
+    void IRAM_ATTR HOT RATGDOStore::isrRPM2(RATGDOStore *arg)
+    {
+        // The encoder updates faster than the ESP wants to process, so by sampling
+        // every 5ms we get a more reliable curve The counter is behind the actual
+        // pulse counter, but it doesn't matter since we only need a reliable linear
+        // counter to determine the door direction
+        if (millis() - arg->lastPulse < 5) {
+            return;
+        }
+
+        // In rare situations, the rotary encoder can be parked so that RPM2
+        // continuously fires this ISR. This causes the door counter to change value
+        // even though the door isn't moving To solve this, check to see if RPM1
+        // pulsed. If not, do nothing. If yes, reset the pulsed flag
+        if (arg->rpm1Pulsed) {
+            arg->rpm1Pulsed = false;
+        } else {
+            return;
+        }
+
+        arg->lastPulse = millis();
+
+        // If the RPM1 state is different from the RPM2 state, then the door is
+        // opening
+		if (arg->input_rpm1.digital_read()) {
+            arg->doorPositionCounter--;
+        } else {
+            arg->doorPositionCounter++;
+        }
+    }
+
+    void IRAM_ATTR HOT RATGDOStore::isrObstruction()
+    {
+		if (this->input_obst.digital_read()) {
+            arg->lastObstructionHigh = millis();
+        } else {
+            this->obstructionLowCount++;
+        }
+    }
+
     void RATGDOComponent::setup()
     {
         this->pref_ = global_preferences->make_preference<int>(734874333U);
@@ -42,13 +145,21 @@ namespace ratgdo {
         }
 
 		this->output_gdo_pin_->setup();
+		this->store_.output_gdo = this->output_gdo_pin_->to_isr();
 		this->trigger_open_pin_->setup();
+		this->store_.trigger_open = this->trigger_open_pin_->to_isr();
 		this->trigger_close_pin_->setup();
+		this->store_.trigger_close = this->trigger_close_pin_->to_isr();
 		this->trigger_light_pin_->setup();
+		this->store_.trigger_light = this->trigger_light_pin_->to_isr();
 		this->status_door_pin_->setup();
+		this->store_.status_door = this->status_door_pin_->to_isr();
 		this->status_obst_pin_->setup();
+		this->store_.status_obst = this->status_obst_pin_->to_isr();
 		this->input_rpm1_pin_->setup();
+		this->store_.input_rpm1 = this->input_rpm1_pin_->to_isr();
 		this->input_rpm2_pin_->setup();
+		this->store_.input_rpm2 = this->input_rpm2_pin_->to_isr();
 		this->input_obst_pin_->setup();
 
         this->swSerial.begin(9600, SWSERIAL_8N2, -1, this->output_gdo_pin_->get_pin(), true);
@@ -166,12 +277,12 @@ namespace ratgdo {
         // bounces
         if (!rotaryEncoderDetected) {
             if (!this->input_rpm1_pin_->digital_read()) {
-                if (doorState != "reed_closed") {
+                if (this->doorState != "reed_closed") {
                     ESP_LOGD(TAG, "Reed switch closed");
                     this->doorState = "reed_closed";
 					this->status_door_pin_->digital_write(true);
                 }
-            } else if (doorState != "reed_open") {
+            } else if (this->doorState != "reed_open") {
                 ESP_LOGD(TAG, "Reed switch open");
                 this->doorState = "reed_open";
 				this->status_door_pin_->digital_write(false);
@@ -189,7 +300,7 @@ namespace ratgdo {
         }
 
         // Wait 5 pulses before updating to door opening status
-        if (doorPositionCounter - lastDirectionChangeCounter > 5) {
+        if (this->doorPositionCounter - lastDirectionChangeCounter > 5) {
             if (this->doorState != "opening") {
                 ESP_LOGD(TAG, "Door Opening...");
             }
@@ -225,135 +336,31 @@ namespace ratgdo {
         lastDoorPositionCounter = doorPositionCounter;
     }
 
-    /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
-     * ***************************/
-    void IRAM_ATTR RATGDOComponent::isrDebounce(const char* type)
-    {
-        static unsigned long lastOpenDoorTime = 0;
-        static unsigned long lastCloseDoorTime = 0;
-        static unsigned long lastToggleLightTime = 0;
-        unsigned long currentMillis = millis();
-
-        // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < 2000)
-            return;
-
-        if (strcmp(type, "openDoor") == 0) {
-			if (!this->trigger_open_pin_->digital_read()) {
-                // save the time of the falling edge
-                lastOpenDoorTime = currentMillis;
-            } else if (currentMillis - lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
-                // now see if the rising edge was between 500ms and 10 seconds after the
-                // falling edge
-                this->dryContactDoorOpen = true;
-            }
-        }
-
-        if (strcmp(type, "closeDoor") == 0) {
-			if (!this->trigger_close_pin_->digital_read()) {
-                // save the time of the falling edge
-                lastCloseDoorTime = currentMillis;
-            } else if (currentMillis - lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
-                // now see if the rising edge was between 500ms and 10 seconds after the
-                // falling edge
-                this->dryContactDoorClose = true;
-            }
-        }
-
-        if (strcmp(type, "toggleLight") == 0) {
-			if (!this->trigger_light_pin_->digital_read()) {
-                // save the time of the falling edge
-                lastToggleLightTime = currentMillis;
-            } else if (currentMillis - lastToggleLightTime > 500 && currentMillis - lastToggleLightTime < 10000) {
-                // now see if the rising edge was between 500ms and 10 seconds after the
-                // falling edge
-                this->dryContactToggleLight = true;
-            }
-        }
-    }
-
-    void IRAM_ATTR RATGDOComponent::isrDoorOpen() { isrDebounce("openDoor"); }
-
-    void IRAM_ATTR RATGDOComponent::isrDoorClose() { isrDebounce("closeDoor"); }
-
-    void IRAM_ATTR RATGDOComponent::isrLight() { isrDebounce("toggleLight"); }
-
-    // Fire on RISING edge of RPM1
-    void IRAM_ATTR RATGDOComponent::isrRPM1() { this->rpm1Pulsed = true; }
-
-    // Fire on RISING edge of RPM2
-    // When RPM1 HIGH on RPM2 rising edge, door closing:
-    // RPM1: __|--|___
-    // RPM2: ___|--|__
-
-    // When RPM1 LOW on RPM2 rising edge, door opening:
-    // RPM1: ___|--|__
-    // RPM2: __|--|___
-    void IRAM_ATTR RATGDOComponent::isrRPM2()
-    {
-        // The encoder updates faster than the ESP wants to process, so by sampling
-        // every 5ms we get a more reliable curve The counter is behind the actual
-        // pulse counter, but it doesn't matter since we only need a reliable linear
-        // counter to determine the door direction
-        static unsigned long lastPulse = 0;
-        unsigned long currentMillis = millis();
-
-        if (currentMillis - lastPulse < 5) {
-            return;
-        }
-
-        // In rare situations, the rotary encoder can be parked so that RPM2
-        // continuously fires this ISR. This causes the door counter to change value
-        // even though the door isn't moving To solve this, check to see if RPM1
-        // pulsed. If not, do nothing. If yes, reset the pulsed flag
-        if (this->rpm1Pulsed) {
-            this->rpm1Pulsed = false;
-        } else {
-            return;
-        }
-
-        lastPulse = millis();
-
-        // If the RPM1 state is different from the RPM2 state, then the door is
-        // opening
-		if (this->input_rpm1_pin_->digital_read()) {
-            this->doorPositionCounter--;
-        } else {
-            this->doorPositionCounter++;
-        }
-    }
 
     // handle changes to the dry contact state
     void RATGDOComponent::dryContactLoop()
     {
-        if (this->dryContactDoorOpen) {
+        if (this->store_.dryContactDoorOpen) {
             ESP_LOGD(TAG, "Dry Contact: open the door");
-            this->dryContactDoorOpen = false;
+            this->store_.dryContactDoorOpen = false;
             openDoor();
         }
 
-        if (this->dryContactDoorClose) {
+        if (this->store_.dryContactDoorClose) {
             ESP_LOGD(TAG, "Dry Contact: close the door");
-            this->dryContactDoorClose = false;
+            this->store_.dryContactDoorClose = false;
             closeDoor();
         }
 
-        if (this->dryContactToggleLight) {
+        if (this->store_.dryContactToggleLight) {
             ESP_LOGD(TAG, "Dry Contact: toggle the light");
-            this->dryContactToggleLight = false;
+            this->store_.dryContactToggleLight = false;
             toggleLight();
         }
     }
 
     /*************************** OBSTRUCTION DETECTION ***************************/
-    void IRAM_ATTR RATGDOComponent::isrObstruction()
-    {
-		if (this->input_obst_pin_->digital_read()) {
-            this->lastObstructionHigh = millis();
-        } else {
-            this->obstructionLowCount++;
-        }
-    }
+
 
     void RATGDOComponent::obstructionLoop()
     {
