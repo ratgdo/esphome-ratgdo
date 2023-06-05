@@ -14,7 +14,6 @@
 #include "ratgdo.h"
 #include "esphome/core/log.h"
 
-#define CODE_LENGTH 19
 
 namespace esphome {
 namespace ratgdo {
@@ -260,83 +259,6 @@ namespace ratgdo {
     {
         this->useRollingCodes_ = useRollingCodes;
     }
-
-    /*************************** DETECTING THE DOOR STATE
-     * ***************************/
-    void RATGDOComponent::doorStateLoop()
-    {
-        static bool rotaryEncoderDetected = false;
-        static int lastDoorPositionCounter = 0;
-        static int lastDirectionChangeCounter = 0;
-        static int lastCounterMillis = 0;
-
-        // Handle reed switch
-        // This may need to be debounced, but so far in testing I haven't detected any
-        // bounces
-        if (!rotaryEncoderDetected) {
-            if (!this->input_rpm1_pin_->digital_read()) {
-                if (this->doorState != "reed_closed") {
-                    ESP_LOGD(TAG, "Reed switch closed");
-                    this->doorState = "reed_closed";
-					this->status_door_pin_->digital_write(true);
-                }
-            } else if (this->doorState != "reed_open") {
-                ESP_LOGD(TAG, "Reed switch open");
-                this->doorState = "reed_open";
-				this->status_door_pin_->digital_write(false);
-            }
-        }
-        // end reed switch handling
-
-
-
-        // If the previous and the current state of the RPM2 Signal are different,
-        // that means there is a rotary encoder detected and the door is moving
-        if (this->store_.doorPositionCounter != lastDoorPositionCounter) {
-            rotaryEncoderDetected = true; // this disables the reed switch handler
-            lastCounterMillis = millis();
-
-            ESP_LOGD(TAG, "Door Position: %d", this->store_.doorPositionCounter);
-        }
-
-        // Wait 5 pulses before updating to door opening status
-        if (this->store_.doorPositionCounter - lastDirectionChangeCounter > 5) {
-            if (this->doorState != "opening") {
-                ESP_LOGD(TAG, "Door Opening...");
-            }
-            lastDirectionChangeCounter = this->store_.doorPositionCounter;
-            this->doorState = "opening";
-        }
-
-        if (lastDirectionChangeCounter - this->store_.doorPositionCounter > 5) {
-            if (this->doorState != "closing") {
-                ESP_LOGD(TAG, "Door Closing...");
-            }
-            lastDirectionChangeCounter = this->store_.doorPositionCounter;
-            this->doorState = "closing";
-        }
-
-        // 250 millis after the last rotary encoder pulse, the door is stopped
-        if (millis() - lastCounterMillis > 250) {
-            // if the door was closing, and is now stopped, then the door is closed
-            if (this->doorState == "closing") {
-                this->doorState = "closed";
-                ESP_LOGD(TAG, "Closed");
-				this->status_door_pin_->digital_write(false);
-            }
-
-            // if the door was opening, and is now stopped, then the door is open
-            if (this->doorState == "opening") {
-                this->doorState = "open";
-                ESP_LOGD(TAG, "Open");
-				this->status_door_pin_->digital_write(true);
-            }
-        }
-
-        ESP_LOGD(TAG, "Door State: %s, doorPositionCounter: %d rotaryEncoderDetected: %d", this->doorState.c_str(), this->store_.doorPositionCounter, rotaryEncoderDetected);
-        lastDoorPositionCounter = this->store_.doorPositionCounter;
-    }
-
 
     // handle changes to the dry contact state
     void RATGDOComponent::dryContactLoop()
