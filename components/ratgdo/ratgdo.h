@@ -126,7 +126,7 @@ class RATGDOComponent : public Component {
       bool useRollingCodes_;
 
 
-} // RATGDOComponent
+}; // RATGDOComponent
 
 } // namespace ratgdo
 } // namespace esphome
