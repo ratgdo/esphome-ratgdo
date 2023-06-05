@@ -205,14 +205,14 @@ void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
   }
 }
 
-void IRAM_ATTR isrDoorOpen() { isrDebounce("openDoor"); }
+void IRAM_ATTR RATGDOComponent::isrDoorOpen() { isrDebounce("openDoor"); }
 
-void IRAM_ATTR isrDoorClose() { isrDebounce("closeDoor"); }
+void IRAM_ATTR RATGDOComponent::isrDoorClose() { isrDebounce("closeDoor"); }
 
-void IRAM_ATTR isrLight() { isrDebounce("toggleLight"); }
+void IRAM_ATTR RATGDOComponent::isrLight() { isrDebounce("toggleLight"); }
 
 // Fire on RISING edge of RPM1
-void IRAM_ATTR isrRPM1() { this->rpm1Pulsed = true; }
+void IRAM_ATTR RATGDOComponent::isrRPM1() { this->rpm1Pulsed = true; }
 
 // Fire on RISING edge of RPM2
 // When RPM1 HIGH on RPM2 rising edge, door closing:
@@ -277,7 +277,7 @@ void RATGDOComponent::dryContactLoop() {
 }
 
 /*************************** OBSTRUCTION DETECTION ***************************/
-void IRAM_ATTR isrObstruction() {
+void IRAM_ATTR RATGDOComponent::isrObstruction() {
   if (digitalRead(INPUT_OBST)) {
     this->lastObstructionHigh = millis();
   } else {
