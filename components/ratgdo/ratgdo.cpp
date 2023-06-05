@@ -253,11 +253,33 @@ namespace ratgdo {
 
     void RATGDOComponent::printRollingCode()
     {
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            if (this->rollingCode[i] <= 0x0f)
-                ESP_LOGD(TAG, "0");
-            ESP_LOGD(TAG, "%x", this->rollingCode[i]);
-        }
+
+		char code[CODE_LENGTH];
+  		snprintf(code, sizeof(code), 
+			"%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X",
+			this->rollingCode[0],
+			this->rollingCode[1],
+			this->rollingCode[2],
+			this->rollingCode[3],
+			this->rollingCode[4],
+			this->rollingCode[5],
+			this->rollingCode[6],
+			this->rollingCode[7],
+			this->rollingCode[8],
+			this->rollingCode[9],
+			this->rollingCode[10],
+			this->rollingCode[11],
+			this->rollingCode[12],
+			this->rollingCode[13],
+			this->rollingCode[14],
+			this->rollingCode[15],
+			this->rollingCode[16],
+			this->rollingCode[17],
+			this->rollingCode[18]			
+		);
+
+		ESP_LOGD(TAG, "Rolling Code: %s", code);
+
     }
 
     void RATGDOComponent::set_rolling_codes(bool useRollingCodes)
