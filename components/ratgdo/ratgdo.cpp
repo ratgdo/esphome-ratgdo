@@ -194,6 +194,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
+		ESP_LOGD(TAG, "loop");
         obstructionLoop();
         doorStateLoop();
         dryContactLoop();
