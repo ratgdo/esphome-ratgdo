@@ -1,6 +1,6 @@
 #include "rolling_code.h"
 #include "common.h"
-#include "secplus.h"
+#include "secplus/secplus.h"
 
 void readCounterFromFlash() {
   // Open the file
