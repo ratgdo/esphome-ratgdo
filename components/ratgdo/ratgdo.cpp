@@ -254,7 +254,7 @@ namespace ratgdo {
     void RATGDOComponent::printRollingCode()
     {
 
-		char code[40];
+		char code[CODE_LENGTH];
   		snprintf(code, sizeof(code), 
 			"%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X%01X",
 			this->rollingCode[0],
