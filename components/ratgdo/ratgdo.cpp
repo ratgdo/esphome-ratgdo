@@ -60,7 +60,7 @@ namespace ratgdo {
         if (currentMillis < 2000)
             return;
 			
-		if (!this->trigger_close.digital_read()) {
+		if (!arg->trigger_close.digital_read()) {
 			// save the time of the falling edge
 			arg->lastCloseDoorTime = currentMillis;
 		} else if (currentMillis - arg->lastCloseDoorTime > 500 && currentMillis - arg->lastCloseDoorTime < 10000) {
