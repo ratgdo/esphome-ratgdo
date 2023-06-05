@@ -434,27 +434,27 @@ namespace ratgdo {
             return;
 
         getRollingCode("reboot1");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         getRollingCode("reboot2");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         getRollingCode("reboot3");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         getRollingCode("reboot4");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         getRollingCode("reboot5");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         getRollingCode("reboot6");
-        transmit(this->rollingCode);
+        transmit(this->txRollingCode);
         delay(65);
 
         this->pref_.save(&this->rollingCodeCounter);
