@@ -123,6 +123,7 @@ namespace ratgdo {
         void openDoor();
         void closeDoor();
         void toggleLight();
+        void toggleDoor();        
         void sendSyncCodes();
 
         void obstructionLoop();
