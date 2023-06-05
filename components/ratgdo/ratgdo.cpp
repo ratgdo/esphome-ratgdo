@@ -474,7 +474,7 @@ namespace ratgdo {
 
     void RATGDOComponent::openDoor()
     {
-        if (this->doorState == "open" || this->doorState == "opening") {
+	    if(this->doorStates[this->store_.doorState] == "open" || doorStates[this->store_.doorState] == "opening"){
             ESP_LOGD(TAG, "The door is already %s", doorState);
             return;
         }
@@ -488,7 +488,7 @@ namespace ratgdo {
 
     void RATGDOComponent::closeDoor()
     {
-        if (this->doorState == "closed" || this->doorState == "closing") {
+	    if(this->doorStates[this->store_.doorState] == "closed" || doorStates[this->store_.doorState] == "closing"){
             ESP_LOGD(TAG, "The door is already %s", this->doorState);
             return;
         }
@@ -501,7 +501,7 @@ namespace ratgdo {
     }
 
     void RATGDOComponent::stopDoor(){
-        if(doorStates[doorState] == "opening" || doorStates[doorState] == "closing"){
+	    if(this->doorStates[this->store_.doorState] == "opening" || doorStates[this->store_.doorState] == "closing"){
             toggleDoor();
         }else{
             Serial.print("The door is not moving.");
@@ -512,12 +512,12 @@ namespace ratgdo {
     {
         if (this->useRollingCodes_) {
             getRollingCode("door1");
-            transmit(this->rollingCode);
+            transmit(this->txRollingCode);
 
             delay(40);
 
             getRollingCode("door2");
-            transmit(this->rollingCode);
+            transmit(this->txRollingCode);
 
             this->pref_.save(&this->rollingCodeCounter);
         } else {
@@ -531,7 +531,7 @@ namespace ratgdo {
     {
         if (this->useRollingCodes_) {
             getRollingCode("light");
-            transmit(this->rollingCode);
+            transmit(this->txRollingCode);
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
