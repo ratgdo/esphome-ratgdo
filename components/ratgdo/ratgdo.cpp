@@ -78,6 +78,66 @@ namespace ratgdo {
         dryContactLoop();
     }
 
+    void RATGDOComponent::getRollingCode(const char* command)
+    {
+
+        uint64_t id = 0x539;
+        uint64_t fixed = 0;
+        uint32_t data = 0;
+
+        if (strcmp(command, "reboot1") == 0) {
+            fixed = 0x400000000;
+            data = 0x0000618b;
+        } else if (strcmp(command, "reboot2") == 0) {
+            fixed = 0;
+            data = 0x01009080;
+        } else if (strcmp(command, "reboot3") == 0) {
+            fixed = 0;
+            data = 0x0000b1a0;
+        } else if (strcmp(command, "reboot4") == 0) {
+            fixed = 0;
+            data = 0x01009080;
+        } else if (strcmp(command, "reboot5") == 0) {
+            fixed = 0x300000000;
+            data = 0x00008092;
+        } else if (strcmp(command, "reboot6") == 0) {
+            fixed = 0x300000000;
+            data = 0x00008092;
+        } else if (strcmp(command, "door1") == 0) {
+            fixed = 0x200000000;
+            data = 0x01018280;
+        } else if (strcmp(command, "door2") == 0) {
+            fixed = 0x200000000;
+            data = 0x01009280;
+        } else if (strcmp(command, "light") == 0) {
+            fixed = 0x200000000;
+            data = 0x00009281;
+        } else {
+            ESP_LOGD(TAG, "ERROR: Invalid command");
+            return;
+        }
+
+        fixed = fixed | id;
+
+        encode_wireline(this->rollingCodeCounter, fixed, data, this->rollingCode);
+
+        printRollingCode();
+
+        if (strcmp(command, "door1") != 0) { // door2 is created with same counter and should always be called after door1
+            this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+        }
+        return;
+    }
+
+    void RATGDOComponent::printRollingCode()
+    {
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            if (this->rollingCode[i] <= 0x0f)
+                ESP_LOGD(TAG, "0");
+            ESP_LOGD(TAG, "%x", this->rollingCode[i]);
+        }
+    }
+
     void RATGDOComponent::set_rolling_codes(bool useRollingCodes)
     {
         this->useRollingCodes_ = useRollingCodes;
@@ -479,65 +539,7 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::getRollingCode(const char* command)
-    {
 
-        uint64_t id = 0x539;
-        uint64_t fixed = 0;
-        uint32_t data = 0;
-
-        if (strcmp(command, "reboot1") == 0) {
-            fixed = 0x400000000;
-            data = 0x0000618b;
-        } else if (strcmp(command, "reboot2") == 0) {
-            fixed = 0;
-            data = 0x01009080;
-        } else if (strcmp(command, "reboot3") == 0) {
-            fixed = 0;
-            data = 0x0000b1a0;
-        } else if (strcmp(command, "reboot4") == 0) {
-            fixed = 0;
-            data = 0x01009080;
-        } else if (strcmp(command, "reboot5") == 0) {
-            fixed = 0x300000000;
-            data = 0x00008092;
-        } else if (strcmp(command, "reboot6") == 0) {
-            fixed = 0x300000000;
-            data = 0x00008092;
-        } else if (strcmp(command, "door1") == 0) {
-            fixed = 0x200000000;
-            data = 0x01018280;
-        } else if (strcmp(command, "door2") == 0) {
-            fixed = 0x200000000;
-            data = 0x01009280;
-        } else if (strcmp(command, "light") == 0) {
-            fixed = 0x200000000;
-            data = 0x00009281;
-        } else {
-            ESP_LOGD(TAG, "ERROR: Invalid command");
-            return;
-        }
-
-        fixed = fixed | id;
-
-        encode_wireline(this->rollingCodeCounter, fixed, data, this->rollingCode);
-
-        printRollingCode();
-
-        if (strcmp(command, "door1") != 0) { // door2 is created with same counter and should always be called after door1
-            this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
-        }
-        return;
-    }
-
-    void RATGDOComponent::printRollingCode()
-    {
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            if (this->rollingCode[i] <= 0x0f)
-                ESP_LOGD(TAG, "0");
-            ESP_LOGD(TAG, "%x", this->rollingCode[i]);
-        }
-    }
 
 } // namespace ratgdo
 } // namespace esphome
