@@ -167,7 +167,7 @@ void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
   if (strcmp(type, "openDoor") == 0) {
     if (digitalRead(TRIGGER_OPEN) == LOW) {
       // save the time of the falling edge
-      this->lastOpenDoorTime = currentMillis;
+      lastOpenDoorTime = currentMillis;
     } else if (currentMillis - lastOpenDoorTime > 500 &&
                currentMillis - lastOpenDoorTime < 10000) {
       // now see if the rising edge was between 500ms and 10 seconds after the
@@ -191,7 +191,7 @@ void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
   if (strcmp(type, "toggleLight") == 0) {
     if (digitalRead(TRIGGER_LIGHT) == LOW) {
       // save the time of the falling edge
-      this->lastToggleLightTime = currentMillis;
+      lastToggleLightTime = currentMillis;
     } else if (currentMillis - lastToggleLightTime > 500 &&
                currentMillis - lastToggleLightTime < 10000) {
       // now see if the rising edge was between 500ms and 10 seconds after the
