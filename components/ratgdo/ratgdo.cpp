@@ -170,8 +170,10 @@ namespace ratgdo {
 		this->trigger_open_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 		this->trigger_close_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 		this->trigger_light_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+
 		this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
 		this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
+        
 		this->input_rpm1_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);  // set to pullup to add support for reed switches
 		this->input_rpm2_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);// make sure pin doesn't float when using reed switch
                            // and fire interrupt by mistake
@@ -294,6 +296,8 @@ namespace ratgdo {
         }
         // end reed switch handling
 
+
+
         // If the previous and the current state of the RPM2 Signal are different,
         // that means there is a rotary encoder detected and the door is moving
         if (this->store_.doorPositionCounter != lastDoorPositionCounter) {
@@ -337,6 +341,7 @@ namespace ratgdo {
             }
         }
 
+        ESP_LOGD(TAG, "Door State: %s, doorPositionCounter: %d rotaryEncoderDetected: %d", this->doorState.c_str(), this->store_.doorPositionCounter, rotaryEncoderDetected);
         lastDoorPositionCounter = this->store_.doorPositionCounter;
     }
 
