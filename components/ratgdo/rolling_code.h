@@ -2,7 +2,7 @@
 #define _RATGDO_ROLLING_CODE_H
 
 extern "C" {
-#include "../secplus/secplus.h"
+#include "secplus.h"
 }
 
 void readCounterFromFlash(); // get the rolling code counter from setup.json &
