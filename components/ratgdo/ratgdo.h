@@ -100,17 +100,30 @@ namespace ratgdo {
         void set_rolling_codes(bool useRollingCodes);
         void transmit(const uint8_t*);
         void sync();
-        void openDoor();
-        void closeDoor();
-        void toggleLight();
-        void toggleDoor();
         void sendSyncCodes();
 
         void obstructionLoop();
         void obstructionDetected();
         void obstructionCleared();
 
+        void toggleDoor();
+        void openDoor();
+        void closeDoor();
+        void stopDoor();
         void sendDoorStatus();
+
+        void toggleLight();
+        void lightOn();
+        void lightOff();
+        void sendLightStatus();
+
+        void toggleLock();
+        void lock();
+        void unlock();
+        void sendLockStatus();
+
+        void sendMotionStatus();
+
         void doorStateLoop();
         void dryContactLoop();
         void printRollingCode();
