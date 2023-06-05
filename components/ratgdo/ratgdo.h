@@ -87,13 +87,13 @@ namespace ratgdo {
         void openDoor();
         void closeDoor();
         void toggleLight();
+        void sendSyncCodes();
 
         void obstructionLoop();
         void obstructionDetected();
         void obstructionCleared();
 
         void sendDoorStatus();
-
         void doorStateLoop();
         void dryContactLoop();
         void printRollingCode();
