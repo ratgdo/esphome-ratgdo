@@ -498,21 +498,7 @@ namespace ratgdo {
                                      // opening/closing. by setting here, we can avoid
                                      // bouncing from rapidly repeated commands
 
-        if (this->useRollingCodes_) {
-            getRollingCode("door1");
-            transmit(this->rollingCode);
-
-            delay(40);
-
-            getRollingCode("door2");
-            transmit(this->rollingCode);
-
-            this->pref_.save(&this->rollingCodeCounter);
-        } else {
-            sendSyncCodes();
-            ESP_LOGD(TAG, "door_code");
-            transmit(DOOR_CODE);
-        }
+        toggleDoor();
     }
 
     void RATGDOComponent::closeDoor()
@@ -526,6 +512,11 @@ namespace ratgdo {
                                      // opening/closing. by setting here, we can avoid
                                      // bouncing from rapidly repeated commands
 
+        toggleDoor();
+    }
+
+    void RATGDOComponent::toggleDoor()
+    {
         if (this->useRollingCodes_) {
             getRollingCode("door1");
             transmit(this->rollingCode);
@@ -540,7 +531,7 @@ namespace ratgdo {
             sendSyncCodes();
             ESP_LOGD(TAG, "door_code");
             transmit(DOOR_CODE);
-        }
+        }        
     }
 
     void RATGDOComponent::toggleLight()
