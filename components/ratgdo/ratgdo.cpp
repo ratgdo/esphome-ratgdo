@@ -185,7 +185,7 @@ namespace ratgdo {
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);        
 		this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
-        swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
+        this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
 		this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 		this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
@@ -444,6 +444,49 @@ namespace ratgdo {
         }
     }
 
+    void RATGDOComponent::gdoStateLoop(){
+        if(!this->swSerial.available()) return;
+        uint8_t serData = this->swSerial.read();
+
+        static uint32_t msgStart;
+        static bool reading = false;
+        static uint16_t byteCount = 0;
+
+        if(!reading){
+            // shift serial byte onto msg start
+            msgStart <<= 8;
+            msgStart |= serData;
+
+            // truncate to 3 bytes
+            msgStart &= 0x00FFFFFF;
+
+            // if we are at the start of a message, capture the next 16 bytes
+            if(msgStart == 0x550100){
+                byteCount = 3;
+                rxRollingCode[0] = 0x55;
+                rxRollingCode[1] = 0x01;
+                rxRollingCode[2] = 0x00;
+
+                reading = true;
+                return;
+            }
+        }
+
+        if(reading){
+            this->rxRollingCode[byteCount] = serData;
+            byteCount++;
+
+            if(byteCount == 19){
+                reading = false;
+                msgStart = 0;
+                byteCount = 0;
+
+                readRollingCode(doorState, lightState, lockState, motionState, obstructionState);
+            }
+        }
+    }
+
+
     void RATGDOComponent::statusUpdateLoop(){
         // initialize to unknown
         static uint8_t previousDoorState = 0;
@@ -465,6 +508,31 @@ namespace ratgdo {
         previousLightState = this->store_.lightState;
         previousLockState = this->store_.lockState;
         previousObstructionState = this->store_.obstructionState;
+    }
+
+    void RATGDOComponent::sendDoorStatus(){
+        ESP_LOGD(TAG, "Door state %d", this->store_.doorState);
+        this->status_door_pin_->digital_write(this->store_.doorState == 1);       
+    }
+
+    void RATGDOComponent::sendLightStatus(){
+        ESP_LOGD(TAG, "Light state %d", this->store_.lightState)
+        Serial.println(lightStates[lightState]);
+    }
+
+    void RATGDOComponent::sendLockStatus(){
+        ESP_LOGD(TAG, "Lock state %d", this->store_.lockState);
+        Serial.println(lockStates[lockState]);
+    }
+
+    void RATGDOComponent::sendMotionStatus(){
+        ESP_LOGD(TAG, "Motion state %d", this->store_.motionState);
+        motionState = 0; // reset motion state
+    }
+
+    void RATGDOComponent::sendObstructionStatus(){
+        ESP_LOGD(TAG, "Obstruction state %d", this->store_.obstructionState);
+        this->status_obst_pin_->digital_write(this->store_.obstructionState == 0);       
     }
 
     void RATGDOComponent::obstructionDetected()
@@ -516,27 +584,27 @@ namespace ratgdo {
 
         getRollingCode("reboot1");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         getRollingCode("reboot2");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         getRollingCode("reboot3");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         getRollingCode("reboot4");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         getRollingCode("reboot5");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         getRollingCode("reboot6");
         transmit(this->rollingCode);
-        delay(45);
+        delay(65);
 
         this->pref_.save(&this->rollingCodeCounter);
     }
@@ -544,13 +612,13 @@ namespace ratgdo {
 	void RATGDOComponent::sendSyncCodes()
 	{
 		transmit(SYNC1);
-		delay(45);
+		delay(65);
 		transmit(SYNC2);
-		delay(45);
+		delay(65);
 		transmit(SYNC3);
-		delay(45);
+		delay(65);
 		transmit(SYNC4);
-		delay(45);
+		delay(65);
 	}						
 
     void RATGDOComponent::openDoor()
@@ -579,6 +647,14 @@ namespace ratgdo {
                                      // bouncing from rapidly repeated commands
 
         toggleDoor();
+    }
+
+    void RATGDOComponent::stopDoor(){
+        if(doorStates[doorState] == "opening" || doorStates[doorState] == "closing"){
+            toggleDoor();
+        }else{
+            Serial.print("The door is not moving.");
+        }
     }
 
     void RATGDOComponent::toggleDoor()

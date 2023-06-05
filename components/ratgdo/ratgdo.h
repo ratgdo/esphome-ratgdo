@@ -21,38 +21,6 @@ extern "C" {
 #include "secplus.h"
 }
 
-static const uint8_t D0 = 16;
-static const uint8_t D1 = 5;
-static const uint8_t D2 = 4;
-static const uint8_t D3 = 0;
-static const uint8_t D4 = 2;
-static const uint8_t D5 = 14;
-static const uint8_t D6 = 12;
-static const uint8_t D7 = 13;
-static const uint8_t D8 = 15;
-static const uint8_t D9 = 3;
-static const uint8_t D10 = 1;
-
-#define CODE_LENGTH 19 // the length of each command sent to the door.
-/********************************** PIN DEFINITIONS
- * *****************************************/
-#define OUTPUT_GDO \
-    D4 // red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
-#define TRIGGER_OPEN D5 // dry contact for opening door
-#define TRIGGER_CLOSE D6 // dry contact for closing door
-#define TRIGGER_LIGHT \
-    D3 // dry contact for triggering light (no discrete light commands, so toggle
-       // only)
-#define STATUS_DOOR D0 // output door status, HIGH for open, LOW for closed
-#define STATUS_OBST \
-    D8 // output for obstruction status, HIGH for obstructed, LOW for clear
-#define INPUT_RPM1 \
-    D1 // RPM1 rotary encoder input OR reed switch if not soldering to the door
-       // opener logic board
-#define INPUT_RPM2 \
-    D2 // RPM2 rotary encoder input OR not used if using reed switch
-#define INPUT_OBST D7 // black obstruction sensor terminal
-
 namespace esphome {
 namespace ratgdo {
 
@@ -109,14 +77,15 @@ namespace ratgdo {
                                       // [online|offline|opening|open|closing|closed|obstructed|clear|reed_open|reed_closed]
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
+        void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
+        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
+
         void set_trigger_open_pin(InternalGPIOPin* pin) { this->trigger_open_pin_ = pin; };
         void set_trigger_close_pin(InternalGPIOPin* pin) { this->trigger_close_pin_ = pin; };
         void set_trigger_light_pin(InternalGPIOPin* pin) { this->trigger_light_pin_ = pin; };
+
         void set_status_door_pin(InternalGPIOPin* pin) { this->status_door_pin_ = pin; };
         void set_status_obst_pin(InternalGPIOPin* pin) { this->status_obst_pin_ = pin; };
-        void set_input_rpm1_pin(InternalGPIOPin* pin) { this->input_rpm1_pin_ = pin; };
-        void set_input_rpm2_pin(InternalGPIOPin* pin) { this->input_rpm2_pin_ = pin; };
-        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
