@@ -356,7 +356,7 @@ namespace ratgdo {
                 msgStart = 0;
                 byteCount = 0;
 
-                readRollingCode(doorState, lightState, lockState, motionState, obstructionState);
+                readRollingCode(this->store_.doorState, this->store_.lightState, this->store_.lockState, this->store_.motionState, this->store_.obstructionState);
             }
         }
     }
