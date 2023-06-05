@@ -412,7 +412,7 @@ namespace ratgdo {
 
     void RATGDOComponent::obstructionCleared()
     {
-        if (this->doorIsObstructed) {
+        if (this->store_.doorIsObstructed) {
             this->store_.doorIsObstructed = false;
 			this->status_obst_pin_->digital_write(false);
             ESP_LOGD(TAG, "Obstruction Cleared");
@@ -494,7 +494,7 @@ namespace ratgdo {
                                      // opening/closing. by setting here, we can avoid
                                      // bouncing from rapidly repeated commands
 
-        if (this->useRollingCodes) {
+        if (this->useRollingCodes_) {
             getRollingCode("door1");
             transmit(this->rollingCode, CODE_LENGTH);
 
@@ -541,7 +541,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLight()
     {
-        if (this->useRollingCodes) {
+        if (this->useRollingCodes_) {
             getRollingCode("light");
             transmit(this->rollingCode, CODE_LENGTH);
             this->pref_.save(&this->rollingCodeCounter);
