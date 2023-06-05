@@ -17,15 +17,6 @@
 #include "SoftwareSerial.h"
 #include "rolling_code.h"
 
-namespace esphome {
-namespace ratgdo {
-
-SoftwareSerial swSerial;
-
-/********************************** BOOTSTRAP MANAGER
- * *****************************************/
-BootstrapManager bootstrapManager;
-
 /********************************** PIN DEFINITIONS
  * *****************************************/
 #define OUTPUT_GDO                                                             \
@@ -44,6 +35,14 @@ BootstrapManager bootstrapManager;
 #define INPUT_RPM2                                                             \
   D2 // RPM2 rotary encoder input OR not used if using reed switch
 #define INPUT_OBST D7 // black obstruction sensor terminal
+namespace esphome {
+namespace ratgdo {
+
+SoftwareSerial swSerial;
+
+/********************************** BOOTSTRAP MANAGER
+ * *****************************************/
+BootstrapManager bootstrapManager;
 
 /********************************** MQTT TOPICS
  * *****************************************/
