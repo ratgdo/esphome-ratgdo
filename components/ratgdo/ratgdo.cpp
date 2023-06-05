@@ -35,13 +35,14 @@ namespace ratgdo {
         0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1 };
 
 
+	static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
 
     /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
      * ***************************/
     void IRAM_ATTR HOT RATGDOStore::isrDoorOpen(RATGDOStore *arg) { 
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < 2000)
+        if (currentMillis < STARTUP_DELAY)
             return;
 
 		if (!arg->trigger_open.digital_read()) {
@@ -57,7 +58,7 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrDoorClose(RATGDOStore *arg) { 
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < 2000)
+        if (currentMillis < STARTUP_DELAY)
             return;
 			
 		if (!arg->trigger_close.digital_read()) {
@@ -73,7 +74,7 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrLight(RATGDOStore *arg) { 
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < 2000)
+        if (currentMillis < STARTUP_DELAY)
             return;
 			
 		if (!arg->trigger_light.digital_read()) {
