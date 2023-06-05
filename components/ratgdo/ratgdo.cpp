@@ -478,11 +478,6 @@ namespace ratgdo {
             ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
             return;
         }
-
-        this->doorState = "opening"; // It takes a couple of pulses to detect
-                                     // opening/closing. by setting here, we can avoid
-                                     // bouncing from rapidly repeated commands
-
         toggleDoor();
     }
 
@@ -492,11 +487,6 @@ namespace ratgdo {
             ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
             return;
         }
-
-        this->doorState = "closing"; // It takes a couple of pulses to detect
-                                     // opening/closing. by setting here, we can avoid
-                                     // bouncing from rapidly repeated commands
-
         toggleDoor();
     }
 
