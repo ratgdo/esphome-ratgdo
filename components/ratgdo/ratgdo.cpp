@@ -391,7 +391,7 @@ namespace ratgdo {
     }
 
     void RATGDOComponent::sendLightStatus(){
-        ESP_LOGD(TAG, "Light state %d", this->store_.lightState)
+        ESP_LOGD(TAG, "Light state %d", this->store_.lightState);
     }
 
     void RATGDOComponent::sendLockStatus(){
