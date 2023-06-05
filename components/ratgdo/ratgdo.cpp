@@ -327,10 +327,6 @@ void RATGDOComponent::sendCurrentCounter() {
   ESP_LOGD(TAG, "Current counter %d", rollingCodeCounter);
 }
 
-/********************************** MANAGE HARDWARE BUTTON
- * *****************************************/
-void RATGDOComponent::manageHardwareButton() {}
-
 /************************* DOOR COMMUNICATION *************************/
 /*
  * Transmit a message to the door opener over uart1
