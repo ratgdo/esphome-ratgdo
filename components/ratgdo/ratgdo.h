@@ -41,7 +41,7 @@ namespace ratgdo {
 
         bool dryContactDoorOpen { false };
         bool dryContactDoorClose { false };
-        bool dryContactToggleLight { false };        
+        bool dryContactToggleLight { false };
 
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
