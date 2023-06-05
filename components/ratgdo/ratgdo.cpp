@@ -378,7 +378,7 @@ namespace ratgdo {
             } else if (this->obstructionLowCount == 0) {
                 // if the line is high and the last high pulse was more than 70ms ago,
                 // then there is an obstruction present
-                if ((this->input_obst_pin_->digital_read() && currentMillis - this->lastObstructionHigh > 70) {
+                if (this->input_obst_pin_->digital_read() && currentMillis - this->lastObstructionHigh > 70) {
                     obstructionDetected();
                 } else {
                     // asleep
