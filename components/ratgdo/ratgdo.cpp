@@ -395,7 +395,7 @@ void RATGDOComponent::sync() {
   transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
-  writeCounterToFlash();
+  this->pref_.save(&this->rollingCodeCounter);
 }
 
 void RATGDOComponent::openDoor() {
@@ -417,7 +417,7 @@ void RATGDOComponent::openDoor() {
     getRollingCode("door2");
     transmit(this->rollingCode, CODE_LENGTH);
 
-    writeCounterToFlash();
+    this->pref_.save(&this->rollingCodeCounter);
   } else {
     for (int i = 0; i < 4; i++) {
       ESP_LOGD(TAG, "sync_code[%d]", i);
