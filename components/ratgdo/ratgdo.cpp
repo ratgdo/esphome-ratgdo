@@ -530,7 +530,7 @@ void RATGDOComponent::getRollingCode(const char *command, int rollingCodeCounter
 	return;
 }
 
-void printRollingCode(){
+void RATGDOComponent::printRollingCode(){
 	for(int i = 0; i < CODE_LENGTH; i++){
 	if(this->rollingCode[i] <= 0x0f) ESP_LOGD(TAG, "0");
 		ESP_LOGD(TAG, "%x", this->rollingCode[i]);
