@@ -60,14 +60,16 @@ namespace ratgdo {
 
     struct RATGDOStore {
         ISRInternalGPIOPin output_gdo;
+
+        ISRInternalGPIOPin input_gdo;
+        ISRInternalGPIOPin input_obst;
+
         ISRInternalGPIOPin trigger_open;
         ISRInternalGPIOPin trigger_close;
         ISRInternalGPIOPin trigger_light;
+
         ISRInternalGPIOPin status_door;
         ISRInternalGPIOPin status_obst;
-        ISRInternalGPIOPin input_rpm1;
-        ISRInternalGPIOPin input_rpm2;
-        ISRInternalGPIOPin input_obst;
 
         unsigned long lastOpenDoorTime { 0 };
         unsigned long lastCloseDoorTime { 0 };
@@ -75,7 +77,7 @@ namespace ratgdo {
         unsigned long lastPulse { 0 };
         volatile int doorPositionCounter { 0 }; // calculate the door's movement and position
         bool rpm1Pulsed { false }; // did rpm1 get a pulse or not - eliminates an issue when the
-                                            // sensor is parked on a high pulse which fires rpm2 isr
+                                   // sensor is parked on a high pulse which fires rpm2 isr
 
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
@@ -101,7 +103,8 @@ namespace ratgdo {
          * *****************************************/
         unsigned int rollingCodeCounter;
         SoftwareSerial swSerial;
-        uint8_t rollingCode[CODE_LENGTH];
+        uint8_t txRollingCode[CODE_LENGTH];
+        uint8_t rxRollingCode[CODE_LENGTH];
         String doorState = "unknown"; // will be
                                       // [online|offline|opening|open|closing|closed|obstructed|clear|reed_open|reed_closed]
 
@@ -123,7 +126,7 @@ namespace ratgdo {
         void openDoor();
         void closeDoor();
         void toggleLight();
-        void toggleDoor();        
+        void toggleDoor();
         void sendSyncCodes();
 
         void obstructionLoop();
@@ -142,14 +145,16 @@ namespace ratgdo {
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
+
+        InternalGPIOPin* input_gdo_pin_;
+        InternalGPIOPin* input_obst_pin_;
+
         InternalGPIOPin* trigger_open_pin_;
         InternalGPIOPin* trigger_close_pin_;
         InternalGPIOPin* trigger_light_pin_;
+
         InternalGPIOPin* status_door_pin_;
         InternalGPIOPin* status_obst_pin_;
-        InternalGPIOPin* input_rpm1_pin_;
-        InternalGPIOPin* input_rpm2_pin_;
-        InternalGPIOPin* input_obst_pin_;
 
     }; // RATGDOComponent
 

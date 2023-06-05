@@ -156,23 +156,23 @@ namespace ratgdo {
 
 		this->output_gdo_pin_->setup();
 		this->store_.output_gdo = this->output_gdo_pin_->to_isr();
+		this->input_gdo_pin_->setup();
+		this->store_.input_gdo = this->input_gdo_pin_->to_isr();
+		this->input_obst_pin_->setup();
+		this->store_.input_obst = this->input_obst_pin_->to_isr();
+
 		this->trigger_open_pin_->setup();
 		this->store_.trigger_open = this->trigger_open_pin_->to_isr();
 		this->trigger_close_pin_->setup();
 		this->store_.trigger_close = this->trigger_close_pin_->to_isr();
 		this->trigger_light_pin_->setup();
 		this->store_.trigger_light = this->trigger_light_pin_->to_isr();
+
 		this->status_door_pin_->setup();
 		this->store_.status_door = this->status_door_pin_->to_isr();
 		this->status_obst_pin_->setup();
 		this->store_.status_obst = this->status_obst_pin_->to_isr();
-		this->input_rpm1_pin_->setup();
-		this->store_.input_rpm1 = this->input_rpm1_pin_->to_isr();
-		this->input_rpm2_pin_->setup();
-		this->store_.input_rpm2 = this->input_rpm2_pin_->to_isr();
-		this->input_obst_pin_->setup();
 
-        this->swSerial.begin(9600, SWSERIAL_8N2, -1, this->output_gdo_pin_->get_pin(), true);
 
 		this->trigger_open_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 		this->trigger_close_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
@@ -180,19 +180,17 @@ namespace ratgdo {
 
 		this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
 		this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
-        
-		this->input_rpm1_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);  // set to pullup to add support for reed switches
-		this->input_rpm2_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);// make sure pin doesn't float when using reed switch
-                           // and fire interrupt by mistake
+
+        this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
+        this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);        
 		this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
+        swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
 		this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 		this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 		this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 		this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
-		this->input_rpm1_pin_->attach_interrupt(RATGDOStore::isrRPM1, &this->store_, gpio::INTERRUPT_RISING_EDGE);
-		this->input_rpm2_pin_->attach_interrupt(RATGDOStore::isrRPM2, &this->store_, gpio::INTERRUPT_RISING_EDGE);
 
         if (this->useRollingCodes_) {
             ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
@@ -206,9 +204,43 @@ namespace ratgdo {
     void RATGDOComponent::loop()
     {
         obstructionLoop();
-        doorStateLoop();
+        gdoStateLoop();
         dryContactLoop();
+        statusUpdateLoop();
 		//ESP_LOGD(TAG, "Door State: %s", this->doorState.c_str());
+    }
+
+    void RATGDOComponent::readRollingCode(uint8_t &door, uint8_t &light, uint8_t &lock, uint8_t &motion, uint8_t &obstruction){
+        uint32_t rolling = 0;
+        uint64_t fixed = 0;
+        uint32_t data = 0;
+
+        uint16_t cmd = 0;
+        uint8_t nibble = 0;
+        uint8_t byte1 = 0;
+        uint8_t byte2 = 0;
+
+        decode_wireline(this->rxRollingCode, &rolling, &fixed, &data);
+
+        cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
+
+        nibble = (data >> 8) & 0xf;
+        byte1 = (data >> 16) & 0xff;
+        byte2 = (data >> 24) & 0xff;
+
+        if(cmd == 0x81){
+            door = nibble;
+            light = (byte2 >> 1) & 1;
+            lock = byte2 & 1;
+            motion = 0; // when the status message is read, reset motion state to 0|clear
+            // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
+
+        }else if(cmd == 0x281){
+            light ^= 1; // toggle bit
+        }else if(cmd == 0x84){
+        }else if(cmd == 0x285){
+            motion = 1; // toggle bit
+        }
     }
 
     void RATGDOComponent::getRollingCode(const char* command)
@@ -252,7 +284,7 @@ namespace ratgdo {
 
         fixed = fixed | id;
 
-        encode_wireline(this->rollingCodeCounter, fixed, data, this->rollingCode);
+        encode_wireline(this->rollingCodeCounter, fixed, data, this->txRollingCode);
 
         printRollingCode();
 
@@ -383,27 +415,26 @@ namespace ratgdo {
         long currentMillis = millis();
         static unsigned long lastMillis = 0;
 
-        // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms),
-        // obstructed (HIGH), asleep (LOW) the transitions between awake and asleep
-        // are tricky because the voltage drops slowly when falling asleep and is high
-        // without pulses when waking up
+        // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
+        // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
+        // and is high without pulses when waking up
 
-        // If at least 3 low pulses are counted within 50ms, the door is awake, not
-        // obstructed and we don't have to check anything else
+        // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
 
         // Every 50ms
-        if (currentMillis - lastMillis > 50) {
+        if(currentMillis - lastMillis > 50){
             // check to see if we got between 3 and 8 low pulses on the line
-            if (this->store_.obstructionLowCount >= 3 && this->store_.obstructionLowCount <= 8) {
-                obstructionCleared();
+            if(this->store_.obstructionLowCount >= 3 && this->store_.obstructionLowCount <= 8){
+                // obstructionCleared();
+                this->store_.obstructionState = 1;
 
-                // if there have been no pulses the line is steady high or low
-            } else if (this->store_.obstructionLowCount == 0) {
-                // if the line is high and the last high pulse was more than 70ms ago,
-                // then there is an obstruction present
-                if (this->input_obst_pin_->digital_read() && currentMillis - this->store_.lastObstructionHigh > 70) {
-                    obstructionDetected();
-                } else {
+            // if there have been no pulses the line is steady high or low			
+            }else if(this->store_.obstructionLowCount == 0){
+                // if the line is high and the last high pulse was more than 70ms ago, then there is an obstruction present
+                if(this->input_obst_pin_->digital_read() && currentMillis - this->store_.lastObstructionHigh > 70){
+                    this->store_.obstructionState = 0;
+                    // obstructionDetected();
+                }else{
                     // asleep
                 }
             }
