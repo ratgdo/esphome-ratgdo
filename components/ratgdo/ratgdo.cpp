@@ -54,12 +54,12 @@ namespace ratgdo {
                            // and fire interrupt by mistake
         pinMode(INPUT_OBST, INPUT);
 
-        attachInterrupt(TRIGGER_OPEN, this->isrDoorOpen, CHANGE);
-        attachInterrupt(TRIGGER_CLOSE, this->isrDoorClose, CHANGE);
-        attachInterrupt(TRIGGER_LIGHT, this->isrLight, CHANGE);
-        attachInterrupt(INPUT_OBST, this->isrObstruction, CHANGE);
-        attachInterrupt(INPUT_RPM1, this->isrRPM1, RISING);
-        attachInterrupt(INPUT_RPM2, this->isrRPM2, RISING);
+        attachInterrupt(TRIGGER_OPEN, &this->isrDoorOpen, CHANGE);
+        attachInterrupt(TRIGGER_CLOSE, &this->isrDoorClose, CHANGE);
+        attachInterrupt(TRIGGER_LIGHT, &this->isrLight, CHANGE);
+        attachInterrupt(INPUT_OBST, &this->isrObstruction, CHANGE);
+        attachInterrupt(INPUT_RPM1, &this->isrRPM1, RISING);
+        attachInterrupt(INPUT_RPM2, &this->isrRPM2, RISING);
 
         if (this->useRollingCodes_) {
             ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
