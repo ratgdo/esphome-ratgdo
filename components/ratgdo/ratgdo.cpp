@@ -480,7 +480,7 @@ void RATGDOComponent::toggleLight() {
 }
 
 
-void RATGDOComponent::getRollingCode(const char *command, int rollingCodeCounter){
+void RATGDOComponent::getRollingCode(const char *command){
 
 	uint64_t id = 0x539;
 	uint64_t fixed = 0;
@@ -520,7 +520,7 @@ void RATGDOComponent::getRollingCode(const char *command, int rollingCodeCounter
 
 	fixed = fixed | id;
 
-	encode_wireline(rollingCodeCounter, fixed, data, rollingCode);
+	encode_wireline(this->rollingCodeCounter, fixed, data, this->rollingCode);
 
 	printRollingCode();
 
