@@ -16,6 +16,13 @@
 
 #include "SoftwareSerial.h"
 #include "rolling_code.h"
+extern "C" {
+#include "secplus.h"
+}
+
+#define CODE_LENGTH 19 // the length of each command sent to the door.
+extern byte rollingCode[CODE_LENGTH];
+extern unsigned int rollingCodeCounter;
 
 /********************************** PIN DEFINITIONS
  * *****************************************/
@@ -59,6 +66,7 @@ class RATGDOComponent : public Component {
     unsigned long lastObstructionHigh =
         0; // count time between high pulses from the obst ISR
 
+    bool useRollingCodes = true; // use rolling codes or not
     bool doorIsObstructed = false;
     bool dryContactDoorOpen = false;
     bool dryContactDoorClose = false;
@@ -70,6 +78,7 @@ class RATGDOComponent : public Component {
 
     /********************************** FUNCTION DECLARATION
      * *****************************************/
+    void set_rolling_codes(bool useRollingCodes)
     void transmit(byte *payload, unsigned int length);
     void sync();
     void openDoor();
@@ -111,6 +120,12 @@ class RATGDOComponent : public Component {
 
     byte LIGHT_CODE[] = {0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
                         0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1};
+
+ 
+  protected:
+      ESPPreferenceObject pref_;
+      bool useRollingCodes_;
+
 
 } // RATGDOComponent
 

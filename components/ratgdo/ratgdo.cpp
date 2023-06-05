@@ -12,8 +12,6 @@
  ************************************/
 
 #include "ratgdo.h"
-#include "common.h"
-
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -22,6 +20,11 @@ namespace ratgdo {
 static const char *const TAG = "ratgdo";
 
 void RATGDOComponent::setup() {
+    this->pref_ = global_preferences->make_preference<int>(this->get_object_id_hash());
+    if (!this->pref_.load(&this->rollingCodeCounter)) {
+	  this->rollingCodeCounter = 0;
+    }
+
   swSerial.begin(9600, SWSERIAL_8N2, -1, OUTPUT_GDO, true);
   pinMode(TRIGGER_OPEN, INPUT_PULLUP);
   pinMode(TRIGGER_CLOSE, INPUT_PULLUP);
@@ -46,9 +49,7 @@ void RATGDOComponent::setup() {
 
   readCounterFromFlash();
 
-  if (useRollingCodes) {
-    // if(rollingCodeCounter == 0) rollingCodeCounter = 1;
-
+  if (this->useRollingCodes_) {
     ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
     sync(); // if rolling codes are being used (rolling code counter > 0), send
             // reboot/sync to the opener on startup
@@ -62,6 +63,10 @@ void RATGDOComponent::loop() {
   doorStateLoop();
   dryContactLoop();
 }
+ 
+ void RATGDOComponent::set_rolling_codes(bool useRollingCodes) {
+   this->useRollingCodes_ = useRollingCodes;
+ }
 
 /*************************** DETECTING THE DOOR STATE
  * ***************************/
@@ -78,12 +83,12 @@ void RATGDOComponent::doorStateLoop() {
     if (digitalRead(INPUT_RPM1) == LOW) {
       if (doorState != "reed_closed") {
         ESP_LOGD(TAG, "Reed switch closed");
-        doorState = "reed_closed";
+        this->doorState = "reed_closed";
         digitalWrite(STATUS_DOOR, HIGH);
       }
     } else if (doorState != "reed_open") {
       ESP_LOGD(TAG, "Reed switch open");
-      doorState = "reed_open";
+      this->doorState = "reed_open";
       digitalWrite(STATUS_DOOR, LOW);
     }
   }
@@ -91,7 +96,7 @@ void RATGDOComponent::doorStateLoop() {
 
   // If the previous and the current state of the RPM2 Signal are different,
   // that means there is a rotary encoder detected and the door is moving
-  if (doorPositionCounter != lastDoorPositionCounter) {
+  if (this->doorPositionCounter != lastDoorPositionCounter) {
     rotaryEncoderDetected = true; // this disables the reed switch handler
     lastCounterMillis = millis();
 
@@ -100,33 +105,33 @@ void RATGDOComponent::doorStateLoop() {
 
   // Wait 5 pulses before updating to door opening status
   if (doorPositionCounter - lastDirectionChangeCounter > 5) {
-    if (doorState != "opening") {
+    if (this->doorState != "opening") {
       ESP_LOGD(TAG, "Door Opening...");
     }
-    lastDirectionChangeCounter = doorPositionCounter;
-    doorState = "opening";
+    lastDirectionChangeCounter = this->doorPositionCounter;
+    this->doorState = "opening";
   }
 
-  if (lastDirectionChangeCounter - doorPositionCounter > 5) {
-    if (doorState != "closing") {
+  if (this->lastDirectionChangeCounter - this->doorPositionCounter > 5) {
+    if (this->doorState != "closing") {
       ESP_LOGD(TAG, "Door Closing...");
     }
-    lastDirectionChangeCounter = doorPositionCounter;
-    doorState = "closing";
+    lastDirectionChangeCounter = this->doorPositionCounter;
+    this->doorState = "closing";
   }
 
   // 250 millis after the last rotary encoder pulse, the door is stopped
   if (millis() - lastCounterMillis > 250) {
     // if the door was closing, and is now stopped, then the door is closed
-    if (doorState == "closing") {
-      doorState = "closed";
+    if (this->doorState == "closing") {
+      this->doorState = "closed";
       ESP_LOGD(TAG, "Closed");
       digitalWrite(STATUS_DOOR, LOW);
     }
 
     // if the door was opening, and is now stopped, then the door is open
-    if (doorState == "opening") {
-      doorState = "open";
+    if (this->doorState == "opening") {
+      this->doorState = "open";
       ESP_LOGD(TAG, "Open");
       digitalWrite(STATUS_DOOR, HIGH);
     }
@@ -150,12 +155,12 @@ void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
   if (strcmp(type, "openDoor") == 0) {
     if (digitalRead(TRIGGER_OPEN) == LOW) {
       // save the time of the falling edge
-      lastOpenDoorTime = currentMillis;
+      this->lastOpenDoorTime = currentMillis;
     } else if (currentMillis - lastOpenDoorTime > 500 &&
                currentMillis - lastOpenDoorTime < 10000) {
       // now see if the rising edge was between 500ms and 10 seconds after the
       // falling edge
-      dryContactDoorOpen = true;
+      this->dryContactDoorOpen = true;
     }
   }
 
@@ -167,19 +172,19 @@ void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
                currentMillis - lastCloseDoorTime < 10000) {
       // now see if the rising edge was between 500ms and 10 seconds after the
       // falling edge
-      dryContactDoorClose = true;
+      this->dryContactDoorClose = true;
     }
   }
 
   if (strcmp(type, "toggleLight") == 0) {
     if (digitalRead(TRIGGER_LIGHT) == LOW) {
       // save the time of the falling edge
-      lastToggleLightTime = currentMillis;
+      this->lastToggleLightTime = currentMillis;
     } else if (currentMillis - lastToggleLightTime > 500 &&
                currentMillis - lastToggleLightTime < 10000) {
       // now see if the rising edge was between 500ms and 10 seconds after the
       // falling edge
-      dryContactToggleLight = true;
+      this->dryContactToggleLight = true;
     }
   }
 }
@@ -191,7 +196,7 @@ void IRAM_ATTR isrDoorClose() { isrDebounce("closeDoor"); }
 void IRAM_ATTR isrLight() { isrDebounce("toggleLight"); }
 
 // Fire on RISING edge of RPM1
-void IRAM_ATTR isrRPM1() { rpm1Pulsed = true; }
+void IRAM_ATTR isrRPM1() { this->rpm1Pulsed = true; }
 
 // Fire on RISING edge of RPM2
 // When RPM1 HIGH on RPM2 rising edge, door closing:
@@ -217,8 +222,8 @@ void IRAM_ATTR RATGDOComponent::isrRPM2() {
   // continuously fires this ISR. This causes the door counter to change value
   // even though the door isn't moving To solve this, check to see if RPM1
   // pulsed. If not, do nothing. If yes, reset the pulsed flag
-  if (rpm1Pulsed) {
-    rpm1Pulsed = false;
+  if (this->rpm1Pulsed) {
+    this->rpm1Pulsed = false;
   } else {
     return;
   }
@@ -228,29 +233,29 @@ void IRAM_ATTR RATGDOComponent::isrRPM2() {
   // If the RPM1 state is different from the RPM2 state, then the door is
   // opening
   if (digitalRead(INPUT_RPM1)) {
-    doorPositionCounter--;
+    this->doorPositionCounter--;
   } else {
-    doorPositionCounter++;
+    this->doorPositionCounter++;
   }
 }
 
 // handle changes to the dry contact state
 void RATGDOComponent::dryContactLoop() {
-  if (dryContactDoorOpen) {
+  if (this->dryContactDoorOpen) {
     ESP_LOGD(TAG, "Dry Contact: open the door");
-    dryContactDoorOpen = false;
+    this->dryContactDoorOpen = false;
     openDoor();
   }
 
-  if (dryContactDoorClose) {
+  if (this->dryContactDoorClose) {
     ESP_LOGD(TAG, "Dry Contact: close the door");
-    dryContactDoorClose = false;
+    this->dryContactDoorClose = false;
     closeDoor();
   }
 
-  if (dryContactToggleLight) {
+  if (this->dryContactToggleLight) {
     ESP_LOGD(TAG, "Dry Contact: toggle the light");
-    dryContactToggleLight = false;
+    this->dryContactToggleLight = false;
     toggleLight();
   }
 }
@@ -258,9 +263,9 @@ void RATGDOComponent::dryContactLoop() {
 /*************************** OBSTRUCTION DETECTION ***************************/
 void IRAM_ATTR isrObstruction() {
   if (digitalRead(INPUT_OBST)) {
-    lastObstructionHigh = millis();
+    this->lastObstructionHigh = millis();
   } else {
-    obstructionLowCount++;
+    this->obstructionLowCount++;
   }
 }
 
@@ -279,14 +284,14 @@ void RATGDOComponent::obstructionLoop() {
   // Every 50ms
   if (currentMillis - lastMillis > 50) {
     // check to see if we got between 3 and 8 low pulses on the line
-    if (obstructionLowCount >= 3 && obstructionLowCount <= 8) {
+    if (this->obstructionLowCount >= 3 && this->obstructionLowCount <= 8) {
       obstructionCleared();
 
       // if there have been no pulses the line is steady high or low
-    } else if (obstructionLowCount == 0) {
+    } else if (this->obstructionLowCount == 0) {
       // if the line is high and the last high pulse was more than 70ms ago,
       // then there is an obstruction present
-      if (digitalRead(INPUT_OBST) && currentMillis - lastObstructionHigh > 70) {
+      if (digitalRead(INPUT_OBST) && currentMillis - this->lastObstructionHigh > 70) {
         obstructionDetected();
       } else {
         // asleep
@@ -294,7 +299,7 @@ void RATGDOComponent::obstructionLoop() {
     }
 
     lastMillis = currentMillis;
-    obstructionLowCount = 0;
+    this->obstructionLowCount = 0;
   }
 }
 
@@ -303,7 +308,7 @@ void RATGDOComponent::obstructionDetected() {
   unsigned long interruptTime = millis();
   // Anything less than 100ms is a bounce and is ignored
   if (interruptTime - lastInterruptTime > 250) {
-    doorIsObstructed = true;
+    this->doorIsObstructed = true;
     digitalWrite(STATUS_OBST, HIGH);
     ESP_LOGD(TAG, "Obstruction Detected");
   }
@@ -311,20 +316,20 @@ void RATGDOComponent::obstructionDetected() {
 }
 
 void RATGDOComponent::obstructionCleared() {
-  if (doorIsObstructed) {
-    doorIsObstructed = false;
+  if (this->doorIsObstructed) {
+    this->doorIsObstructed = false;
     digitalWrite(STATUS_OBST, LOW);
     ESP_LOGD(TAG, "Obstruction Cleared");
   }
 }
 
 void RATGDOComponent::sendDoorStatus() {
-  ESP_LOGD(TAG, "Door state %s", doorState);
+  ESP_LOGD(TAG, "Door state %s", this->doorState);
 }
 
 void RATGDOComponent::sendCurrentCounter() {
-  String msg = String(rollingCodeCounter);
-  ESP_LOGD(TAG, "Current counter %d", rollingCodeCounter);
+  String msg = String(this->rollingCodeCounter);
+  ESP_LOGD(TAG, "Current counter %d", this->rollingCodeCounter);
 }
 
 /************************* DOOR COMMUNICATION *************************/
@@ -347,54 +352,54 @@ void RATGDOComponent::transmit(byte *payload, unsigned int length) {
 }
 
 void RATGDOComponent::sync() {
-  if (!useRollingCodes)
+  if (!this->useRollingCodes_)
     return;
 
   getRollingCode("reboot1");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   getRollingCode("reboot2");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   getRollingCode("reboot3");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   getRollingCode("reboot4");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   getRollingCode("reboot5");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   getRollingCode("reboot6");
-  transmit(rollingCode, CODE_LENGTH);
+  transmit(this->rollingCode, CODE_LENGTH);
   delay(45);
 
   writeCounterToFlash();
 }
 
 void RATGDOComponent::openDoor() {
-  if (doorState == "open" || doorState == "opening") {
+  if (this->doorState == "open" || this->doorState == "opening") {
     ESP_LOGD(TAG, "The door is already %s", doorState);
     return;
   }
 
-  doorState = "opening"; // It takes a couple of pulses to detect
+  this->doorState = "opening"; // It takes a couple of pulses to detect
                          // opening/closing. by setting here, we can avoid
                          // bouncing from rapidly repeated commands
 
-  if (useRollingCodes) {
+  if (this->useRollingCodes) {
     getRollingCode("door1");
-    transmit(rollingCode, CODE_LENGTH);
+    transmit(this->rollingCode, CODE_LENGTH);
 
     delay(40);
 
     getRollingCode("door2");
-    transmit(rollingCode, CODE_LENGTH);
+    transmit(this->rollingCode, CODE_LENGTH);
 
     writeCounterToFlash();
   } else {
@@ -410,23 +415,23 @@ void RATGDOComponent::openDoor() {
 }
 
 void RATGDOComponent::closeDoor() {
-  if (doorState == "closed" || doorState == "closing") {
-    ESP_LOGD(TAG, "The door is already %s", doorState);
+  if (this->doorState == "closed" || this->doorState == "closing") {
+    ESP_LOGD(TAG, "The door is already %s", this->doorState);
     return;
   }
 
-  doorState = "closing"; // It takes a couple of pulses to detect
+  this->doorState = "closing"; // It takes a couple of pulses to detect
                          // opening/closing. by setting here, we can avoid
                          // bouncing from rapidly repeated commands
 
-  if (useRollingCodes) {
+  if (this->useRollingCodes_) {
     getRollingCode("door1");
-    transmit(rollingCode, CODE_LENGTH);
+    transmit(this->rollingCode, CODE_LENGTH);
 
     delay(40);
 
     getRollingCode("door2");
-    transmit(rollingCode, CODE_LENGTH);
+    transmit(this->rollingCode, CODE_LENGTH);
 
     writeCounterToFlash();
   } else {
@@ -442,9 +447,9 @@ void RATGDOComponent::closeDoor() {
 }
 
 void RATGDOComponent::toggleLight() {
-  if (useRollingCodes) {
+  if (this->useRollingCodes) {
     getRollingCode("light");
-    transmit(rollingCode, CODE_LENGTH);
+    transmit(this->rollingCode, CODE_LENGTH);
     writeCounterToFlash();
   } else {
     for (int i = 0; i < 4; i++) {
@@ -456,6 +461,64 @@ void RATGDOComponent::toggleLight() {
     ESP_LOGD(TAG, "light_code")
     transmit(LIGHT_CODE, CODE_LENGTH);
   }
+}
+
+
+void RATGDOComponent::getRollingCode(const char *command, int rollingCodeCounter){
+
+	uint64_t id = 0x539;
+	uint64_t fixed = 0;
+	uint32_t data = 0;
+
+	if(strcmp(command,"reboot1") == 0){
+		fixed = 0x400000000;
+		data = 0x0000618b;
+	}else if(strcmp(command,"reboot2") == 0){
+		fixed = 0;
+		data = 0x01009080;
+	}else if(strcmp(command,"reboot3") == 0){
+		fixed = 0;
+		data = 0x0000b1a0;
+	}else if(strcmp(command,"reboot4") == 0){
+		fixed = 0;
+		data = 0x01009080;
+	}else if(strcmp(command,"reboot5") == 0){
+		fixed = 0x300000000;
+		data = 0x00008092;
+	}else if(strcmp(command,"reboot6") == 0){
+		fixed = 0x300000000;
+		data = 0x00008092;
+	}else if(strcmp(command,"door1") == 0){
+		fixed = 0x200000000;
+		data = 0x01018280;
+	}else if(strcmp(command,"door2") == 0){
+		fixed = 0x200000000;
+		data = 0x01009280;
+	}else if(strcmp(command,"light") == 0){
+		fixed = 0x200000000;
+		data = 0x00009281;
+	}else{
+		ESP_LOGD(TAG,"ERROR: Invalid command");
+		return;
+	}
+
+	fixed = fixed | id;
+
+	encode_wireline(rollingCodeCounter, fixed, data, rollingCode);
+
+	printRollingCode();
+
+	if(strcmp(command,"door1") != 0){ // door2 is created with same counter and should always be called after door1
+		this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+	}
+	return;
+}
+
+void printRollingCode(){
+	for(int i = 0; i < CODE_LENGTH; i++){
+	if(this->rollingCode[i] <= 0x0f) ESP_LOGD(TAG, "0");
+		ESP_LOGD(TAG, "%x", this->rollingCode[i]);
+	}
 }
 
 } // namespace ratgdo
