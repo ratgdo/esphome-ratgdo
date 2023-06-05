@@ -292,7 +292,7 @@ namespace ratgdo {
 
         // If the previous and the current state of the RPM2 Signal are different,
         // that means there is a rotary encoder detected and the door is moving
-        if (this->doorPositionCounter != lastDoorPositionCounter) {
+        if (this->store_.doorPositionCounter != lastDoorPositionCounter) {
             rotaryEncoderDetected = true; // this disables the reed switch handler
             lastCounterMillis = millis();
 
@@ -300,19 +300,19 @@ namespace ratgdo {
         }
 
         // Wait 5 pulses before updating to door opening status
-        if (this->doorPositionCounter - lastDirectionChangeCounter > 5) {
+        if (this->store_.>doorPositionCounter - lastDirectionChangeCounter > 5) {
             if (this->doorState != "opening") {
                 ESP_LOGD(TAG, "Door Opening...");
             }
-            lastDirectionChangeCounter = this->doorPositionCounter;
+            lastDirectionChangeCounter = this->store_.doorPositionCounter;
             this->doorState = "opening";
         }
 
-        if (lastDirectionChangeCounter - this->doorPositionCounter > 5) {
+        if (lastDirectionChangeCounter - this->store_.doorPositionCounter > 5) {
             if (this->doorState != "closing") {
                 ESP_LOGD(TAG, "Door Closing...");
             }
-            lastDirectionChangeCounter = this->doorPositionCounter;
+            lastDirectionChangeCounter = this->store_.doorPositionCounter;
             this->doorState = "closing";
         }
 
@@ -333,7 +333,7 @@ namespace ratgdo {
             }
         }
 
-        lastDoorPositionCounter = doorPositionCounter;
+        lastDoorPositionCounter = this->store_.doorPositionCounter;
     }
 
 
