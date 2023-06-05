@@ -101,7 +101,7 @@ namespace ratgdo {
          * *****************************************/
         unsigned int rollingCodeCounter;
         SoftwareSerial swSerial;
-        unsigned char* rollingCode[CODE_LENGTH];
+        unsigned uint8_t* rollingCode[CODE_LENGTH];
         String doorState = "unknown"; // will be
                                       // [online|offline|opening|open|closing|closed|obstructed|clear|reed_open|reed_closed]
 
