@@ -13,7 +13,7 @@ CONF_ROLLING_CODES = "rolling_codes"
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
-        cv.OPTIONAL(CONF_ROLLING_CODES, default=True): cv.boolean,
+        cv.Optional(CONF_ROLLING_CODES, default=True): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
