@@ -197,7 +197,7 @@ namespace ratgdo {
         obstructionLoop();
         doorStateLoop();
         dryContactLoop();
-		ESP_LOGD(TAG, "Door State: %s", this->doorState.c_str()
+		ESP_LOGD(TAG, "Door State: %s", this->doorState.c_str())
     }
 
     void RATGDOComponent::getRollingCode(const char* command)
