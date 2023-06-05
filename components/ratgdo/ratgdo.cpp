@@ -63,12 +63,9 @@ void RATGDOComponent::loop() {
   dryContactLoop();
 }
 
-} // namespace ratgdo
-} // namespace esphome
-
 /*************************** DETECTING THE DOOR STATE
  * ***************************/
-void doorStateLoop() {
+void RATGDOComponent::doorStateLoop() {
   static bool rotaryEncoderDetected = false;
   static int lastDoorPositionCounter = 0;
   static int lastDirectionChangeCounter = 0;
@@ -140,7 +137,7 @@ void doorStateLoop() {
 
 /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
  * ***************************/
-void IRAM_ATTR isrDebounce(const char *type) {
+void IRAM_ATTR RATGDOComponent::isrDebounce(const char *type) {
   static unsigned long lastOpenDoorTime = 0;
   static unsigned long lastCloseDoorTime = 0;
   static unsigned long lastToggleLightTime = 0;
@@ -204,7 +201,7 @@ void IRAM_ATTR isrRPM1() { rpm1Pulsed = true; }
 // When RPM1 LOW on RPM2 rising edge, door opening:
 // RPM1: ___|--|__
 // RPM2: __|--|___
-void IRAM_ATTR isrRPM2() {
+void IRAM_ATTR RATGDOComponent::isrRPM2() {
   // The encoder updates faster than the ESP wants to process, so by sampling
   // every 5ms we get a more reliable curve The counter is behind the actual
   // pulse counter, but it doesn't matter since we only need a reliable linear
@@ -238,7 +235,7 @@ void IRAM_ATTR isrRPM2() {
 }
 
 // handle changes to the dry contact state
-void dryContactLoop() {
+void RATGDOComponent::dryContactLoop() {
   if (dryContactDoorOpen) {
     ESP_LOGD(TAG, "Dry Contact: open the door");
     dryContactDoorOpen = false;
@@ -267,7 +264,7 @@ void IRAM_ATTR isrObstruction() {
   }
 }
 
-void obstructionLoop() {
+void RATGDOComponent::obstructionLoop() {
   long currentMillis = millis();
   static unsigned long lastMillis = 0;
 
@@ -301,7 +298,7 @@ void obstructionLoop() {
   }
 }
 
-void obstructionDetected() {
+void RATGDOComponent::obstructionDetected() {
   static unsigned long lastInterruptTime = 0;
   unsigned long interruptTime = millis();
   // Anything less than 100ms is a bounce and is ignored
@@ -313,7 +310,7 @@ void obstructionDetected() {
   lastInterruptTime = interruptTime;
 }
 
-void obstructionCleared() {
+void RATGDOComponent::obstructionCleared() {
   if (doorIsObstructed) {
     doorIsObstructed = false;
     digitalWrite(STATUS_OBST, LOW);
@@ -321,16 +318,18 @@ void obstructionCleared() {
   }
 }
 
-void sendDoorStatus() { ESP_LOGD(TAG, "Door state %s", doorState); }
+void RATGDOComponent::sendDoorStatus() {
+  ESP_LOGD(TAG, "Door state %s", doorState);
+}
 
-void sendCurrentCounter() {
+void RATGDOComponent::sendCurrentCounter() {
   String msg = String(rollingCodeCounter);
   ESP_LOGD(TAG, "Current counter %d", rollingCodeCounter);
 }
 
 /********************************** MANAGE HARDWARE BUTTON
  * *****************************************/
-void manageHardwareButton() {}
+void RATGDOComponent::manageHardwareButton() {}
 
 /************************* DOOR COMMUNICATION *************************/
 /*
@@ -341,7 +340,7 @@ void manageHardwareButton() {}
  * The opener requires a specific duration low/high pulse before it will accept
  * a message
  */
-void transmit(byte *payload, unsigned int length) {
+void RATGDOComponent::transmit(byte *payload, unsigned int length) {
   digitalWrite(OUTPUT_GDO, HIGH); // pull the line high for 1305 micros so the
                                   // door opener responds to the message
   delayMicroseconds(1305);
@@ -351,7 +350,7 @@ void transmit(byte *payload, unsigned int length) {
   swSerial.write(payload, length);
 }
 
-void sync() {
+void RATGDOComponent::sync() {
   if (!useRollingCodes)
     return;
 
@@ -382,7 +381,7 @@ void sync() {
   writeCounterToFlash();
 }
 
-void openDoor() {
+void RATGDOComponent::openDoor() {
   if (doorState == "open" || doorState == "opening") {
     ESP_LOGD(TAG, "The door is already %s", doorState);
     return;
@@ -414,7 +413,7 @@ void openDoor() {
   }
 }
 
-void closeDoor() {
+void RATGDOComponent::closeDoor() {
   if (doorState == "closed" || doorState == "closing") {
     ESP_LOGD(TAG, "The door is already %s", doorState);
     return;
@@ -446,7 +445,7 @@ void closeDoor() {
   }
 }
 
-void toggleLight() {
+void RATGDOComponent::toggleLight() {
   if (useRollingCodes) {
     getRollingCode("light");
     transmit(rollingCode, CODE_LENGTH);
@@ -462,3 +461,6 @@ void toggleLight() {
     transmit(LIGHT_CODE, CODE_LENGTH);
   }
 }
+
+} // namespace ratgdo
+} // namespace esphome
