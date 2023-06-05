@@ -71,7 +71,7 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_RPM2])
     cg.add(var.set_input_rpm2_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
-    cg.add(var.set_input_obst(pin))
+    cg.add(var.set_input_obst_pin(pin))
 
     cg.add_library(
         name="secplus",
