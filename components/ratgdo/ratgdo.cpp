@@ -475,7 +475,7 @@ namespace ratgdo {
     void RATGDOComponent::openDoor()
     {
 	    if(this->doorStates[this->store_.doorState] == "open" || doorStates[this->store_.doorState] == "opening"){
-            ESP_LOGD(TAG, "The door is already %s", doorState);
+            ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
             return;
         }
 
@@ -489,7 +489,7 @@ namespace ratgdo {
     void RATGDOComponent::closeDoor()
     {
 	    if(this->doorStates[this->store_.doorState] == "closed" || doorStates[this->store_.doorState] == "closing"){
-            ESP_LOGD(TAG, "The door is already %s", this->doorState);
+            ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
             return;
         }
 
