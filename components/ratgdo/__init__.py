@@ -23,3 +23,8 @@ async def to_code(config):
     await cg.register_component(var, config)
     # rolling_codes = await cg.get_variable(config[CONF_ROLLING_CODES])
     # cg.add(var.set_microphone(mic))
+    cg.add_library(
+        name="secplus",
+        repository="https://github.com/bdraco/secplus",
+        version="f98c3220356c27717a25102c0b35815ebbd26ccc",
+    )

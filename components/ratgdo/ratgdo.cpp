@@ -22,6 +22,7 @@ namespace ratgdo {
 static const char *const TAG = "ratgdo";
 
 void RATGDOComponent::setup() {
+  swSerial.begin(9600, SWSERIAL_8N2, -1, OUTPUT_GDO, true);
   pinMode(TRIGGER_OPEN, INPUT_PULLUP);
   pinMode(TRIGGER_CLOSE, INPUT_PULLUP);
   pinMode(TRIGGER_LIGHT, INPUT_PULLUP);
