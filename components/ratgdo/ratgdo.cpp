@@ -403,7 +403,7 @@ namespace ratgdo {
         unsigned long interruptTime = millis();
         // Anything less than 100ms is a bounce and is ignored
         if (interruptTime - lastInterruptTime > 250) {
-            this->doorIsObstructed = true;
+            this->store_.doorIsObstructed = true;
 			this->status_obst_pin_->digital_write(true);
             ESP_LOGD(TAG, "Obstruction Detected");
         }
@@ -413,7 +413,7 @@ namespace ratgdo {
     void RATGDOComponent::obstructionCleared()
     {
         if (this->doorIsObstructed) {
-            this->doorIsObstructed = false;
+            this->store_.doorIsObstructed = false;
 			this->status_obst_pin_->digital_write(false);
             ESP_LOGD(TAG, "Obstruction Cleared");
         }
