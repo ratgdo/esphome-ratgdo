@@ -36,7 +36,7 @@ static const byte LIGHT_CODE[] = {0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb
 					0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1};
 
 void RATGDOComponent::setup() {
-    this->pref_ = global_preferences->make_preference<int>(this->get_object_id_hash());
+    this->pref_ = global_preferences->make_preference<int>(734874333U);
     if (!this->pref_.load(&this->rollingCodeCounter)) {
 	  this->rollingCodeCounter = 0;
     }
