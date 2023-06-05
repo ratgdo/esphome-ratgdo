@@ -300,7 +300,7 @@ namespace ratgdo {
         }
 
         // Wait 5 pulses before updating to door opening status
-        if (this->store_.>doorPositionCounter - lastDirectionChangeCounter > 5) {
+        if (this->store_.doorPositionCounter - lastDirectionChangeCounter > 5) {
             if (this->doorState != "opening") {
                 ESP_LOGD(TAG, "Door Opening...");
             }
