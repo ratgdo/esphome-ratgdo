@@ -88,7 +88,10 @@ namespace ratgdo {
 	}
 
     // Fire on RISING edge of RPM1
-    void IRAM_ATTR HOT RATGDOStore::isrRPM1(RATGDOStore *arg) { arg->rpm1Pulsed = true; }
+    void IRAM_ATTR HOT RATGDOStore::isrRPM1(RATGDOStore *arg) { 
+        arg->rpm1Pulsed = true; 
+        ESP_LOGD(TAG, "isrRPM1 rpm1Pulsed");
+    }
 
     // Fire on RISING edge of RPM2
     // When RPM1 HIGH on RPM2 rising edge, door closing:
@@ -125,8 +128,10 @@ namespace ratgdo {
         // If the RPM1 state is different from the RPM2 state, then the door is
         // opening
 		if (arg->input_rpm1.digital_read()) {
+            ESP_LOGD(TAG, "isrRPM2 RPM1 HIGH");
             arg->doorPositionCounter--;
         } else {
+            ESP_LOGD(TAG, "isrRPM2 RPM1 LOW");
             arg->doorPositionCounter++;
         }
     }
@@ -134,8 +139,10 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore *arg)
     {
 		if (arg->input_obst.digital_read()) {
+            ESP_LOGD(TAG, "isrObstruction HIGH")
             arg->lastObstructionHigh = millis();
         } else {
+            ESP_LOGD(TAG, "isrObstruction LOW")
             arg->obstructionLowCount++;
         }
     }
