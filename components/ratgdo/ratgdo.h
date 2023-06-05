@@ -20,9 +20,6 @@ extern "C" {
 }
 
 #define CODE_LENGTH 19 // the length of each command sent to the door.
-extern byte rollingCode[CODE_LENGTH];
-extern unsigned int rollingCodeCounter;
-
 /********************************** PIN DEFINITIONS
  * *****************************************/
 #define OUTPUT_GDO                                                             \
@@ -41,12 +38,9 @@ extern unsigned int rollingCodeCounter;
 #define INPUT_RPM2                                                             \
   D2 // RPM2 rotary encoder input OR not used if using reed switch
 #define INPUT_OBST D7 // black obstruction sensor terminal
+
 namespace esphome {
 namespace ratgdo {
-
-
-
-//class RATGDOComponent;                  // this component
 
 class RATGDOComponent : public Component {
  public:
