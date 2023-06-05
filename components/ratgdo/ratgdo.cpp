@@ -81,21 +81,11 @@ void doorStateLoop() {
       if (doorState != "reed_closed") {
         ESP_LOGD(TAG, "Reed switch closed");
         doorState = "reed_closed";
-        if (isConfigFileOk) {
-          bootstrapManager.publish(overallStatusTopic.c_str(), "reed_closed",
-                                   true);
-          bootstrapManager.publish(doorStatusTopic.c_str(), "reed_closed",
-                                   true);
-        }
         digitalWrite(STATUS_DOOR, HIGH);
       }
     } else if (doorState != "reed_open") {
       ESP_LOGD(TAG, "Reed switch open");
       doorState = "reed_open";
-      if (isConfigFileOk) {
-        bootstrapManager.publish(overallStatusTopic.c_str(), "reed_open", true);
-        bootstrapManager.publish(doorStatusTopic.c_str(), "reed_open", true);
-      }
       digitalWrite(STATUS_DOOR, LOW);
     }
   }
@@ -114,10 +104,6 @@ void doorStateLoop() {
   if (doorPositionCounter - lastDirectionChangeCounter > 5) {
     if (doorState != "opening") {
       ESP_LOGD(TAG, "Door Opening...");
-      if (isConfigFileOk) {
-        bootstrapManager.publish(overallStatusTopic.c_str(), "opening", true);
-        bootstrapManager.publish(doorStatusTopic.c_str(), "opening", true);
-      }
     }
     lastDirectionChangeCounter = doorPositionCounter;
     doorState = "opening";
@@ -126,10 +112,6 @@ void doorStateLoop() {
   if (lastDirectionChangeCounter - doorPositionCounter > 5) {
     if (doorState != "closing") {
       ESP_LOGD(TAG, "Door Closing...");
-      if (isConfigFileOk) {
-        bootstrapManager.publish(overallStatusTopic.c_str(), "closing", true);
-        bootstrapManager.publish(doorStatusTopic.c_str(), "closing", true);
-      }
     }
     lastDirectionChangeCounter = doorPositionCounter;
     doorState = "closing";
@@ -141,12 +123,6 @@ void doorStateLoop() {
     if (doorState == "closing") {
       doorState = "closed";
       ESP_LOGD(TAG, "Closed");
-      if (isConfigFileOk) {
-        bootstrapManager.publish(overallStatusTopic.c_str(), doorState.c_str(),
-                                 true);
-        bootstrapManager.publish(doorStatusTopic.c_str(), doorState.c_str(),
-                                 true);
-      }
       digitalWrite(STATUS_DOOR, LOW);
     }
 
@@ -154,12 +130,6 @@ void doorStateLoop() {
     if (doorState == "opening") {
       doorState = "open";
       ESP_LOGD(TAG, "Open");
-      if (isConfigFileOk) {
-        bootstrapManager.publish(overallStatusTopic.c_str(), doorState.c_str(),
-                                 true);
-        bootstrapManager.publish(doorStatusTopic.c_str(), doorState.c_str(),
-                                 true);
-      }
       digitalWrite(STATUS_DOOR, HIGH);
     }
   }
@@ -337,14 +307,7 @@ void obstructionDetected() {
   if (interruptTime - lastInterruptTime > 250) {
     doorIsObstructed = true;
     digitalWrite(STATUS_OBST, HIGH);
-
     ESP_LOGD(TAG, "Obstruction Detected");
-
-    if (isConfigFileOk) {
-      bootstrapManager.publish(overallStatusTopic.c_str(), "obstructed", true);
-      bootstrapManager.publish(obstructionStatusTopic.c_str(), "obstructed",
-                               true);
-    }
   }
   lastInterruptTime = interruptTime;
 }
@@ -353,32 +316,15 @@ void obstructionCleared() {
   if (doorIsObstructed) {
     doorIsObstructed = false;
     digitalWrite(STATUS_OBST, LOW);
-
     ESP_LOGD(TAG, "Obstruction Cleared");
-
-    if (isConfigFileOk) {
-      bootstrapManager.publish(overallStatusTopic.c_str(), "clear", true);
-      bootstrapManager.publish(obstructionStatusTopic.c_str(), "clear", true);
-    }
   }
 }
 
-void sendDoorStatus() {
-  ESP_LOGD(TAG, "Door state %s", doorState);
-
-  if (isConfigFileOk) {
-    bootstrapManager.publish(overallStatusTopic.c_str(), doorState.c_str(),
-                             true);
-    bootstrapManager.publish(doorStatusTopic.c_str(), doorState.c_str(), true);
-  }
-}
+void sendDoorStatus() { ESP_LOGD(TAG, "Door state %s", doorState); }
 
 void sendCurrentCounter() {
   String msg = String(rollingCodeCounter);
   ESP_LOGD(TAG, "Current counter %d", rollingCodeCounter);
-  if (isConfigFileOk) {
-    bootstrapManager.publish(rollingCodeTopic.c_str(), msg.c_str(), true);
-  }
 }
 
 /********************************** MANAGE HARDWARE BUTTON
