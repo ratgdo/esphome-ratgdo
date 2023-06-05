@@ -382,7 +382,7 @@ namespace ratgdo {
                 obstructionCleared();
 
                 // if there have been no pulses the line is steady high or low
-            } else if (this->obstructionLowCount == 0) {
+            } else if (this->store_.obstructionLowCount == 0) {
                 // if the line is high and the last high pulse was more than 70ms ago,
                 // then there is an obstruction present
                 if (this->input_obst_pin_->digital_read() && currentMillis - this->store_.lastObstructionHigh > 70) {
@@ -393,7 +393,7 @@ namespace ratgdo {
             }
 
             lastMillis = currentMillis;
-            this->obstructionLowCount = 0;
+            this->store_.obstructionLowCount = 0;
         }
     }
 
