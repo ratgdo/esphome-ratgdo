@@ -444,6 +444,29 @@ namespace ratgdo {
         }
     }
 
+    void RATGDOComponent::statusUpdateLoop(){
+        // initialize to unknown
+        static uint8_t previousDoorState = 0;
+        static uint8_t previousLightState = 2;
+        static uint8_t previousLockState = 2;
+        static uint8_t previousObstructionState = 2;
+
+        if(this->store_.doorState != previousDoorState) sendDoorStatus();
+        if(this->store_.lightState != previousLightState) sendLightStatus();
+        if(this->store_.lockState != previousLockState) sendLockStatus();
+        if(this->store_.obstructionState != previousObstructionState) sendObstructionStatus();
+
+        if(this->store_.motionState == 1){
+            sendMotionStatus();
+            this->store_.motionState = 0;
+        }
+
+        previousDoorState = this->store_.doorState;
+        previousLightState = this->store_.lightState;
+        previousLockState = this->store_.lockState;
+        previousObstructionState = this->store_.obstructionState;
+    }
+
     void RATGDOComponent::obstructionDetected()
     {
         static unsigned long lastInterruptTime = 0;
