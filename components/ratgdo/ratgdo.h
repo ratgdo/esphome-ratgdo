@@ -69,21 +69,21 @@ namespace ratgdo {
         ISRInternalGPIOPin input_rpm2;
         ISRInternalGPIOPin input_obst;
 
-        volatile unsigned long lastOpenDoorTime { 0 };
-        volatile unsigned long lastCloseDoorTime { 0 };
-        volatile unsigned long lastToggleLightTime { 0 };
-        volatile unsigned long lastPulse { 0 };
+        unsigned long lastOpenDoorTime { 0 };
+        unsigned long lastCloseDoorTime { 0 };
+        unsigned long lastToggleLightTime { 0 };
+        unsigned long lastPulse { 0 };
         volatile int doorPositionCounter { 0 }; // calculate the door's movement and position
-        volatile bool rpm1Pulsed { false }; // did rpm1 get a pulse or not - eliminates an issue when the
+        bool rpm1Pulsed { false }; // did rpm1 get a pulse or not - eliminates an issue when the
                                             // sensor is parked on a high pulse which fires rpm2 isr
 
-        volatile int obstructionLowCount = 0; // count obstruction low pulses
-        volatile long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
+        int obstructionLowCount = 0; // count obstruction low pulses
+        long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        volatile bool doorIsObstructed { false };
-        volatile bool dryContactDoorOpen { false };
-        volatile bool dryContactDoorClose { false };
-        volatile bool dryContactToggleLight { false };
+        bool doorIsObstructed { false };
+        bool dryContactDoorOpen { false };
+        bool dryContactDoorClose { false };
+        bool dryContactToggleLight { false };
 
         static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
