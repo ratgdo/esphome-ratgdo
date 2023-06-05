@@ -41,25 +41,35 @@ namespace ratgdo {
             this->rollingCodeCounter = 0;
         }
 
-        this->swSerial.begin(9600, SWSERIAL_8N2, -1, OUTPUT_GDO, true);
-        pinMode(TRIGGER_OPEN, INPUT_PULLUP);
-        pinMode(TRIGGER_CLOSE, INPUT_PULLUP);
-        pinMode(TRIGGER_LIGHT, INPUT_PULLUP);
-        pinMode(STATUS_DOOR, OUTPUT);
-        pinMode(STATUS_OBST, OUTPUT);
-        pinMode(INPUT_RPM1,
-            INPUT_PULLUP); // set to pullup to add support for reed switches
-        pinMode(INPUT_RPM2,
-            INPUT_PULLUP); // make sure pin doesn't float when using reed switch
-                           // and fire interrupt by mistake
-        pinMode(INPUT_OBST, INPUT);
+		this->output_gdo_pin_->setup();
+		this->trigger_open_pin_->setup();
+		this->trigger_close_pin_->setup();
+		this->trigger_light_pin_->setup();
+		this->status_door_pin_->setup();
+		this->status_obst_pin_->setup();
+		this->input_rpm1_pin_->setup();
+		this->input_rpm2_pin_->setup();
+		this->input_obst_pin_->setup();
 
-        attachInterrupt(TRIGGER_OPEN, &RATGDOComponent::isrDoorOpen, CHANGE);
-        attachInterrupt(TRIGGER_CLOSE, &RATGDOComponent::isrDoorClose, CHANGE);
-        attachInterrupt(TRIGGER_LIGHT, &RATGDOComponent::isrLight, CHANGE);
-        attachInterrupt(INPUT_OBST, &RATGDOComponent::isrObstruction, CHANGE);
-        attachInterrupt(INPUT_RPM1, &RATGDOComponent::isrRPM1, RISING);
-        attachInterrupt(INPUT_RPM2, &RATGDOComponent::isrRPM2, RISING);
+        this->swSerial.begin(9600, SWSERIAL_8N2, -1, this->output_gdo_pin_->get_pin(), true);
+
+		this->trigger_open_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->trigger_close_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->trigger_light_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+		this->status_door_pin_->set_mode(gpio::FLAG_OUTPUT);
+		this->status_obst_pin_->set_mode(gpio::FLAG_OUTPUT);
+		this->input_rpm1_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);  // set to pullup to add support for reed switches
+		this->input_rpm2_pin_->set_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);// make sure pin doesn't float when using reed switch
+                           // and fire interrupt by mistake
+		this->input_obst_pin_->set_mode(gpio::FLAG_INPUT);
+
+
+		thiis->trigger_open_pin_->attach_interrupt(RATGDOComponent::isrDoorOpen, this, gpio::INTERRUPT_ANY_EDGE);
+		this->trigger_close_pin_->attach_interrupt(RATGDOComponent::isrDoorClose, this, gpio::INTERRUPT_ANY_EDGE);
+		this->trigger_light_pin_->attach_interrupt(RATGDOComponent::isrLight, this, gpio::INTERRUPT_ANY_EDGE);
+		this->input_obst_pin_->attach_interrupt(RATGDOComponent::isrObstruction, this, gpio::INTERRUPT_ANY_EDGE);
+		this->input_rpm1_pin_->attach_interrupt(RATGDOComponent::isrRPM1, this, gpio::INTERRUPT_RISING_EDGE);
+		this->input_rpm2_pin_->attach_interrupt(RATGDOComponent::isrRPM2, this, gpio::INTERRUPT_RISING_EDGE);
 
         if (this->useRollingCodes_) {
             ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
@@ -155,16 +165,16 @@ namespace ratgdo {
         // This may need to be debounced, but so far in testing I haven't detected any
         // bounces
         if (!rotaryEncoderDetected) {
-            if (digitalRead(INPUT_RPM1) == LOW) {
+            if (!this->input_rpm1_pin_->digital_read()) {
                 if (doorState != "reed_closed") {
                     ESP_LOGD(TAG, "Reed switch closed");
                     this->doorState = "reed_closed";
-                    digitalWrite(STATUS_DOOR, HIGH);
+					this->status_door_pin_->digital_write(true);
                 }
             } else if (doorState != "reed_open") {
                 ESP_LOGD(TAG, "Reed switch open");
                 this->doorState = "reed_open";
-                digitalWrite(STATUS_DOOR, LOW);
+				this->status_door_pin_->digital_write(false);
             }
         }
         // end reed switch handling
@@ -201,14 +211,14 @@ namespace ratgdo {
             if (this->doorState == "closing") {
                 this->doorState = "closed";
                 ESP_LOGD(TAG, "Closed");
-                digitalWrite(STATUS_DOOR, LOW);
+				this->status_door_pin_->digital_write(false);
             }
 
             // if the door was opening, and is now stopped, then the door is open
             if (this->doorState == "opening") {
                 this->doorState = "open";
                 ESP_LOGD(TAG, "Open");
-                digitalWrite(STATUS_DOOR, HIGH);
+				this->status_door_pin_->digital_write(true);
             }
         }
 
@@ -229,7 +239,7 @@ namespace ratgdo {
             return;
 
         if (strcmp(type, "openDoor") == 0) {
-            if (digitalRead(TRIGGER_OPEN) == LOW) {
+			if (!this->trigger_open_pin_->digital_read()) {
                 // save the time of the falling edge
                 lastOpenDoorTime = currentMillis;
             } else if (currentMillis - lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
@@ -240,7 +250,7 @@ namespace ratgdo {
         }
 
         if (strcmp(type, "closeDoor") == 0) {
-            if (digitalRead(TRIGGER_CLOSE) == LOW) {
+			if (!this->trigger_close_pin_->digital_read()) {
                 // save the time of the falling edge
                 lastCloseDoorTime = currentMillis;
             } else if (currentMillis - lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
@@ -251,7 +261,7 @@ namespace ratgdo {
         }
 
         if (strcmp(type, "toggleLight") == 0) {
-            if (digitalRead(TRIGGER_LIGHT) == LOW) {
+			if (!this->trigger_light_pin_->digital_read()) {
                 // save the time of the falling edge
                 lastToggleLightTime = currentMillis;
             } else if (currentMillis - lastToggleLightTime > 500 && currentMillis - lastToggleLightTime < 10000) {
@@ -306,7 +316,7 @@ namespace ratgdo {
 
         // If the RPM1 state is different from the RPM2 state, then the door is
         // opening
-        if (digitalRead(INPUT_RPM1)) {
+		if (this->input_rpm1_pin_->digital_read()) {
             this->doorPositionCounter--;
         } else {
             this->doorPositionCounter++;
@@ -338,7 +348,7 @@ namespace ratgdo {
     /*************************** OBSTRUCTION DETECTION ***************************/
     void IRAM_ATTR RATGDOComponent::isrObstruction()
     {
-        if (digitalRead(INPUT_OBST)) {
+		if (this->input_obst_pin_->digital_read()) {
             this->lastObstructionHigh = millis();
         } else {
             this->obstructionLowCount++;
@@ -368,7 +378,7 @@ namespace ratgdo {
             } else if (this->obstructionLowCount == 0) {
                 // if the line is high and the last high pulse was more than 70ms ago,
                 // then there is an obstruction present
-                if (digitalRead(INPUT_OBST) && currentMillis - this->lastObstructionHigh > 70) {
+                if ((this->input_obst_pin_->digital_read() && currentMillis - this->lastObstructionHigh > 70) {
                     obstructionDetected();
                 } else {
                     // asleep
@@ -387,7 +397,7 @@ namespace ratgdo {
         // Anything less than 100ms is a bounce and is ignored
         if (interruptTime - lastInterruptTime > 250) {
             this->doorIsObstructed = true;
-            digitalWrite(STATUS_OBST, HIGH);
+			this->status_obst_pin_->digital_write(true);
             ESP_LOGD(TAG, "Obstruction Detected");
         }
         lastInterruptTime = interruptTime;
@@ -397,7 +407,7 @@ namespace ratgdo {
     {
         if (this->doorIsObstructed) {
             this->doorIsObstructed = false;
-            digitalWrite(STATUS_OBST, LOW);
+			this->status_obst_pin_->digital_write(false);
             ESP_LOGD(TAG, "Obstruction Cleared");
         }
     }
@@ -413,10 +423,10 @@ namespace ratgdo {
      */
     void RATGDOComponent::transmit(const unsigned char * payload, unsigned int length)
     {
-        digitalWrite(OUTPUT_GDO, HIGH); // pull the line high for 1305 micros so the
+		this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                         // door opener responds to the message
         delayMicroseconds(1305);
-        digitalWrite(OUTPUT_GDO, LOW); // bring the line low
+		this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->swSerial.write(payload, length);
