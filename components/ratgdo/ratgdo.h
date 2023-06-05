@@ -13,8 +13,8 @@
 
 #pragma once
 #include "esphome/core/component.h"
-#include "esphome/core/preferences.h"
 #include "esphome/core/gpio.h"
+#include "esphome/core/preferences.h"
 
 #include "SoftwareSerial.h"
 extern "C" {
@@ -69,28 +69,28 @@ namespace ratgdo {
         ISRInternalGPIOPin input_rpm2;
         ISRInternalGPIOPin input_obst;
 
-        volatile unsigned long lastOpenDoorTime{0};
-        volatile unsigned long lastCloseDoorTime{0};
-        volatile unsigned long lastToggleLightTime{0};
-        volatile unsigned long lastPulse{0};
-        volatile int doorPositionCounter{0}; // calculate the door's movement and position
-        volatile bool rpm1Pulsed{false}; // did rpm1 get a pulse or not - eliminates an issue when the
-                                 // sensor is parked on a high pulse which fires rpm2 isr
+        volatile unsigned long lastOpenDoorTime { 0 };
+        volatile unsigned long lastCloseDoorTime { 0 };
+        volatile unsigned long lastToggleLightTime { 0 };
+        volatile unsigned long lastPulse { 0 };
+        volatile int doorPositionCounter { 0 }; // calculate the door's movement and position
+        volatile bool rpm1Pulsed { false }; // did rpm1 get a pulse or not - eliminates an issue when the
+                                            // sensor is parked on a high pulse which fires rpm2 isr
 
         volatile int obstructionLowCount = 0; // count obstruction low pulses
         volatile long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        volatile bool doorIsObstructed{false};
-        volatile bool dryContactDoorOpen{false};
-        volatile bool dryContactDoorClose{false};
-        volatile bool dryContactToggleLight{false};
+        volatile bool doorIsObstructed { false };
+        volatile bool dryContactDoorOpen { false };
+        volatile bool dryContactDoorClose { false };
+        volatile bool dryContactToggleLight { false };
 
-        static void IRAM_ATTR isrDoorOpen(RATGDOStore *arg);
-        static void IRAM_ATTR isrDoorClose(RATGDOStore *arg);
-        static void IRAM_ATTR isrLight(RATGDOStore *arg);
-        static void IRAM_ATTR isrObstruction(RATGDOStore *arg);
-        static void IRAM_ATTR isrRPM1(RATGDOStore *arg);
-        static void IRAM_ATTR isrRPM2(RATGDOStore *arg);
+        static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
+        static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
+        static void IRAM_ATTR isrLight(RATGDOStore* arg);
+        static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
+        static void IRAM_ATTR isrRPM1(RATGDOStore* arg);
+        static void IRAM_ATTR isrRPM2(RATGDOStore* arg);
     };
 
     class RATGDOComponent : public Component {
@@ -101,7 +101,7 @@ namespace ratgdo {
          * *****************************************/
         unsigned int rollingCodeCounter;
         SoftwareSerial swSerial;
-        unsigned char * rollingCode[CODE_LENGTH];
+        unsigned char* rollingCode[CODE_LENGTH];
         String doorState = "unknown"; // will be
                                       // [online|offline|opening|open|closing|closed|obstructed|clear|reed_open|reed_closed]
 
@@ -135,11 +135,10 @@ namespace ratgdo {
         void printRollingCode();
         void getRollingCode(const char* command);
 
-
     protected:
         ESPPreferenceObject pref_;
-        bool useRollingCodes_{true};
-        RATGDOStore store_{};
+        bool useRollingCodes_ { true };
+        RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* trigger_open_pin_;
