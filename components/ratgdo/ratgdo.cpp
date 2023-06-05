@@ -27,7 +27,6 @@ namespace ratgdo {
         0x4b, 0x18, 0x20, 0x92, 0x09, 0x20, 0xf2, 0x11, 0x2c };
     static const unsigned char SYNC4[] = { 0x55, 0x01, 0x00, 0x95, 0x29, 0x36, 0x91, 0x29, 0x36, 0x9a,
         0x69, 0x05, 0x2f, 0xbe, 0xdf, 0x6d, 0x16, 0xcb, 0xe7 };
-    static const unsigned char* SYNC_CODE[] = { SYNC1, SYNC2, SYNC3, SYNC4 };
 
     static const unsigned char  DOOR_CODE[] = { 0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
         0xfc, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x36, 0xb3 };
@@ -455,6 +454,18 @@ namespace ratgdo {
         this->pref_.save(&this->rollingCodeCounter);
     }
 
+	void RATGDOComponent::sendSyncCodes()
+	{
+		transmit(SYNC1, CODE_LENGTH);
+		delay(45);
+		transmit(SYNC2, CODE_LENGTH);
+		delay(45);
+		transmit(SYNC3, CODE_LENGTH);
+		delay(45);
+		transmit(SYNC4, CODE_LENGTH);
+		delay(45);
+	}						
+
     void RATGDOComponent::openDoor()
     {
         if (this->doorState == "open" || this->doorState == "opening") {
@@ -477,12 +488,7 @@ namespace ratgdo {
 
             this->pref_.save(&this->rollingCodeCounter);
         } else {
-            for (int i = 0; i < 4; i++) {
-                ESP_LOGD(TAG, "sync_code[%d]", i);
-
-                transmit(SYNC_CODE[i], CODE_LENGTH);
-                delay(45);
-            }
+            sendSyncCodes();
             ESP_LOGD(TAG, "door_code")
             transmit(DOOR_CODE, CODE_LENGTH);
         }
@@ -510,12 +516,7 @@ namespace ratgdo {
 
             this->pref_.save(&this->rollingCodeCounter);
         } else {
-            for (int i = 0; i < 4; i++) {
-                ESP_LOGD(TAG, "sync_code[%d]", i);
-
-                transmit(SYNC_CODE[i], CODE_LENGTH);
-                delay(45);
-            }
+            sendSyncCodes();
             ESP_LOGD(TAG, "door_code")
             transmit(DOOR_CODE, CODE_LENGTH);
         }
@@ -528,12 +529,7 @@ namespace ratgdo {
             transmit(this->rollingCode, CODE_LENGTH);
             this->pref_.save(&this->rollingCodeCounter);
         } else {
-            for (int i = 0; i < 4; i++) {
-                ESP_LOGD(TAG, "sync_code[%d]", i);
-
-                transmit(SYNC_CODE[i], CODE_LENGTH);
-                delay(45);
-            }
+            sendSyncCodes();
             ESP_LOGD(TAG, "light_code")
             transmit(LIGHT_CODE, CODE_LENGTH);
         }
