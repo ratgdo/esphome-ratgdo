@@ -61,10 +61,6 @@ void RATGDOComponent::setup() {
   attachInterrupt(INPUT_RPM1, isrRPM1, RISING);
   attachInterrupt(INPUT_RPM2, isrRPM2, RISING);
 
-  LittleFS.begin();
-
-  readCounterFromFlash();
-
   if (this->useRollingCodes_) {
     ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
     sync(); // if rolling codes are being used (rolling code counter > 0), send
