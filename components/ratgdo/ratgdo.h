@@ -103,8 +103,7 @@ namespace ratgdo {
         void sendSyncCodes();
 
         void obstructionLoop();
-        void obstructionDetected();
-        void obstructionCleared();
+        void sendObstructionStatus();
 
         void toggleDoor();
         void openDoor();
