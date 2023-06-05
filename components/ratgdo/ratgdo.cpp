@@ -235,11 +235,6 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::set_rolling_codes(bool useRollingCodes)
-    {
-        this->useRollingCodes_ = useRollingCodes;
-    }
-
     // handle changes to the dry contact state
     void RATGDOComponent::dryContactLoop()
     {
