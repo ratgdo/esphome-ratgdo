@@ -17,6 +17,9 @@
 #include "SoftwareSerial.h"
 #include "rolling_code.h"
 
+namespace esphome {
+namespace ratgdo {
+
 SoftwareSerial swSerial;
 
 /********************************** BOOTSTRAP MANAGER
@@ -125,3 +128,5 @@ byte LIGHT_CODE[] = {0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
                      0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1};
 
 #endif
+}
+}
