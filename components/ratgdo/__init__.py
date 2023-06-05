@@ -36,15 +36,15 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
         cv.Optional(CONF_ROLLING_CODES, default=True): cv.boolean,
-        cv.Required(CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_TRIGGER_OPEN, default=DEFAULT_TRIGGER_OPEN): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_TRIGGER_CLOSE, default=DEFAULT_TRIGGER_CLOSE): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_TRIGGER_LIGHT, default=DEFAULT_TRIGGER_LIGHT): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_STATUS_DOOR, default=DEFAULT_STATUS_DOOR): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_STATUS_OBST, default=DEFAULT_STATUS_OBST): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_INPUT_RPM1, default=DEFAULT_INPUT_RPM1): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_INPUT_RPM2, default=DEFAULT_INPUT_RPM2): pins.internal_gpio_input_pin_schema,
-        cv.Required(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_TRIGGER_OPEN, default=DEFAULT_TRIGGER_OPEN): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_TRIGGER_CLOSE, default=DEFAULT_TRIGGER_CLOSE): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_TRIGGER_LIGHT, default=DEFAULT_TRIGGER_LIGHT): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_STATUS_DOOR, default=DEFAULT_STATUS_DOOR): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_STATUS_OBST, default=DEFAULT_STATUS_OBST): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_INPUT_RPM1, default=DEFAULT_INPUT_RPM1): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_INPUT_RPM2, default=DEFAULT_INPUT_RPM2): pins.internal_gpio_input_pin_schema,
+        cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): pins.internal_gpio_input_pin_schema,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
