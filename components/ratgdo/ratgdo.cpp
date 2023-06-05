@@ -127,13 +127,10 @@ namespace ratgdo {
 		this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 		this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
-        if (this->useRollingCodes_) {
-            ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
-            sync(); // if rolling codes are being used (rolling code counter > 0), send
-                    // reboot/sync to the opener on startup
-        } else {
-            ESP_LOGD(TAG, "Rolling codes are disabled.");
-        }
+        ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
+        sync(); // if rolling codes are being used (rolling code counter > 0), send
+                // reboot/sync to the opener on startup
+
     }
 
     void RATGDOComponent::loop()
