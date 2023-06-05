@@ -90,9 +90,7 @@ namespace ratgdo {
         }
 
 		this->output_gdo_pin_->setup();
-		this->store_.output_gdo = this->output_gdo_pin_->to_isr();
 		this->input_gdo_pin_->setup();
-		this->store_.input_gdo = this->input_gdo_pin_->to_isr();
 		this->input_obst_pin_->setup();
 		this->store_.input_obst = this->input_obst_pin_->to_isr();
 

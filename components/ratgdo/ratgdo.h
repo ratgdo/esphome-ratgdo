@@ -29,25 +29,19 @@ namespace ratgdo {
     class RATGDOComponent;
 
     struct RATGDOStore {
-        ISRInternalGPIOPin output_gdo;
-
-        ISRInternalGPIOPin input_gdo;
         ISRInternalGPIOPin input_obst;
 
         ISRInternalGPIOPin trigger_open;
         ISRInternalGPIOPin trigger_close;
         ISRInternalGPIOPin trigger_light;
 
-        ISRInternalGPIOPin status_door;
-        ISRInternalGPIOPin status_obst;
-
         unsigned long lastOpenDoorTime { 0 };
         unsigned long lastCloseDoorTime { 0 };
         unsigned long lastToggleLightTime { 0 };
-        unsigned long lastPulse { 0 };
-        volatile int doorPositionCounter { 0 }; // calculate the door's movement and position
-        bool rpm1Pulsed { false }; // did rpm1 get a pulse or not - eliminates an issue when the
-                                   // sensor is parked on a high pulse which fires rpm2 isr
+
+        bool dryContactDoorOpen { false };
+        bool dryContactDoorClose { false };
+        bool dryContactToggleLight { false };        
 
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
@@ -57,10 +51,6 @@ namespace ratgdo {
         uint8_t lockState = 2;
         uint8_t lightState = 2;
         uint8_t doorState = 0;
-
-        bool dryContactDoorOpen { false };
-        bool dryContactDoorClose { false };
-        bool dryContactToggleLight { false };
 
         static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
