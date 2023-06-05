@@ -14,6 +14,7 @@
 #pragma once
 #include "esphome/core/component.h"
 #include "esphome/core/preferences.h"
+#include <Arduino.h>
 
 
 #include "SoftwareSerial.h"
