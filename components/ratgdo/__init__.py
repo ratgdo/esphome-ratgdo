@@ -7,7 +7,7 @@ DEPENDENCIES = ["preferences"]
 
 
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
-RATGDO = ratgdo_ns.class_("RATGDO", cg.Component)
+RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
 
 CONF_ROLLING_CODES = "rolling_codes"
 
