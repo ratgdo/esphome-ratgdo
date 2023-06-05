@@ -405,9 +405,6 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        if (!this->useRollingCodes_)
-            return;
-
         getRollingCode("reboot1");
         transmit(this->txRollingCode);
         delay(65);
