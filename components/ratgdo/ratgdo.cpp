@@ -176,11 +176,11 @@ namespace ratgdo {
 
 
 		this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->_store, gpio::INTERRUPT_ANY_EDGE);
-		this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->_stor, gpio::INTERRUPT_ANY_EDGE);
-		this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->_stor, gpio::INTERRUPT_ANY_EDGE);
-		this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->_stor, gpio::INTERRUPT_ANY_EDGE);
-		this->input_rpm1_pin_->attach_interrupt(RATGDOStore::isrRPM1, &this->_stor, gpio::INTERRUPT_RISING_EDGE);
-		this->input_rpm2_pin_->attach_interrupt(RATGDOStore::isrRPM2, &this->_stor, gpio::INTERRUPT_RISING_EDGE);
+		this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
+		this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->store_, gpio::INTERRUPT_ANY_EDGE);
+		this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
+		this->input_rpm1_pin_->attach_interrupt(RATGDOStore::isrRPM1, &this->store_, gpio::INTERRUPT_RISING_EDGE);
+		this->input_rpm2_pin_->attach_interrupt(RATGDOStore::isrRPM2, &this->store_, gpio::INTERRUPT_RISING_EDGE);
 
         if (this->useRollingCodes_) {
             ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
