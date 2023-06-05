@@ -15,7 +15,6 @@
 
 
 #include "SoftwareSerial.h"
-#include "rolling_code.h"
 extern "C" {
 #include "secplus.h"
 }
