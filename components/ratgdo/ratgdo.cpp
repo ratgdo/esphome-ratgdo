@@ -335,15 +335,6 @@ void RATGDOComponent::obstructionCleared() {
   }
 }
 
-void RATGDOComponent::sendDoorStatus() {
-  ESP_LOGD(TAG, "Door state %s", this->doorState);
-}
-
-void RATGDOComponent::sendCurrentCounter() {
-  String msg = String(this->rollingCodeCounter);
-  ESP_LOGD(TAG, "Current counter %d", this->rollingCodeCounter);
-}
-
 /************************* DOOR COMMUNICATION *************************/
 /*
  * Transmit a message to the door opener over uart1
