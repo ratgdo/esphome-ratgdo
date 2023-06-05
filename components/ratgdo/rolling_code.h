@@ -1,11 +1,6 @@
 #ifndef _RATGDO_ROLLING_CODE_H
 #define _RATGDO_ROLLING_CODE_H
 
-#include "BootstrapManager.h"
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <LittleFS.h>
-
 extern "C" {
 #include "secplus.h"
 }
