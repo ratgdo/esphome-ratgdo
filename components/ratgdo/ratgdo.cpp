@@ -392,12 +392,10 @@ namespace ratgdo {
 
     void RATGDOComponent::sendLightStatus(){
         ESP_LOGD(TAG, "Light state %d", this->store_.lightState)
-        Serial.println(lightStates[lightState]);
     }
 
     void RATGDOComponent::sendLockStatus(){
         ESP_LOGD(TAG, "Lock state %d", this->store_.lockState);
-        Serial.println(lockStates[lockState]);
     }
 
     void RATGDOComponent::sendMotionStatus(){
