@@ -530,7 +530,28 @@ namespace ratgdo {
         }
     }
 
+    // Lock functions
+    void RATGDOComponent::lock(){
+        if(this->lockStates[this->store_.lockState] == "locked"){
+            ESP_LOGD(TAG, ("already locked");
+        }else{
+            toggleLock();
+        }
+    }
 
+    void RATGDOComponent::unlock(){
+        if(this->lockStates[this->store_.lockState] == "unlocked"){
+            ESP_LOGD(TAG, ("already unlocked");
+        }else{
+            toggleLock();
+        }
+    }
+
+    void RATGDOComponent::toggleLock(){
+        getRollingCode("lock");
+        transmit(this->txRollingCode);
+        this->pref_.save(&this->rollingCodeCounter);
+    }
 
 } // namespace ratgdo
 } // namespace esphome
