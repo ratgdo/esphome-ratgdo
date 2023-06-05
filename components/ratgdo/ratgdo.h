@@ -116,6 +116,7 @@ namespace ratgdo {
         void printRollingCode();
         void getRollingCode(const char* command);
         void gdoStateLoop();
+        void statusUpdateLoop();
 
     protected:
         ESPPreferenceObject pref_;
