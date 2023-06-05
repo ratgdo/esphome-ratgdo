@@ -78,11 +78,11 @@ namespace ratgdo {
         SoftwareSerial swSerial;
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
-        String doorStates[6] = {"unknown","open","closed","stopped","opening","closing"};
-        String lightStates[3] = {"off","on","unknown"};
-        String lockStates[3] = {"unlocked","locked","unknown"};
-        String motionStates[2] = {"clear","detected"};
-        String obstructionStates[3] = {"obstructed","clear","unknown"};
+        String doorStates[6] = { "unknown", "open", "closed", "stopped", "opening", "closing" };
+        String lightStates[3] = { "off", "on", "unknown" };
+        String lockStates[3] = { "unlocked", "locked", "unknown" };
+        String motionStates[2] = { "clear", "detected" };
+        String obstructionStates[3] = { "obstructed", "clear", "unknown" };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
@@ -117,7 +117,7 @@ namespace ratgdo {
         void getRollingCode(const char* command);
         void gdoStateLoop();
         void statusUpdateLoop();
-        void readRollingCode(uint8_t &door, uint8_t &light, uint8_t &lock, uint8_t &motion, uint8_t &obstruction);
+        void readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction);
 
     protected:
         ESPPreferenceObject pref_;
