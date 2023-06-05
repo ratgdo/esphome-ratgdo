@@ -118,7 +118,7 @@ namespace ratgdo {
         /********************************** FUNCTION DECLARATION
          * *****************************************/
         void set_rolling_codes(bool useRollingCodes);
-        void transmit(const unsigned char*, unsigned int);
+        void transmit(const uint8_t*);
         void sync();
         void openDoor();
         void closeDoor();

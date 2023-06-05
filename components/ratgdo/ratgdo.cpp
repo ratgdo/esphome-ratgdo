@@ -432,7 +432,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(const unsigned char * payload, unsigned int length)
+    void RATGDOComponent::transmit(const unsigned char * payload)
     {
 		this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                         // door opener responds to the message
@@ -440,7 +440,7 @@ namespace ratgdo {
 		this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->swSerial.write(payload, length);
+        this->swSerial.write(payload, CODE_LENGTH);
     }
 
     void RATGDOComponent::sync()
@@ -449,27 +449,27 @@ namespace ratgdo {
             return;
 
         getRollingCode("reboot1");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         getRollingCode("reboot2");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         getRollingCode("reboot3");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         getRollingCode("reboot4");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         getRollingCode("reboot5");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         getRollingCode("reboot6");
-        transmit(this->rollingCode, CODE_LENGTH);
+        transmit(this->rollingCode);
         delay(45);
 
         this->pref_.save(&this->rollingCodeCounter);
@@ -477,13 +477,13 @@ namespace ratgdo {
 
 	void RATGDOComponent::sendSyncCodes()
 	{
-		transmit(SYNC1, CODE_LENGTH);
+		transmit(SYNC1);
 		delay(45);
-		transmit(SYNC2, CODE_LENGTH);
+		transmit(SYNC2);
 		delay(45);
-		transmit(SYNC3, CODE_LENGTH);
+		transmit(SYNC3);
 		delay(45);
-		transmit(SYNC4, CODE_LENGTH);
+		transmit(SYNC4);
 		delay(45);
 	}						
 
@@ -500,18 +500,18 @@ namespace ratgdo {
 
         if (this->useRollingCodes_) {
             getRollingCode("door1");
-            transmit(this->rollingCode, CODE_LENGTH);
+            transmit(this->rollingCode);
 
             delay(40);
 
             getRollingCode("door2");
-            transmit(this->rollingCode, CODE_LENGTH);
+            transmit(this->rollingCode);
 
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
             ESP_LOGD(TAG, "door_code");
-            transmit(DOOR_CODE, CODE_LENGTH);
+            transmit(DOOR_CODE);
         }
     }
 
@@ -528,18 +528,18 @@ namespace ratgdo {
 
         if (this->useRollingCodes_) {
             getRollingCode("door1");
-            transmit(this->rollingCode, CODE_LENGTH);
+            transmit(this->rollingCode);
 
             delay(40);
 
             getRollingCode("door2");
-            transmit(this->rollingCode, CODE_LENGTH);
+            transmit(this->rollingCode);
 
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
             ESP_LOGD(TAG, "door_code");
-            transmit(DOOR_CODE, CODE_LENGTH);
+            transmit(DOOR_CODE);
         }
     }
 
@@ -547,12 +547,12 @@ namespace ratgdo {
     {
         if (this->useRollingCodes_) {
             getRollingCode("light");
-            transmit(this->rollingCode, CODE_LENGTH);
+            transmit(this->rollingCode);
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
             ESP_LOGD(TAG, "light_code");
-            transmit(LIGHT_CODE, CODE_LENGTH);
+            transmit(LIGHT_CODE);
         }
     }
 
