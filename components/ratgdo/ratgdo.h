@@ -75,7 +75,7 @@ namespace ratgdo {
         /********************************** GLOBAL VARS
          * *****************************************/
         unsigned int rollingCodeCounter;
-        SoftwareSerial swSerial;
+        EspSoftwareSerial::UART swSerial;
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
         String doorStates[6] = { "unknown", "open", "closed", "stopped", "opening", "closing" };
