@@ -46,7 +46,7 @@ namespace ratgdo {
 
 
 
-class RATGDOComponent;                  // this component
+//class RATGDOComponent;                  // this component
 
 class RATGDOComponent : public Component {
  public:
