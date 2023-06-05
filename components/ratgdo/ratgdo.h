@@ -44,7 +44,6 @@ extern unsigned int rollingCodeCounter;
 namespace esphome {
 namespace ratgdo {
 
-SoftwareSerial swSerial;
 
 
 class RATGDOComponent;                  // this component
@@ -56,6 +55,7 @@ class RATGDOComponent : public Component {
     /********************************** GLOBAL VARS
      * *****************************************/
     unsigned int rollingCodeCounter;
+    SoftwareSerial swSerial;
     byte rollingCode[CODE_LENGTH];
     String doorState =
         "unknown"; // will be

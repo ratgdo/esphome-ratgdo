@@ -25,7 +25,7 @@ void RATGDOComponent::setup() {
 	  this->rollingCodeCounter = 0;
     }
 
-  swSerial.begin(9600, SWSERIAL_8N2, -1, OUTPUT_GDO, true);
+  this->swSerial.begin(9600, SWSERIAL_8N2, -1, OUTPUT_GDO, true);
   pinMode(TRIGGER_OPEN, INPUT_PULLUP);
   pinMode(TRIGGER_CLOSE, INPUT_PULLUP);
   pinMode(TRIGGER_LIGHT, INPUT_PULLUP);
@@ -348,7 +348,7 @@ void RATGDOComponent::transmit(byte *payload, unsigned int length) {
   digitalWrite(OUTPUT_GDO, LOW); // bring the line low
 
   delayMicroseconds(1260); // "LOW" pulse duration before the message start
-  swSerial.write(payload, length);
+  this->swSerial.write(payload, length);
 }
 
 void RATGDOComponent::sync() {
