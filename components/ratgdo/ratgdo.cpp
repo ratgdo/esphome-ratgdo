@@ -533,7 +533,7 @@ namespace ratgdo {
     // Lock functions
     void RATGDOComponent::lock(){
         if(this->lockStates[this->store_.lockState] == "locked"){
-            ESP_LOGD(TAG, ("already locked");
+            ESP_LOGD(TAG, "already locked");
         }else{
             toggleLock();
         }
@@ -541,7 +541,7 @@ namespace ratgdo {
 
     void RATGDOComponent::unlock(){
         if(this->lockStates[this->store_.lockState] == "unlocked"){
-            ESP_LOGD(TAG, ("already unlocked");
+            ESP_LOGD(TAG, "already unlocked");
         }else{
             toggleLock();
         }
