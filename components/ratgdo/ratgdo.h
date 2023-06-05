@@ -66,8 +66,6 @@ namespace ratgdo {
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
         static void IRAM_ATTR isrLight(RATGDOStore* arg);
         static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
-        static void IRAM_ATTR isrRPM1(RATGDOStore* arg);
-        static void IRAM_ATTR isrRPM2(RATGDOStore* arg);
     };
 
     class RATGDOComponent : public Component {
@@ -117,6 +115,7 @@ namespace ratgdo {
         void dryContactLoop();
         void printRollingCode();
         void getRollingCode(const char* command);
+        void gdoStateLoop();
 
     protected:
         ESPPreferenceObject pref_;
