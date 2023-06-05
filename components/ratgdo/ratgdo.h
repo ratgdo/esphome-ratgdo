@@ -96,6 +96,8 @@ namespace ratgdo {
 
         void doorStateLoop();
         void dryContactLoop();
+        void printRollingCode()
+        void getRollingCode(const char* command)
 
         /********************************** INTERRUPT SERVICE ROUTINES
          * ***********************************/
