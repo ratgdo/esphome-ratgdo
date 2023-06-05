@@ -97,10 +97,8 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void set_rolling_codes(bool useRollingCodes);
         void transmit(const uint8_t*);
         void sync();
-        void sendSyncCodes();
 
         void obstructionLoop();
         void sendObstructionStatus();
@@ -133,7 +131,6 @@ namespace ratgdo {
 
     protected:
         ESPPreferenceObject pref_;
-        bool useRollingCodes_ { true };
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;

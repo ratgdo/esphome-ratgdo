@@ -9,8 +9,6 @@ DEPENDENCIES = ["preferences"]
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
 RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
 
-CONF_ROLLING_CODES = "rolling_codes"
-
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
 DEFAULT_OUTPUT_GDO = 2 # D4 ed control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
@@ -38,7 +36,6 @@ DEFAULT_INPUT_RPM2 = 4 # D2 RPM2 rotary encoder input OR not used if using reed 
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
-        cv.Optional(CONF_ROLLING_CODES, default=True): cv.boolean,
         cv.Optional(CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO): pins.internal_gpio_input_pin_schema,
         cv.Optional(CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO): pins.internal_gpio_input_pin_schema,
         cv.Optional(CONF_TRIGGER_OPEN, default=DEFAULT_TRIGGER_OPEN): pins.internal_gpio_input_pin_schema,
@@ -56,8 +53,6 @@ CONFIG_SCHEMA = cv.Schema(
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
-    cg.add(var.set_rolling_codes(config[CONF_ROLLING_CODES]))
-
     pin = await cg.gpio_pin_expression(config[CONF_OUTPUT_GDO])
     cg.add(var.set_output_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_GDO])
@@ -71,7 +66,7 @@ async def to_code(config):
     cg.add(var.set_trigger_close_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_TRIGGER_LIGHT])
     cg.add(var.set_trigger_light_pin(pin))
-    
+
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_DOOR])
     cg.add(var.set_status_door_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_OBST])

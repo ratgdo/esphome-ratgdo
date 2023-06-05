@@ -19,23 +19,6 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
-    /*** Static Codes ***/
-    static const unsigned char SYNC1[] = { 0x55, 0x01, 0x00, 0x61, 0x12, 0x49, 0x2c, 0x92, 0x5b, 0x24,
-        0x96, 0x86, 0x0b, 0x65, 0x96, 0xd9, 0x8f, 0x26, 0x4a };
-    static const unsigned char SYNC2[] = { 0x55, 0x01, 0x00, 0x08, 0x34, 0x93, 0x49, 0xb4, 0x92, 0x4d,
-        0x20, 0x26, 0x1b, 0x4d, 0xb4, 0xdb, 0xad, 0x76, 0x93 };
-    static const unsigned char SYNC3[] = { 0x55, 0x01, 0x00, 0x06, 0x1b, 0x2c, 0xbf, 0x4b, 0x6d, 0xb6,
-        0x4b, 0x18, 0x20, 0x92, 0x09, 0x20, 0xf2, 0x11, 0x2c };
-    static const unsigned char SYNC4[] = { 0x55, 0x01, 0x00, 0x95, 0x29, 0x36, 0x91, 0x29, 0x36, 0x9a,
-        0x69, 0x05, 0x2f, 0xbe, 0xdf, 0x6d, 0x16, 0xcb, 0xe7 };
-
-    static const unsigned char  DOOR_CODE[] = { 0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
-        0xfc, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x36, 0xb3 };
-
-    static const unsigned char  LIGHT_CODE[] = { 0x55, 0x01, 0x00, 0x94, 0x3f, 0xef, 0xbc, 0xfb, 0x7f, 0xbe,
-        0xff, 0xa6, 0x1a, 0x4d, 0xa6, 0xda, 0x8d, 0x76, 0xb1 };
-
-
 	static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
 
     /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
@@ -460,18 +443,6 @@ namespace ratgdo {
         this->pref_.save(&this->rollingCodeCounter);
     }
 
-	void RATGDOComponent::sendSyncCodes()
-	{
-		transmit(SYNC1);
-		delay(65);
-		transmit(SYNC2);
-		delay(65);
-		transmit(SYNC3);
-		delay(65);
-		transmit(SYNC4);
-		delay(65);
-	}						
-
     void RATGDOComponent::openDoor()
     {
 	    if(this->doorStates[this->store_.doorState] == "open" || doorStates[this->store_.doorState] == "opening"){
@@ -500,34 +471,38 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        if (this->useRollingCodes_) {
-            getRollingCode("door1");
-            transmit(this->txRollingCode);
+        getRollingCode("door1");
+        transmit(this->txRollingCode);
 
-            delay(40);
+        delay(40);
 
-            getRollingCode("door2");
-            transmit(this->txRollingCode);
+        getRollingCode("door2");
+        transmit(this->txRollingCode);
 
-            this->pref_.save(&this->rollingCodeCounter);
-        } else {
-            sendSyncCodes();
-            ESP_LOGD(TAG, "door_code");
-            transmit(DOOR_CODE);
-        }        
+        this->pref_.save(&this->rollingCodeCounter);
+     
     }
 
-    void RATGDOComponent::toggleLight()
-    {
-        if (this->useRollingCodes_) {
-            getRollingCode("light");
-            transmit(this->txRollingCode);
-            this->pref_.save(&this->rollingCodeCounter);
-        } else {
-            sendSyncCodes();
-            ESP_LOGD(TAG, "light_code");
-            transmit(LIGHT_CODE);
+    void RATGDOComponent::lightOn(){
+        if(his->lightStates[this->store_.lightState] == "on"){
+            ESP_LOGD(TAG, "already on");
+        }else{
+            toggleLight();
         }
+    }
+
+    void RATGDOComponent::lightOff(){
+        if(his->lightStates[this->store_.lightState] == "off"){
+            ESP_LOGD(TAG, "already off");
+        }else{
+            toggleLight();
+        }
+    }
+
+    void RATGDOComponent::toggleLight(){
+        getRollingCode("light");
+        transmit(this->txRollingCode);
+        this->pref_.save(&this->rollingCodeCounter);
     }
 
     // Lock functions
