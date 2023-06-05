@@ -411,7 +411,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(unsigned char * payload, unsigned int length)
+    void RATGDOComponent::transmit(const unsigned char * payload, unsigned int length)
     {
         digitalWrite(OUTPUT_GDO, HIGH); // pull the line high for 1305 micros so the
                                         // door opener responds to the message
