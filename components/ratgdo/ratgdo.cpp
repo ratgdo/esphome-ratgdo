@@ -489,7 +489,7 @@ namespace ratgdo {
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
-            ESP_LOGD(TAG, "door_code")
+            ESP_LOGD(TAG, "door_code");
             transmit(DOOR_CODE, CODE_LENGTH);
         }
     }
@@ -517,7 +517,7 @@ namespace ratgdo {
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
-            ESP_LOGD(TAG, "door_code")
+            ESP_LOGD(TAG, "door_code");
             transmit(DOOR_CODE, CODE_LENGTH);
         }
     }
@@ -530,7 +530,7 @@ namespace ratgdo {
             this->pref_.save(&this->rollingCodeCounter);
         } else {
             sendSyncCodes();
-            ESP_LOGD(TAG, "light_code")
+            ESP_LOGD(TAG, "light_code");
             transmit(LIGHT_CODE, CODE_LENGTH);
         }
     }
