@@ -64,7 +64,7 @@ namespace ratgdo {
 		this->input_obst_pin_->set_mode(gpio::FLAG_INPUT);
 
 
-		thiis->trigger_open_pin_->attach_interrupt(RATGDOComponent::isrDoorOpen, this, gpio::INTERRUPT_ANY_EDGE);
+		this->trigger_open_pin_->attach_interrupt(RATGDOComponent::isrDoorOpen, this, gpio::INTERRUPT_ANY_EDGE);
 		this->trigger_close_pin_->attach_interrupt(RATGDOComponent::isrDoorClose, this, gpio::INTERRUPT_ANY_EDGE);
 		this->trigger_light_pin_->attach_interrupt(RATGDOComponent::isrLight, this, gpio::INTERRUPT_ANY_EDGE);
 		this->input_obst_pin_->attach_interrupt(RATGDOComponent::isrObstruction, this, gpio::INTERRUPT_ANY_EDGE);
