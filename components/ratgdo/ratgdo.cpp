@@ -400,7 +400,7 @@ namespace ratgdo {
 
     void RATGDOComponent::sendMotionStatus(){
         ESP_LOGD(TAG, "Motion state %d", this->store_.motionState);
-        motionState = 0; // reset motion state
+        this->store_.motionState = 0; // reset motion state
     }
 
     void RATGDOComponent::sendObstructionStatus(){
