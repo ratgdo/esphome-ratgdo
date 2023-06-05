@@ -79,15 +79,15 @@ namespace ratgdo {
         bool rpm1Pulsed = false; // did rpm1 get a pulse or not - eliminates an issue when the
                                  // sensor is parked on a high pulse which fires rpm2 isr
 
-        void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin = pin; };
-        void set_trigger_open_pin(InternalGPIOPin* pin) { this->trigger_open_pin = pin; };
-        void set_trigger_close_pin(InternalGPIOPin* pin) { this->trigger_close_pin = pin; };
-        void set_trigger_light_pin(InternalGPIOPin* pin) { this->trigger_light_pin = pin; };
-        void set_status_door_pin(InternalGPIOPin* pin) { this->status_door_pin = pin; };
-        void set_status_obst_pin(InternalGPIOPin* pin) { this->status_obst_pin = pin; };
-        void set_input_rpm1_pin(InternalGPIOPin* pin) { this->input_rpm1_pin = pin; };
-        void set_input_rpm2_pin(InternalGPIOPin* pin) { this->input_rpm2_pin = pin; };
-        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin = pin; };
+        void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
+        void set_trigger_open_pin(InternalGPIOPin* pin) { this->trigger_open_pin_ = pin; };
+        void set_trigger_close_pin(InternalGPIOPin* pin) { this->trigger_close_pin_ = pin; };
+        void set_trigger_light_pin(InternalGPIOPin* pin) { this->trigger_light_pin_ = pin; };
+        void set_status_door_pin(InternalGPIOPin* pin) { this->status_door_pin_ = pin; };
+        void set_status_obst_pin(InternalGPIOPin* pin) { this->status_obst_pin_ = pin; };
+        void set_input_rpm1_pin(InternalGPIOPin* pin) { this->input_rpm1_pin_ = pin; };
+        void set_input_rpm2_pin(InternalGPIOPin* pin) { this->input_rpm2_pin_ = pin; };
+        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
@@ -122,15 +122,15 @@ namespace ratgdo {
     protected:
         ESPPreferenceObject pref_;
         bool useRollingCodes_;
-        InternalGPIOPin* output_gdo_pin;
-        InternalGPIOPin* trigger_open_pin;
-        InternalGPIOPin* trigger_close_pin;
-        InternalGPIOPin* trigger_light_pin;
-        InternalGPIOPin* status_door_pin;
-        InternalGPIOPin* status_obst_pin;
-        InternalGPIOPin* input_rpm1_pin;
-        InternalGPIOPin* input_rpm2_pin;
-        InternalGPIOPin* input_obst_pin;
+        InternalGPIOPin* output_gdo_pin_;
+        InternalGPIOPin* trigger_open_pin_;
+        InternalGPIOPin* trigger_close_pin_;
+        InternalGPIOPin* trigger_light_pin_;
+        InternalGPIOPin* status_door_pin_;
+        InternalGPIOPin* status_obst_pin_;
+        InternalGPIOPin* input_rpm1_pin_;
+        InternalGPIOPin* input_rpm2_pin_;
+        InternalGPIOPin* input_obst_pin_;
 
     }; // RATGDOComponent
 
