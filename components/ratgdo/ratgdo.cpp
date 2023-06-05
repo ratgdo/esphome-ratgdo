@@ -130,7 +130,7 @@ namespace ratgdo {
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore *arg)
     {
-		if (this->input_obst.digital_read()) {
+		if (arg->input_obst.digital_read()) {
             arg->lastObstructionHigh = millis();
         } else {
             arg->obstructionLowCount++;
