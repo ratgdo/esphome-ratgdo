@@ -249,9 +249,9 @@ namespace ratgdo {
     void RATGDOComponent::printRollingCode()
     {
         for (int i = 0; i < CODE_LENGTH; i++) {
-            if (this->rollingCode[i] <= 0x0f)
+            if (this->txRollingCode[i] <= 0x0f)
                 ESP_LOGD(TAG, "0");
-            ESP_LOGD(TAG, "%x", this->rollingCode[i]);
+            ESP_LOGD(TAG, "%x", this->txRollingCode[i]);
         }
     }
 
