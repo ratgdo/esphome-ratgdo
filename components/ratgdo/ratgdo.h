@@ -15,7 +15,7 @@
 #define _RATGDO_H
 
 #include "rolling_code.h"
-#include "../espsoftwareserial/SoftwareSerial.h"
+#include "SoftwareSerial.h"
 
 SoftwareSerial swSerial;
 

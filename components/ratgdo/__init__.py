@@ -28,3 +28,8 @@ async def to_code(config):
         repository="https://github.com/bdraco/secplus",
         version="f98c3220356c27717a25102c0b35815ebbd26ccc",
     )
+    cg.add_library(
+        name="espsoftwareserial",
+        repository="https://github.com/bdraco/espsoftwareserial",
+        version="2f408224633316b997f82339e5b2731b1e561060",
+    )
