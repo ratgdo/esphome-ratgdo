@@ -296,7 +296,7 @@ namespace ratgdo {
             rotaryEncoderDetected = true; // this disables the reed switch handler
             lastCounterMillis = millis();
 
-            ESP_LOGD(TAG, "Door Position: %d", doorPositionCounter);
+            ESP_LOGD(TAG, "Door Position: %d", this->store_.doorPositionCounter);
         }
 
         // Wait 5 pulses before updating to door opening status
