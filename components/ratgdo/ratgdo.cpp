@@ -90,12 +90,8 @@ namespace ratgdo {
         }
     }
 
-    class RATGDOComponent : public Component, public UARTDevice {
+    class RATGDOComponent {
     public:
-        RATGDOComponent(UARTComponent* parent)
-            : UARTDevice(parent)
-        {
-        }
 
         void setup() override
         {
