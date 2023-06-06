@@ -138,7 +138,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        //ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
+        // ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
         obstructionLoop();
         gdoStateLoop();
         dryContactLoop();
@@ -249,11 +249,26 @@ namespace ratgdo {
 
     void RATGDOComponent::printRollingCode()
     {
-        for (int i = 0; i < CODE_LENGTH; i++) {
-            if (this->txRollingCode[i] <= 0x0f)
-                ESP_LOGD(TAG, "0");
-            ESP_LOGD(TAG, "%x", this->txRollingCode[i]);
-        }
+        ESP_LOGD(TAG, "Send code: %x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x%x",
+            this->txRollingCode[0] <= 0x0f ? 0 : this->txRollingCode[0],
+            this->txRollingCode[1] <= 0x0f ? 0 : this->txRollingCode[1],
+            this->txRollingCode[2] <= 0x0f ? 0 : this->txRollingCode[2],
+            this->txRollingCode[3] <= 0x0f ? 0 : this->txRollingCode[3],
+            this->txRollingCode[4] <= 0x0f ? 0 : this->txRollingCode[4],
+            this->txRollingCode[5] <= 0x0f ? 0 : this->txRollingCode[5],
+            this->txRollingCode[6] <= 0x0f ? 0 : this->txRollingCode[6],
+            this->txRollingCode[7] <= 0x0f ? 0 : this->txRollingCode[7],
+            this->txRollingCode[8] <= 0x0f ? 0 : this->txRollingCode[8],
+            this->txRollingCode[9] <= 0x0f ? 0 : this->txRollingCode[9],
+            this->txRollingCode[10] <= 0x0f ? 0 : this->txRollingCode[10],
+            this->txRollingCode[11] <= 0x0f ? 0 : this->txRollingCode[11],
+            this->txRollingCode[12] <= 0x0f ? 0 : this->txRollingCode[12],
+            this->txRollingCode[13] <= 0x0f ? 0 : this->txRollingCode[13],
+            this->txRollingCode[14] <= 0x0f ? 0 : this->txRollingCode[14],
+            this->txRollingCode[15] <= 0x0f ? 0 : this->txRollingCode[15],
+            this->txRollingCode[16] <= 0x0f ? 0 : this->txRollingCode[16],
+            this->txRollingCode[17] <= 0x0f ? 0 : this->txRollingCode[17],
+            this->txRollingCode[18] <= 0x0f ? 0 : this->txRollingCode[18]);
     }
 
     // handle changes to the dry contact state
@@ -317,7 +332,7 @@ namespace ratgdo {
     void RATGDOComponent::gdoStateLoop()
     {
         if (!this->available()) {
-            //ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
+            // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             return;
         }
         uint8_t serData;
