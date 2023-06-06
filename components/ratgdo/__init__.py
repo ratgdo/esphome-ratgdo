@@ -2,12 +2,13 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 from esphome import pins, automation
+from esphome.components import uart
 
-DEPENDENCIES = ["preferences"]
+DEPENDENCIES = ["preferences", "uart"]
 
 
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
-RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
+RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component, uart.UARTDevice)
 
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
@@ -46,7 +47,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_STATUS_DOOR, default=DEFAULT_STATUS_DOOR): pins.internal_gpio_input_pin_schema,
         cv.Optional(CONF_STATUS_OBST, default=DEFAULT_STATUS_OBST): pins.internal_gpio_input_pin_schema,
     }
-).extend(cv.COMPONENT_SCHEMA)
+).extend(cv.COMPONENT_SCHEMA).extend(uart.UART_DEVICE_SCHEMA)
 
 
 async def to_code(config):
