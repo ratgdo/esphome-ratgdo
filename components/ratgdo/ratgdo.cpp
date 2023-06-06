@@ -471,12 +471,9 @@ namespace ratgdo {
     {
         getRollingCode("door1");
         transmit(this->txRollingCode);
-
         delay(40);
-
         getRollingCode("door2");
         transmit(this->txRollingCode);
-
         this->pref_.save(&this->rollingCodeCounter);
      
     }
@@ -498,9 +495,7 @@ namespace ratgdo {
     }
 
     void RATGDOComponent::toggleLight(){
-        getRollingCode("light");
-        transmit(this->txRollingCode);
-        this->pref_.save(&this->rollingCodeCounter);
+        sendCommand("light");
     }
 
     // Lock functions
@@ -521,7 +516,11 @@ namespace ratgdo {
     }
 
     void RATGDOComponent::toggleLock(){
-        getRollingCode("lock");
+        sendCommand("lock");
+    }
+
+    void RATGDOComponent::sendCommand(const char* command){
+        getRollingCode(command);
         transmit(this->txRollingCode);
         this->pref_.save(&this->rollingCodeCounter);
     }
