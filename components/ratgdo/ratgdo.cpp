@@ -127,8 +127,6 @@ namespace ratgdo {
 
         this->check_uart_settings(9600, 1, esphome::uart::UART_CONFIG_PARITY_NONE, 8);
 
-        //this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
-
         this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
         this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
         this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->store_, gpio::INTERRUPT_ANY_EDGE);
