@@ -149,6 +149,14 @@ namespace ratgdo {
     void RATGDOComponent::dump_config()
     {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
+        LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
+        LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
+        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
+        LOG_PIN("  Trigger Open Pin: ", this->trigger_open_pin_);
+        LOG_PIN("  Trigger Close Pin: ", this->trigger_close_pin_);
+        LOG_PIN("  Trigger Light Pin: ", this->trigger_light_pin_);
+        LOG_PIN("  Status Door Pin: ", this->status_door_pin_);
+        LOG_PIN("  Status Obstruction Pin: ", this->status_obst_pin_);
     }
 
     void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
