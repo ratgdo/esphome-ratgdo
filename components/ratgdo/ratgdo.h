@@ -35,10 +35,6 @@ namespace ratgdo {
         ISRInternalGPIOPin trigger_close;
         ISRInternalGPIOPin trigger_light;
 
-        unsigned long lastOpenDoorTime { 0 };
-        unsigned long lastCloseDoorTime { 0 };
-        unsigned long lastToggleLightTime { 0 };
-
         bool dryContactDoorOpen { false };
         bool dryContactDoorClose { false };
         bool dryContactToggleLight { false };

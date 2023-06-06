@@ -24,6 +24,8 @@ namespace ratgdo {
     /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
      * ***************************/
     void IRAM_ATTR HOT RATGDOStore::isrDoorOpen(RATGDOStore *arg) { 
+    	static unsigned long lastOpenDoorTime = 0;
+
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
         if (currentMillis < STARTUP_DELAY)
@@ -31,8 +33,8 @@ namespace ratgdo {
 
 		if (!arg->trigger_open.digital_read()) {
 			// save the time of the falling edge
-			arg->lastOpenDoorTime = currentMillis;
-		} else if (currentMillis - arg->lastOpenDoorTime > 500 && currentMillis - arg->lastOpenDoorTime < 10000) {
+			lastOpenDoorTime = currentMillis;
+		} else if (currentMillis - arg->lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
 			// now see if the rising edge was between 500ms and 10 seconds after the
 			// falling edge
 			arg->dryContactDoorOpen = true;
@@ -40,6 +42,8 @@ namespace ratgdo {
 	}
 
     void IRAM_ATTR HOT RATGDOStore::isrDoorClose(RATGDOStore *arg) { 
+    	static unsigned long lastCloseDoorTime = 0;
+
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
         if (currentMillis < STARTUP_DELAY)
@@ -47,8 +51,8 @@ namespace ratgdo {
 			
 		if (!arg->trigger_close.digital_read()) {
 			// save the time of the falling edge
-			arg->lastCloseDoorTime = currentMillis;
-		} else if (currentMillis - arg->lastCloseDoorTime > 500 && currentMillis - arg->lastCloseDoorTime < 10000) {
+			lastCloseDoorTime = currentMillis;
+		} else if (currentMillis - arg->lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
 			// now see if the rising edge was between 500ms and 10 seconds after the
 			// falling edge
 			arg->dryContactDoorClose = true;
@@ -56,6 +60,8 @@ namespace ratgdo {
 	}
 
     void IRAM_ATTR HOT RATGDOStore::isrLight(RATGDOStore *arg) { 
+    	static unsigned long lastToggleLightTime = 0;
+
         unsigned long currentMillis = millis();
         // Prevent ISR during the first 2 seconds after reboot
         if (currentMillis < STARTUP_DELAY)
@@ -63,8 +69,8 @@ namespace ratgdo {
 			
 		if (!arg->trigger_light.digital_read()) {
 			// save the time of the falling edge
-			arg->lastToggleLightTime = currentMillis;
-		} else if (currentMillis - arg->lastToggleLightTime > 500 && currentMillis - arg->lastToggleLightTime < 10000) {
+			lastToggleLightTime = currentMillis;
+		} else if (currentMillis - lastToggleLightTime > 500 && currentMillis - lastToggleLightTime < 10000) {
 			// now see if the rising edge was between 500ms and 10 seconds after the
 			// falling edge
 			arg->dryContactToggleLight = true;
