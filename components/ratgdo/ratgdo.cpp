@@ -92,7 +92,7 @@ namespace ratgdo {
         }
     }
 
-    class RATGDOComponent {
+    class RATGDOComponent : public UARTDevice, public Component {
     public:
 
         void setup() override
