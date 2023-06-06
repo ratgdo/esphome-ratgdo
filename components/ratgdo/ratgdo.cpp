@@ -480,7 +480,7 @@ namespace ratgdo {
         if (this->doorStates[this->store_.doorState] == "opening" || doorStates[this->store_.doorState] == "closing") {
             toggleDoor();
         } else {
-            Serial.print("The door is not moving.");
+            ESP_LOGD(TAG, "The door is not moving.");
         }
     }
 
