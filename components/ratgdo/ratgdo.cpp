@@ -138,7 +138,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter)
+        ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
         obstructionLoop();
         gdoStateLoop();
         dryContactLoop();
