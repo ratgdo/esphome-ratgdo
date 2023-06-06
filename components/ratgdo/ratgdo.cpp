@@ -138,7 +138,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
+        //ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
         obstructionLoop();
         gdoStateLoop();
         dryContactLoop();
@@ -317,7 +317,7 @@ namespace ratgdo {
     void RATGDOComponent::gdoStateLoop()
     {
         if (!this->available()) {
-            ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
+            //ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             return;
         }
         uint8_t serData;
