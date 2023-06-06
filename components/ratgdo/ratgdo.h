@@ -57,6 +57,7 @@ namespace ratgdo {
     public:
         void setup() override;
         void loop() override;
+        void dump_config() override;
         /********************************** GLOBAL VARS
          * *****************************************/
         unsigned int rollingCodeCounter;
