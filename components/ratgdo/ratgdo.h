@@ -12,12 +12,11 @@
  ************************************/
 
 #pragma once
-#include "esphome/core/component.h"
-#include "esphome/core/gpio.h"
-#include "esphome/core/preferences.h"
-#include "esphome/core/log.h"
 #include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
+#include "esphome/core/gpio.h"
+#include "esphome/core/log.h"
+#include "esphome/core/preferences.h"
 
 #include "SoftwareSerial.h"
 extern "C" {
@@ -28,7 +27,6 @@ extern "C" {
 
 namespace esphome {
 namespace ratgdo {
-
 
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
