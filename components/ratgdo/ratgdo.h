@@ -56,7 +56,7 @@ namespace ratgdo {
         static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
     };
 
-    class RATGDOComponent : public Component, public UARTDevice {
+    class RATGDOComponent : public UARTDevice, public Component {
     public:
         void setup() override;
         void loop() override;
