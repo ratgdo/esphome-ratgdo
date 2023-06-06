@@ -60,7 +60,7 @@ namespace ratgdo {
         void dump_config() override;
         /********************************** GLOBAL VARS
          * *****************************************/
-        unsigned int rollingCodeCounter;
+        uint32_t rollingCodeCounter;
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
         String doorStates[6] = { "unknown", "open", "closed", "stopped", "opening", "closing" };

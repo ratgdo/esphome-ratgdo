@@ -133,8 +133,7 @@ namespace ratgdo {
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
-        sync(); // if rolling codes are being used (rolling code counter > 0), send
-                // reboot/sync to the opener on startup
+        sync(); // reboot/sync to the opener on startup
     }
 
     void RATGDOComponent::loop()
@@ -150,7 +149,6 @@ namespace ratgdo {
     void RATGDOComponent::dump_config()
     {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
-        sync();
     }
 
     void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
