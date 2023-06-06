@@ -92,20 +92,19 @@ namespace ratgdo {
 		this->output_gdo_pin_->setup();
 		this->input_gdo_pin_->setup();
 		this->input_obst_pin_->setup();
-		this->store_.input_obst = this->input_obst_pin_->to_isr();
 
 		this->trigger_open_pin_->setup();
-		this->store_.trigger_open = this->trigger_open_pin_->to_isr();
 		this->trigger_close_pin_->setup();
-		this->store_.trigger_close = this->trigger_close_pin_->to_isr();
 		this->trigger_light_pin_->setup();
-		this->store_.trigger_light = this->trigger_light_pin_->to_isr();
 
 		this->status_door_pin_->setup();
-		this->store_.status_door = this->status_door_pin_->to_isr();
 		this->status_obst_pin_->setup();
-		this->store_.status_obst = this->status_obst_pin_->to_isr();
 
+		this->store_.input_obst = this->input_obst_pin_->to_isr();
+
+		this->store_.trigger_open = this->trigger_open_pin_->to_isr();
+		this->store_.trigger_close = this->trigger_close_pin_->to_isr();
+		this->store_.trigger_light = this->trigger_light_pin_->to_isr();
 
 		this->trigger_open_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 		this->trigger_close_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
