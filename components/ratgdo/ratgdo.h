@@ -26,7 +26,6 @@ extern "C" {
 namespace esphome {
 namespace ratgdo {
 
-    class RATGDOComponent : public Component, public UARTDevice;
 
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
@@ -54,7 +53,7 @@ namespace ratgdo {
         static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
     };
 
-    class RATGDOComponent : public Component {
+    class RATGDOComponent : public Component, public UARTDevice {
     public:
         void setup() override;
         void loop() override;
