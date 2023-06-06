@@ -299,7 +299,7 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop(){
         if(!this->swSerial.available()) {
-            ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
+            //ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             return;
         }
         uint8_t serData = this->swSerial.read();
