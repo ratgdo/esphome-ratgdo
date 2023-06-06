@@ -13,6 +13,8 @@
 
 #include "ratgdo.h"
 #include "esphome/core/log.h"
+#include "esphome/components/uart/uart.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -90,14 +92,10 @@ namespace ratgdo {
         }
     }
 
-    class RATGDOComponent : public Component, public UARTDevice {
+    class RATGDOComponent : public uart::UARTDevice, public Component {
     public:
-        RATGDOComponent(UARTComponent* parent)
-            : UARTDevice(parent)
-        {
-        }
 
-        void setup()
+        void setup() override
         {
             this->pref_ = global_preferences->make_preference<int>(734874333U);
             if (!this->pref_.load(&this->rollingCodeCounter)) {
@@ -144,7 +142,7 @@ namespace ratgdo {
                     // reboot/sync to the opener on startup
         }
 
-        void loop()
+        void loop() override
         {
             ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
             obstructionLoop();
