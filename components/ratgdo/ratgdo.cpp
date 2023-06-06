@@ -147,10 +147,10 @@ namespace ratgdo {
         // ESP_LOGD(TAG, "Door State: %s", this->doorState.c_str());
     }
 
-    void RATGDOComponent::dump_config() {
+    void RATGDOComponent::dump_config()
+    {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         sync();
-
     }
 
     void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
