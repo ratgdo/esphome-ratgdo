@@ -82,7 +82,7 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void transmit(const uint8_t*);
+        void transmit(const char* command);
         void sync();
 
         void obstructionLoop();
