@@ -26,7 +26,7 @@ extern "C" {
 namespace esphome {
 namespace ratgdo {
 
-    class RATGDOComponent;
+    class RATGDOComponent : public Component, public UARTDevice;
 
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
