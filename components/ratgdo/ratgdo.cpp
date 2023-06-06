@@ -421,41 +421,36 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(const uint8_t* payload)
+    void RATGDOComponent::transmit(const char* command)
     {
+        getRollingCode(command);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
         delayMicroseconds(1305);
         this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->write_array(payload, CODE_LENGTH);
+        this->write_array(this->txRollingCode, CODE_LENGTH);
     }
 
     void RATGDOComponent::sync()
     {
-        getRollingCode("reboot1");
-        transmit(this->txRollingCode);
+        transmit("reboot1");
         delay(65);
 
-        getRollingCode("reboot2");
-        transmit(this->txRollingCode);
+        transmit("reboot2");
         delay(65);
 
-        getRollingCode("reboot3");
-        transmit(this->txRollingCode);
+        transmit("reboot3");
         delay(65);
 
-        getRollingCode("reboot4");
-        transmit(this->txRollingCode);
+        transmit("reboot4");
         delay(65);
 
-        getRollingCode("reboot5");
-        transmit(this->txRollingCode);
+        transmit("reboot5");
         delay(65);
 
-        getRollingCode("reboot6");
-        transmit(this->txRollingCode);
+        transmit("reboot6");
         delay(65);
 
         this->pref_.save(&this->rollingCodeCounter);
@@ -490,11 +485,9 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        getRollingCode("door1");
-        transmit(this->txRollingCode);
+        transmit("door1");
         delay(40);
-        getRollingCode("door2");
-        transmit(this->txRollingCode);
+        transmit("door2");
         this->pref_.save(&this->rollingCodeCounter);
     }
 
@@ -547,8 +540,7 @@ namespace ratgdo {
 
     void RATGDOComponent::sendCommand(const char* command)
     {
-        getRollingCode(command);
-        transmit(this->txRollingCode);
+        transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
     }
 
