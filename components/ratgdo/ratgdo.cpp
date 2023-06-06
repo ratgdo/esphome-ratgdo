@@ -13,6 +13,8 @@
 
 #include "ratgdo.h"
 #include "esphome/core/log.h"
+#include "esphome/components/uart/uart.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace ratgdo {
