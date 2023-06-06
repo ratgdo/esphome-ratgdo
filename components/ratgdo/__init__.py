@@ -72,15 +72,10 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_OBST])
     cg.add(var.set_status_obst_pin(pin))
 
-
+    await uart.register_uart_device(var, config)
 
     cg.add_library(
         name="secplus",
         repository="https://github.com/bdraco/secplus",
         version="f98c3220356c27717a25102c0b35815ebbd26ccc",
-    )
-    cg.add_library(
-        name="espsoftwareserial",
-        repository="https://github.com/bdraco/espsoftwareserial",
-        version="2f408224633316b997f82339e5b2731b1e561060",
     )

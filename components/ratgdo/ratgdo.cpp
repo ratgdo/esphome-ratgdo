@@ -121,11 +121,13 @@ namespace ratgdo {
         this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
         this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
 
-        // this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
-        // this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+        this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
+        this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
         this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
-        this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
+        this->check_uart_settings(9600, 1, esphome::uart::UART_CONFIG_PARITY_NONE, 8);
+
+        //this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
         this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
         this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
@@ -304,11 +306,15 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop()
     {
-        if (!this->swSerial.available()) {
+        if (!this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             return;
         }
-        uint8_t serData = this->swSerial.read();
+        uint8_t serData;
+        if (!this->read_byte(&serData)) {
+            ESP_LOGD(TAG, "Failed to read byte");
+            return;
+        }
 
         static uint32_t msgStart;
         static bool reading = false;
@@ -413,7 +419,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(const unsigned char* payload)
+    void RATGDOComponent::transmit(const uint_8t* payload)
     {
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
@@ -421,7 +427,7 @@ namespace ratgdo {
         this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->swSerial.write(payload, CODE_LENGTH);
+        this->write_array(payload, CODE_LENGTH);
     }
 
     void RATGDOComponent::sync()
