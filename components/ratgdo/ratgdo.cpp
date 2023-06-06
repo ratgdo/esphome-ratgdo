@@ -34,7 +34,7 @@ namespace ratgdo {
 		if (!arg->trigger_open.digital_read()) {
 			// save the time of the falling edge
 			lastOpenDoorTime = currentMillis;
-		} else if (currentMillis - arg->lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
+		} else if (currentMillis - lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
 			// now see if the rising edge was between 500ms and 10 seconds after the
 			// falling edge
 			arg->dryContactDoorOpen = true;
@@ -52,7 +52,7 @@ namespace ratgdo {
 		if (!arg->trigger_close.digital_read()) {
 			// save the time of the falling edge
 			lastCloseDoorTime = currentMillis;
-		} else if (currentMillis - arg->lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
+		} else if (currentMillis - lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
 			// now see if the rising edge was between 500ms and 10 seconds after the
 			// falling edge
 			arg->dryContactDoorClose = true;
