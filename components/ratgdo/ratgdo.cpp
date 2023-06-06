@@ -119,8 +119,8 @@ namespace ratgdo {
 		this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
 		this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
 
-        this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
-        this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);        
+        //this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
+        //this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);        
 		this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
