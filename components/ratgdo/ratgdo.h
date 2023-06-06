@@ -18,7 +18,6 @@
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
 
-#include "SoftwareSerial.h"
 extern "C" {
 #include "secplus.h"
 }
