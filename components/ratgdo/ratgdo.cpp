@@ -639,5 +639,11 @@ namespace ratgdo {
         this->pref_.save(&this->rollingCodeCounter);
     }
 
+    void RATGDOComponent::register_child(RATGDOComponent* obj)
+    {
+        this->children_.push_back(obj);
+        obj->set_parent(this);
+    }
+
 } // namespace ratgdo
 } // namespace esphome

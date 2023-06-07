@@ -160,9 +160,12 @@ namespace ratgdo {
         void statusUpdateLoop();
         void readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction);
         void sendCommand(Commands command);
+        /** Register a child component. */
+        void register_child(RATGDOComponent* obj);
 
     protected:
         ESPPreferenceObject pref_;
+        std::vector<RATGDOComponent*> children_;
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
