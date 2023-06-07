@@ -541,7 +541,7 @@ namespace ratgdo {
     void RATGDOComponent::toggleDoor()
     {
         transmit(Commands::DOOR1);
-        delay(40);
+        delay(65);
         transmit(Commands::DOOR2);
         this->pref_.save(&this->rollingCodeCounter);
     }
