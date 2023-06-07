@@ -538,6 +538,7 @@ namespace ratgdo {
     {
         if (this->store_.doorState == DoorState::DOOR_STATE_OPEN || this->store_.doorState == DoorState::DOOR_STATE_OPENING) {
             ESP_LOGD(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
+            sendDoorStatus();
             return;
         }
         toggleDoor();
@@ -547,6 +548,7 @@ namespace ratgdo {
     {
         if (this->store_.doorState == DoorState::DOOR_STATE_CLOSED || this->store_.doorState == DoorState::DOOR_STATE_CLOSING) {
             ESP_LOGD(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
+            sendDoorStatus();
             return;
         }
         toggleDoor();
@@ -558,6 +560,7 @@ namespace ratgdo {
             toggleDoor();
         } else {
             ESP_LOGD(TAG, "The door is not moving.");
+            sendDoorStatus();
         }
     }
 
@@ -572,6 +575,7 @@ namespace ratgdo {
     {
         if (this->store_.lightState == LightState::LIGHT_STATE_ON) {
             ESP_LOGD(TAG, "already on");
+            sendLightStatus();
         } else {
             toggleLight();
         }
@@ -581,6 +585,7 @@ namespace ratgdo {
     {
         if (this->store_.lightState == LightState::LIGHT_STATE_OFF) {
             ESP_LOGD(TAG, "already off");
+            sendLightStatus();
         } else {
             toggleLight();
         }
