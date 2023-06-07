@@ -268,7 +268,7 @@ namespace ratgdo {
         this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
         for (auto* child : this->children_) {
             child->on_rolling_code_change(this->rollingCodeCounter);
-        }        
+        }
     }
 
     void RATGDOComponent::printRollingCode()
