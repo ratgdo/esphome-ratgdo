@@ -2,17 +2,11 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 from esphome.components import number
-from .. import (
-    ratgdo_ns,
-    register_ratgdo_child,
-    RATGDO_CLIENT_SCHMEA
-)
+from .. import ratgdo_ns, register_ratgdo_child, RATGDO_CLIENT_SCHMEA
 
 DEPENDENCIES = ["ratgdo"]
 
-RATGDONumber = ratgdo_ns.class_(
-    "RATGDONumber", number.Number, cg.Component
-)
+RATGDONumber = ratgdo_ns.class_("RATGDONumber", number.Number, cg.Component)
 NumberType = ratgdo_ns.enum("NumberType")
 
 CONF_TYPE = "type"
@@ -21,11 +15,15 @@ TYPES = {
 }
 
 
-CONFIG_SCHEMA = number.number_schema(RATGDONumber).extend(
-    {
-        cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
-    }
-).extend(RATGDO_CLIENT_SCHMEA)
+CONFIG_SCHEMA = (
+    number.number_schema(RATGDONumber)
+    .extend(
+        {
+            cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
+        }
+    )
+    .extend(RATGDO_CLIENT_SCHMEA)
+)
 
 
 async def to_code(config):

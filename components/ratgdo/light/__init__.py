@@ -1,14 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import (
-    CONF_OUTPUT_ID, # New in 2023.5
+    CONF_OUTPUT_ID,  # New in 2023.5
 )
 from esphome.components import light
-from .. import (
-    ratgdo_ns,
-    register_ratgdo_child,
-    RATGDO_CLIENT_SCHMEA
-)
+from .. import ratgdo_ns, register_ratgdo_child, RATGDO_CLIENT_SCHMEA
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -17,7 +13,9 @@ RATGDOLightOutput = ratgdo_ns.class_(
 )
 
 
-CONFIG_SCHEMA = light.LIGHT_SCHEMA.extend({cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}).extend(RATGDO_CLIENT_SCHMEA)
+CONFIG_SCHEMA = light.LIGHT_SCHEMA.extend(
+    {cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}
+).extend(RATGDO_CLIENT_SCHMEA)
 
 
 async def to_code(config):

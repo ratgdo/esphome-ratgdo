@@ -2,11 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 from esphome.components import binary_sensor
-from .. import (
-    ratgdo_ns,
-    register_ratgdo_child,
-    RATGDO_CLIENT_SCHMEA
-)
+from .. import ratgdo_ns, register_ratgdo_child, RATGDO_CLIENT_SCHMEA
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -22,11 +18,15 @@ TYPES = {
 }
 
 
-CONFIG_SCHEMA = binary_sensor.binary_sensor_schema(RATGDOBinarySensor).extend(
-    {
-        cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
-    }
-).extend(RATGDO_CLIENT_SCHMEA)
+CONFIG_SCHEMA = (
+    binary_sensor.binary_sensor_schema(RATGDOBinarySensor)
+    .extend(
+        {
+            cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
+        }
+    )
+    .extend(RATGDO_CLIENT_SCHMEA)
+)
 
 
 async def to_code(config):

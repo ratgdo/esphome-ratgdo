@@ -78,6 +78,7 @@ RATGDO_CLIENT_SCHMEA = cv.Schema(
     }
 )
 
+
 async def register_ratgdo_child(var, config):
     parent = await cg.get_variable(config[CONF_RATGDO_ID])
     cg.add(parent.register_child(var))
