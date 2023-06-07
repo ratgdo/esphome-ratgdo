@@ -245,7 +245,7 @@ namespace ratgdo {
             return;
         }
 
-        ESP_LOGD(TAG, "Command: %d fixed=%" PRIu64 " data=%d rollingCodeCounter=%d", command, fixed, data, this->rollingCodeCounter);
+        ESP_LOGD(TAG, "Command: %d fixed=%" PRIx64 " data=%d rollingCodeCounter=%d", command, fixed, data, this->rollingCodeCounter);
 
         fixed = fixed | id;
 
