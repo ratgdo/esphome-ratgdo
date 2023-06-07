@@ -126,7 +126,7 @@ namespace ratgdo {
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
         this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
-        this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
+        this->check_uart_settings(9600, 1, esphome::uart::UART_CONFIG_PARITY_NONE, 8);
 
         this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
         this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
@@ -345,11 +345,16 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop()
     {
-        if (!this->swSerial.available()) {
+        if (!this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             return;
         }
-        uint8_t serData = this->swSerial.read();
+        uint8_t serData;
+        if (!this->read_byte(&serData)) {
+            ESP_LOGD(TAG, "Failed to read byte");
+            return;
+        }
+
         static uint32_t msgStart;
         static bool reading = false;
         static uint16_t byteCount = 0;
@@ -481,7 +486,7 @@ namespace ratgdo {
         this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->swSerial.write(this->txRollingCode, CODE_LENGTH);
+        this->write_array(this->txRollingCode, CODE_LENGTH);
     }
 
     void RATGDOComponent::sync()

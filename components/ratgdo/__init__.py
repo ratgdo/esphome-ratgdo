@@ -2,13 +2,14 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 from esphome import pins, automation
+from esphome.components import uart
 
-DEPENDENCIES = ["preferences"]
+DEPENDENCIES = ["preferences", "uart"]
 MULTI_CONF = True
 
 
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
-RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
+RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component, uart.UARTDevice)
 
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
@@ -104,13 +105,10 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_OBST])
     cg.add(var.set_status_obst_pin(pin))
 
+    await uart.register_uart_device(var, config)
+
     cg.add_library(
         name="secplus",
         repository="https://github.com/bdraco/secplus",
         version="f98c3220356c27717a25102c0b35815ebbd26ccc",
-    )
-    cg.add_library(
-        name="espsoftwareserial",
-        repository="https://github.com/bdraco/espsoftwareserial",
-        version="2f408224633316b997f82339e5b2731b1e561060",
     )
