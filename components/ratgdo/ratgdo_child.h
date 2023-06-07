@@ -3,12 +3,13 @@
 #include "esphome/core/helpers.h"
 
 #include "ratgdo.h"
+#include "ratgdo_state.h"
+
 namespace esphome {
 namespace ratgdo {
 
     // Forward declare RATGDOComponent
     class RATGDOComponent;
-
 
     class RATGDOClient : public Parented<RATGDOComponent> {
     public:
