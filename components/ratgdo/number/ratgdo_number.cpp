@@ -9,7 +9,7 @@ namespace ratgdo {
 
     void RATGDONumber::dump_config()
     {
-        LOG_BINARY_SENSOR("", "RATGDO Number", this);
+        LOG_NUMBER("", "RATGDO Number", this);
         ESP_LOGCONFIG(TAG, "  Type: Rolling Code Counter");
     }
 
