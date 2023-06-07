@@ -53,7 +53,20 @@ namespace ratgdo {
         traits.set_is_assumed_state(false);
         return traits;
     }
-    void RATGDOCover::control(const CoverCall& call) { }
+    void RATGDOCover::control(const CoverCall& call)
+    {
+        if (call.get_stop()) {
+            this->parent_->stopDoor();
+        }
+        if (call.get_position().has_value()) {
+            auto pos = *call.get_position();
+            if (pos == COVER_OPEN) {
+                this->parent_->openDoor();
+            } else if (pos == COVER_CLOSED) {
+                this->parent_->closeDoor();
+            }
+        }
+    }
 
 } // namespace ratgdo
 } // namespace esphome
