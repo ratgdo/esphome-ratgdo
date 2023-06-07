@@ -430,7 +430,7 @@ namespace ratgdo {
     void RATGDOComponent::sendLightStatus()
     {
         LightState val = static_cast<LightState>(this->store_.lightState);
-        ESP_LOGD(TAG, "Light state %s", light_state_to_string(val));
+        ESP_LOGD(TAG, "Light state %s (%d)", light_state_to_string(val), this->store_.lightState);
         for (auto* child : this->children_) {
             child->on_light_state(val);
         }
