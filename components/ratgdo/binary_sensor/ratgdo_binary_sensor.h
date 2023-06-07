@@ -17,7 +17,7 @@ namespace ratgdo {
     class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
     public:
         void dump_config() override;
-        void set_type(SensorType type) { this->binary_sensor_type_ = type_; }
+        void set_type(SensorType binary_sensor_type_) { this->binary_sensor_type_ = binary_sensor_type_; }
 
         void on_motion_state(MotionState state) override;
         void on_obstruction_state(ObstructionState state) override;
