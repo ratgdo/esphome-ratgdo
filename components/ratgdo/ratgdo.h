@@ -155,11 +155,11 @@ namespace ratgdo {
         void doorStateLoop();
         void dryContactLoop();
         void printRollingCode();
-        void getRollingCode(const char* command);
+        void getRollingCode(Commands command);
         void gdoStateLoop();
         void statusUpdateLoop();
         void readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction);
-        void sendCommand(const char* command);
+        void sendCommand(Commands command);
 
     protected:
         ESPPreferenceObject pref_;
