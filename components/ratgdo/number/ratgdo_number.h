@@ -19,7 +19,7 @@ namespace ratgdo {
         void set_number_type(NumberType number_type_) { this->number_type_ = number_type_; }
 
         void on_rolling_code_change(uint32_t rollingCodeCounter) override;
-        void RATGDONumber::control(float value) override;
+        void control(float value) override;
 
     protected:
         NumberType number_type_;
