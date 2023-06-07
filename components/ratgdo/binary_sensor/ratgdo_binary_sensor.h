@@ -9,19 +9,21 @@
 namespace esphome {
 namespace ratgdo {
 
+enum SensorType {
+  RATGDO_SENSOR_MOTION,
+  RATGDO_SENSOR_OBSTRUCTION,
+};
+
 class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
  public:
   void dump_config() override;
-  void set_type(const char *) { this->type_ = type_; }
+  void set_type(SensorType type) { type_ = type_; }
 
-  void on_door_state(esphome::ratgdo::DoorState state) override;
-  void on_light_state(esphome::ratgdo::LightState state) override;
-  void on_lock_state(esphome::ratgdo::LockState state) override;
   void on_motion_state(esphome::ratgdo::MotionState state) override;
   void on_obstruction_state(esphome::ratgdo::ObstructionState state) override;
 
   protected:
-   const char *type_;
+   SensorType type_;
 
 };
 

@@ -13,14 +13,18 @@ DEPENDENCIES = ["ratgdo"]
 RATGDOBinarySensor = ratgdo_ns.class_(
     "RATGDOBinarySensor", binary_sensor.BinarySensor, cg.Component
 )
+SensorType = ratgdo_ns.enum("SensorType")
 
 CONF_TYPE = "type"
-TYPES = {"motion", "obstruction"}
+TYPES = {
+    "motion": SensorType.RATGDO_SENSOR_MOTION,
+    "obstruction": SensorType.RATGDO_SENSOR_OBSTRUCTION,
+}
 
 
 CONFIG_SCHEMA = binary_sensor.binary_sensor_schema(RATGDOBinarySensor).extend(
     {
-        cv.Required(CONF_TYPE): str
+        cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
     }
 ).extend(RATGDO_CLIENT_SCHMEA)
 
@@ -29,5 +33,5 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await binary_sensor.register_binary_sensor(var, config)
     await cg.register_component(var, config)
-    await register_ratgdo_child(var, config)
     cg.add(var.set_type(var, config[CONF_TYPE]))
+    await register_ratgdo_child(var, config)
