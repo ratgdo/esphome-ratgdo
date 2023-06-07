@@ -13,7 +13,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Type: Sync");
     }
 
-    void RATGDOButton::control(float value)
+    void RATGDOButton::press_action()
     {
         ESP_LOGD(TAG, "name: %s this->type_:%d", this->get_name(), this->button_type_);
         this->parent_->sync();
