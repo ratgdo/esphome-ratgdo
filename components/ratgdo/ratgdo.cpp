@@ -85,10 +85,8 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
         if (arg->input_obst.digital_read()) {
-            // ESP_LOGD(TAG, "isrObstruction HIGH");
             arg->lastObstructionHigh = millis();
         } else {
-            // ESP_LOGD(TAG, "isrObstruction LOW");
             arg->obstructionLowCount++;
         }
     }
@@ -141,12 +139,10 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        // ESP_LOGD(TAG, "loop rollingCodeCounter: %d", this->rollingCodeCounter);
         obstructionLoop();
         gdoStateLoop();
         dryContactLoop();
         statusUpdateLoop();
-        // ESP_LOGD(TAG, "Door State: %s", this->doorState.c_str());
     }
 
     void RATGDOComponent::dump_config()
