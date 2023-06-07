@@ -9,8 +9,7 @@ static const char *const TAG = "ratgdo.binary_sensor";
 
 void RATGDOBinarySensor::dump_config() {
   LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
-  ESP_LOGCONFIG("  Type: %s", this->type_);
-
+  ESP_LOGCONFIG(TAG, "  Type: %s", this->type_ == SensorType::RATGDO_SENSOR_MOTION ? "Motion" : "Obstruction");
 }
 void RATGDOBinarySensor::on_motion_state(esphome::ratgdo::MotionState state) {
   if (this->type_ == SensorType::RATGDO_SENSOR_MOTION)
