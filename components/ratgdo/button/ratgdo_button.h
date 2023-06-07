@@ -18,7 +18,7 @@ namespace ratgdo {
         void dump_config() override;
         void set_button_type(ButtonType button_type_) { this->button_type_ = button_type_; }
 
-        void control(float value) override;
+        void control() override;
 
     protected:
         ButtonType button_type_;
