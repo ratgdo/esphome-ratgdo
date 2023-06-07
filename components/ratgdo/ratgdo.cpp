@@ -82,8 +82,8 @@ namespace ratgdo {
         switch (state) {
         case OBSTRUCTION_STATE_CLEAR:
             return "CLEAR";
-        case OBSTRUCTION_STATE_DETECTED:
-            return "DETECTED";
+        case OBSTRUCTION_STATE_OBSTRUCTED:
+            return "OBSTRUCTED";
         case OBSTRUCTION_STATE_UNKNOWN:
         default:
             return "UNKNOWN";
