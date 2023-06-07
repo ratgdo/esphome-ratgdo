@@ -12,7 +12,7 @@ namespace ratgdo {
 class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
  public:
   void dump_config() override;
-  void set_type(const std::string &type_) { this->type_ = type_; }
+  void set_type(const char *) { this->type_ = type_; }
 
   void on_door_state(esphome::ratgdo::DoorState state) override;
   void on_light_state(esphome::ratgdo::LightState state) override;
@@ -21,7 +21,7 @@ class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClie
   void on_obstruction_state(esphome::ratgdo::ObstructionState state) override;
 
   protected:
-   std::string type_;
+   const char *type_;
 
 };
 
