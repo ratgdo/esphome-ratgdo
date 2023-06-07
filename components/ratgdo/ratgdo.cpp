@@ -505,10 +505,8 @@ namespace ratgdo {
         transmit(Commands::REBOOT5);
         delay(65);
 
-        transmit(Commands::REBOOT6);
+        sendCommandAndSaveCounter(Commands::REBOOT6);
         delay(65);
-
-        this->pref_.save(&this->rollingCodeCounter);
     }
 
     void RATGDOComponent::openDoor()
@@ -541,9 +539,8 @@ namespace ratgdo {
     void RATGDOComponent::toggleDoor()
     {
         transmit(Commands::DOOR1);
-        delay(65);
-        transmit(Commands::DOOR2);
-        this->pref_.save(&this->rollingCodeCounter);
+        delay(40);
+        sendCommandAndSaveCounter(Commands::DOOR2);
     }
 
     void RATGDOComponent::lightOn()
@@ -566,7 +563,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLight()
     {
-        sendCommand(Commands::LIGHT);
+        sendCommandAndSaveCounter(Commands::LIGHT);
     }
 
     // Lock functions
@@ -590,10 +587,10 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommand(Commands::LOCK);
+        sendCommandAndSaveCounter(Commands::LOCK);
     }
 
-    void RATGDOComponent::sendCommand(Commands command)
+    void RATGDOComponent::sendCommandAndSaveCounter(Commands command)
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
