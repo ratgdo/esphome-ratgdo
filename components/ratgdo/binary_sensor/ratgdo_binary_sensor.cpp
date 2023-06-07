@@ -10,7 +10,7 @@ namespace ratgdo {
     void RATGDOBinarySensor::setup()
     {
         if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION)
-            this->publish_state(state == MotionState::MOTION_STATE_CLEAR);        
+            this->publish_state(state == MotionState::MOTION_STATE_CLEAR);
     }
 
     void RATGDOBinarySensor::dump_config()
