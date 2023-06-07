@@ -9,6 +9,8 @@ static const char *const TAG = "ratgdo.binary_sensor";
 
 void RATGDOBinarySensor::dump_config() {
   LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
+  LOG_PIN("  Type: ", this->type_);
+
 }
 
 void RATGDOBinarySensor::on_door_state(esphome::ratgdo::DoorState state) {}
