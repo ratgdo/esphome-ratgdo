@@ -2,8 +2,6 @@
 #include "esphome/core/log.h"
 #include "../ratgdo_state.h"
 
-#ifdef USE_ESP32
-
 namespace esphome {
 namespace ratgdo {
 
@@ -23,4 +21,3 @@ void on_obstruction_state(esphome::ratgdo::ObstructionState state) {}
 }  // namespace ratgdo
 }  // namespace esphome
 
-#endif
