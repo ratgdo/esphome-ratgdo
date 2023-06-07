@@ -33,6 +33,7 @@ namespace ratgdo {
             this->current_operation = COVER_OPERATION_CLOSING;
             break;
         case DoorState::DOOR_STATE_STOPPED:
+            this->position = COVER_OPEN;
         default:
             this->current_operation = COVER_OPERATION_IDLE;
 
