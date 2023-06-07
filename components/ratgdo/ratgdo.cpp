@@ -46,7 +46,7 @@ namespace ratgdo {
             return "OFF";
         case LIGHT_STATE_ON:
             return "ON";
-        case IGHT_STATE_UNKNOWN:
+        case LIGHT_STATE_UNKNOWN:
         default:
             return "UNKNOWN";
         }
