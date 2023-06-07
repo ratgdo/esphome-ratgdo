@@ -25,7 +25,6 @@ namespace ratgdo {
         traits.set_supported_color_modes({ light::ColorMode::ON_OFF });
         return traits;
     }
-    LightState* RATGDOLightOutput::get_state() { return this->state_; }
 
     void RATGDOLightOutput::write_state(light::LightState* state)
     {
