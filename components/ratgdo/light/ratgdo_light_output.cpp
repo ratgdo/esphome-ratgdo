@@ -1,6 +1,6 @@
+#include "ratgdo_light_output.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
-#include "ratgdo_light_output.h"
 
 namespace esphome {
 namespace ratgdo {
