@@ -1,8 +1,11 @@
 import esphome.codegen as cg
 from esphome.const import CONF_ID
+import esphome.config_validation as cv
+
 from esphome.components import cover
 from .. import (
     ratgdo_ns,
+    RATGDO,
     register_ratgdo_child,
     RATGDO_CLIENT_SCHMEA
 )
@@ -14,7 +17,7 @@ RATGDOCover = ratgdo_ns.class_(
 )
 
 
-CONFIG_SCHEMA = cover.COVER_SCHEMA.extend(RATGDO_CLIENT_SCHMEA)
+CONFIG_SCHEMA = cover.COVER_SCHEMA.extend({cv.GenerateID(RATGDO): cv.declare_id()}).extend(RATGDO_CLIENT_SCHMEA)
 
 
 async def to_code(config):
