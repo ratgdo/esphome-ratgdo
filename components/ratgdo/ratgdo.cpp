@@ -473,6 +473,7 @@ namespace ratgdo {
         if (this->store_.motionState == MotionState::MOTION_STATE_DETECTED) {
             sendMotionStatus();
             this->store_.motionState = MotionState::MOTION_STATE_CLEAR;
+            sendMotionStatus();
         }
 
         previousDoorState = this->store_.doorState;
@@ -515,10 +516,6 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
         for (auto* child : this->children_) {
             child->on_motion_state(val);
-        }
-        this->store_.motionState = MotionState::MOTION_STATE_CLEAR; // reset motion state
-        for (auto* child : this->children_) {
-            child->on_motion_state(MotionState::MOTION_STATE_CLEAR);
         }
     }
 
