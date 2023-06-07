@@ -24,7 +24,7 @@ namespace ratgdo {
     }
     void RATGDOBinarySensor::on_door_state(DoorState state) { }
     void RATGDOBinarySensor::on_light_state(LightState state) { }
-    void RATGDOBinarySensor::on_lock_state(:LockState state) { }
+    void RATGDOBinarySensor::on_lock_state(LockState state) { }
 
 } // namespace ratgdo
 } // namespace esphome
