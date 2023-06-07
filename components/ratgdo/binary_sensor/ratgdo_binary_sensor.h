@@ -14,7 +14,6 @@ namespace ratgdo {
 class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
  public:
   void setup() override;
-  void loop() override;
   void dump_config() override;
 
   void on_door_state(esphome::ratgdo::DoorState state) override;
