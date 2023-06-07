@@ -11,7 +11,7 @@ namespace ratgdo {
 
     void RATGDOLightOutput::dump_config()
     {
-        LOG_CONFIG("", "RATGDO Light");
+        ESPLOG_CONFIG("", "RATGDO Light");
     }
     void RATGDOLightOutput::on_motion_state(esphome::ratgdo::MotionState state) { }
     void RATGDOLightOutput::on_obstruction_state(esphome::ratgdo::ObstructionState state) { }
