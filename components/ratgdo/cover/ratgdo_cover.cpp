@@ -1,6 +1,6 @@
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
-#include "ratgdo_binary_sensor.h"
+#include "ratgdo_cover.h"
 
 namespace esphome {
 namespace ratgdo {
