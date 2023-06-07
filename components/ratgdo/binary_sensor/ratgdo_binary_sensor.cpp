@@ -7,7 +7,7 @@ namespace ratgdo {
 
 static const char *const TAG = "ratgdo.binary_sensor";
 
-class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
+class RATGDOBinarySensor :  {
 void dump_config() {
   LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
 }
