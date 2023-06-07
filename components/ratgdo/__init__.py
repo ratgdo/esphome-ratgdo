@@ -36,7 +36,7 @@ CONF_STATUS_OBST = "status_obst_pin"
 DEFAULT_STATUS_OBST = (
     15  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
 )
-
+CONF_RATGDO_ID = "ratgdo_id"
 
 CONFIG_SCHEMA = (
     cv.Schema(
@@ -72,9 +72,14 @@ CONFIG_SCHEMA = (
     .extend(uart.UART_DEVICE_SCHEMA)
 )
 
+RATGDO_CLIENT_SCHMEA = cv.Schema(
+    {
+        cv.Required(CONF_RATGDO_ID): cv.use_id(RATGDO),
+    }
+)
 
 async def register_ratgdo_child(var, config):
-    parent = cv.use_id(RATGDO)
+    parent = await cg.get_variable(config[CONF_RATGDO_ID])
     cg.add(parent.register_child(var))
 
 
