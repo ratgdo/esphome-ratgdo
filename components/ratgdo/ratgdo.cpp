@@ -82,10 +82,10 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
         if (arg->input_obst.digital_read()) {
-            ESP_LOGD(TAG, "isrObstruction HIGH");
+            //ESP_LOGD(TAG, "isrObstruction HIGH");
             arg->lastObstructionHigh = millis();
         } else {
-            ESP_LOGD(TAG, "isrObstruction LOW");
+            //ESP_LOGD(TAG, "isrObstruction LOW");
             arg->obstructionLowCount++;
         }
     }
