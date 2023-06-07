@@ -21,6 +21,9 @@ namespace ratgdo {
 
         void on_motion_state(esphome::ratgdo::MotionState state) override;
         void on_obstruction_state(esphome::ratgdo::ObstructionState state) override;
+        void on_door_state(esphome::ratgdo::DoorState state) override;
+        void on_light_state(esphome::ratgdo::LightState state) override;
+        void on_lock_state(esphome::ratgdo::LockState state) override;
 
     protected:
         SensorType type_;
