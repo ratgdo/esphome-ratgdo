@@ -248,6 +248,8 @@ namespace ratgdo {
             return;
         }
 
+        ESP_LOGD(TAG, "Command: %d fixed=%d data=%d rollingCodeCounter=%d", command, fixed, data, this->rollingCodeCounter);
+
         fixed = fixed | id;
 
         encode_wireline(this->rollingCodeCounter, fixed, data, this->txRollingCode);
