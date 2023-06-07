@@ -495,7 +495,7 @@ namespace ratgdo {
     {
         LightState val = static_cast<LightState>(this->store_.lightState);
         ESP_LOGD(TAG, "Light state %s", light_state_to_string(val));
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_light_state(val);
         }
     }
@@ -504,7 +504,7 @@ namespace ratgdo {
     {
         LockState val = static_cast<LockState>(this->store_.lockState);
         ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(val));
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_lock_state(val);
         }
     }
@@ -513,20 +513,20 @@ namespace ratgdo {
     {
         MotionState val = static_cast<MotionState>(this->store_.motionState);
         ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_motion_state(val);
         }
         this->store_.motionState = MotionState::MOTION_STATE_CLEAR; // reset motion state
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_motion_state(MotionState::MOTION_STATE_CLEAR);
-        }        
+        }
     }
 
     void RATGDOComponent::sendObstructionStatus()
     {
         ObstructionState val = static_cast<ObstructionState>(this->store_.obstructionState);
         ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_obstruction_state(val);
         }
         this->status_obst_pin_->digital_write(this->store_.obstructionState == 0);
