@@ -5,19 +5,18 @@
 namespace esphome {
 namespace ratgdo {
 
-// Forward declare RATGDOComponent
-class RATGDOComponent;
+    // Forward declare RATGDOComponent
+    class RATGDOComponent;
 
-class RATGDOClient : public Parented<RATGDOComponent> {
- public:
-  virtual void on_status() = 0;
-  virtual void on_ratgdo_state(bool is_ready) = 0;
+    class RATGDOClient : public Parented<RATGDOComponent> {
+    public:
+        virtual void on_status() = 0;
+        virtual void on_ratgdo_state(bool is_ready) = 0;
 
- protected:
-  friend RATGDOComponent;
-  virtual std::string describe() = 0;
-};
+    protected:
+        friend RATGDOComponent;
+        virtual std::string describe() = 0;
+    };
 
-}  // namespace ratgdo
-}  // namespace esphome
-
+} // namespace ratgdo
+} // namespace esphome

@@ -12,6 +12,8 @@
  ************************************/
 
 #include "ratgdo.h"
+#include "ratgdo_child.h"
+
 #include "esphome/core/log.h"
 
 namespace esphome {

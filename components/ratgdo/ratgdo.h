@@ -22,6 +22,7 @@ extern "C" {
 #include "secplus.h"
 }
 
+#include "ratgdo_child.h"
 #define CODE_LENGTH 19
 
 namespace esphome {
