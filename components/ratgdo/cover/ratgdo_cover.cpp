@@ -49,6 +49,7 @@ namespace ratgdo {
         traits.set_is_assumed_state(false);
         return traits;
     }
+    void RATGDOCover::control(const CoverCall& call) { }
 
 } // namespace ratgdo
 } // namespace esphome

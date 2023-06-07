@@ -20,8 +20,8 @@ namespace ratgdo {
         void on_light_state(esphome::ratgdo::LightState state) override;
         void on_lock_state(esphome::ratgdo::LockState state) override;
 
-        // protected:
-        // void control(const cover::CoverCall &call) override;
+    protected:
+        void control(const cover::CoverCall& call) override;
     };
 
 } // namespace ratgdo
