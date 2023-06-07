@@ -59,3 +59,9 @@ button:
   - platform: restart
     name: "${friendly_name} Restart"
 
+  - platform: ratgdo
+    id: ${id_prefix}_sync
+    type: sync
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Sync"
