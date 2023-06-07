@@ -480,34 +480,29 @@ namespace ratgdo {
 
     void RATGDOComponent::sendDoorStatus()
     {
-        DoorState val = static_cast<DoorState>(this->store_.doorState);
-        ESP_LOGD(TAG, "Door state: %s", door_state_to_string(val));
+        ESP_LOGD(TAG, "Door state: %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
         this->status_door_pin_->digital_write(this->store_.doorState == 1);
     }
 
     void RATGDOComponent::sendLightStatus()
     {
-        LightState val = static_cast<LightState>(this->store_.lightState);
-        ESP_LOGD(TAG, "Light state %s", light_state_to_string(val));
+        ESP_LOGD(TAG, "Light state %s", light_state_to_string(static_cast<LightState>(this->store_.lightState)));
     }
 
     void RATGDOComponent::sendLockStatus()
     {
-        LockState val = static_cast<LockState>(this->store_.lockState);
-        ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(val));
+        ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(static_cast<LockState>(this->store_.lockState)));
     }
 
     void RATGDOComponent::sendMotionStatus()
     {
-        MotionState val = static_cast<MotionState>(this->store_.motionState);
-        ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
+        ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(static_cast<MotionState>(this->store_.motionState)));
         this->store_.motionState = MotionState::MOTION_STATE_CLEAR; // reset motion state
     }
 
     void RATGDOComponent::sendObstructionStatus()
     {
-        ObstructionState val = static_cast<ObstructionState>(this->store_.obstructionState);
-        ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
+        ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(static_cast<ObstructionState>(this->store_.obstructionState)));
         this->status_obst_pin_->digital_write(this->store_.obstructionState == 0);
     }
 
@@ -558,8 +553,7 @@ namespace ratgdo {
     void RATGDOComponent::openDoor()
     {
         if (this->store_.doorState == DoorState::DOOR_STATE_OPEN || this->store_.doorState == DoorState::DOOR_STATE_OPENING) {
-            DoorState val = static_cast<DoorState>(this->store_.doorState);
-            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(val));
+            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
             return;
         }
         toggleDoor();
@@ -568,8 +562,7 @@ namespace ratgdo {
     void RATGDOComponent::closeDoor()
     {
         if (this->store_.doorState == DoorState::DOOR_STATE_CLOSED || this->store_.doorState == DoorState::DOOR_STATE_CLOSING) {
-            DoorState val = static_cast<DoorState>(this->store_.doorState);
-            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(val));
+            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
             return;
         }
         toggleDoor();
