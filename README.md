@@ -1,12 +1,7 @@
-# This is an attempt to make the ratgdo shield + D1 clone work with ESPHome
 
 # ratgdo
 
-ratgdo gives you **local** MQTT & dry contact control plus status feedback for your Chamberlain/LiftMaster Security+ 2.0 garage door opener. Security+ 2.0 uses an encrypted serial signal to control the door opener's open/close and light functions, which makes it impossible to use Shelly One, Go Control, Insteon I/O linc or any other dry contact relay device to control the door. 
-
-ratgdo is a hardware shield (circuit board) & firmware for the ESP8266 based Wemos D1 Mini development board that wires to your door opener's terminals and restores dry contact control. It also allows you to control the door with MQTT over your local WiFi network which can be used to integrate directly with NodeRED or Home Assistant, eliminating the need for another "smart" device. WiFi is **not** required if you wish to only use the dry contact interface.
-
-ratgdo is *not* a cloud device and does *not* require a subscription service. The firmware is open source and free for anyone to use.
+This is a port of the ratgdo software for the v2 board to esphome.
 
 > **ratgdo shields available to order**
 > Shields are available and shipping domestic USA via USPS.
@@ -17,6 +12,90 @@ ratgdo is *not* a cloud device and does *not* require a subscription service. Th
 # [Visit the github.io page for instructions](https://paulwieland.github.io/ratgdo/).
 [ratgdo on GitHub.io](https://paulwieland.github.io/ratgdo/)
 
-# Special thanks
+# ESPHome config
 
-Special thanks to kosibar, Brad and TechJunkie01 - without whom this project would not have been possible.
+```yaml
+---
+substitutions:
+  id_prefix: ratgdo
+  friendly_name: "Garage"
+  wifi_ssid: <FILL IN SSID>
+  wifi_password: <FILL IN PASSWORD>
+
+esphome:
+  name: ${id_prefix}
+  platform: ESP8266
+  board: esp01_1m
+
+api:
+  id: api_server
+
+web_server:
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/bdraco/esphome-ratgdo
+    refresh: 1s
+
+ratgdo:
+  id: ${id_prefix}
+
+binary_sensor:
+  - platform: ratgdo
+    type: motion
+    id: ${id_prefix}_motion
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Motion"
+    device_class: motion
+  - platform: ratgdo
+    type: obstruction
+    id: ${id_prefix}_obstruction
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Obstruction"
+    device_class: problem
+
+cover:
+  - platform: ratgdo
+    id: ratgdo_garage
+    device_class: garage
+    name: ${friendly_name}
+    ratgdo_id: ${id_prefix}
+
+
+light:
+  - platform: ratgdo
+    id: ratgdo_light
+    name: "${friendly_name} Light"
+    ratgdo_id: ${id_prefix}
+
+uart:
+  tx_pin: 
+      number: 2
+      inverted: true
+  rx_pin:
+      number: 4
+      inverted: true
+  baud_rate: 9600
+
+wifi:
+  ssid: ${wifi_ssid}
+  password: ${wifi_password}
+
+
+logger:
+  level: VERBOSE
+
+ota:
+
+button:
+  - platform: restart
+    name: "${friendly_name} Restart"
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+
+```
