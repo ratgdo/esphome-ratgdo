@@ -12,18 +12,10 @@
  ************************************/
 
 #pragma once
-#include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
-
-extern "C" {
-#include "secplus.h"
-}
-
-#include "ratgdo_child.h"
-#define CODE_LENGTH 19
 
 namespace esphome {
 namespace ratgdo {
