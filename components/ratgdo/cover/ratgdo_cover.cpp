@@ -13,8 +13,6 @@ namespace ratgdo {
     {
         LOG_COVER("", "RATGDO Cover", this);
     }
-    void RATGDOCover::on_motion_state(MotionState state) { }
-    void RATGDOCover::on_obstruction_state(ObstructionState state) { }
     void RATGDOCover::on_door_state(DoorState state)
     {
         switch (state) {
@@ -42,8 +40,6 @@ namespace ratgdo {
 
         this->publish_state();
     }
-    void RATGDOCover::on_light_state(LightState state) { }
-    void RATGDOCover::on_lock_state(LockState state) { }
 
     CoverTraits RATGDOCover::get_traits()
     {

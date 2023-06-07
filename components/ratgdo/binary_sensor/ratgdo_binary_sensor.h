@@ -22,9 +22,6 @@ namespace ratgdo {
 
         void on_motion_state(MotionState state) override;
         void on_obstruction_state(ObstructionState state) override;
-        void on_door_state(DoorState state) override;
-        void on_light_state(LightState state) override;
-        void on_lock_state(LockState state) override;
 
     protected:
         SensorType binary_sensor_type_;

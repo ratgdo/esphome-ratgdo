@@ -30,9 +30,7 @@ namespace ratgdo {
         if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_OBSTRUCTION)
             this->publish_state(state == ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED);
     }
-    void RATGDOBinarySensor::on_door_state(DoorState state) { }
-    void RATGDOBinarySensor::on_light_state(LightState state) { }
-    void RATGDOBinarySensor::on_lock_state(LockState state) { }
+
 
 } // namespace ratgdo
 } // namespace esphome
