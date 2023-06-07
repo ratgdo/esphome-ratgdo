@@ -17,7 +17,7 @@ RATGDOCover = ratgdo_ns.class_(
 )
 
 
-CONFIG_SCHEMA = cover.COVER_SCHEMA.extend({cv.GenerateID(RATGDO): cv.declare_id()}).extend(RATGDO_CLIENT_SCHMEA)
+CONFIG_SCHEMA = cover.COVER_SCHEMA.extend({cv.GenerateID(): cv.declare_id(RATGDO)}).extend(RATGDO_CLIENT_SCHMEA)
 
 
 async def to_code(config):
