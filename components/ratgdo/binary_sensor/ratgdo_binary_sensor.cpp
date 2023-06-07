@@ -7,6 +7,12 @@ namespace ratgdo {
 
     static const char* const TAG = "ratgdo.binary_sensor";
 
+    void RATGDOBinarySensor::setup()
+    {
+        if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION)
+            this->publish_state(state == MotionState::MOTION_STATE_CLEAR);        
+    }
+
     void RATGDOBinarySensor::dump_config()
     {
         LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
