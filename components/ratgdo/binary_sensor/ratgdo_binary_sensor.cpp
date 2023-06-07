@@ -31,6 +31,5 @@ namespace ratgdo {
             this->publish_state(state == ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED);
     }
 
-
 } // namespace ratgdo
 } // namespace esphome

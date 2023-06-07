@@ -15,7 +15,6 @@ namespace ratgdo {
         cover::CoverTraits get_traits() override;
         void on_door_state(DoorState state) override;
 
-
     protected:
         void control(const cover::CoverCall& call) override;
     };
