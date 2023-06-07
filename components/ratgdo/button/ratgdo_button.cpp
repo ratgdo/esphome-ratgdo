@@ -9,7 +9,7 @@ namespace ratgdo {
 
     void RATGDOButton::dump_config()
     {
-        LOG_NUMBER("", "RATGDO Button", this);
+        LOG_BUTTON("", "RATGDO Button", this);
         ESP_LOGCONFIG(TAG, "  Type: Sync");
     }
 
