@@ -18,9 +18,8 @@ CONF_TYPE = "type"
 TYPES = {"motion", "obstruction"}
 
 
-CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
+CONFIG_SCHEMA = binary_sensor.binary_sensor_schema(RATGDOBinarySensor).extend(
     {
-        cv.GenerateID(): cv.declare_id(RATGDOBinarySensor),
         cv.Required(CONF_TYPE): str
     }
 ).extend(RATGDO_CLIENT_SCHMEA)
@@ -28,6 +27,6 @@ CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    await cg.register_component(var, config)
     await binary_sensor.register_binary_sensor(var, config)
+    await cg.register_component(var, config)
     await register_ratgdo_child(var, config)
