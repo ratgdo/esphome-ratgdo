@@ -1,11 +1,11 @@
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
-#include "ratgdo_cover.h"
+#include "ratgdo_light_output.h"
 
 namespace esphome {
 namespace ratgdo {
 
-    using namespace esphome::cover;
+    using namespace esphome::light;
 
     static const char* const TAG = "ratgdo.light";
 
