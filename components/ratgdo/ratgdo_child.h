@@ -21,7 +21,6 @@ namespace ratgdo {
 
     protected:
         friend RATGDOComponent;
-        virtual std::string describe() = 0;
     };
 
 } // namespace ratgdo
