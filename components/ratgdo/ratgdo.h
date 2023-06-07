@@ -12,11 +12,11 @@
  ************************************/
 
 #pragma once
-#include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
+#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 
 extern "C" {
 #include "secplus.h"
@@ -79,6 +79,8 @@ namespace ratgdo {
         /********************************** GLOBAL VARS
          * *****************************************/
         uint32_t rollingCodeCounter;
+        EspSoftwareSerial::UART swSerial;
+
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
 
