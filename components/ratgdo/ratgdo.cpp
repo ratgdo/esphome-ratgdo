@@ -408,7 +408,6 @@ namespace ratgdo {
         if (this->store_.motionState == MotionState::MOTION_STATE_DETECTED) {
             sendMotionStatus();
             this->store_.motionState = MotionState::MOTION_STATE_CLEAR;
-            sendMotionStatus();
         }
 
         previousDoorState = this->store_.doorState;
