@@ -8,6 +8,12 @@ namespace ratgdo {
 
     // Forward declare RATGDOComponent
     class RATGDOComponent;
+    // Forward declare enums
+    enum DoorState;
+    enum LightState;
+    enum LockState;
+    enum MotionState;
+    enum ObstructionState;
 
     class RATGDOClient : public Parented<RATGDOComponent> {
     public:
