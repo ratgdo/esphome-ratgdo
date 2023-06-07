@@ -483,29 +483,52 @@ namespace ratgdo {
 
     void RATGDOComponent::sendDoorStatus()
     {
-        ESP_LOGD(TAG, "Door state: %s", door_state_to_string(static_cast<DoorState>(this->store_.doorState)));
+        DoorState val = static_cast<DoorState>(this->store_.doorState);
+        ESP_LOGD(TAG, "Door state: %s", door_state_to_string(val);
         this->status_door_pin_->digital_write(this->store_.doorState == 1);
+        for (auto *child : this->children_) {
+            child->on_door_state(val);
+        }
     }
 
     void RATGDOComponent::sendLightStatus()
     {
-        ESP_LOGD(TAG, "Light state %s", light_state_to_string(static_cast<LightState>(this->store_.lightState)));
+        LightState val = static_cast<LightState>(this->store_.lightState);
+        ESP_LOGD(TAG, "Light state %s", light_state_to_string(val));
+        for (auto *child : this->children_) {
+            child->on_light_state(val);
+        }
     }
 
     void RATGDOComponent::sendLockStatus()
     {
-        ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(static_cast<LockState>(this->store_.lockState)));
+        LockState val = static_cast<LockState>(this->store_.lockState);
+        ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(val));
+        for (auto *child : this->children_) {
+            child->on_lock_state(val);
+        }
     }
 
     void RATGDOComponent::sendMotionStatus()
     {
-        ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(static_cast<MotionState>(this->store_.motionState)));
+        MotionState val = static_cast<MotionState>(this->store_.motionState);
+        ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
+        for (auto *child : this->children_) {
+            child->on_motion_state(val);
+        }
         this->store_.motionState = MotionState::MOTION_STATE_CLEAR; // reset motion state
+        for (auto *child : this->children_) {
+            child->on_motion_state(MotionState::MOTION_STATE_CLEAR);
+        }        
     }
 
     void RATGDOComponent::sendObstructionStatus()
     {
-        ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(static_cast<ObstructionState>(this->store_.obstructionState)));
+        ObstructionState val = static_cast<ObstructionState>(this->store_.obstructionState);
+        ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
+        for (auto *child : this->children_) {
+            child->on_obstruction_state(val);
+        }
         this->status_obst_pin_->digital_write(this->store_.obstructionState == 0);
     }
 
