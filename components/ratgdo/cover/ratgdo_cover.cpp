@@ -1,6 +1,6 @@
+#include "ratgdo_cover.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
-#include "ratgdo_cover.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -17,16 +17,23 @@ namespace ratgdo {
     void RATGDOCover::on_obstruction_state(esphome::ratgdo::ObstructionState state) { }
     void RATGDOCover::on_door_state(esphome::ratgdo::DoorState state)
     {
-
-        if (state == esphome::ratgdo::DoorState::DOOR_STATE_OPEN)
+        switch (state) {
+        case esphome::ratgdo::DoorState::DOOR_STATE_OPEN:
             this->position = COVER_OPEN;
-        this->current_operation = COVER_OPERATION_IDLE;
-        else if (state == esphome::ratgdo::DoorState::DOOR_STATE_CLOSED) this->position = COVER_CLOSED;
-        this->current_operation = COVER_OPERATION_IDLE;
-        else if (state == esphome::ratgdo::DoorState::DOOR_STATE_OPENING) this->current_operation = COVER_OPERATION_OPENING;
-        else if (state == esphome::ratgdo::DoorState::DOOR_STATE_CLOSING) this->current_operation = COVER_OPERATION_CLOSING;
-        else if (state == esphome::ratgdo::DoorState::DOOR_STATE_STOPPED) this->current_operation = COVER_OPERATION_IDLE;
-        else this->current_operation = COVER_OPERATION_IDLE;
+            this->current_operation = COVER_OPERATION_IDLE;
+        case esphome::ratgdo::DoorState::DOOR_STATE_CLOSED:
+            this->position = COVER_CLOSED;
+            this->current_operation = COVER_OPERATION_IDLE;
+        case esphome::ratgdo::DoorState::DOOR_STATE_OPENING:
+            this->current_operation = COVER_OPERATION_OPENING;
+        case esphome::ratgdo::DoorState::DOOR_STATE_CLOSING:
+            this->current_operation = COVER_OPERATION_CLOSING;
+        case esphome::ratgdo::DoorState::DOOR_STATE_STOPPED:
+        default:
+            this->current_operation = COVER_OPERATION_IDLE;
+
+            break;
+        }
 
         this->publish_state();
     }
