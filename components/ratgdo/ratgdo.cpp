@@ -156,6 +156,7 @@ namespace ratgdo {
         LOG_PIN("  Trigger Light Pin: ", this->trigger_light_pin_);
         LOG_PIN("  Status Door Pin: ", this->status_door_pin_);
         LOG_PIN("  Status Obstruction Pin: ", this->status_obst_pin_);
+        sync();
     }
 
     void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
