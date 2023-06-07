@@ -13,11 +13,11 @@ namespace ratgdo {
     {
         ESP_LOGCONFIG("", "RATGDO Light");
     }
-    void RATGDOLightOutput::on_motion_state(esphome::ratgdo::MotionState state) { }
-    void RATGDOLightOutput::on_obstruction_state(esphome::ratgdo::ObstructionState state) { }
-    void RATGDOLightOutput::on_door_state(esphome::ratgdo::DoorState state) { }
-    void RATGDOLightOutput::on_light_state(esphome::ratgdo::LightState state) { }
-    void RATGDOLightOutput::on_lock_state(esphome::ratgdo::LockState state) { }
+    void RATGDOLightOutput::on_motion_state(MotionState state) { }
+    void RATGDOLightOutput::on_obstruction_state(ObstructionState state) { }
+    void RATGDOLightOutput::on_door_state(DoorState state) { }
+    void RATGDOLightOutput::on_light_state(LightState state) { }
+    void RATGDOLightOutput::on_lock_state(LockState state) { }
 
     LightTraits RATGDOLightOutput::get_traits()
     {

@@ -19,11 +19,11 @@ namespace ratgdo {
         void dump_config() override;
         void set_type(SensorType type) { type_ = type_; }
 
-        void on_motion_state(esphome::ratgdo::MotionState state) override;
-        void on_obstruction_state(esphome::ratgdo::ObstructionState state) override;
-        void on_door_state(esphome::ratgdo::DoorState state) override;
-        void on_light_state(esphome::ratgdo::LightState state) override;
-        void on_lock_state(esphome::ratgdo::LockState state) override;
+        void on_motion_state(MotionState state) override;
+        void on_obstruction_state(ObstructionState state) override;
+        void on_door_state(DoorState state) override;
+        void on_light_state(LightState state) override;
+        void on_lock_state(LockState state) override;
 
     protected:
         SensorType type_;

@@ -13,26 +13,26 @@ namespace ratgdo {
     {
         LOG_COVER("", "RATGDO Cover", this);
     }
-    void RATGDOCover::on_motion_state(esphome::ratgdo::MotionState state) { }
-    void RATGDOCover::on_obstruction_state(esphome::ratgdo::ObstructionState state) { }
-    void RATGDOCover::on_door_state(esphome::ratgdo::DoorState state)
+    void RATGDOCover::on_motion_state(MotionState state) { }
+    void RATGDOCover::on_obstruction_state(ObstructionState state) { }
+    void RATGDOCover::on_door_state(DoorState state)
     {
         switch (state) {
-        case esphome::ratgdo::DoorState::DOOR_STATE_OPEN:
+        case DoorState::DOOR_STATE_OPEN:
             this->position = COVER_OPEN;
             this->current_operation = COVER_OPERATION_IDLE;
             break;
-        case esphome::ratgdo::DoorState::DOOR_STATE_CLOSED:
+        case DoorState::DOOR_STATE_CLOSED:
             this->position = COVER_CLOSED;
             this->current_operation = COVER_OPERATION_IDLE;
             break;
-        case esphome::ratgdo::DoorState::DOOR_STATE_OPENING:
+        case DoorState::DOOR_STATE_OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
             break;
-        case esphome::ratgdo::DoorState::DOOR_STATE_CLOSING:
+        case DoorState::DOOR_STATE_CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
             break;
-        case esphome::ratgdo::DoorState::DOOR_STATE_STOPPED:
+        case DoorState::DOOR_STATE_STOPPED:
         default:
             this->current_operation = COVER_OPERATION_IDLE;
 
@@ -41,8 +41,8 @@ namespace ratgdo {
 
         this->publish_state();
     }
-    void RATGDOCover::on_light_state(esphome::ratgdo::LightState state) { }
-    void RATGDOCover::on_lock_state(esphome::ratgdo::LockState state) { }
+    void RATGDOCover::on_light_state(LightState state) { }
+    void RATGDOCover::on_lock_state(LockState state) { }
 
     CoverTraits RATGDOCover::get_traits()
     {
