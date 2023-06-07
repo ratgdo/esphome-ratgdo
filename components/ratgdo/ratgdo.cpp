@@ -95,7 +95,7 @@ namespace ratgdo {
 
     void RATGDOComponent::setup()
     {
-        this->pref_ = global_preferences->make_preference<int>(734874333U);
+        this->pref_ = global_preferences->make_preference<int>(this->get_object_id_hash());
         if (!this->pref_.load(&this->rollingCodeCounter)) {
             this->rollingCodeCounter = 0;
         }
