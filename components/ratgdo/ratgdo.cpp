@@ -262,7 +262,7 @@ namespace ratgdo {
 
     void RATGDOComponent::printRollingCode()
     {
-        ESP_LOGD(TAG, "Counter: %d Send code: [%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x][%02x]",
+        ESP_LOGD(TAG, "Counter: %d Send code: [%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X]",
             this->rollingCodeCounter,
             this->txRollingCode[0],
             this->txRollingCode[1],

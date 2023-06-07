@@ -31,6 +31,7 @@ namespace ratgdo {
             return "OFF";
         case LIGHT_STATE_ON:
             return "ON";
+            // 2 and 3 appears sometimes
         case LIGHT_STATE_UNKNOWN:
         default:
             return "UNKNOWN";
