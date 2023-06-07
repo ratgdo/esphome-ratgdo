@@ -45,12 +45,14 @@ namespace ratgdo {
         LOCK_STATE_LOCKED = 1,
         LOCK_STATE_UNKNOWN = 2,
     };
+    const char* lock_state_to_string(LockState state);
 
     /// Enum for all states a the motion can be in.
     enum MotionState : uint8_t {
         MOTION_STATE_CLEAR = 0,
         MOTION_STATE_DETECTED = 1,
     };
+    const char* motion_state_to_string(MotionState state);
 
     /// Enum for all states a the obstruction can be in.
     enum ObstructionState : uint8_t {
@@ -58,6 +60,7 @@ namespace ratgdo {
         OBSTRUCTION_STATE_CLEAR = 1,
         OBSTRUCTION_STATE_UNKNOWN = 2,
     };
+    const char* obstruction_state_to_string(ObstructionState state);
 
 } // namespace ratgdo
 } // namespace esphome
