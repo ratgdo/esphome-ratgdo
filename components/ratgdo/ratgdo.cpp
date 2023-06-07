@@ -263,44 +263,45 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::getRollingCode(const char* command)
+    void RATGDOComponent::getRollingCode(Commands command)
     {
 
         uint64_t id = 0x539;
         uint64_t fixed = 0;
         uint32_t data = 0;
 
-        if (strcmp(command, "reboot1") == 0) {
+        switch (command) {
+        case REBOOT1:
             fixed = 0x400000000;
             data = 0x0000618b;
-        } else if (strcmp(command, "reboot2") == 0) {
+        case REBOOT2:
             fixed = 0;
             data = 0x01009080;
-        } else if (strcmp(command, "reboot3") == 0) {
+        case REBOOT3:
             fixed = 0;
             data = 0x0000b1a0;
-        } else if (strcmp(command, "reboot4") == 0) {
+        case REBOOT4:
             fixed = 0;
             data = 0x01009080;
-        } else if (strcmp(command, "reboot5") == 0) {
+        case REBOOT5:
             fixed = 0x300000000;
             data = 0x00008092;
-        } else if (strcmp(command, "reboot6") == 0) {
+        case REBOOT6:
             fixed = 0x300000000;
             data = 0x00008092;
-        } else if (strcmp(command, "door1") == 0) {
+        case DOOR1:
             fixed = 0x200000000;
             data = 0x01018280;
-        } else if (strcmp(command, "door2") == 0) {
+        case DOOR2:
             fixed = 0x200000000;
             data = 0x01009280;
-        } else if (strcmp(command, "light") == 0) {
+        case LIGHT:
             fixed = 0x200000000;
             data = 0x00009281;
-        } else if (strcmp(command, "lock") == 0) {
+        case LOCK:
             fixed = 0x0100000000;
             data = 0x0000728c;
-        } else {
+        default:
             ESP_LOGD(TAG, "ERROR: Invalid command");
             return;
         }
@@ -311,7 +312,7 @@ namespace ratgdo {
 
         printRollingCode();
 
-        if (strcmp(command, "door1") != 0) { // door2 is created with same counter and should always be called after door1
+        if (command != Commands::DOOR1) { // door2 is created with same counter and should always be called after door1
             this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
         }
         return;
@@ -515,7 +516,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(const char* command)
+    void RATGDOComponent::transmit(Commands command)
     {
         getRollingCode(command);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
@@ -529,22 +530,22 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        transmit("reboot1");
+        transmit(Commands::REBOOT1);
         delay(65);
 
-        transmit("reboot2");
+        transmit(Commands::REBOOT2);
         delay(65);
 
-        transmit("reboot3");
+        transmit(Commands::REBOOT3);
         delay(65);
 
-        transmit("reboot4");
+        transmit(Commands::REBOOT4);
         delay(65);
 
-        transmit("reboot5");
+        transmit(Commands::REBOOT5);
         delay(65);
 
-        transmit("reboot6");
+        transmit(Commands::REBOOT6);
         delay(65);
 
         this->pref_.save(&this->rollingCodeCounter);
@@ -579,9 +580,9 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        transmit("door1");
+        transmit(Commands::DOOR1);
         delay(40);
-        transmit("door2");
+        transmit(Commands::DOOR2);
         this->pref_.save(&this->rollingCodeCounter);
     }
 
@@ -605,7 +606,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLight()
     {
-        sendCommand("light");
+        sendCommand(Commands::LIGHT);
     }
 
     // Lock functions
@@ -629,10 +630,10 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommand("lock");
+        sendCommand(Commands::LOCK);
     }
 
-    void RATGDOComponent::sendCommand(const char* command)
+    void RATGDOComponent::sendCommand(Commands command)
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);

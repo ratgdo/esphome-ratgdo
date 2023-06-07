@@ -65,6 +65,19 @@ namespace ratgdo {
         OBSTRUCTION_STATE_CLEAR = 1,
         OBSTRUCTION_STATE_UNKNOWN = 2,
     };
+
+    enum Commands {
+        REBOOT1,
+        REBOOT2,
+        REBOOT3,
+        REBOOT4,
+        REBOOT5,
+        REBOOT6,
+        DOOR1,
+        DOOR2,
+        LIGHT,
+        LOCK,
+    };
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
 
