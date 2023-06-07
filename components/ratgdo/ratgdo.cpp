@@ -20,6 +20,76 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
 
+    const char* door_state_to_string(DoorState state)
+    {
+        switch (state) {
+        case DOOR_STATE_OPEN:
+            return "OPEN";
+        case DOOR_STATE_CLOSED:
+            return "CLOSED";
+        case DOOR_STATE_STOPPED:
+            return "STOPPED";
+        case DOOR_STATE_OPENING:
+            return "OPENING";
+        case DOOR_STATE_CLOSING:
+            return "CLOSING";
+        case DOOR_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }
+
+    const char* light_state_to_string(LightState state)
+    {
+        switch (state) {
+        case LIGHT_STATE_OFF:
+            return "OFF";
+        case LIGHT_STATE_ON:
+            return "ON";
+        case IGHT_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }
+
+    const char* lock_state_to_string(LockState state)
+    {
+        switch (state) {
+        case LOCK_STATE_UNLOCKED:
+            return "UNLOCKED";
+        case LOCK_STATE_LOCKED:
+            return "LOCKED";
+        case LOCK_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }
+
+    const char* motion_state_to_string(MotionState state)
+    {
+        switch (state) {
+        case MOTION_STATE_CLEAR:
+            return "CLEAR";
+        case MOTION_STATE_DETECTED:
+            return "DETECTED";
+        default:
+            return "CLEAR";
+        }
+    }
+
+    const char* obstruction_state_to_string(ObstructionState state)
+    {
+        switch (state) {
+        case OBSTRUCTION_STATE_CLEAR:
+            return "CLEAR";
+        case OBSTRUCTION_STATE_DETECTED:
+            return "DETECTED";
+        case OBSTRUCTION_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }
+
     /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
      * ***************************/
     void IRAM_ATTR HOT RATGDOStore::isrDoorOpen(RATGDOStore* arg)
@@ -82,10 +152,10 @@ namespace ratgdo {
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
         if (arg->input_obst.digital_read()) {
-            //ESP_LOGD(TAG, "isrObstruction HIGH");
+            // ESP_LOGD(TAG, "isrObstruction HIGH");
             arg->lastObstructionHigh = millis();
         } else {
-            //ESP_LOGD(TAG, "isrObstruction LOW");
+            // ESP_LOGD(TAG, "isrObstruction LOW");
             arg->obstructionLowCount++;
         }
     }
@@ -482,8 +552,8 @@ namespace ratgdo {
 
     void RATGDOComponent::openDoor()
     {
-        if (this->doorStates[this->store_.doorState] == "open" || doorStates[this->store_.doorState] == "opening") {
-            ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
+        if (this->store_.doorState == DoorState.DOOR_STATE_OPEN || this->store_.doorState == DoorState.DOOR_STATE_OPENING) {
+            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(this->store_.doorState));
             return;
         }
         toggleDoor();
@@ -491,8 +561,8 @@ namespace ratgdo {
 
     void RATGDOComponent::closeDoor()
     {
-        if (this->doorStates[this->store_.doorState] == "closed" || doorStates[this->store_.doorState] == "closing") {
-            ESP_LOGD(TAG, "The door is already %s", this->doorStates[this->store_.doorState]);
+        if (this->store_.doorState == DoorState.DOOR_STATE_CLOSED || this->store_.doorState == DoorState.DOOR_STATE_CLOSING) {
+            ESP_LOGD(TAG, "The door is already %s", door_state_to_string(this->store_.doorState));
             return;
         }
         toggleDoor();
@@ -500,7 +570,7 @@ namespace ratgdo {
 
     void RATGDOComponent::stopDoor()
     {
-        if (this->doorStates[this->store_.doorState] == "opening" || doorStates[this->store_.doorState] == "closing") {
+        if (this->store_.doorState == DoorState.DOOR_STATE_OPENING || this->store_.doorState == DoorState.DOOR_STATE_CLOSING) {
             toggleDoor();
         } else {
             ESP_LOGD(TAG, "The door is not moving.");
@@ -517,7 +587,7 @@ namespace ratgdo {
 
     void RATGDOComponent::lightOn()
     {
-        if (this->lightStates[this->store_.lightState] == "on") {
+        if (this->store_.lightState == LightState.LIGHT_STATE_ON) {
             ESP_LOGD(TAG, "already on");
         } else {
             toggleLight();
@@ -526,7 +596,7 @@ namespace ratgdo {
 
     void RATGDOComponent::lightOff()
     {
-        if (this->lightStates[this->store_.lightState] == "off") {
+        if (this->store_.lightState == LightState.LIGHT_STATE_OFF) {
             ESP_LOGD(TAG, "already off");
         } else {
             toggleLight();
@@ -541,7 +611,7 @@ namespace ratgdo {
     // Lock functions
     void RATGDOComponent::lock()
     {
-        if (this->lockStates[this->store_.lockState] == "locked") {
+        if (this->store_.lockState == LockState.LOCK_STATE_LOCKED) {
             ESP_LOGD(TAG, "already locked");
         } else {
             toggleLock();
@@ -550,7 +620,7 @@ namespace ratgdo {
 
     void RATGDOComponent::unlock()
     {
-        if (this->lockStates[this->store_.lockState] == "unlocked") {
+        if (this->store_.lockState == LockState.LOCK_STATE_UNLOCKED) {
             ESP_LOGD(TAG, "already unlocked");
         } else {
             toggleLock();

@@ -27,6 +27,44 @@ extern "C" {
 namespace esphome {
 namespace ratgdo {
 
+    /// Enum for all states a the door can be in.
+    enum DoorState : uint8_t {
+        DOOR_STATE_UNKNOWN = 0,
+        DOOR_STATE_OPEN = 1,
+        DOOR_STATE_CLOSED = 2,
+        DOOR_STATE_STOPPED = 3,
+        DOOR_STATE_OPENING = 4,
+        DOOR_STATE_CLOSING = 5
+    };
+    const char* door_state_to_string(DoorState state);
+
+    /// Enum for all states a the light can be in.
+    enum LightState : uint8_t {
+        LIGHT_STATE_OFF = 0,
+        LIGHT_STATE_ON = 1,
+        LIGHT_STATE_UNKNOWN = 2,
+    };
+    const char* light_state_to_string(LightState state);
+
+    /// Enum for all states a the lock can be in.
+    enum LockState : uint8_t {
+        LOCK_STATE_UNLOCKED = 0,
+        LOCK_STATE_LOCKED = 1,
+        LOCK_STATE_UNKNOWN = 2,
+    };
+
+    /// Enum for all states a the motion can be in.
+    enum MotionState : uint8_t {
+        MOTION_STATE_CLEAR = 0,
+        MOTION_STATE_DETECTED = 1,
+    };
+
+    /// Enum for all states a the obstruction can be in.
+    enum ObstructionState : uint8_t {
+        OBSTRUCTION_STATE_OBSTRUCTED = 0,
+        OBSTRUCTION_STATE_CLEAR = 1,
+        OBSTRUCTION_STATE_UNKNOWN = 2,
+    };
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
 
@@ -41,11 +79,11 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        uint8_t obstructionState = 2;
-        uint8_t motionState = 0;
-        uint8_t lockState = 2;
-        uint8_t lightState = 2;
-        uint8_t doorState = 0;
+        uint8_t obstructionState = ObstructionState.OBSTRUCTION_STATE_UNKNOWN;
+        uint8_t motionState = MotionState.MOTION_STATE_CLEAR;
+        uint8_t lockState = LockState.LOCK_STATE_UNKNOWN;
+        uint8_t lightState = LightState.LIGHT_STATE_UNKNOWN;
+        uint8_t doorState = DoorState.DOOR_STATE_UNKNOWN;
 
         static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
@@ -63,11 +101,6 @@ namespace ratgdo {
         uint32_t rollingCodeCounter;
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
-        String doorStates[6] = { "unknown", "open", "closed", "stopped", "opening", "closing" };
-        String lightStates[3] = { "off", "on", "unknown" };
-        String lockStates[3] = { "unlocked", "locked", "unknown" };
-        String motionStates[2] = { "clear", "detected" };
-        String obstructionStates[3] = { "obstructed", "clear", "unknown" };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
