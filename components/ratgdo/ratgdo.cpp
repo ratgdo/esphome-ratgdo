@@ -156,6 +156,7 @@ namespace ratgdo {
         LOG_PIN("  Trigger Light Pin: ", this->trigger_light_pin_);
         LOG_PIN("  Status Door Pin: ", this->status_door_pin_);
         LOG_PIN("  Status Obstruction Pin: ", this->status_obst_pin_);
+        ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
     void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
@@ -178,11 +179,13 @@ namespace ratgdo {
         byte2 = (data >> 24) & 0xff;
 
         if (cmd == 0x81) {
+
             door = nibble;
             light = (byte2 >> 1) & 1;
             lock = byte2 & 1;
             motion = 0; // when the status message is read, reset motion state to 0|clear
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
+            ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
 
         } else if (cmd == 0x281) {
             light ^= 1; // toggle bit
