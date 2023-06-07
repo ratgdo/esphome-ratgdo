@@ -79,11 +79,11 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        uint8_t obstructionState = ObstructionState.OBSTRUCTION_STATE_UNKNOWN;
-        uint8_t motionState = MotionState.MOTION_STATE_CLEAR;
-        uint8_t lockState = LockState.LOCK_STATE_UNKNOWN;
-        uint8_t lightState = LightState.LIGHT_STATE_UNKNOWN;
-        uint8_t doorState = DoorState.DOOR_STATE_UNKNOWN;
+        uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+        uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
+        uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
+        uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
+        uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
 
         static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
