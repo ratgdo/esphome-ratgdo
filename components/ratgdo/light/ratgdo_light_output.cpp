@@ -16,7 +16,15 @@ namespace ratgdo {
     void RATGDOLightOutput::on_motion_state(MotionState state) { }
     void RATGDOLightOutput::on_obstruction_state(ObstructionState state) { }
     void RATGDOLightOutput::on_door_state(DoorState state) { }
-    void RATGDOLightOutput::on_light_state(LightState state) { }
+    void RATGDOLightOutput::on_light_state(LightState state)
+    {
+        ESP_LOGD(TAG, "name: %s on_light_state: %d", this->get_name(), state);
+        if (this->light_state_) {
+            auto call = this->light_state_->make_call();
+            call.set_state(state == LightState::LIGHT_STATE_ON);
+            call.perform();
+        }
+    }
     void RATGDOLightOutput::on_lock_state(LockState state) { }
 
     LightTraits RATGDOLightOutput::get_traits()
