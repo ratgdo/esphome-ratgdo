@@ -31,9 +31,9 @@ namespace ratgdo {
         bool binary;
         state->current_values_as_binary(&binary);
         if (binary) {
-            this->parent_->turnOnLight();
+            this->parent_->lightOn();
         } else {
-            this->parent_->turnOffLight();
+            this->parent_->lightOff();
         }
     }
 
