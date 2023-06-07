@@ -7,8 +7,6 @@
 namespace esphome {
 namespace ratgdo {
 
-using namespace esphome::binary_sensor;
-
 static const char *const TAG = "ratgdo.binary_sensor";
 
  class RATGDOBinarySensor {
