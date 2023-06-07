@@ -5,6 +5,7 @@ from esphome import pins, automation
 from esphome.components import uart
 
 DEPENDENCIES = ["preferences", "uart"]
+MULTI_CONF = True
 
 
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
