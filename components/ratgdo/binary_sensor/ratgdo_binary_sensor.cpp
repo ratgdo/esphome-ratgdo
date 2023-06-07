@@ -7,6 +7,8 @@
 namespace esphome {
 namespace ratgdo {
 
+using namespace esphome::binary_sensor;
+
 static const char *const TAG = "ratgdo.binary_sensor";
 
  class RATGDOBinarySensor {
@@ -14,9 +16,6 @@ void dump_config() {
   LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
 }
 
-void setup() {
-  this->publish_internal_state(false);
-}
 void on_door_state(esphome::ratgdo::DoorState state) {}
 void on_light_state(esphome::ratgdo::LightState state) {}
 void on_lock_state(esphome::ratgdo::LockState state) {}
