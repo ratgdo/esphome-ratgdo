@@ -14,7 +14,7 @@ namespace ratgdo {
         void dump_config() override;
         light::LightTraits get_traits() override;
         light::LightState* get_state() const;
-        void setup_state(light::LightState* state) override { this->light_state_ = state; }
+        void setup_state(light::LightState* state) override { this->state_ = state; }
 
         void on_motion_state(esphome::ratgdo::MotionState state) override;
         void on_obstruction_state(esphome::ratgdo::ObstructionState state) override;
