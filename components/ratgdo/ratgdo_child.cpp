@@ -1,5 +1,3 @@
-#pragma once
-
 #include "esphome/core/helpers.h"
 
 #include "ratgdo.h"
