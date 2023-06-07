@@ -134,6 +134,8 @@ namespace ratgdo {
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
+    	delay(60); // 
+
         sync(); // reboot/sync to the opener on startup
     }
 
