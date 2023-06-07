@@ -22,6 +22,7 @@ substitutions:
   wifi_ssid: <FILL IN SSID>
   wifi_password: <FILL IN PASSWORD>
 
+
 esphome:
   name: ${id_prefix}
   platform: ESP8266
@@ -55,9 +56,17 @@ binary_sensor:
     name: "${friendly_name} Obstruction"
     device_class: problem
 
+number:
+  - platform: ratgdo
+    id: ${id_prefix}_rolling_code_counter
+    type: rolling_code_counter
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Rolling Code Counter"
+
 cover:
   - platform: ratgdo
-    id: ratgdo_garage
+    id: ${id_prefix}_garage
     device_class: garage
     name: ${friendly_name}
     ratgdo_id: ${id_prefix}
