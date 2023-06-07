@@ -13,7 +13,7 @@ namespace ratgdo {
     public:
         void dump_config() override;
         light::LightTraits get_traits() override;
-        void RATGDOLightOutput::write_state(light::LightState* state) override;
+        void write_state(light::LightState* state) override;
         void setup_state(light::LightState* state) override { this->state_ = state; }
         light::LightState* get_state() { return this->state_; }
 
