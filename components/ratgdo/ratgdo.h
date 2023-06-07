@@ -23,6 +23,8 @@ extern "C" {
 }
 
 #include "ratgdo_child.h"
+#include "ratgdo_state.h"
+
 #define CODE_LENGTH 19
 
 namespace esphome {
