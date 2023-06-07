@@ -207,33 +207,43 @@ namespace ratgdo {
         case REBOOT1:
             fixed = 0x400000000;
             data = 0x0000618b;
+            break;
         case REBOOT2:
             fixed = 0;
             data = 0x01009080;
+            break;
         case REBOOT3:
             fixed = 0;
             data = 0x0000b1a0;
+            break;
         case REBOOT4:
             fixed = 0;
             data = 0x01009080;
+            break;
         case REBOOT5:
             fixed = 0x300000000;
             data = 0x00008092;
+            break;
         case REBOOT6:
             fixed = 0x300000000;
             data = 0x00008092;
+            break;
         case DOOR1:
             fixed = 0x200000000;
             data = 0x01018280;
+            break;
         case DOOR2:
             fixed = 0x200000000;
             data = 0x01009280;
+            break;
         case LIGHT:
             fixed = 0x200000000;
             data = 0x00009281;
+            break;
         case LOCK:
             fixed = 0x0100000000;
             data = 0x0000728c;
+            break;
         default:
             ESP_LOGD(TAG, "ERROR: Invalid command");
             return;
