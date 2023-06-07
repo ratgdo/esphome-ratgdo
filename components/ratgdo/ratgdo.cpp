@@ -257,10 +257,18 @@ namespace ratgdo {
         printRollingCode();
 
         if (command != Commands::DOOR1) { // door2 is created with same counter and should always be called after door1
-            ESP_LOGD(TAG, "Incrementing rolling code counter");
-            this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+            incrementRollingCodeCounter();
         }
         return;
+    }
+
+    void RATGDOComponent::incrementRollingCodeCounter()
+    {
+        ESP_LOGD(TAG, "Incrementing rolling code counter");
+        this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+        for (auto* child : this->children_) {
+            child->on_rolling_code_change(this->rollingCodeCounter);
+        }        
     }
 
     void RATGDOComponent::printRollingCode()
