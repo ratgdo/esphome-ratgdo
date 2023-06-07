@@ -30,7 +30,7 @@ CONFIG_SCHEMA = number.number_schema(RATGDONumber).extend(
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    await number.register_number(var, config, step=1)
+    await number.register_number(var, config, step=1, min_value=0, max_value=4294967295)
     await cg.register_component(var, config)
     cg.add(var.set_number_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
