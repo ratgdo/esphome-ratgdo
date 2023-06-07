@@ -453,10 +453,10 @@ namespace ratgdo {
     void RATGDOComponent::statusUpdateLoop()
     {
         // initialize to unknown
-        static uint8_t previousDoorState = 0;
-        static uint8_t previousLightState = 2;
-        static uint8_t previousLockState = 2;
-        static uint8_t previousObstructionState = 2;
+        static uint8_t previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
+        static uint8_t previousLightState = LightState::LIGHT_STATE_UNKNOWN;
+        static uint8_t previousLockState = LockState::LOCK_STATE_UNKNOWN;
+        static uint8_t previousObstructionState = ObstructionState::OBSTRUCTION_STATE_UNKNOWN;
 
         if (this->store_.doorState != previousDoorState)
             sendDoorStatus();
@@ -467,9 +467,9 @@ namespace ratgdo {
         if (this->store_.obstructionState != previousObstructionState)
             sendObstructionStatus();
 
-        if (this->store_.motionState == 1) {
+        if (this->store_.motionState == MotionState::MOTION_STATE_DETECTED) {
             sendMotionStatus();
-            this->store_.motionState = 0;
+            this->store_.motionState = MotionState::MOTION_STATE_CLEAR;
         }
 
         previousDoorState = this->store_.doorState;
