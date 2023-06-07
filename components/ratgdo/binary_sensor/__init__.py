@@ -18,7 +18,7 @@ TYPES = {"motion", "obstruction"}
 
 CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
     {cv.Required(CONF_TYPE): str}
-)
+).extend(cv.COMPONENT_SCHEMA)
 
 
 async def to_code(config):
