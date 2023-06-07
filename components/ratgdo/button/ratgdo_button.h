@@ -11,6 +11,7 @@ namespace ratgdo {
 
     enum ButtonType {
         RATGDO_SYNC
+            RATGDO_QUERY
     };
 
     class RATGDOButton : public button::Button, public RATGDOClient, public Component {

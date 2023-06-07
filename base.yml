@@ -65,3 +65,9 @@ button:
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Sync"
+  - platform: ratgdo
+    id: ${id_prefix}_query
+    type: query
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Query"

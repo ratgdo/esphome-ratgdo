@@ -12,6 +12,7 @@ ButtonType = ratgdo_ns.enum("ButtonType")
 CONF_TYPE = "type"
 TYPES = {
     "sync": ButtonType.RATGDO_SYNC,
+    "query": ButtonType.RATGDO_QUERY,
 }
 
 

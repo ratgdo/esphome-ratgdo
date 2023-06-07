@@ -82,6 +82,11 @@ namespace ratgdo {
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
 
+        uint8_t previousDoorState { DoorState::DOOR_STATE_UNKNOWN };
+        uint8_t previousLightState { LightState::LIGHT_STATE_UNKNOWN };
+        uint8_t previousLockState { LockState::LOCK_STATE_UNKNOWN };
+        uint8_t previousObstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
@@ -118,7 +123,7 @@ namespace ratgdo {
         void sendLockStatus();
 
         void sendMotionStatus();
-
+        void query();
         void doorStateLoop();
         void dryContactLoop();
         void printRollingCode();
