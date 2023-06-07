@@ -13,11 +13,11 @@ namespace ratgdo {
 
     class RATGDOClient : public Parented<RATGDOComponent> {
     public:
-        void on_door_state(esphome::ratgdo::DoorState state) {};
-        void on_light_state(esphome::ratgdo::LightState state) {};
-        void on_lock_state(esphome::ratgdo::LockState state) {};
-        void on_motion_state(esphome::ratgdo::MotionState state) {};
-        void on_obstruction_state(esphome::ratgdo::ObstructionState state) {};
+        virtual void on_door_state(esphome::ratgdo::DoorState state);
+        virtual void on_light_state(esphome::ratgdo::LightState state);
+        virtual void on_lock_state(esphome::ratgdo::LockState state);
+        virtual void on_motion_state(esphome::ratgdo::MotionState state);
+        virtual void on_obstruction_state(esphome::ratgdo::ObstructionState state);
 
     protected:
         friend RATGDOComponent;
