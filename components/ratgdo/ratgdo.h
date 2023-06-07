@@ -128,7 +128,7 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void transmit(const char* command);
+        void transmit(Commands command);
         void sync();
 
         void obstructionLoop();
