@@ -5,7 +5,6 @@ import esphome.config_validation as cv
 from esphome.components import cover
 from .. import (
     ratgdo_ns,
-    RATGDO,
     register_ratgdo_child,
     RATGDO_CLIENT_SCHMEA
 )

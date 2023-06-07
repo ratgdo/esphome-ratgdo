@@ -1,19 +1,11 @@
 import esphome.codegen as cg
-from esphome.const import CONF_ID
 import esphome.config_validation as cv
 from esphome.const import (
-    CONF_DURATION,
-    CONF_CONSTANT_BRIGHTNESS,
-    CONF_OUTPUT_ID,
-    CONF_COLD_WHITE_COLOR_TEMPERATURE,
-    CONF_WARM_WHITE_COLOR_TEMPERATURE,
-    CONF_REVERSED,
-    CONF_MIN_BRIGHTNESS, # New in 2023.5
+    CONF_OUTPUT_ID, # New in 2023.5
 )
 from esphome.components import light
 from .. import (
     ratgdo_ns,
-    RATGDO,
     register_ratgdo_child,
     RATGDO_CLIENT_SCHMEA
 )
