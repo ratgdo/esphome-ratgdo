@@ -639,7 +639,7 @@ namespace ratgdo {
         this->pref_.save(&this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::register_child(RATGDOComponent* obj)
+    void RATGDOComponent::register_child(RATGDOClient* obj)
     {
         this->children_.push_back(obj);
         obj->set_parent(this);

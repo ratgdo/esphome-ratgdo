@@ -27,6 +27,9 @@ extern "C" {
 namespace esphome {
 namespace ratgdo {
 
+    // Forward declare RATGDOClient
+    class RATGDOClient;
+
     /// Enum for all states a the door can be in.
     enum DoorState : uint8_t {
         DOOR_STATE_UNKNOWN = 0,
@@ -161,7 +164,7 @@ namespace ratgdo {
         void readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction);
         void sendCommand(Commands command);
         /** Register a child component. */
-        void register_child(RATGDOComponent* obj);
+        void register_child(RATGDOClient* obj);
 
     protected:
         ESPPreferenceObject pref_;
