@@ -12,11 +12,11 @@
  ************************************/
 
 #pragma once
+#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 
 extern "C" {
 #include "secplus.h"
