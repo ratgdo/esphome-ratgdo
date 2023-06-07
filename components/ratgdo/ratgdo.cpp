@@ -486,7 +486,7 @@ namespace ratgdo {
     {
         DoorState val = static_cast<DoorState>(this->store_.doorState);
         ESP_LOGD(TAG, "Door state: %s", door_state_to_string(val));
-        for (auto *child : this->children_) {
+        for (auto* child : this->children_) {
             child->on_door_state(val);
         }
         this->status_door_pin_->digital_write(this->store_.doorState == 1);
