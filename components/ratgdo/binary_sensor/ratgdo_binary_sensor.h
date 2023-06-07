@@ -1,8 +1,6 @@
 #pragma once
 
 #include "esphome/core/component.h"
-#include "esphome/core/defines.h"
-#include "esphome/core/hal.h"
 #include "../ratgdo_child.h"
 #include "../ratgdo_state.h"
 #include "../ratgdo.h"
