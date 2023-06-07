@@ -33,5 +33,5 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await binary_sensor.register_binary_sensor(var, config)
     await cg.register_component(var, config)
-    cg.add(var.set_type(var, config[CONF_TYPE]))
+    cg.add(var.set_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
