@@ -13,7 +13,7 @@ RATGDOBinarySensor = ratgdo_ns.class_(
     "RATGDOBinarySensor", binary_sensor.BinarySensor, cg.Component
 )
 
-CONF_TYPE = "xtype"
+CONF_TYPE = "type"
 TYPES = {"motion", "obstruction"}
 
 
