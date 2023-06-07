@@ -28,6 +28,8 @@ number:
     entity_category: config
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Rolling Code Counter"
+    mode: box
+    unit_of_measurement: "codes"
 
 cover:
   - platform: ratgdo
