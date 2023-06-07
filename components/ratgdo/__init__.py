@@ -68,6 +68,7 @@ CONFIG_SCHEMA = (
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
+    .extend(uart.UART_DEVICE_SCHEMA)
 )
 
 RATGDO_CLIENT_SCHMEA = cv.Schema(
