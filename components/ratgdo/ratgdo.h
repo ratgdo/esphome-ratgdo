@@ -169,7 +169,7 @@ namespace ratgdo {
 
     protected:
         ESPPreferenceObject pref_;
-        std::vector<RATGDOComponent*> children_;
+        std::vector<RATGDOClient*> children_;
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
