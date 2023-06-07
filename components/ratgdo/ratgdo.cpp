@@ -262,10 +262,23 @@ namespace ratgdo {
         return;
     }
 
+    void RATGDOComponent::setRollingCodeCounter(uint32_t counter)
+    {
+        ESP_LOGD(TAG, "Set rolling code counter to %d", counter);
+        this->rollingCodeCounter = counter;
+        this->pref_.save(&this->rollingCodeCounter);
+        sendRollingCodeChanged();
+    }
+
     void RATGDOComponent::incrementRollingCodeCounter()
     {
         ESP_LOGD(TAG, "Incrementing rolling code counter");
         this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+        sendRollingCodeChanged();
+    }
+
+    void RATGDOComponent::sendRollingCodeChanged()
+    {
         for (auto* child : this->children_) {
             child->on_rolling_code_change(this->rollingCodeCounter);
         }
