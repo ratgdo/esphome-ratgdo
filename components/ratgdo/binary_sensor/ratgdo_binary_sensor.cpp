@@ -19,6 +19,12 @@ void RATGDOBinarySensor::on_obstruction_state(esphome::ratgdo::ObstructionState 
   if (this->type_ == SensorType::RATGDO_SENSOR_OBSTRUCTION)
     this->publish_state(state == esphome::ratgdo::ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED);
 }
+void RATGDOBinarySensor::on_door_state(esphome::ratgdo::DoorState state) {}
+void RATGDOBinarySensor::on_light_state(esphome::ratgdo::LightState state) {}
+void RATGDOBinarySensor::on_lock_state(esphome::ratgdo::LockState state) {}
+
+
+
 }  // namespace ratgdo
 }  // namespace esphome
 
