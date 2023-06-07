@@ -15,7 +15,6 @@ class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClie
  public:
   void setup() override;
   void loop() override;
-  void update() override;
   void dump_config() override;
 
   void on_door_state(esphome::ratgdo::DoorState state) override;
