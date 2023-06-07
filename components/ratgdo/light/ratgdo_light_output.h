@@ -17,11 +17,7 @@ namespace ratgdo {
         void setup_state(light::LightState* state) override { this->light_state_ = state; }
         light::LightState* get_state() { return this->light_state_; }
 
-        void on_motion_state(MotionState state) override;
-        void on_obstruction_state(ObstructionState state) override;
-        void on_door_state(DoorState state) override;
         void on_light_state(LightState state) override;
-        void on_lock_state(LockState state) override;
 
     protected:
         bool _is_on;
