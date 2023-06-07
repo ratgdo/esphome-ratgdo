@@ -10,7 +10,7 @@ namespace ratgdo {
     void RATGDOBinarySensor::dump_config()
     {
         LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
-        ESP_LOGCONFIG(TAG, "  Type: %s", this->type_ == SensorType::RATGDO_SENSOR_MOTION ? "Motion" : "Obstruction");
+        ESP_LOGCONFIG(TAG, "  Type: %s", this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION ? "Motion" : "Obstruction");
     }
     void RATGDOBinarySensor::on_motion_state(MotionState state)
     {
