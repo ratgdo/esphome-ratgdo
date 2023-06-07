@@ -8,7 +8,7 @@ namespace ratgdo {
 // Forward declare RATGDOComponent
 class RATGDOComponent;
 
-class BedJetClient : public Parented<RATGDOComponent> {
+class RATGDOClient : public Parented<RATGDOComponent> {
  public:
   virtual void on_status() = 0;
   virtual void on_ratgdo_state(bool is_ready) = 0;
