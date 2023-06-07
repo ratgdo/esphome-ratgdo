@@ -7,17 +7,15 @@ namespace ratgdo {
 
 static const char *const TAG = "ratgdo.binary_sensor";
 
-class RATGDOBinarySensor :  {
-void dump_config() {
+void RATGDOBinarySensor::dump_config() {
   LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
 }
 
-void on_door_state(esphome::ratgdo::DoorState state) {}
-void on_light_state(esphome::ratgdo::LightState state) {}
-void on_lock_state(esphome::ratgdo::LockState state) {}
-void on_motion_state(esphome::ratgdo::MotionState state) {}
-void on_obstruction_state(esphome::ratgdo::ObstructionState state) {}
- };
+void RATGDOBinarySensor::on_door_state(esphome::ratgdo::DoorState state) {}
+void RATGDOBinarySensor::on_light_state(esphome::ratgdo::LightState state) {}
+void RATGDOBinarySensor::on_lock_state(esphome::ratgdo::LockState state) {}
+void RATGDOBinarySensor::on_motion_state(esphome::ratgdo::MotionState state) {}
+void RATGDOBinarySensor::on_obstruction_state(esphome::ratgdo::ObstructionState state) {}
 }  // namespace ratgdo
 }  // namespace esphome
 
