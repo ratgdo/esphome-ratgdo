@@ -17,7 +17,7 @@ void on_light_state(esphome::ratgdo::LightState state) {}
 void on_lock_state(esphome::ratgdo::LockState state) {}
 void on_motion_state(esphome::ratgdo::MotionState state) {}
 void on_obstruction_state(esphome::ratgdo::ObstructionState state) {}
- }
+ };
 }  // namespace ratgdo
 }  // namespace esphome
 
