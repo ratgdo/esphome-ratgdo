@@ -21,13 +21,17 @@ namespace ratgdo {
         case esphome::ratgdo::DoorState::DOOR_STATE_OPEN:
             this->position = COVER_OPEN;
             this->current_operation = COVER_OPERATION_IDLE;
+            break;
         case esphome::ratgdo::DoorState::DOOR_STATE_CLOSED:
             this->position = COVER_CLOSED;
             this->current_operation = COVER_OPERATION_IDLE;
+            break;
         case esphome::ratgdo::DoorState::DOOR_STATE_OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
+            break;
         case esphome::ratgdo::DoorState::DOOR_STATE_CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
+            break;
         case esphome::ratgdo::DoorState::DOOR_STATE_STOPPED:
         default:
             this->current_operation = COVER_OPERATION_IDLE;
