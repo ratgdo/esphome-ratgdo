@@ -13,6 +13,7 @@
 
 #include "ratgdo.h"
 #include "ratgdo_child.h"
+#include "ratgdo_state.h"
 
 #include "esphome/core/log.h"
 
