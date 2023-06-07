@@ -5,6 +5,7 @@ from esphome.components import binary_sensor
 from .. import (
     ratgdo_ns,
     register_ratgdo_child,
+    RATGDO_CLIENT_SCHMEA
 )
 
 DEPENDENCIES = ["ratgdo"]
@@ -22,7 +23,7 @@ CONFIG_SCHEMA = binary_sensor.BINARY_SENSOR_SCHEMA.extend(
         cv.GenerateID(): cv.declare_id(RATGDOBinarySensor),
         cv.Required(CONF_TYPE): str
     }
-).extend(cv.COMPONENT_SCHEMA)
+).extend(RATGDO_CLIENT_SCHMEA)
 
 
 async def to_code(config):
