@@ -15,6 +15,7 @@ CONF_TYPE = "type"
 TYPES = {
     "motion": SensorType.RATGDO_SENSOR_MOTION,
     "obstruction": SensorType.RATGDO_SENSOR_OBSTRUCTION,
+    "motor": SensorType.RATGDO_SENSOR_MOTOR,
 }
 
 
