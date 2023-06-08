@@ -660,6 +660,7 @@ namespace ratgdo {
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
+        global_preferences->sync();
     }
 
     void RATGDOComponent::register_child(RATGDOClient* obj)
