@@ -68,8 +68,9 @@ namespace ratgdo {
         case MOTOR_STATE_ON:
             return "ON";
         case MOTOR_STATE_OFF:
-        default:
             return "OFF";
+        default:
+            return "UNKNOWN";
         }
     }
 

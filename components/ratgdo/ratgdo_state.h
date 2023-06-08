@@ -66,6 +66,7 @@ namespace ratgdo {
     enum MotorState : uint8_t {
         MOTOR_STATE_OFF = 0,
         MOTOR_STATE_ON = 1,
+        MOTOR_STATE_UNKNOWN = 2,
     };
     const char* motor_state_to_string(MotorState state);
 

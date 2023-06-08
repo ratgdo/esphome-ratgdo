@@ -445,7 +445,9 @@ namespace ratgdo {
             sendLockStatus();
         if (this->obstructionState != this->previousObstructionState)
             sendObstructionStatus();
-
+        if (this->motorState != this->previousMotorState) {
+            sendMotorStatus();
+        }
         if (this->motionState == MotionState::MOTION_STATE_DETECTED) {
             sendMotionStatus();
             this->motionState = MotionState::MOTION_STATE_CLEAR;
