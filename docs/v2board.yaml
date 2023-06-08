@@ -1,0 +1,31 @@
+substitutions:
+  id_prefix: ratgdo
+  friendly_name: "Garage"
+
+web_server:
+
+dashboard_import:
+  package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
+
+packages:
+  # Git repo examples
+  remote_package:
+    url: https://github.com/esphome-ratgdo/esphome-ratgdo
+    files: [base.yml]
+    refresh: 1s # optional
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+ota:
+
+wifi:
+  ap:
+
+logger:
+  level: VERBOSE
