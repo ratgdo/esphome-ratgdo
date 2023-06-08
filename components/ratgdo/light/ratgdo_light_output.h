@@ -14,7 +14,7 @@ namespace ratgdo {
         void dump_config() override;
         light::LightTraits get_traits() override;
         void write_state(light::LightState* state) override;
-        void setup_state(light::LightState* state) override { this->light_state_ = state; }
+        void setup_state(light::LightState* state) override;
         light::LightState* get_state() { return this->light_state_; }
 
         void on_light_state(esphome::ratgdo::LightState state) override;

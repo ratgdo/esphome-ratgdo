@@ -22,6 +22,14 @@ namespace ratgdo {
             this->light_state_->publish_state();
         }
     }
+    void RATGDOLightOutput::setup_state(light::LightState* state)
+    {
+        bool is_on = this->parent_->isLightOn();
+        this->light_state_ = state;
+        state->current_values.set_state(is_on);
+        state->remote_values.set_state(is_on);
+        state->publish_state();
+    }
     LightTraits RATGDOLightOutput::get_traits()
     {
         auto traits = LightTraits();

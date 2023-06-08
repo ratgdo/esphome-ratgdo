@@ -583,6 +583,11 @@ namespace ratgdo {
         sendCommandAndSaveCounter(Commands::DOOR2);
     }
 
+    bool RATGDOComonent::isLightOn()
+    {
+        return this->lightState == LightState::LIGHT_STATE_ON;
+    }
+
     void RATGDOComponent::lightOn()
     {
         if (this->lightState == LightState::LIGHT_STATE_ON) {

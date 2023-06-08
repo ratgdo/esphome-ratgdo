@@ -115,6 +115,7 @@ namespace ratgdo {
         void toggleLight();
         void lightOn();
         void lightOff();
+        bool isLightOn();
         void sendLightStatus();
 
         void toggleLock();
