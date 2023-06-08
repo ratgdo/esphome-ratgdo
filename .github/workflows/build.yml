@@ -57,6 +57,7 @@ jobs:
       - name: Copy files
         run: |-
           mkdir output
+          cp -R static/* output/
           cp -R firmwares/*/* output/
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v1.0.7
