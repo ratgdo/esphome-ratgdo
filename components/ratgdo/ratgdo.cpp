@@ -457,6 +457,7 @@ namespace ratgdo {
         this->previousLightState = this->lightState;
         this->previousLockState = this->lockState;
         this->previousObstructionState = this->obstructionState;
+        this->previousMotorState = this->motorState;
     }
 
     void RATGDOComponent::query()
