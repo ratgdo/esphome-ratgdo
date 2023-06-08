@@ -33,11 +33,14 @@ namespace ratgdo {
     {
         bool binary;
         state->current_values_as_binary(&binary);
+        if (binary == this->_is_on)
+            return;
         if (binary) {
             this->parent_->lightOn();
         } else {
             this->parent_->lightOff();
         }
+        this->_is_on = binary;
     }
 
 } // namespace ratgdo
