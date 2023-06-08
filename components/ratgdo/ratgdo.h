@@ -59,12 +59,6 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
-        uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
-        uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
-        uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
-        uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
-
         static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
         static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
         static void IRAM_ATTR isrLight(RATGDOStore* arg);
@@ -86,6 +80,12 @@ namespace ratgdo {
         uint8_t previousLightState { LightState::LIGHT_STATE_UNKNOWN };
         uint8_t previousLockState { LockState::LOCK_STATE_UNKNOWN };
         uint8_t previousObstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+
+        uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+        uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
+        uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
+        uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
+        uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
