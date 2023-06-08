@@ -1,6 +1,6 @@
 substitutions:
   id_prefix: ratgdov2
-  friendly_name: "Garage"
+  friendly_name: "RATGDOv2"
 
 web_server:
 
@@ -23,6 +23,8 @@ api:
   id: api_server
 
 ota:
+
+improv_serial:
 
 wifi:
   ap:
