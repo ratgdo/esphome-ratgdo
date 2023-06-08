@@ -573,7 +573,7 @@ namespace ratgdo {
     void RATGDOComponent::lightOn()
     {
         if (this->store_.lightState == LightState::LIGHT_STATE_ON) {
-            ESP_LOGD(TAG, "already on");
+            ESP_LOGD(TAG, "The light is already on");
         } else {
             toggleLight();
         }
@@ -582,7 +582,7 @@ namespace ratgdo {
     void RATGDOComponent::lightOff()
     {
         if (this->store_.lightState == LightState::LIGHT_STATE_OFF) {
-            ESP_LOGD(TAG, "already off");
+            ESP_LOGD(TAG, "The light is already off");
         } else {
             toggleLight();
         }
