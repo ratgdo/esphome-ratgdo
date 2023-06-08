@@ -189,9 +189,13 @@ namespace ratgdo {
 
         } else if (cmd == 0x281) {
             light ^= 1; // toggle bit
+            ESP_LOGD(TAG, "Light: %d (toggle)", light);
+
         } else if (cmd == 0x84) {
         } else if (cmd == 0x285) {
             motion = 1; // toggle bit
+            ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
+
         }
     }
 
@@ -575,10 +579,7 @@ namespace ratgdo {
         if (this->lightState == LightState::LIGHT_STATE_ON) {
             ESP_LOGD(TAG, "The light is already on");
         } else {
-            toggleLight();
-            // We don't always get the state back so be optimistic
-            this->previousLightState = this->lightState;
-            this->lightState = LightState::LIGHT_STATE_ON;            
+            toggleLight(); 
         }
     }
 
@@ -588,9 +589,6 @@ namespace ratgdo {
             ESP_LOGD(TAG, "The light is already off");
         } else {
             toggleLight();
-            // We don't always get the state back so be optimistic
-            this->previousLightState = this->lightState;
-            this->lightState = LightState::LIGHT_STATE_OFF;
         }
     }
 
