@@ -26,6 +26,7 @@ binary_sensor:
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Motor"
     device_class: running
+    entity_category: diagnostic
 
 number:
   - platform: ratgdo
