@@ -1,6 +1,8 @@
 
 # ratgdo
 
+This project is not affiliated with RATGDO or Paul Wieland. Please buy his boards and suppot his excellent work.
+
 This is a port of the ratgdo software for the v2 board to esphome.
 
 > **ratgdo shields available to order**
