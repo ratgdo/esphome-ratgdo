@@ -1,5 +1,5 @@
 substitutions:
-  id_prefix: ratgdo_v2
+  id_prefix: ratgdov2
   friendly_name: "Garage"
 
 web_server:
