@@ -502,7 +502,7 @@ namespace ratgdo {
 
     void RATGDOComponent::sendMotorStatus()
     {
-        MotorState val = static_cast<MotorState>(this->MotorState);
+        MotorState val = static_cast<MotorState>(this->motorState);
         ESP_LOGD(TAG, "Motor state %s", motor_state_to_string(val));
         for (auto* child : this->children_) {
             child->on_motor_state(val);
