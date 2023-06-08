@@ -1,6 +1,8 @@
 
 # ratgdo
 
+This project is not affiliated with RATGDO or Paul Wieland. Please buy his boards to support his excellent work.
+
 This is a port of the ratgdo software for the v2 board to esphome.
 
 > **ratgdo shields available to order**
@@ -14,37 +16,8 @@ This is a port of the ratgdo software for the v2 board to esphome.
 
 # ESPHome config
 
-```yaml
----
-substitutions:
-  id_prefix: ratgdo
-  friendly_name: "Garage"
+[v2 board](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/docs/v2board.yaml)
 
-web_server:
+# Web Installer
 
-dashboard_import:
-  package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
-
-packages:
-  # Git repo examples
-  remote_package:
-    url: https://github.com/esphome-ratgdo/esphome-ratgdo
-    files: [base.yml]
-    refresh: 1s # optional
-
-# Sync time with Home Assistant.
-time:
-  - platform: homeassistant
-    id: homeassistant_time
-
-api:
-  id: api_server
-
-ota:
-
-wifi:
-  ap:
-
-logger:
-  level: VERBOSE
-```
+[v2 board](https://esphome-ratgdo.github.io/esphome-ratgdo/)
