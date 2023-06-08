@@ -195,7 +195,6 @@ namespace ratgdo {
         } else if (cmd == 0x285) {
             motion = 1; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
-
         }
     }
 
@@ -579,7 +578,7 @@ namespace ratgdo {
         if (this->lightState == LightState::LIGHT_STATE_ON) {
             ESP_LOGD(TAG, "The light is already on");
         } else {
-            toggleLight(); 
+            toggleLight();
         }
     }
 
