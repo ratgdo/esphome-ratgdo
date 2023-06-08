@@ -141,6 +141,7 @@ namespace ratgdo {
     protected:
         ESPPreferenceObject pref_;
         std::vector<RATGDOClient*> children_;
+        bool forceUpdate_ { false };
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
