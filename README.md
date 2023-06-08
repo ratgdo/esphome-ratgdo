@@ -19,10 +19,11 @@ This is a port of the ratgdo software for the v2 board to esphome.
 substitutions:
   id_prefix: ratgdo
   friendly_name: "Garage"
-  wifi_ssid: <FILL IN SSID>
-  wifi_password: <FILL IN PASSWORD>
 
 web_server:
+
+dashboard_import:
+  package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
 
 packages:
   # Git repo examples
@@ -42,10 +43,8 @@ api:
 ota:
 
 wifi:
-  ssid: ${wifi_ssid}
-  password: ${wifi_password}
+  ap:
 
 logger:
   level: VERBOSE
-
 ```

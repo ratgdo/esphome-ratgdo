@@ -72,7 +72,9 @@ uart:
 button:
   - platform: restart
     name: "${friendly_name} Restart"
-
+  - platform: safe_mode
+    name: "${friendly_name} Safe Mode Boot"
+    entity_category: diagnostic
   - platform: ratgdo
     id: ${id_prefix}_sync
     type: sync
