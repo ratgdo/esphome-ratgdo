@@ -17,10 +17,9 @@ namespace ratgdo {
         void setup_state(light::LightState* state) override { this->light_state_ = state; }
         light::LightState* get_state() { return this->light_state_; }
 
-        void on_light_state(LightState state) override;
+        void on_light_state(esphome::ratgdo::LightState state) override;
 
     protected:
-        bool _is_on;
         light::LightState* light_state_;
     };
 
