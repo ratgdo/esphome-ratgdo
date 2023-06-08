@@ -18,6 +18,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "on_light_state: %d", state);
         if (this->light_state_) {
             this->light_state_->current_values.set_state(state == LightState::LIGHT_STATE_ON);
+            this->light_state_->remote_values.set_state(state == LightState::LIGHT_STATE_ON);
             this->light_state_->publish_state();
         }
     }
