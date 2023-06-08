@@ -83,6 +83,7 @@ namespace ratgdo {
 
         uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
         uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
+        uint8_t motorState { MotionState::MOTION_STATE_OFF };
         uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
         uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
         uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
