@@ -67,6 +67,7 @@ namespace ratgdo {
         MOTOR_STATE_OFF = 0,
         MOTOR_STATE_ON = 1,
     };
+    const char* motor_state_to_string(MotorState state);
 
 } // namespace ratgdo
 } // namespace esphome
