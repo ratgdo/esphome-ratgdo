@@ -576,6 +576,9 @@ namespace ratgdo {
             ESP_LOGD(TAG, "The light is already on");
         } else {
             toggleLight();
+            // We don't always get the state back so be optimistic
+            this->previousLightState = this->lightState;
+            this->lightState = LightState::LIGHT_STATE_ON;            
         }
     }
 
@@ -585,6 +588,9 @@ namespace ratgdo {
             ESP_LOGD(TAG, "The light is already off");
         } else {
             toggleLight();
+            // We don't always get the state back so be optimistic
+            this->previousLightState = this->lightState;
+            this->lightState = LightState::LIGHT_STATE_OFF;
         }
     }
 
