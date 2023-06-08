@@ -5,6 +5,7 @@ substitutions:
 web_server:
 
 dashboard_import:
+  project: ratgdo
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
 
 packages:
