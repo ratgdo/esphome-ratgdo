@@ -8,7 +8,7 @@ esp8266:
 external_components:
   - source:
       type: git
-      url: https://github.com/bdraco/esphome-ratgdo
+      url: https://github.com/esphome-ratgdo/esphome-ratgdo
     refresh: 1s
 
 ratgdo:

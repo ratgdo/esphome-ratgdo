@@ -27,7 +27,7 @@ web_server:
 packages:
   # Git repo examples
   remote_package:
-    url: https://github.com/bdraco/esphome-ratgdo
+    url: https://github.com/esphome-ratgdo/esphome-ratgdo
     files: [base.yml]
     refresh: 1s # optional
 
