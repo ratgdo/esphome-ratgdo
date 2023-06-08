@@ -32,8 +32,9 @@ namespace ratgdo {
     void RATGDOLightOutput::write_state(light::LightState* state)
     {
         bool binary;
+        bool current_state = state == LightState::LIGHT_STATE_ON;
         state->current_values_as_binary(&binary);
-        if (binary == state == LightState::LIGHT_STATE_ON)
+        if (binary == current_state)
             return;
         if (binary) {
             ESP_LOGD(TAG, "output call lightOn");
