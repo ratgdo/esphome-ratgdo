@@ -24,6 +24,8 @@ api:
 
 ota:
 
+improv_serial:
+
 wifi:
   ap:
 
