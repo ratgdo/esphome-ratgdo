@@ -20,6 +20,12 @@ binary_sensor:
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Obstruction"
     device_class: problem
+  - platform: ratgdo
+    type: motor
+    id: ${id_prefix}_motor
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Motor"
+    device_class: running
 
 number:
   - platform: ratgdo

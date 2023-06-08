@@ -16,7 +16,13 @@ namespace ratgdo {
     void RATGDOBinarySensor::dump_config()
     {
         LOG_BINARY_SENSOR("", "RATGDO BinarySensor", this);
-        ESP_LOGCONFIG(TAG, "  Type: %s", this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION ? "Motion" : "Obstruction");
+        if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION) {
+            ESP_LOGCONFIG(TAG, "  Type: Motion");
+        } else if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_OBSTRUCTION) {
+            ESP_LOGCONFIG(TAG, "  Type: Obstruction");
+        } else if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTOR) {
+            ESP_LOGCONFIG(TAG, "  Type: Motor");
+        }
     }
     void RATGDOBinarySensor::on_motion_state(MotionState state)
     {
@@ -29,6 +35,12 @@ namespace ratgdo {
         ESP_LOGD(TAG, "name: %s this->type_:%d on_obstruction_state: %d", this->get_name(), this->binary_sensor_type_, state);
         if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_OBSTRUCTION)
             this->publish_state(state == ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED);
+    }
+    void RATGDOBinarySensor::on_motor_state(MotorState state)
+    {
+        ESP_LOGD(TAG, "name: %s this->type_:%d on_motor_state: %d", this->get_name(), this->binary_sensor_type_, state);
+        if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTOR)
+            this->publish_state(state == MotorState::MOTOR_STATE_ON);
     }
 
 } // namespace ratgdo

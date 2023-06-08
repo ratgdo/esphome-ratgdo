@@ -62,5 +62,11 @@ namespace ratgdo {
     };
     const char* obstruction_state_to_string(ObstructionState state);
 
+    /// Enum for all states a the motor can be in.
+    enum MotorState : uint8_t {
+        MOTOR_STATE_OFF = 0,
+        MOTOR_STATE_ON = 1,
+    };
+
 } // namespace ratgdo
 } // namespace esphome

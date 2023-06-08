@@ -159,7 +159,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction)
+    void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -184,6 +184,7 @@ namespace ratgdo {
             light = (byte2 >> 1) & 1;
             lock = byte2 & 1;
             motion = 0; // when the status message is read, reset motion state to 0|clear
+            motor = 0; // when the status message is read, reset motor state to 0|off
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
             if (this->forceUpdate_) {
@@ -198,6 +199,8 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Light: %d (toggle)", light);
         } else if (cmd == 0x84) {
             ESP_LOGD(TAG, "Unknown 0x84");
+        } else if (cmd == 0x284) {
+            motor = 1;
         } else if (cmd == 0x280) {
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
         } else if (cmd == 0x48c) {
@@ -427,7 +430,7 @@ namespace ratgdo {
                 msgStart = 0;
                 byteCount = 0;
 
-                readRollingCode(this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState);
+                readRollingCode(this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
             }
         }
     }
@@ -494,6 +497,15 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
         for (auto* child : this->children_) {
             child->on_motion_state(val);
+        }
+    }
+
+    void RATGDOComponent::sendMotorStatus()
+    {
+        MotorState val = static_cast<MotorState>(this->MotorState);
+        ESP_LOGD(TAG, "Motor state %s", motor_state_to_string(val));
+        for (auto* child : this->children_) {
+            child->on_motor_state(val);
         }
     }
 

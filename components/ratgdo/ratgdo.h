@@ -124,6 +124,7 @@ namespace ratgdo {
         void sendLockStatus();
 
         void sendMotionStatus();
+        void sendMotorStatus();
         void query();
         void doorStateLoop();
         void dryContactLoop();

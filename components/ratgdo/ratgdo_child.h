@@ -18,6 +18,7 @@ namespace ratgdo {
         virtual void on_lock_state(LockState state);
         virtual void on_motion_state(MotionState state);
         virtual void on_obstruction_state(ObstructionState state);
+        virtual void on_motor_state(MotorState state);
         virtual void on_rolling_code_change(uint32_t rollingCodeCounter);
 
     protected:

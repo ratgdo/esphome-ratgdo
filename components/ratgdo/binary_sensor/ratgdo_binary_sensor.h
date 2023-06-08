@@ -12,6 +12,7 @@ namespace ratgdo {
     enum SensorType {
         RATGDO_SENSOR_MOTION,
         RATGDO_SENSOR_OBSTRUCTION,
+        RATGDO_SENSOR_MOTOR
     };
 
     class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {
