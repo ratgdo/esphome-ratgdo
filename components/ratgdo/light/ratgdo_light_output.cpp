@@ -16,9 +16,10 @@ namespace ratgdo {
     void RATGDOLightOutput::on_light_state(LightState state)
     {
         ESP_LOGD(TAG, "on_light_state: %d", state);
+        this->_is_on = state == LightState::LIGHT_STATE_ON;
         if (this->light_state_) {
             auto call = this->light_state_->make_call();
-            call.set_state(state == LightState::LIGHT_STATE_ON);
+            call.set_state(this->_is_on);
             call.perform();
         }
     }
