@@ -22,16 +22,6 @@ substitutions:
   wifi_ssid: <FILL IN SSID>
   wifi_password: <FILL IN PASSWORD>
 
-
-esphome:
-  name: ${id_prefix}
-  platform: ESP8266
-  board: esp01_1m
-  restore_from_flash: true
-
-api:
-  id: api_server
-
 web_server:
 
 packages:
@@ -45,6 +35,9 @@ packages:
 time:
   - platform: homeassistant
     id: homeassistant_time
+
+api:
+  id: api_server
 
 ota:
 

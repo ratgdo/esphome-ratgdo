@@ -1,8 +1,18 @@
+esphome:
+  name: ${id_prefix}
+  platform: ESP8266
+  board: esp01_1m
+  restore_from_flash: true
+
+api:
+  id: api_server
+
 external_components:
   - source:
       type: git
       url: https://github.com/bdraco/esphome-ratgdo
     refresh: 1s
+
 
 ratgdo:
   id: ${id_prefix}
