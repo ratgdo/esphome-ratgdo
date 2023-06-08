@@ -186,6 +186,12 @@ namespace ratgdo {
             motion = 0; // when the status message is read, reset motion state to 0|clear
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
+            if (this->forceUpdate) {
+                this->forceUpdate = false;
+                this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
+                this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
+                this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
+            }
 
         } else if (cmd == 0x281) {
             light ^= 1; // toggle bit
@@ -450,9 +456,7 @@ namespace ratgdo {
 
     void RATGDOComponent::query()
     {
-        this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
-        this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
-        this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
+        this->forceUpdate = true;
         sendCommandAndSaveCounter(Commands::REBOOT2);
     }
 
