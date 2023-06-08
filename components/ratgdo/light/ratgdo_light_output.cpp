@@ -13,7 +13,7 @@ namespace ratgdo {
     {
         ESP_LOGCONFIG("", "RATGDO Light");
     }
-    void RATGDOLightOutput::on_light_state(LightState state)
+    void RATGDOLightOutput::on_light_state(esphome::ratgdo::LightState state)
     {
         ESP_LOGD(TAG, "on_light_state: %d", state);
         this->_is_on = state == LightState::LIGHT_STATE_ON;
