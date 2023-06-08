@@ -195,7 +195,7 @@ namespace ratgdo {
         } else if (cmd == 0x280) {
             ESP_LOGD(TAG, "Pressed: %s", "pressed" if byte1 == 1 else "released");
         } else if (cmd == 0x48c) {
-            ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);            
+            ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
         } else if (cmd == 0x285) {
             motion = 1; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
