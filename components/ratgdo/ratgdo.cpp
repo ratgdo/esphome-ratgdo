@@ -199,6 +199,8 @@ namespace ratgdo {
         } else if (cmd == 0x285) {
             motion = 1; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
+        } else {
+            ESP_LOGD(TAG, "Unknown command: %04x", cmd);
         }
     }
 
