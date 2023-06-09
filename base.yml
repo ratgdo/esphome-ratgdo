@@ -126,9 +126,9 @@ cover:
     device_class: garage
     name: ${friendly_name}
     ratgdo_id: ${id_prefix}
-    on_closed:
+    on_close:
       - switch.turn_off: ${id_prefix}_status_door
-    on_opened:
+    on_open:
       - switch.turn_on: ${id_prefix}_status_door
 
 
