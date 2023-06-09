@@ -44,13 +44,7 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_obst_pin_->setup();
 
-        this->status_door_pin_->setup();
-        this->status_obst_pin_->setup();
-
         this->store_.input_obst = this->input_obst_pin_->to_isr();
-
-        this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
-        this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
 
         this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
@@ -316,7 +310,6 @@ namespace ratgdo {
         for (auto* child : this->children_) {
             child->on_door_state(val);
         }
-        this->status_door_pin_->digital_write(this->doorState == 1);
     }
 
     void RATGDOComponent::sendLightStatus()
@@ -362,7 +355,6 @@ namespace ratgdo {
         for (auto* child : this->children_) {
             child->on_obstruction_state(val);
         }
-        this->status_obst_pin_->digital_write(this->obstructionState == 0);
     }
 
     /************************* DOOR COMMUNICATION *************************/

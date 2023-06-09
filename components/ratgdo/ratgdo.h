@@ -73,9 +73,6 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        static void IRAM_ATTR isrDoorOpen(RATGDOStore* arg);
-        static void IRAM_ATTR isrDoorClose(RATGDOStore* arg);
-        static void IRAM_ATTR isrLight(RATGDOStore* arg);
         static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
     };
 
@@ -106,9 +103,6 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
-
-        void set_status_door_pin(InternalGPIOPin* pin) { this->status_door_pin_ = pin; };
-        void set_status_obst_pin(InternalGPIOPin* pin) { this->status_obst_pin_ = pin; };
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
@@ -158,12 +152,8 @@ namespace ratgdo {
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
-
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-
-        InternalGPIOPin* status_door_pin_;
-        InternalGPIOPin* status_obst_pin_;
 
     }; // RATGDOComponent
 

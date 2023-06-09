@@ -21,6 +21,26 @@ external_components:
 ratgdo:
   id: ${id_prefix}
 
+
+
+switch:
+  - platform: gpio
+    id: "${id_prefix}_status_door"
+    pin: 
+      number: D0  # D0 output door status, HIGH for open, LOW for closed
+      mode:
+        output: true
+    name: "${friendly_name} Status Door"
+    entity_category: diagnostic
+  - platform: gpio
+    id: "${id_prefix}_status_obstruction"
+    pin: 
+      number: D8  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
+      mode:
+        output: true
+    name: "${friendly_name} Status Obstruction"
+    entity_category: diagnostic
+
 binary_sensor:
   - platform: ratgdo
     type: motion
@@ -34,6 +54,10 @@ binary_sensor:
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Obstruction"
     device_class: problem
+    on_press:
+      - switch.turn_on: ${id_prefix}_status_obstruction
+    on_release:
+      - switch.turn_off: ${id_prefix}_status_obstruction
   - platform: ratgdo
     type: motor
     id: ${id_prefix}_motor
@@ -102,6 +126,10 @@ cover:
     device_class: garage
     name: ${friendly_name}
     ratgdo_id: ${id_prefix}
+    on_closed:
+      - switch.turn_off: ${id_prefix}_status_door
+    on_opened:
+      - switch.turn_on: ${id_prefix}_status_door
 
 
 light:
