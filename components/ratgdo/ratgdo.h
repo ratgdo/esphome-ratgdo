@@ -82,9 +82,11 @@ namespace ratgdo {
         void loop() override;
         void dump_config() override;
 
-        uint32_t rollingCodeCounter;
+        uint32_t rollingCodeCounter{ 0};
+        uint32_t lastSyncedRollingCodeCounter{ 0};
+
         uint16_t previousOpenings { 0 }; // number of times the door has been opened
-        uint16_t openings; // number of times the door has been opened
+        uint16_t openings{0}; // number of times the door has been opened
 
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];

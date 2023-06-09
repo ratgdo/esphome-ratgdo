@@ -477,7 +477,10 @@ namespace ratgdo {
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
-        global_preferences->sync();
+        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter > 2) {
+            this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
+            global_preferences->sync();
+        }
     }
 
     void RATGDOComponent::register_child(RATGDOClient* obj)
