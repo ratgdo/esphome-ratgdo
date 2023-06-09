@@ -77,6 +77,12 @@ binary_sensor:
     on_release:
       - switch.turn_off: ${id_prefix}_status_obstruction
   - platform: ratgdo
+    type: button
+    id: ${id_prefix}_button
+    ratgdo_id: ${id_prefix}
+    name: "Button"
+    entity_category: diagnostic      
+  - platform: ratgdo
     type: motor
     id: ${id_prefix}_motor
     ratgdo_id: ${id_prefix}
