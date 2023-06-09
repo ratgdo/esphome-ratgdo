@@ -9,7 +9,7 @@ namespace ratgdo {
 
     void RATGDOSwitch::dump_config()
     {
-        LOG_NUMBER("", "RATGDO Switch", this);
+        LOG_SWITCH("", "RATGDO Switch", this);
         ESP_LOGCONFIG(TAG, "  Type: Lock");
     }
 
