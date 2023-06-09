@@ -110,7 +110,7 @@ namespace ratgdo {
         } else if (cmd == 0x84) {
             ESP_LOGD(TAG, "Unknown 0x84");
         } else if (cmd == 0x284) {
-            motor = 1;
+            motor = MotorState::MOTOR_STATE_ON;
         } else if (cmd == 0x280) {
             button = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
@@ -118,7 +118,7 @@ namespace ratgdo {
             openings = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
         } else if (cmd == 0x285) {
-            motion = 1; // toggle bit
+            motion = MotionState::MOTION_STATE_DETECTED; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
         } else {
             ESP_LOGD(TAG, "Unknown command: %04x", cmd);
