@@ -134,7 +134,6 @@ namespace ratgdo {
     void RATGDOComponent::getRollingCode(cmd command)
     {
         uint64_t fixed = command.fixed | REMOTE_ID;
-        ESP_LOGD(TAG, "Command: %d rollingCodeCounter=%d", command, this->rollingCodeCounter);
         encode_wireline(this->rollingCodeCounter, fixed, command.data, this->txRollingCode);
         printRollingCode();
         if (command != Command.DOOR1) { // door2 is created with same counter and should always be called after door1
