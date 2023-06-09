@@ -112,10 +112,10 @@ namespace ratgdo {
             this->motorState = MotorState::MOTOR_STATE_ON;
         } else if (cmd == 0x280) {
             this->buttonState = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
-            ESP_LOGD(TAG, "Pressed: %d", byte1 == 1);
+            ESP_LOGD(TAG, "Pressed: %d", this->buttonState);
         } else if (cmd == 0x48c) {
             this->openings = (byte1 << 8) | byte2;
-            ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
+            ESP_LOGD(TAG, "Openings: %d", this->openings);
         } else if (cmd == 0x285) {
             this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", this->motionState);
