@@ -140,9 +140,9 @@ number:
 
 cover:
   - platform: ratgdo
-    id: ${id_prefix}_garage
+    id: ${id_prefix}_garage_door
     device_class: garage
-    name: ${friendly_name}
+    name: "${friendly_name} Door"
     ratgdo_id: ${id_prefix}
     on_closed:
       - switch.turn_off: ${id_prefix}_status_door
