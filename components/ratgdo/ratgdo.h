@@ -108,7 +108,7 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void transmit(Commands command);
+        void transmit(command command);
         void sync();
 
         void obstructionLoop();
@@ -136,14 +136,14 @@ namespace ratgdo {
         void query();
         void doorStateLoop();
         void printRollingCode();
-        void getRollingCode(Commands command);
+        void getRollingCode(command command);
         void gdoStateLoop();
         void statusUpdateLoop();
         void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor);
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
-        void sendCommandAndSaveCounter(Commands command);
+        void sendCommandAndSaveCounter(command command);
         /** Register a child component. */
         void register_child(RATGDOClient* obj);
 
