@@ -33,14 +33,14 @@ namespace ratgdo {
     // Forward declare RATGDOClient
     class RATGDOClient;
 
-    typedef struct {
+    struct cmd {
         uint64_t fixed;
         uint32_t data;
         inline bool operator!=(cmd const &other) const
         {
             return (fixed != other.fixed || data != other.data);
         }        
-    } cmd;
+    };
 
     typedef struct {
         cmd REBOOT1;
