@@ -15,7 +15,8 @@ namespace ratgdo {
 
     void RATGDOSwitch::on_lock_state(LockState state)
     {
-        this->state(state == LockState::LOCK_STATE_LOCKED) this->publish_state();
+        this->state(state == LockState::LOCK_STATE_LOCKED);
+        this->publish_state();
     }
     void RATGDOSwitch::write_state(bool state)
     {
