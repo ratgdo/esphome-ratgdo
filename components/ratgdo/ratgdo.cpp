@@ -25,7 +25,7 @@ namespace ratgdo {
     static const uint64_t REMOTE_ID = 0x539;
     static const uint16_t STATUS_CMD = 0x81;
 
-    void IRAM_ATTR RATGDOStore::isrObstruction(RATGDOStore* arg)
+    void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
         if (arg->input_obst.digital_read()) {
             arg->lastObstructionHigh = millis();

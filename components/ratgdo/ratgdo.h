@@ -73,7 +73,7 @@ namespace ratgdo {
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        static void IRAM_ATTR isrObstruction(RATGDOStore* arg);
+        static void IRAM_ATTR HOT isrObstruction(RATGDOStore* arg);
     };
 
     class RATGDOComponent : public uart::UARTDevice, public Component {
