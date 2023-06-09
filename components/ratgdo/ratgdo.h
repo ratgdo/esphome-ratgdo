@@ -33,17 +33,36 @@ namespace ratgdo {
     // Forward declare RATGDOClient
     class RATGDOClient;
 
-    enum Commands {
-        REBOOT1,
-        REBOOT2,
-        REBOOT3,
-        REBOOT4,
-        REBOOT5,
-        REBOOT6,
-        DOOR1,
-        DOOR2,
-        LIGHT,
-        LOCK,
+    typedef struct {
+        uint64_t fixed;
+        uint32_t data;
+    } command;
+
+    typedef struct {
+        command REBOOT1;
+        command REBOOT2;
+        command REBOOT3;
+        command REBOOT4;
+        command REBOOT5;
+        command REBOOT6;
+        command REBOOT4;
+        command DOOR1;
+        command DOOR2;
+        command LIGHT;
+        command LOCK;
+    } commands;
+
+    static const commands Command = {
+        .REBOOT1 = (command) { 0x400000000, 0x0000618b },
+        .REBOOT2 = (command) { 0, 0x01009080 },
+        .REBOOT3 = (command) { 0, 0x0000b1a0 },
+        .REBOOT4 = (command) { 0, 0x01009080 },
+        .REBOOT5 = (command) { 0x300000000, 0x00008092 },
+        .REBOOT6 = (command) { 0x300000000, 0x00008092 },
+        .DOOR1 = (command) { 0x200000000, 0x01018280 },
+        .DOOR2 = (command) { 0x200000000, 0x01009280 },
+        .LIGHT = (command) { 0x200000000, 0x00009281 },
+        .LOCK = (command) { 0x0100000000, 0x0000728c },
     };
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
@@ -121,7 +140,7 @@ namespace ratgdo {
         void getRollingCode(Commands command);
         void gdoStateLoop();
         void statusUpdateLoop();
-        void readRollingCode(bool &isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor);
+        void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor);
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);

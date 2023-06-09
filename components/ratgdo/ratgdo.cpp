@@ -81,7 +81,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(bool &isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
+    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -130,58 +130,12 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::getRollingCode(Commands command)
+    void RATGDOComponent::getRollingCode(command command)
     {
 
         uint64_t id = 0x539;
-        uint64_t fixed = 0;
-        uint32_t data = 0;
-
-        switch (command) {
-        case REBOOT1:
-            fixed = 0x400000000;
-            data = 0x0000618b;
-            break;
-        case REBOOT2:
-            fixed = 0;
-            data = 0x01009080;
-            break;
-        case REBOOT3:
-            fixed = 0;
-            data = 0x0000b1a0;
-            break;
-        case REBOOT4:
-            fixed = 0;
-            data = 0x01009080;
-            break;
-        case REBOOT5:
-            fixed = 0x300000000;
-            data = 0x00008092;
-            break;
-        case REBOOT6:
-            fixed = 0x300000000;
-            data = 0x00008092;
-            break;
-        case DOOR1:
-            fixed = 0x200000000;
-            data = 0x01018280;
-            break;
-        case DOOR2:
-            fixed = 0x200000000;
-            data = 0x01009280;
-            break;
-        case LIGHT:
-            fixed = 0x200000000;
-            data = 0x00009281;
-            break;
-        case LOCK:
-            fixed = 0x0100000000;
-            data = 0x0000728c;
-            break;
-        default:
-            ESP_LOGD(TAG, "ERROR: Invalid command");
-            return;
-        }
+        uint64_t fixed = command.fixed;
+        uint32_t data = command.data;
 
         ESP_LOGD(TAG, "Command: %d rollingCodeCounter=%d", command, this->rollingCodeCounter);
 
@@ -191,7 +145,7 @@ namespace ratgdo {
 
         printRollingCode();
 
-        if (command != Commands::DOOR1) { // door2 is created with same counter and should always be called after door1
+        if (command != Commands.DOOR1) { // door2 is created with same counter and should always be called after door1
             incrementRollingCodeCounter();
         }
         return;
@@ -284,8 +238,8 @@ namespace ratgdo {
     {
         static uint32_t msgStart;
         static bool reading = false;
-        static uint16_t byteCount = 0;    
-        static bool isStatus = false;    
+        static uint16_t byteCount = 0;
+        static bool isStatus = false;
 
         while (this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
@@ -362,7 +316,7 @@ namespace ratgdo {
     void RATGDOComponent::query()
     {
         this->forceUpdate_ = true;
-        sendCommandAndSaveCounter(Commands::REBOOT2);
+        sendCommandAndSaveCounter(Commands.REBOOT2);
     }
 
     void RATGDOComponent::sendDoorStatus()
@@ -430,7 +384,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(Commands command)
+    void RATGDOComponent::transmit(command command)
     {
         getRollingCode(command);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
@@ -444,22 +398,22 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        transmit(Commands::REBOOT1);
+        transmit(Commands.REBOOT1);
         delay(65);
 
-        transmit(Commands::REBOOT2);
+        transmit(Commands.REBOOT2);
         delay(65);
 
-        transmit(Commands::REBOOT3);
+        transmit(Commands.REBOOT3);
         delay(65);
 
-        transmit(Commands::REBOOT4);
+        transmit(Commands.REBOOT4);
         delay(65);
 
-        transmit(Commands::REBOOT5);
+        transmit(Commands.REBOOT5);
         delay(65);
 
-        sendCommandAndSaveCounter(Commands::REBOOT6);
+        sendCommandAndSaveCounter(Commands.REBOOT6);
         delay(65);
     }
 
@@ -492,9 +446,9 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        transmit(Commands::DOOR1);
+        transmit(Commands.DOOR1);
         delay(40);
-        sendCommandAndSaveCounter(Commands::DOOR2);
+        sendCommandAndSaveCounter(Commands.DOOR2);
     }
 
     bool RATGDOComponent::isLightOn()
@@ -528,7 +482,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLight()
     {
-        sendCommandAndSaveCounter(Commands::LIGHT);
+        sendCommandAndSaveCounter(Commands.LIGHT);
     }
 
     // Lock functions
@@ -552,10 +506,10 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommandAndSaveCounter(Commands::LOCK);
+        sendCommandAndSaveCounter(Commands.LOCK);
     }
 
-    void RATGDOComponent::sendCommandAndSaveCounter(Commands command)
+    void RATGDOComponent::sendCommandAndSaveCounter(command command)
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
