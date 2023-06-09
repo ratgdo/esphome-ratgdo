@@ -130,7 +130,7 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::getRollingCode(command command)
+    void RATGDOComponent::getRollingCode(cmd command)
     {
 
         uint64_t id = 0x539;
@@ -384,7 +384,7 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(command command)
+    void RATGDOComponent::transmit(cmd command)
     {
         getRollingCode(command);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
@@ -509,7 +509,7 @@ namespace ratgdo {
         sendCommandAndSaveCounter(Command.LOCK);
     }
 
-    void RATGDOComponent::sendCommandAndSaveCounter(command command)
+    void RATGDOComponent::sendCommandAndSaveCounter(cmd command)
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);

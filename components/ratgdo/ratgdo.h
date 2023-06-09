@@ -36,36 +36,36 @@ namespace ratgdo {
     typedef struct {
         uint64_t fixed;
         uint32_t data;
-        inline bool operator!=(const command& cmd) const
+        inline bool operator!=(const cmd& cmd) const
         {
             return (fixed != cmd.fixed || data != cmd.data);
         }        
-    } command;
+    } cmd;
 
     typedef struct {
-        command REBOOT1;
-        command REBOOT2;
-        command REBOOT3;
-        command REBOOT4;
-        command REBOOT5;
-        command REBOOT6;
-        command DOOR1;
-        command DOOR2;
-        command LIGHT;
-        command LOCK;
-    } commands;
+        cmd REBOOT1;
+        cmd REBOOT2;
+        cmd REBOOT3;
+        cmd REBOOT4;
+        cmd REBOOT5;
+        cmd REBOOT6;
+        cmd DOOR1;
+        cmd DOOR2;
+        cmd LIGHT;
+        cmd LOCK;
+    } cmds;
 
-    const commands Command = {
-        .REBOOT1 = (command) { 0x400000000, 0x0000618b },
-        .REBOOT2 = (command) { 0, 0x01009080 },
-        .REBOOT3 = (command) { 0, 0x0000b1a0 },
-        .REBOOT4 = (command) { 0, 0x01009080 },
-        .REBOOT5 = (command) { 0x300000000, 0x00008092 },
-        .REBOOT6 = (command) { 0x300000000, 0x00008092 },
-        .DOOR1 = (command) { 0x200000000, 0x01018280 },
-        .DOOR2 = (command) { 0x200000000, 0x01009280 },
-        .LIGHT = (command) { 0x200000000, 0x00009281 },
-        .LOCK = (command) { 0x0100000000, 0x0000728c },
+    const cmds Command = {
+        .REBOOT1 = (cmd) { 0x400000000, 0x0000618b },
+        .REBOOT2 = (cmd) { 0, 0x01009080 },
+        .REBOOT3 = (cmd) { 0, 0x0000b1a0 },
+        .REBOOT4 = (cmd) { 0, 0x01009080 },
+        .REBOOT5 = (cmd) { 0x300000000, 0x00008092 },
+        .REBOOT6 = (cmd) { 0x300000000, 0x00008092 },
+        .DOOR1 = (cmd) { 0x200000000, 0x01018280 },
+        .DOOR2 = (cmd) { 0x200000000, 0x01009280 },
+        .LIGHT = (cmd) { 0x200000000, 0x00009281 },
+        .LOCK = (cmd) { 0x0100000000, 0x0000728c },
     };
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
@@ -112,7 +112,7 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void transmit(command command);
+        void transmit(cmd command);
         void sync();
 
         void obstructionLoop();
@@ -140,14 +140,14 @@ namespace ratgdo {
         void query();
         void doorStateLoop();
         void printRollingCode();
-        void getRollingCode(command command);
+        void getRollingCode(cmd command);
         void gdoStateLoop();
         void statusUpdateLoop();
         void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor);
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
-        void sendCommandAndSaveCounter(command command);
+        void sendCommandAndSaveCounter(cmd command);
         /** Register a child component. */
         void register_child(RATGDOClient* obj);
 
