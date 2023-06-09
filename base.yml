@@ -61,7 +61,6 @@ binary_sensor:
         pullup: true    
     name: "${friendly_name} Dry contact close"
     entity_category: diagnostic
-    invert: true
     on_press:
       - cover.close: ${id_prefix}_garage
   - platform: gpio
