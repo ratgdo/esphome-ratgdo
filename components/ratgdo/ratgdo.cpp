@@ -270,7 +270,7 @@ namespace ratgdo {
                         this->obstructionState,
                         this->motorState,
                         this->openings,
-                        this->button);
+                        this->buttonState);
                     if (isStatus && this->forceUpdate_) {
                         this->forceUpdate_ = false;
                         this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
