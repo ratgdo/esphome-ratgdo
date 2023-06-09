@@ -24,6 +24,7 @@ namespace ratgdo {
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
     static const uint64_t REMOTE_ID = 0x539;
     static const uint16_t STATUS_CMD = 0x81;
+    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -367,8 +368,10 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        transmit(Command.REBOOT1);
-        delay(65);
+        for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
+            transmit(Command.REBOOT1);
+            delay(65);
+        }
         transmit(Command.REBOOT2);
         delay(65);
         transmit(Command.REBOOT3);
@@ -477,7 +480,7 @@ namespace ratgdo {
     {
         transmit(command);
         this->pref_.save(&this->rollingCodeCounter);
-        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter > 2) {
+        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= MAX_CODES_WITHOUT_FLASH_WRITE) {
             this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
             global_preferences->sync();
         }
