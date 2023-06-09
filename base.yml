@@ -44,16 +44,19 @@ binary_sensor:
   - platform: gpio
     pin: D5 # # D5 dry contact for opening door
     name: "${friendly_name} Dry contact open"
+    eneity_category: diagnostic
     on_press:
       - cover.open: ${id_prefix}_garage
   - platform: gpio
     pin: D6  # D6 dry contact for closing door
     name: "${friendly_name} Dry contact close"
+    eneity_category: diagnostic
     on_press:
       - cover.close: ${id_prefix}_garage    
   - platform: gpio
     pin: D3  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
     name: "${friendly_name} Dry contact light"
+    eneity_category: diagnostic
     on_press:
       - light.toggle: {id_prefix}_light
 
