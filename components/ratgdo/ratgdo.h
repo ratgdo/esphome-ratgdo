@@ -81,9 +81,11 @@ namespace ratgdo {
         void setup() override;
         void loop() override;
         void dump_config() override;
-        /********************************** GLOBAL VARS
-         * *****************************************/
+
         uint32_t rollingCodeCounter;
+        uint16_t previousOpenings { 0 }; // number of times the door has been opened
+        uint16_t openings; // number of times the door has been opened
+
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
 
@@ -111,6 +113,8 @@ namespace ratgdo {
 
         void obstructionLoop();
         void sendObstructionStatus();
+
+        void sendOpenings();
 
         void toggleDoor();
         void openDoor();

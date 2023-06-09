@@ -74,7 +74,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
+    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings)
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -114,6 +114,7 @@ namespace ratgdo {
         } else if (cmd == 0x280) {
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
         } else if (cmd == 0x48c) {
+            openings = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
         } else if (cmd == 0x285) {
             motion = 1; // toggle bit
@@ -259,7 +260,7 @@ namespace ratgdo {
                     byteCount = 0;
                     isStatus = false;
 
-                    readRollingCode(isStatus, this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
+                    readRollingCode(isStatus, this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState, this->openings);
                     if (isStatus && this->forceUpdate_) {
                         this->forceUpdate_ = false;
                         this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
@@ -275,31 +276,42 @@ namespace ratgdo {
     {
         if (this->doorState != this->previousDoorState)
             sendDoorStatus();
+        this->previousDoorState = this->doorState;
         if (this->lightState != this->previousLightState)
             sendLightStatus();
+        this->previousLightState = this->lightState;
         if (this->lockState != this->previousLockState)
             sendLockStatus();
+        this->previousLockState = this->lockState;
         if (this->obstructionState != this->previousObstructionState)
             sendObstructionStatus();
+        this->previousObstructionState = this->obstructionState;
         if (this->motorState != this->previousMotorState) {
             sendMotorStatus();
+            this->previousMotorState = this->motorState;
         }
         if (this->motionState == MotionState::MOTION_STATE_DETECTED) {
             sendMotionStatus();
             this->motionState = MotionState::MOTION_STATE_CLEAR;
         }
-
-        this->previousDoorState = this->doorState;
-        this->previousLightState = this->lightState;
-        this->previousLockState = this->lockState;
-        this->previousObstructionState = this->obstructionState;
-        this->previousMotorState = this->motorState;
+        if (this->openings != this->previousOpenings) {
+            sendOpenings();
+            this->previousOpenings = this->openings;
+        }
     }
 
     void RATGDOComponent::query()
     {
         this->forceUpdate_ = true;
         sendCommandAndSaveCounter(Command.REBOOT2);
+    }
+
+    void RATGDOComponent::sendOpenings()
+    {
+        ESP_LOGD(TAG, "Openings: %d", this->openings);
+        for (auto* child : this->children_) {
+            child->on_openings_change(this->openings);
+        }
     }
 
     void RATGDOComponent::sendDoorStatus()

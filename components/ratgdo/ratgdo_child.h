@@ -20,6 +20,7 @@ namespace ratgdo {
         virtual void on_obstruction_state(ObstructionState state);
         virtual void on_motor_state(MotorState state);
         virtual void on_rolling_code_change(uint32_t rollingCodeCounter);
+        virtual void on_openings_change(uint32_t openings);
 
     protected:
         friend RATGDOComponent;

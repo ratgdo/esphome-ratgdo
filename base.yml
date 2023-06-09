@@ -30,6 +30,15 @@ uart:
     inverted: true
   baud_rate: 9600
 
+sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_openings
+    type: openings
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "${friendly_name} Openings"
+    unit_of_measurement: "openings"
+
 switch:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
