@@ -73,7 +73,6 @@ binary_sensor:
         pullup: true    
     name: "${friendly_name} Dry contact light"
     entity_category: diagnostic
-    invert: true
     on_press:
       - light.toggle: ${id_prefix}_light
 
