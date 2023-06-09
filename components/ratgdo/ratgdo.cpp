@@ -261,7 +261,16 @@ namespace ratgdo {
                     byteCount = 0;
                     isStatus = false;
 
-                    readRollingCode(isStatus, this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState, this->openings);
+                    readRollingCode(
+                        isStatus,
+                        this->doorState,
+                        this->lightState,
+                        this->lockState,
+                        this->motionState,
+                        this->obstructionState,
+                        this->motorState,
+                        this->openings,
+                        this->button);
                     if (isStatus && this->forceUpdate_) {
                         this->forceUpdate_ = false;
                         this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
