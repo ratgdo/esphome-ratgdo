@@ -48,14 +48,6 @@ namespace ratgdo {
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
 
-        ISRInternalGPIOPin trigger_open;
-        ISRInternalGPIOPin trigger_close;
-        ISRInternalGPIOPin trigger_light;
-
-        bool dryContactDoorOpen { false };
-        bool dryContactDoorClose { false };
-        bool dryContactToggleLight { false };
-
         int obstructionLowCount = 0; // count obstruction low pulses
         long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
@@ -93,10 +85,6 @@ namespace ratgdo {
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
 
-        void set_trigger_open_pin(InternalGPIOPin* pin) { this->trigger_open_pin_ = pin; };
-        void set_trigger_close_pin(InternalGPIOPin* pin) { this->trigger_close_pin_ = pin; };
-        void set_trigger_light_pin(InternalGPIOPin* pin) { this->trigger_light_pin_ = pin; };
-
         void set_status_door_pin(InternalGPIOPin* pin) { this->status_door_pin_ = pin; };
         void set_status_obst_pin(InternalGPIOPin* pin) { this->status_obst_pin_ = pin; };
 
@@ -129,7 +117,6 @@ namespace ratgdo {
         void sendMotorStatus();
         void query();
         void doorStateLoop();
-        void dryContactLoop();
         void printRollingCode();
         void getRollingCode(Commands command);
         void gdoStateLoop();
@@ -152,10 +139,6 @@ namespace ratgdo {
 
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-
-        InternalGPIOPin* trigger_open_pin_;
-        InternalGPIOPin* trigger_close_pin_;
-        InternalGPIOPin* trigger_light_pin_;
 
         InternalGPIOPin* status_door_pin_;
         InternalGPIOPin* status_obst_pin_;

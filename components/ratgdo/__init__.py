@@ -21,13 +21,6 @@ DEFAULT_INPUT_GDO = "D2" # D2 red control terminal / GarageDoorOpener (UART1 RX)
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
-CONF_TRIGGER_OPEN = "trigger_open_pin"
-DEFAULT_TRIGGER_OPEN = "D5"  # D5 dry contact for opening door
-CONF_TRIGGER_CLOSE = "trigger_close_pin"
-DEFAULT_TRIGGER_CLOSE = "D6"  # D6 dry contact for closing door
-CONF_TRIGGER_LIGHT = "trigger_light_pin"
-DEFAULT_TRIGGER_LIGHT = "D3"  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
-
 CONF_STATUS_DOOR = "status_door_pin"
 DEFAULT_STATUS_DOOR = "D0"  # D0 output door status, HIGH for open, LOW for closed
 CONF_STATUS_OBST = "status_obst_pin"
@@ -48,15 +41,6 @@ CONFIG_SCHEMA = (
             ): pins.gpio_input_pin_schema,
             cv.Optional(
                 CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
-            ): pins.gpio_input_pin_schema,
-            cv.Optional(
-                CONF_TRIGGER_OPEN, default=DEFAULT_TRIGGER_OPEN
-            ): pins.gpio_input_pin_schema,
-            cv.Optional(
-                CONF_TRIGGER_CLOSE, default=DEFAULT_TRIGGER_CLOSE
-            ): pins.gpio_input_pin_schema,
-            cv.Optional(
-                CONF_TRIGGER_LIGHT, default=DEFAULT_TRIGGER_LIGHT
             ): pins.gpio_input_pin_schema,
             cv.Optional(
                 CONF_STATUS_DOOR, default=DEFAULT_STATUS_DOOR

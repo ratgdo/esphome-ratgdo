@@ -23,65 +23,6 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
 
-    /*************************** DRY CONTACT CONTROL OF LIGHT & DOOR
-     * ***************************/
-    void IRAM_ATTR HOT RATGDOStore::isrDoorOpen(RATGDOStore* arg)
-    {
-        static unsigned long lastOpenDoorTime = 0;
-
-        unsigned long currentMillis = millis();
-        // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < STARTUP_DELAY)
-            return;
-
-        if (!arg->trigger_open.digital_read()) {
-            // save the time of the falling edge
-            lastOpenDoorTime = currentMillis;
-        } else if (currentMillis - lastOpenDoorTime > 500 && currentMillis - lastOpenDoorTime < 10000) {
-            // now see if the rising edge was between 500ms and 10 seconds after the
-            // falling edge
-            arg->dryContactDoorOpen = true;
-        }
-    }
-
-    void IRAM_ATTR HOT RATGDOStore::isrDoorClose(RATGDOStore* arg)
-    {
-        static unsigned long lastCloseDoorTime = 0;
-
-        unsigned long currentMillis = millis();
-        // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < STARTUP_DELAY)
-            return;
-
-        if (!arg->trigger_close.digital_read()) {
-            // save the time of the falling edge
-            lastCloseDoorTime = currentMillis;
-        } else if (currentMillis - lastCloseDoorTime > 500 && currentMillis - lastCloseDoorTime < 10000) {
-            // now see if the rising edge was between 500ms and 10 seconds after the
-            // falling edge
-            arg->dryContactDoorClose = true;
-        }
-    }
-
-    void IRAM_ATTR HOT RATGDOStore::isrLight(RATGDOStore* arg)
-    {
-        static unsigned long lastToggleLightTime = 0;
-
-        unsigned long currentMillis = millis();
-        // Prevent ISR during the first 2 seconds after reboot
-        if (currentMillis < STARTUP_DELAY)
-            return;
-
-        if (!arg->trigger_light.digital_read()) {
-            // save the time of the falling edge
-            lastToggleLightTime = currentMillis;
-        } else if (currentMillis - lastToggleLightTime > 500 && currentMillis - lastToggleLightTime < 10000) {
-            // now see if the rising edge was between 500ms and 10 seconds after the
-            // falling edge
-            arg->dryContactToggleLight = true;
-        }
-    }
-
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
         if (arg->input_obst.digital_read()) {
@@ -102,22 +43,10 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_obst_pin_->setup();
 
-        this->trigger_open_pin_->setup();
-        this->trigger_close_pin_->setup();
-        this->trigger_light_pin_->setup();
-
         this->status_door_pin_->setup();
         this->status_obst_pin_->setup();
 
         this->store_.input_obst = this->input_obst_pin_->to_isr();
-
-        this->store_.trigger_open = this->trigger_open_pin_->to_isr();
-        this->store_.trigger_close = this->trigger_close_pin_->to_isr();
-        this->store_.trigger_light = this->trigger_light_pin_->to_isr();
-
-        this->trigger_open_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->trigger_close_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->trigger_light_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
         this->status_door_pin_->pin_mode(gpio::FLAG_OUTPUT);
         this->status_obst_pin_->pin_mode(gpio::FLAG_OUTPUT);
@@ -128,9 +57,6 @@ namespace ratgdo {
 
         this->check_uart_settings(9600, 1, esphome::uart::UART_CONFIG_PARITY_NONE, 8);
 
-        this->trigger_open_pin_->attach_interrupt(RATGDOStore::isrDoorOpen, &this->store_, gpio::INTERRUPT_ANY_EDGE);
-        this->trigger_close_pin_->attach_interrupt(RATGDOStore::isrDoorClose, &this->store_, gpio::INTERRUPT_ANY_EDGE);
-        this->trigger_light_pin_->attach_interrupt(RATGDOStore::isrLight, &this->store_, gpio::INTERRUPT_ANY_EDGE);
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         ESP_LOGD(TAG, "Syncing rolling code counter after reboot...");
@@ -141,7 +67,6 @@ namespace ratgdo {
     {
         obstructionLoop();
         gdoStateLoop();
-        dryContactLoop();
         statusUpdateLoop();
     }
 
@@ -151,9 +76,6 @@ namespace ratgdo {
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
         LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
-        LOG_PIN("  Trigger Open Pin: ", this->trigger_open_pin_);
-        LOG_PIN("  Trigger Close Pin: ", this->trigger_close_pin_);
-        LOG_PIN("  Trigger Light Pin: ", this->trigger_light_pin_);
         LOG_PIN("  Status Door Pin: ", this->status_door_pin_);
         LOG_PIN("  Status Obstruction Pin: ", this->status_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
@@ -325,28 +247,6 @@ namespace ratgdo {
             this->txRollingCode[16],
             this->txRollingCode[17],
             this->txRollingCode[18]);
-    }
-
-    // handle changes to the dry contact state
-    void RATGDOComponent::dryContactLoop()
-    {
-        if (this->store_.dryContactDoorOpen) {
-            ESP_LOGD(TAG, "Dry Contact: open the door");
-            this->store_.dryContactDoorOpen = false;
-            openDoor();
-        }
-
-        if (this->store_.dryContactDoorClose) {
-            ESP_LOGD(TAG, "Dry Contact: close the door");
-            this->store_.dryContactDoorClose = false;
-            closeDoor();
-        }
-
-        if (this->store_.dryContactToggleLight) {
-            ESP_LOGD(TAG, "Dry Contact: toggle the light");
-            this->store_.dryContactToggleLight = false;
-            toggleLight();
-        }
     }
 
     /*************************** OBSTRUCTION DETECTION ***************************/
