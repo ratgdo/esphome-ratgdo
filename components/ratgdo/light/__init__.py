@@ -1,10 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import (
-    CONF_OUTPUT_ID,  # New in 2023.5
-)
 from esphome.components import light
-from .. import ratgdo_ns, register_ratgdo_child, RATGDO_CLIENT_SCHMEA
+from esphome.const import CONF_OUTPUT_ID  # New in 2023.5
+
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 

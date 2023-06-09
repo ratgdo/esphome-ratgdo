@@ -1,8 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import CONF_ID
 from esphome.components import switch
-from .. import ratgdo_ns, register_ratgdo_child, RATGDO_CLIENT_SCHMEA
+from esphome.const import CONF_ID
+
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 

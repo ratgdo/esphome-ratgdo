@@ -1,8 +1,8 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.const import CONF_ID
 from esphome import pins
 from esphome.components import uart
+from esphome.const import CONF_ID
 
 DEPENDENCIES = ["preferences", "uart"]
 MULTI_CONF = True
@@ -17,7 +17,9 @@ DEFAULT_OUTPUT_GDO = (
     "D4"  # D4 red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
 )
 CONF_INPUT_GDO = "input_gdo_pin"
-DEFAULT_INPUT_GDO = "D2" # D2 red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+DEFAULT_INPUT_GDO = (
+    "D2"  # D2 red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+)
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
