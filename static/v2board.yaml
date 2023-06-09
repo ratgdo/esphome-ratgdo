@@ -5,6 +5,14 @@ substitutions:
 
 web_server:
 
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.esphome
+    version: "1.0"
+
 dashboard_import:
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
 
