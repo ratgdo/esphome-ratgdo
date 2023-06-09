@@ -1,3 +1,4 @@
+---
 esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
@@ -5,7 +6,6 @@ esphome:
   project: 
     name: ratgdo.esphome
     version: "1.0"
-
 
 esp8266:
   board: d1_mini_lite
@@ -86,11 +86,11 @@ light:
 
 uart:
   tx_pin: 
-      number: D4 # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
-      inverted: true
+    number: D4 # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
+    inverted: true
   rx_pin:
-      number: D2 # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
-      inverted: true
+    number: D2 # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+    inverted: true
   baud_rate: 9600
 
 
