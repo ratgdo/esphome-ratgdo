@@ -94,6 +94,7 @@ namespace ratgdo {
         uint8_t previousLockState { LockState::LOCK_STATE_UNKNOWN };
         uint8_t previousObstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
         uint8_t previousMotorState { MotorState::MOTOR_STATE_UNKNOWN };
+        uint8_t previousButtonState { ButtonState::BUTTON_STATE_UNKNOWN };
 
         uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
         uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
@@ -101,6 +102,7 @@ namespace ratgdo {
         uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
         uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
         uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
+        uint8_t buttonState { ButtonState::BUTTON_STATE_UNKNOWN };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
@@ -132,7 +134,7 @@ namespace ratgdo {
         void lock();
         void unlock();
         void sendLockStatus();
-
+        void sendButtonStatus();
         void sendMotionStatus();
         void sendMotorStatus();
         void query();
@@ -141,7 +143,7 @@ namespace ratgdo {
         void getRollingCode(cmd command);
         void gdoStateLoop();
         void statusUpdateLoop();
-        void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings);
+        void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings, uint8_t& button);
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);

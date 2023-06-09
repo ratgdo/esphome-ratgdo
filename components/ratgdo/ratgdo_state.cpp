@@ -87,5 +87,18 @@ namespace ratgdo {
         }
     }
 
+    const char* button_state_to_string(ButtonState state)
+    {
+        switch (state) {
+        case BUTTON_STATE_PRESSED:
+            return "PRESSED";
+        case BUTTON_STATE_RELEASED:
+            return "RELEASED";
+        case BUTTON_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
+        }
+    }    
+
 } // namespace ratgdo
 } // namespace esphome

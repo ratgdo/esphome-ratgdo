@@ -70,5 +70,13 @@ namespace ratgdo {
     };
     const char* motor_state_to_string(MotorState state);
 
+    /// Enum for all states the button can be in.
+    enum ButtonState : uint8_t {
+        BUTTON_STATE_PRESSED = 0,
+        BUTTON_STATE_RELEASED = 1,
+        BUTTON_STATE_UNKNOWN = 2,
+    };
+    const char* button_state_to_string(ButtonState state);
+
 } // namespace ratgdo
 } // namespace esphome

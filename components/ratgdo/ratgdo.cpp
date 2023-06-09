@@ -74,7 +74,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings)
+    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings, uint8_t& button)
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -112,6 +112,7 @@ namespace ratgdo {
         } else if (cmd == 0x284) {
             motor = 1;
         } else if (cmd == 0x280) {
+            button = bytes1 == 1
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
         } else if (cmd == 0x48c) {
             openings = (byte1 << 8) | byte2;
@@ -294,6 +295,10 @@ namespace ratgdo {
             sendMotionStatus();
             this->motionState = MotionState::MOTION_STATE_CLEAR;
         }
+        if (this->buttonState != this->previousButtonState) {
+            sendButtonStatus();
+            this->previousButtonState = this->buttonState;
+        }
         if (this->openings != this->previousOpenings) {
             sendOpenings();
             this->previousOpenings = this->openings;
@@ -347,6 +352,15 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
         for (auto* child : this->children_) {
             child->on_motion_state(val);
+        }
+    }
+
+    void RATGDOComponent::sendButtonStatus()
+    {
+        ButtonState val = static_cast<ButtonState>(this->buttonState);
+        ESP_LOGD(TAG, "Button state %s", button_state_to_string(val));
+        for (auto* child : this->children_) {
+            child->on_button_state(val);
         }
     }
 
