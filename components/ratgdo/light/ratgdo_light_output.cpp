@@ -23,8 +23,7 @@ namespace ratgdo {
     void RATGDOLightOutput::set_state(esphome::ratgdo::LightState state)
     {
 
-        bool is_on
-            = state == LightState::LIGHT_STATE_ON;
+        bool is_on = state == LightState::LIGHT_STATE_ON;
         this->light_state_->current_values.set_state(is_on);
         this->light_state_->remote_values.set_state(is_on);
         this->light_state_->publish_state();
@@ -32,7 +31,7 @@ namespace ratgdo {
     void RATGDOLightOutput::setup_state(light::LightState* light_state)
     {
         esphome::ratgdo::LightState state = this->parent_->getLightState();
-        ESP_LOGD(TAG, "setup_state: getLightState: %d", state)
+        ESP_LOGD(TAG, "setup_state: getLightState: %d", state);
         this->light_state_ = light_state;
         this->set_state(state);
     }
