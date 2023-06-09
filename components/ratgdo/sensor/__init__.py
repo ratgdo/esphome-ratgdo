@@ -8,11 +8,11 @@ from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 DEPENDENCIES = ["ratgdo"]
 
 RATGDOSensor = ratgdo_ns.class_("RATGDOSensor", sensor.Sensor, cg.Component)
-SensorType = ratgdo_ns.enum("SensorType")
+RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
 CONF_TYPE = "type"
 TYPES = {
-    "openings": SensorType.RATGDO_OPENINGS,
+    "openings": RATGDOSensorType.RATGDO_OPENINGS,
 }
 
 
