@@ -22,6 +22,7 @@ namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
+    static const uint64_t REMOTE_ID = 0x539;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -132,23 +133,13 @@ namespace ratgdo {
 
     void RATGDOComponent::getRollingCode(cmd command)
     {
-
-        uint64_t id = 0x539;
-        uint64_t fixed = command.fixed;
-        uint32_t data = command.data;
-
+        uint64_t fixed = command.fixed | REMOTE_ID;
         ESP_LOGD(TAG, "Command: %d rollingCodeCounter=%d", command, this->rollingCodeCounter);
-
-        fixed = fixed | id;
-
-        encode_wireline(this->rollingCodeCounter, fixed, data, this->txRollingCode);
-
+        encode_wireline(this->rollingCodeCounter, fixed, command.data, this->txRollingCode);
         printRollingCode();
-
         if (command != Command.DOOR1) { // door2 is created with same counter and should always be called after door1
             incrementRollingCodeCounter();
         }
-        return;
     }
 
     void RATGDOComponent::setRollingCodeCounter(uint32_t counter)
