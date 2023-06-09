@@ -21,12 +21,6 @@ DEFAULT_INPUT_GDO = "D2" # D2 red control terminal / GarageDoorOpener (UART1 RX)
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
-CONF_STATUS_DOOR = "status_door_pin"
-DEFAULT_STATUS_DOOR = "D0"  # D0 output door status, HIGH for open, LOW for closed
-CONF_STATUS_OBST = "status_obst_pin"
-DEFAULT_STATUS_OBST = (
-    "D8"  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
-)
 CONF_RATGDO_ID = "ratgdo_id"
 
 CONFIG_SCHEMA = (
@@ -42,12 +36,6 @@ CONFIG_SCHEMA = (
             cv.Optional(
                 CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
             ): pins.gpio_input_pin_schema,
-            cv.Optional(
-                CONF_STATUS_DOOR, default=DEFAULT_STATUS_DOOR
-            ): pins.gpio_output_pin_schema,
-            cv.Optional(
-                CONF_STATUS_OBST, default=DEFAULT_STATUS_OBST
-            ): pins.gpio_output_pin_schema,
         }
     )
     .extend(cv.COMPONENT_SCHEMA)
@@ -75,11 +63,6 @@ async def to_code(config):
     cg.add(var.set_input_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
     cg.add(var.set_input_obst_pin(pin))
-
-    pin = await cg.gpio_pin_expression(config[CONF_STATUS_DOOR])
-    cg.add(var.set_status_door_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_STATUS_OBST])
-    cg.add(var.set_status_obst_pin(pin))
 
     await uart.register_uart_device(var, config)
 
