@@ -141,7 +141,7 @@ namespace ratgdo {
         void getRollingCode(cmd command);
         void gdoStateLoop();
         void statusUpdateLoop();
-        void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor);
+        void readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings);
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
