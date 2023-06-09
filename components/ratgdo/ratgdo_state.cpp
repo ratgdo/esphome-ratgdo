@@ -54,10 +54,10 @@ namespace ratgdo {
     const char* motion_state_to_string(MotionState state)
     {
         switch (state) {
-        case MOTION_STATE_DETECTED:
-            return "DETECTED";
         case MOTION_STATE_CLEAR:
             return "CLEAR";
+        case MOTION_STATE_DETECTED:
+            return "DETECTED";
         case MOTION_STATE_UNKNOWN:
         default:
             return "UNKNOWN";
