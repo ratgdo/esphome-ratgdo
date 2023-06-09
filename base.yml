@@ -41,6 +41,10 @@ binary_sensor:
     name: "${friendly_name} Motor"
     device_class: running
     entity_category: diagnostic
+  - platform: gpio
+    pin: D2
+    name: "${friendly_name} Motor"
+
 
 number:
   - platform: ratgdo
@@ -68,10 +72,10 @@ light:
 
 uart:
   tx_pin: 
-      number: 2
+      number: D4 # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
       inverted: true
   rx_pin:
-      number: 4
+      number: D2 # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
       inverted: true
   baud_rate: 9600
 
