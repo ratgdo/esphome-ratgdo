@@ -31,7 +31,7 @@ sensor:
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Openings"
     unit_of_measurement: "openings"
-    icon: up-arrow-box
+    icon: mdi:up-arrow-box
 
 switch:
   - platform: ratgdo
