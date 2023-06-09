@@ -71,8 +71,6 @@ namespace ratgdo {
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
         LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
-        LOG_PIN("  Status Door Pin: ", this->status_door_pin_);
-        LOG_PIN("  Status Obstruction Pin: ", this->status_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
