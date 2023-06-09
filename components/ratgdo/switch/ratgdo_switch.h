@@ -13,7 +13,7 @@ namespace ratgdo {
         RATGDO_LOCK
     };
 
-    class RATGDOSwitch : public switch::Switch, public RATGDOClient, public Component {
+    class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
     public:
         void dump_config() override;
         void set_switch_type(SwitchType switch_type_) { this->switch_type_ = switch_type_; }
