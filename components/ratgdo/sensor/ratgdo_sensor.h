@@ -17,7 +17,7 @@ namespace ratgdo {
     public:
         void setup() override;
         void dump_config() override;
-        void set_ratgo_sensor_type(RATGDOSensorType sensor_type_) { this->ratgdo_sensor_type_ = sensor_type_; }
+        void set_ratgdo_sensor_type(RATGDOSensorType sensor_type_) { this->ratgdo_sensor_type_ = sensor_type_; }
 
         void on_openings_change(uint32_t openings) override;
 
