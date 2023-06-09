@@ -119,7 +119,7 @@ namespace ratgdo {
                 ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
             } else if (cmd == 0x285) {
                 this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
-                ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
+                ESP_LOGD(TAG, "Motion: %d (toggle)", this->motionState);
             } else {
                 ESP_LOGD(TAG, "Unknown command: %04x", cmd);
             }
