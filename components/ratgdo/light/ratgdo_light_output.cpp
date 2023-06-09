@@ -21,7 +21,7 @@ namespace ratgdo {
         }
     }
     void RATGDOLightOutput::set_state(light::LightState* light_state, esphome::ratgdo::LightState state)
-    {
+    
         bool is_on = state == LightState::LIGHT_STATE_ON;
         light_state->current_values.set_state(is_on);
         light_state->remote_values.set_state(is_on);
