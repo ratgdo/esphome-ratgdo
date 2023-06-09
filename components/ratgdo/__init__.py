@@ -68,6 +68,6 @@ async def to_code(config):
 
     cg.add_library(
         name="secplus",
-        repository="https://github.com/bdraco/secplus",
+        repository="https://github.com/esphome-ratgdo/secplus",
         version="f98c3220356c27717a25102c0b35815ebbd26ccc",
     )
