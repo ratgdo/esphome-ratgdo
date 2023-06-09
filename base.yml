@@ -29,7 +29,7 @@ sensor:
     type: openings
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Openings"
+    name: "Openings"
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
 
@@ -39,7 +39,7 @@ switch:
     type: lock
     entity_category: config
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Lock remotes"
+    name: "Lock remotes"
   - platform: gpio
     id: "${id_prefix}_status_door"
     internal: true
@@ -47,7 +47,7 @@ switch:
       number: D0  # D0 output door status, HIGH for open, LOW for closed
       mode:
         output: true
-    name: "${friendly_name} Status door"
+    name: "Status door"
     entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_status_obstruction"
@@ -56,7 +56,7 @@ switch:
       number: D8  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
       mode:
         output: true
-    name: "${friendly_name} Status obstruction"
+    name: "Status obstruction"
     entity_category: diagnostic
 
 binary_sensor:
@@ -64,13 +64,13 @@ binary_sensor:
     type: motion
     id: ${id_prefix}_motion
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Motion"
+    name: "Motion"
     device_class: motion
   - platform: ratgdo
     type: obstruction
     id: ${id_prefix}_obstruction
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Obstruction"
+    name: "Obstruction"
     device_class: problem
     on_press:
       - switch.turn_on: ${id_prefix}_status_obstruction
@@ -80,7 +80,7 @@ binary_sensor:
     type: motor
     id: ${id_prefix}_motor
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Motor"
+    name: "Motor"
     device_class: running
     entity_category: diagnostic
   - platform: gpio
@@ -91,7 +91,7 @@ binary_sensor:
       mode:
         input: true
         pullup: true
-    name: "${friendly_name} Dry contact open"
+    name: "Dry contact open"
     entity_category: diagnostic
     on_press:
       - if:
@@ -107,7 +107,7 @@ binary_sensor:
       mode:
         input: true
         pullup: true    
-    name: "${friendly_name} Dry contact close"
+    name: "Dry contact close"
     entity_category: diagnostic
     on_press:
       - if:
@@ -123,7 +123,7 @@ binary_sensor:
       mode:
         input: true
         pullup: true    
-    name: "${friendly_name} Dry contact light"
+    name: "Dry contact light"
     entity_category: diagnostic
     on_press:
       - light.toggle: ${id_prefix}_light
@@ -134,7 +134,7 @@ number:
     type: rolling_code_counter
     entity_category: config
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Rolling code counter"
+    name: "Rolling code counter"
     mode: box
     unit_of_measurement: "codes"
 
@@ -142,7 +142,7 @@ cover:
   - platform: ratgdo
     id: ${id_prefix}_garage_door
     device_class: garage
-    name: "${friendly_name} Door"
+    name: "Door"
     ratgdo_id: ${id_prefix}
     on_closed:
       - switch.turn_off: ${id_prefix}_status_door
@@ -152,24 +152,24 @@ cover:
 light:
   - platform: ratgdo
     id: ${id_prefix}_light
-    name: "${friendly_name} Light"
+    name: "Light"
     ratgdo_id: ${id_prefix}
 
 button:
   - platform: restart
-    name: "${friendly_name} Restart"
+    name: "Restart"
   - platform: safe_mode
-    name: "${friendly_name} Safe mode boot"
+    name: "Safe mode boot"
     entity_category: diagnostic
   - platform: ratgdo
     id: ${id_prefix}_sync
     type: sync
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Sync"
+    name: "Sync"
   - platform: ratgdo
     id: ${id_prefix}_query
     type: query
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
-    name: "${friendly_name} Query"
+    name: "Query"
