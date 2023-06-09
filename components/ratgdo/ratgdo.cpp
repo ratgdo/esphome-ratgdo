@@ -284,32 +284,67 @@ namespace ratgdo {
 
     void RATGDOComponent::statusUpdateLoop()
     {
-        if (this->doorState != this->previousDoorState)
-            sendDoorStatus();
-        this->previousDoorState = this->doorState;
-        if (this->lightState != this->previousLightState)
-            sendLightStatus();
-        this->previousLightState = this->lightState;
-        if (this->lockState != this->previousLockState)
-            sendLockStatus();
-        this->previousLockState = this->lockState;
-        if (this->obstructionState != this->previousObstructionState)
-            sendObstructionStatus();
-        this->previousObstructionState = this->obstructionState;
+        if (this->doorState != this->previousDoorState) {
+            DoorState val = static_cast<DoorState>(this->doorState);
+            ESP_LOGD(TAG, "Door state: %s", door_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_door_state(val);
+            }
+            this->previousDoorState = this->doorState;
+        }
+        if (this->lightState != this->previousLightState) {
+            LightState val = static_cast<LightState>(this->lightState);
+            ESP_LOGD(TAG, "Light state %s (%d)", light_state_to_string(val), this->lightState);
+            for (auto* child : this->children_) {
+                child->on_light_state(val);
+            }
+            this->previousLightState = this->lightState;
+        }
+        if (this->lockState != this->previousLockState) {
+            LockState val = static_cast<LockState>(this->lockState);
+            ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_lock_state(val);
+            }
+            this->previousLockState = this->lockState;
+        }
+        if (this->obstructionState != this->previousObstructionState){
+            ObstructionState val = static_cast<ObstructionState>(this->obstructionState);
+            ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_obstruction_state(val);
+            }
+            this->previousObstructionState = this->obstructionState;
+        }
         if (this->motorState != this->previousMotorState) {
-            sendMotorStatus();
+            MotorState val = static_cast<MotorState>(this->motorState);
+            ESP_LOGD(TAG, "Motor state %s", motor_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_motor_state(val);
+            }
             this->previousMotorState = this->motorState;
         }
         if (this->motionState == MotionState::MOTION_STATE_DETECTED) {
-            sendMotionStatus();
+            MotionState val = static_cast<MotionState>(this->motionState);
+            ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_motion_state(val);
+            }
             this->motionState = MotionState::MOTION_STATE_CLEAR;
         }
         if (this->buttonState != this->previousButtonState) {
-            sendButtonStatus();
+            ButtonState val = static_cast<ButtonState>(this->buttonState);
+            ESP_LOGD(TAG, "Button state %s", button_state_to_string(val));
+            for (auto* child : this->children_) {
+                child->on_button_state(val);
+            }
             this->previousButtonState = this->buttonState;
         }
         if (this->openings != this->previousOpenings) {
-            sendOpenings();
+            ESP_LOGD(TAG, "Openings: %d", this->openings);
+            for (auto* child : this->children_) {
+                child->on_openings_change(this->openings);
+            }
             this->previousOpenings = this->openings;
         }
     }
@@ -318,77 +353,6 @@ namespace ratgdo {
     {
         this->forceUpdate_ = true;
         sendCommandAndSaveCounter(Command.REBOOT2);
-    }
-
-    void RATGDOComponent::sendOpenings()
-    {
-        ESP_LOGD(TAG, "Openings: %d", this->openings);
-        for (auto* child : this->children_) {
-            child->on_openings_change(this->openings);
-        }
-    }
-
-    void RATGDOComponent::sendDoorStatus()
-    {
-        DoorState val = static_cast<DoorState>(this->doorState);
-        ESP_LOGD(TAG, "Door state: %s", door_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_door_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendLightStatus()
-    {
-        LightState val = static_cast<LightState>(this->lightState);
-        ESP_LOGD(TAG, "Light state %s (%d)", light_state_to_string(val), this->lightState);
-        for (auto* child : this->children_) {
-            child->on_light_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendLockStatus()
-    {
-        LockState val = static_cast<LockState>(this->lockState);
-        ESP_LOGD(TAG, "Lock state %s", lock_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_lock_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendMotionStatus()
-    {
-        MotionState val = static_cast<MotionState>(this->motionState);
-        ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_motion_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendButtonStatus()
-    {
-        ButtonState val = static_cast<ButtonState>(this->buttonState);
-        ESP_LOGD(TAG, "Button state %s", button_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_button_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendMotorStatus()
-    {
-        MotorState val = static_cast<MotorState>(this->motorState);
-        ESP_LOGD(TAG, "Motor state %s", motor_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_motor_state(val);
-        }
-    }
-
-    void RATGDOComponent::sendObstructionStatus()
-    {
-        ObstructionState val = static_cast<ObstructionState>(this->obstructionState);
-        ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
-        for (auto* child : this->children_) {
-            child->on_obstruction_state(val);
-        }
     }
 
     /************************* DOOR COMMUNICATION *************************/

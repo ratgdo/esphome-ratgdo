@@ -113,36 +113,26 @@ namespace ratgdo {
         void transmit(cmd command);
         void sync();
 
+        void gdoStateLoop();
         void obstructionLoop();
-        void sendObstructionStatus();
+        void statusUpdateLoop();
 
-        void sendOpenings();
-
+        void sendCommandAndSaveCounter(cmd command);
         void toggleDoor();
         void openDoor();
         void closeDoor();
         void stopDoor();
-        void sendDoorStatus();
-
         void toggleLight();
         void lightOn();
         void lightOff();
         bool isLightOn();
-        void sendLightStatus();
-
         void toggleLock();
         void lock();
         void unlock();
-        void sendLockStatus();
-        void sendButtonStatus();
-        void sendMotionStatus();
-        void sendMotorStatus();
         void query();
-        void doorStateLoop();
+
         void printRollingCode();
         void getRollingCode(cmd command);
-        void gdoStateLoop();
-        void statusUpdateLoop();
         void readRollingCode(
             bool& isStatus,
             uint8_t& door,
@@ -156,7 +146,6 @@ namespace ratgdo {
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
-        void sendCommandAndSaveCounter(cmd command);
         LightState getLightState();
         /** Register a child component. */
         void register_child(RATGDOClient* obj);
