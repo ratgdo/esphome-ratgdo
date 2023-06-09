@@ -76,13 +76,6 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
     cg.add(var.set_input_obst_pin(pin))
 
-    pin = await cg.gpio_pin_expression(config[CONF_TRIGGER_OPEN])
-    cg.add(var.set_trigger_open_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_TRIGGER_CLOSE])
-    cg.add(var.set_trigger_close_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_TRIGGER_LIGHT])
-    cg.add(var.set_trigger_light_pin(pin))
-
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_DOOR])
     cg.add(var.set_status_door_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_STATUS_OBST])
