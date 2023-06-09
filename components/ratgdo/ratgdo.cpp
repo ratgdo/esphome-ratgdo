@@ -225,58 +225,59 @@ namespace ratgdo {
         static uint16_t byteCount = 0;
         static bool isStatus = false;
 
-        while (this->available()) {
+        if (!this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
-            uint8_t serData;
-            if (!this->read_byte(&serData)) {
-                ESP_LOGD(TAG, "Failed to read byte");
+            return;
+        }
+        uint8_t serData;
+        if (!this->read_byte(&serData)) {
+            ESP_LOGD(TAG, "Failed to read byte");
+            return;
+        }
+        if (!reading) {
+            // shift serial byte onto msg start
+            msgStart <<= 8;
+            msgStart |= serData;
+
+            // truncate to 3 bytes
+            msgStart &= 0x00FFFFFF;
+
+            // if we are at the start of a message, capture the next 16 bytes
+            if (msgStart == 0x550100) {
+                byteCount = 3;
+                rxRollingCode[0] = 0x55;
+                rxRollingCode[1] = 0x01;
+                rxRollingCode[2] = 0x00;
+
+                reading = true;
                 return;
             }
-            if (!reading) {
-                // shift serial byte onto msg start
-                msgStart <<= 8;
-                msgStart |= serData;
+        }
+        if (reading) {
+            this->rxRollingCode[byteCount] = serData;
+            byteCount++;
 
-                // truncate to 3 bytes
-                msgStart &= 0x00FFFFFF;
+            if (byteCount == CODE_LENGTH) {
+                reading = false;
+                msgStart = 0;
+                byteCount = 0;
+                isStatus = false;
 
-                // if we are at the start of a message, capture the next 16 bytes
-                if (msgStart == 0x550100) {
-                    byteCount = 3;
-                    rxRollingCode[0] = 0x55;
-                    rxRollingCode[1] = 0x01;
-                    rxRollingCode[2] = 0x00;
-
-                    reading = true;
-                    return;
-                }
-            }
-            if (reading) {
-                this->rxRollingCode[byteCount] = serData;
-                byteCount++;
-
-                if (byteCount == CODE_LENGTH) {
-                    reading = false;
-                    msgStart = 0;
-                    byteCount = 0;
-                    isStatus = false;
-
-                    readRollingCode(
-                        isStatus,
-                        this->doorState,
-                        this->lightState,
-                        this->lockState,
-                        this->motionState,
-                        this->obstructionState,
-                        this->motorState,
-                        this->openings,
-                        this->buttonState);
-                    if (isStatus && this->forceUpdate_) {
-                        this->forceUpdate_ = false;
-                        this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
-                        this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
-                        this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
-                    }
+                readRollingCode(
+                    isStatus,
+                    this->doorState,
+                    this->lightState,
+                    this->lockState,
+                    this->motionState,
+                    this->obstructionState,
+                    this->motorState,
+                    this->openings,
+                    this->buttonState);
+                if (isStatus && this->forceUpdate_) {
+                    this->forceUpdate_ = false;
+                    this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
+                    this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
+                    this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
                 }
             }
         }
