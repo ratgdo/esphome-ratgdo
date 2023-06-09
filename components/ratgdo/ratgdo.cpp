@@ -374,10 +374,10 @@ namespace ratgdo {
     {
         this->rollingCodeUpdatesEnabled_ = false;
         for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
-            transmit(Command.REBOOT1);
+            transmit(Command.REBOOT1); // get openings
             delay(65);
         }
-        transmit(Command.REBOOT2);
+        transmit(Command.REBOOT2); // get state
         delay(65);
         transmit(Command.REBOOT3);
         delay(65);
