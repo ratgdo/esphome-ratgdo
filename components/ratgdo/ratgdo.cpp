@@ -23,6 +23,7 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
     static const uint64_t REMOTE_ID = 0x539;
+    static const uint16_t STATUS_CMD = 0x81;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -74,7 +75,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(bool& isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor, uint16_t& openings, uint8_t& button)
+    uint16_t RATGDOComponent::readRollingCode() {
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -93,36 +94,35 @@ namespace ratgdo {
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
-        if (cmd == 0x81) {
-
-            door = nibble;
-            light = (byte2 >> 1) & 1;
-            lock = byte2 & 1;
-            motion = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
-            motor = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
+        if (cmd == STATUS_CMD) {
+            this->doorState = nibble;
+            this->lightState = (byte2 >> 1) & 1;
+            this->lockState = byte2 & 1;
+            this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
+            this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
-            isStatus = true;
 
         } else if (cmd == 0x281) {
-            light ^= 1; // toggle bit
-            ESP_LOGD(TAG, "Light: %d (toggle)", light);
+            this->lightState ^= 1; // toggle bit
+            ESP_LOGD(TAG, "Light: %d (toggle)", this->lightState);
         } else if (cmd == 0x84) {
             ESP_LOGD(TAG, "Unknown 0x84");
         } else if (cmd == 0x284) {
-            motor = MotorState::MOTOR_STATE_ON;
+            this->motorState = MotorState::MOTOR_STATE_ON;
         } else if (cmd == 0x280) {
-            button = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
+            this->buttonState = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
         } else if (cmd == 0x48c) {
-            openings = (byte1 << 8) | byte2;
+            this->openings = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Openings: %d", (byte1 << 8) | byte2);
         } else if (cmd == 0x285) {
-            motion = MotionState::MOTION_STATE_DETECTED; // toggle bit
+            this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", motion);
         } else {
             ESP_LOGD(TAG, "Unknown command: %04x", cmd);
         }
+        return cmd;
     }
 
     void RATGDOComponent::getRollingCode(cmd command)
@@ -261,19 +261,7 @@ namespace ratgdo {
                 reading = false;
                 msgStart = 0;
                 byteCount = 0;
-                isStatus = false;
-
-                readRollingCode(
-                    isStatus,
-                    this->doorState,
-                    this->lightState,
-                    this->lockState,
-                    this->motionState,
-                    this->obstructionState,
-                    this->motorState,
-                    this->openings,
-                    this->buttonState);
-                if (isStatus && this->forceUpdate_) {
+                if (readRollingCode() == STATUS_CMD && this->forceUpdate_) {
                     this->forceUpdate_ = false;
                     this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
                     this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
