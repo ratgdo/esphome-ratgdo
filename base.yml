@@ -21,7 +21,14 @@ external_components:
 ratgdo:
   id: ${id_prefix}
 
-
+uart:
+  tx_pin:
+    number: D4  # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
+    inverted: true
+  rx_pin:
+    number: D2  # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+    inverted: true
+  baud_rate: 9600
 
 switch:
   - platform: ratgdo
@@ -30,7 +37,6 @@ switch:
     entity_category: config
     ratgdo_id: ${id_prefix}
     name: "${friendly_name} Lock remotes"
-
   - platform: gpio
     id: "${id_prefix}_status_door"
     pin: 
@@ -138,22 +144,11 @@ cover:
     on_open:
       - switch.turn_on: ${id_prefix}_status_door
 
-
 light:
   - platform: ratgdo
     id: ${id_prefix}_light
     name: "${friendly_name} Light"
     ratgdo_id: ${id_prefix}
-
-uart:
-  tx_pin:
-    number: D4  # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
-    inverted: true
-  rx_pin:
-    number: D2  # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
-    inverted: true
-  baud_rate: 9600
-
 
 button:
   - platform: restart
