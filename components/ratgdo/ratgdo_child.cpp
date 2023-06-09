@@ -14,6 +14,7 @@ namespace ratgdo {
     void RATGDOClient::on_motor_state(MotorState state) {};
     void RATGDOClient::on_rolling_code_change(uint32_t rollingCodeCounter) {};
     void RATGDOClient::on_openings_change(uint32_t openings) {};
+    void RATGDOClient::on_button_state(ButtonState state) {};
 
 } // namespace ratgdo
 } // namespace esphome
