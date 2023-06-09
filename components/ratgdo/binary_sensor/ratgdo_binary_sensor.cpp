@@ -9,7 +9,7 @@ namespace ratgdo {
 
     void RATGDOBinarySensor::setup()
     {
-        if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION)
+        if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTION || this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_OBSTRUCTION) {
             this->publish_state(false);
     }
 
