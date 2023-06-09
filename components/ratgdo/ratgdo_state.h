@@ -51,6 +51,7 @@ namespace ratgdo {
     enum MotionState : uint8_t {
         MOTION_STATE_CLEAR = 0,
         MOTION_STATE_DETECTED = 1,
+        MOTION_STATE_UNKNOWN = 2,
     };
     const char* motion_state_to_string(MotionState state);
 

@@ -57,8 +57,10 @@ namespace ratgdo {
         case MOTION_STATE_DETECTED:
             return "DETECTED";
         case MOTION_STATE_CLEAR:
-        default:
             return "CLEAR";
+        case MOTION_STATE_UNKNOWN:
+        default:
+            return "UNKNOWN";
         }
     }
 

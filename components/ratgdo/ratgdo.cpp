@@ -324,13 +324,13 @@ namespace ratgdo {
             }
             this->previousMotorState = this->motorState;
         }
-        if (this->motionState == MotionState::MOTION_STATE_DETECTED) {
+        if (this->motionState == this->previousMotionState) {
             MotionState val = static_cast<MotionState>(this->motionState);
             ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
             for (auto* child : this->children_) {
                 child->on_motion_state(val);
             }
-            this->motionState = MotionState::MOTION_STATE_CLEAR;
+            this->previousMotionState = this->motionState;
         }
         if (this->buttonState != this->previousButtonState) {
             ButtonState val = static_cast<ButtonState>(this->buttonState);

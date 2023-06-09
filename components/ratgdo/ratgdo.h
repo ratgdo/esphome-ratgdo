@@ -95,14 +95,15 @@ namespace ratgdo {
         uint8_t previousObstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
         uint8_t previousMotorState { MotorState::MOTOR_STATE_UNKNOWN };
         uint8_t previousButtonState { ButtonState::BUTTON_STATE_UNKNOWN };
+        uint8_t previousMotionState { MotionState::MOTION_STATE_UNKNOWN };
 
-        uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
-        uint8_t motionState { MotionState::MOTION_STATE_CLEAR };
-        uint8_t motorState { MotorState::MOTOR_STATE_UNKNOWN };
-        uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
-        uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
         uint8_t doorState { DoorState::DOOR_STATE_UNKNOWN };
+        uint8_t lightState { LightState::LIGHT_STATE_UNKNOWN };
+        uint8_t lockState { LockState::LOCK_STATE_UNKNOWN };
+        uint8_t obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+        uint8_t motorState { MotorState::MOTOR_STATE_UNKNOWN };
         uint8_t buttonState { ButtonState::BUTTON_STATE_UNKNOWN };
+        uint8_t motionState { MotionState::MOTION_STATE_UNKNOWN };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
