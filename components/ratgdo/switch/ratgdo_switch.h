@@ -19,8 +19,7 @@ namespace ratgdo {
         void set_switch_type(SwitchType switch_type_) { this->switch_type_ = switch_type_; }
 
         void on_lock_state(LockState state) override;
-        void turn_off() override;
-        void turn_on() override;
+        void write_state(bool state) override;
 
     protected:
         SwitchType switch_type_;

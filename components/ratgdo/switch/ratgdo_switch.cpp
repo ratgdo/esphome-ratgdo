@@ -17,16 +17,14 @@ namespace ratgdo {
     {
         this->state(state == LockState::LOCK_STATE_LOCKED) this->publish_state();
     }
-    void RATGDOSwitch::turn_on()
+    void RATGDOSwitch::write_state(bool state)
     {
-        ESP_LOGD(TAG, "name: %s this->type_:%d ON", this->get_name(), this->switch_type_);
-        this->parent_->lock(value);
-        this->publish_state(value);
-    }
-    void RATGDOSwitch::turn_off()
-    {
-        ESP_LOGD(TAG, "name: %s this->type_:%d OFF", this->get_name(), this->switch_type_);
-        this->parent_->unlock(value);
+        ESP_LOGD(TAG, "name: %s this->type_:%d state: %d", this->get_name(), this->switch_type_, state);
+        if (state) {
+            this->parent_->lock(value);
+        } else {
+            this->parent_->unlock(value);
+        }
         this->publish_state(value);
     }
 
