@@ -287,50 +287,49 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop()
     {
-        if (!this->available()) {
+        while (this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
-            return;
-        }
-        uint8_t serData;
-        if (!this->read_byte(&serData)) {
-            ESP_LOGD(TAG, "Failed to read byte");
-            return;
-        }
-
-        static uint32_t msgStart;
-        static bool reading = false;
-        static uint16_t byteCount = 0;
-
-        if (!reading) {
-            // shift serial byte onto msg start
-            msgStart <<= 8;
-            msgStart |= serData;
-
-            // truncate to 3 bytes
-            msgStart &= 0x00FFFFFF;
-
-            // if we are at the start of a message, capture the next 16 bytes
-            if (msgStart == 0x550100) {
-                byteCount = 3;
-                rxRollingCode[0] = 0x55;
-                rxRollingCode[1] = 0x01;
-                rxRollingCode[2] = 0x00;
-
-                reading = true;
+            uint8_t serData;
+            if (!this->read_byte(&serData)) {
+                ESP_LOGD(TAG, "Failed to read byte");
                 return;
             }
-        }
 
-        if (reading) {
-            this->rxRollingCode[byteCount] = serData;
-            byteCount++;
+            static uint32_t msgStart;
+            static bool reading = false;
+            static uint16_t byteCount = 0;
 
-            if (byteCount == 19) {
-                reading = false;
-                msgStart = 0;
-                byteCount = 0;
+            if (!reading) {
+                // shift serial byte onto msg start
+                msgStart <<= 8;
+                msgStart |= serData;
 
-                readRollingCode(this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
+                // truncate to 3 bytes
+                msgStart &= 0x00FFFFFF;
+
+                // if we are at the start of a message, capture the next 16 bytes
+                if (msgStart == 0x550100) {
+                    byteCount = 3;
+                    rxRollingCode[0] = 0x55;
+                    rxRollingCode[1] = 0x01;
+                    rxRollingCode[2] = 0x00;
+
+                    reading = true;
+                    return;
+                }
+            }
+
+            if (reading) {
+                this->rxRollingCode[byteCount] = serData;
+                byteCount++;
+
+                if (byteCount == 19) {
+                    reading = false;
+                    msgStart = 0;
+                    byteCount = 0;
+
+                    readRollingCode(this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
+                }
             }
         }
     }
