@@ -38,7 +38,7 @@ namespace ratgdo {
         uint32_t data;
     } command;
 
-    static const commands Command = {
+    static const Command = {
         .REBOOT1 = (command) { 0x400000000, 0x0000618b },
         .REBOOT2 = (command) { 0, 0x01009080 },
         .REBOOT3 = (command) { 0, 0x0000b1a0 },
