@@ -80,7 +80,7 @@ cover:
 
 light:
   - platform: ratgdo
-    id: {id_prefix}_light
+    id: ${id_prefix}_light
     name: "${friendly_name} Light"
     ratgdo_id: ${id_prefix}
 
