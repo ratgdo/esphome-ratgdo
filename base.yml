@@ -98,7 +98,7 @@ binary_sensor:
           condition:
             binary_sensor.is_off: ${id_prefix}_dry_contact_close
           then:
-            - cover.open: ${id_prefix}_garage    
+            - cover.open: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin: 
@@ -114,7 +114,7 @@ binary_sensor:
           condition:
             binary_sensor.is_off: ${id_prefix}_dry_contact_open
           then:
-            - cover.close: ${id_prefix}_garage
+            - cover.close: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
     pin: 
