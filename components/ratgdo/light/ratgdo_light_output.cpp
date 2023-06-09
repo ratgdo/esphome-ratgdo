@@ -17,20 +17,22 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "on_light_state: %d", state);
         if (this->light_state_) {
-            set_state(this->light_state_, state);
+            set_state(state);
         }
     }
-    void RATGDOLightOutput::set_state(light::LightState* light_state, esphome::ratgdo::LightState state)
+    void RATGDOLightOutput::set_state(esphome::ratgdo::LightState state)
     
         bool is_on = state == LightState::LIGHT_STATE_ON;
-        light_state->current_values.set_state(is_on);
-        light_state->remote_values.set_state(is_on);
-        light_state->publish_state();
+        this->light_state_->current_values.set_state(is_on);
+        this->light_state_->remote_values.set_state(is_on);
+        this->light_state_->publish_state();
     }
-    void RATGDOLightOutput::setup_state(light::LightState* state)
+    void RATGDOLightOutput::setup_state(light::LightState* light_state)
     {
-        this->light_state_ = state;
-        this->set_state(state, this->parent_->getLightState());
+        esphome::ratgdo::LightState state = this->parent_->getLightState();
+        ESP_LOGD(TAG,"setup_state: getLightState: %d", state)
+        this->light_state_ = light_state;
+        this->set_state(state);
     }
     LightTraits RATGDOLightOutput::get_traits()
     {
