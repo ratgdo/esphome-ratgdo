@@ -23,7 +23,7 @@ namespace ratgdo {
         } else if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_MOTOR) {
             ESP_LOGCONFIG(TAG, "  Type: Motor");
         } else if (this->binary_sensor_type_ == SensorType::RATGDO_SENSOR_BUTTON) {
-            ESP_LOGCONFIG(TAG, "  Type: Button");            
+            ESP_LOGCONFIG(TAG, "  Type: Button");
         }
     }
     void RATGDOBinarySensor::on_motion_state(MotionState state)
@@ -53,7 +53,7 @@ namespace ratgdo {
             return;
         ESP_LOGD(TAG, "name: %s this->type_:%d on_button_state: %d", this->get_name(), this->binary_sensor_type_, state);
         this->publish_state(state == ButtonState::BUTTON_STATE_PRESSED);
-    }    
+    }
 
 } // namespace ratgdo
 } // namespace esphome

@@ -98,7 +98,7 @@ namespace ratgdo {
         default:
             return "UNKNOWN";
         }
-    }    
+    }
 
 } // namespace ratgdo
 } // namespace esphome
