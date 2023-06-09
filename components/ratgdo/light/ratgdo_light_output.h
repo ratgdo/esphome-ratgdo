@@ -22,6 +22,7 @@ namespace ratgdo {
 
     protected:
         light::LightState* light_state_;
+        bool has_initial_state_ = false;
     };
 
 } // namespace ratgdo

@@ -17,6 +17,7 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "on_light_state: %d", state);
         if (this->light_state_) {
+            this->has_initial_state_ = true;
             set_state(state);
         }
     }
@@ -44,6 +45,8 @@ namespace ratgdo {
 
     void RATGDOLightOutput::write_state(light::LightState* state)
     {
+        if (!this->has_initial_state_)
+            return;
         bool binary;
         state->current_values_as_binary(&binary);
         if (binary) {
