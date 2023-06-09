@@ -497,7 +497,7 @@ namespace ratgdo {
         this->children_.push_back(obj);
         obj->set_parent(this);
     }
-    LightState RATGDOComponent::get_light_state()
+    LightState RATGDOComponent::getLightState()
     {
         return static_cast<LightState>(this->lightState);
     }
