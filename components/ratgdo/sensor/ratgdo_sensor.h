@@ -22,7 +22,7 @@ namespace ratgdo {
         void on_openings_change(uint32_t openings) override;
 
     protected:
-        SensorType sensor_type_;
+        RATGDOSensorType sensor_type_;
     };
 
 } // namespace ratgdo
