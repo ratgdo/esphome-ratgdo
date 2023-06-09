@@ -423,11 +423,11 @@ namespace ratgdo {
 
     void RATGDOComponent::stopDoor()
     {
-        if (this->doorState == DoorState::DOOR_STATE_OPENING || this->doorState == DoorState::DOOR_STATE_CLOSING) {
-            toggleDoor();
-        } else {
+        if (this->doorState != DoorState::DOOR_STATE_OPENING && this->doorState != DoorState::DOOR_STATE_CLOSING) {
             ESP_LOGD(TAG, "The door is not moving.");
+            return;
         }
+        toggleDoor();
     }
 
     void RATGDOComponent::toggleDoor()
@@ -446,24 +446,24 @@ namespace ratgdo {
     {
         if (this->lightState == LightState::LIGHT_STATE_ON) {
             ESP_LOGD(TAG, "The light is already on");
-        } else {
-            toggleLight();
-            // We don't always get the state back so be optimistic
-            this->previousLightState = this->lightState;
-            this->lightState = LightState::LIGHT_STATE_ON;
-        }
+            return;
+        } 
+        toggleLight();
+        // We don't always get the state back so be optimistic
+        this->previousLightState = this->lightState;
+        this->lightState = LightState::LIGHT_STATE_ON;
     }
 
     void RATGDOComponent::lightOff()
     {
         if (this->lightState == LightState::LIGHT_STATE_OFF) {
             ESP_LOGD(TAG, "The light is already off");
-        } else {
-            toggleLight();
-            // We don't always get the state back so be optimistic
-            this->previousLightState = this->lightState;
-            this->lightState = LightState::LIGHT_STATE_OFF;
+            return;
         }
+        toggleLight();
+        // We don't always get the state back so be optimistic
+        this->previousLightState = this->lightState;
+        this->lightState = LightState::LIGHT_STATE_OFF;
     }
 
     void RATGDOComponent::toggleLight()
@@ -476,18 +476,18 @@ namespace ratgdo {
     {
         if (this->lockState == LockState::LOCK_STATE_LOCKED) {
             ESP_LOGD(TAG, "already locked");
-        } else {
-            toggleLock();
+            return;
         }
+        toggleLock();
     }
 
     void RATGDOComponent::unlock()
     {
         if (this->lockState == LockState::LOCK_STATE_UNLOCKED) {
             ESP_LOGD(TAG, "already unlocked");
-        } else {
-            toggleLock();
+            return;
         }
+        toggleLock();
     }
 
     void RATGDOComponent::toggleLock()
