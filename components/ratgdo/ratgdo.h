@@ -45,7 +45,6 @@ namespace ratgdo {
         command REBOOT4;
         command REBOOT5;
         command REBOOT6;
-        command REBOOT4;
         command DOOR1;
         command DOOR2;
         command LIGHT;
