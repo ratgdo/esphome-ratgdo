@@ -248,7 +248,8 @@ namespace ratgdo {
                     reading = true;
                     return;
                 }
-            } else {
+            }
+            if (reading) {
                 this->rxRollingCode[byteCount] = serData;
                 byteCount++;
 
