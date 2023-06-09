@@ -81,7 +81,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
-    void RATGDOComponent::readRollingCode(uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
+    void RATGDOComponent::readRollingCode(bool &isStatus, uint8_t& door, uint8_t& light, uint8_t& lock, uint8_t& motion, uint8_t& obstruction, uint8_t& motor)
     {
         uint32_t rolling = 0;
         uint64_t fixed = 0;
@@ -109,12 +109,7 @@ namespace ratgdo {
             motor = 0; // when the status message is read, reset motor state to 0|off
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
-            if (this->forceUpdate_) {
-                this->forceUpdate_ = false;
-                this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
-                this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
-                this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
-            }
+            isStatus = true;
 
         } else if (cmd == 0x281) {
             light ^= 1; // toggle bit
@@ -287,6 +282,11 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop()
     {
+        static uint32_t msgStart;
+        static bool reading = false;
+        static uint16_t byteCount = 0;    
+        static bool isStatus = false;    
+
         while (this->available()) {
             // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
             uint8_t serData;
@@ -294,11 +294,6 @@ namespace ratgdo {
                 ESP_LOGD(TAG, "Failed to read byte");
                 return;
             }
-
-            static uint32_t msgStart;
-            static bool reading = false;
-            static uint16_t byteCount = 0;
-
             if (!reading) {
                 // shift serial byte onto msg start
                 msgStart <<= 8;
@@ -317,9 +312,7 @@ namespace ratgdo {
                     reading = true;
                     return;
                 }
-            }
-
-            if (reading) {
+            } else {
                 this->rxRollingCode[byteCount] = serData;
                 byteCount++;
 
@@ -327,8 +320,14 @@ namespace ratgdo {
                     reading = false;
                     msgStart = 0;
                     byteCount = 0;
-
-                    readRollingCode(this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
+                    readRollingCode(isStatus, this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
+                    if (isStatus && this->forceUpdate_) {
+                        this->forceUpdate_ = false;
+                        this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
+                        this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
+                        this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
+                    }
+                    isStatus = false;
                 }
             }
         }
