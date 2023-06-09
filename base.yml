@@ -3,7 +3,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
-  project: 
+  project:
     name: ratgdo.esphome
     version: "1.0"
 
@@ -52,13 +52,13 @@ binary_sensor:
     name: "${friendly_name} Dry contact close"
     entity_category: diagnostic
     on_press:
-      - cover.close: ${id_prefix}_garage    
+      - cover.close: ${id_prefix}_garage
   - platform: gpio
     pin: D3  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
     name: "${friendly_name} Dry contact light"
     entity_category: diagnostic
     on_press:
-      - light.toggle: {id_prefix}_light
+      - light.toggle: ${id_prefix}_light
 
 number:
   - platform: ratgdo
@@ -85,7 +85,7 @@ light:
     ratgdo_id: ${id_prefix}
 
 uart:
-  tx_pin: 
+  tx_pin:
     number: D4  # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
     inverted: true
   rx_pin:
