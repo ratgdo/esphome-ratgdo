@@ -145,7 +145,7 @@ namespace ratgdo {
 
         printRollingCode();
 
-        if (command != Commands.DOOR1) { // door2 is created with same counter and should always be called after door1
+        if (command != Command.DOOR1) { // door2 is created with same counter and should always be called after door1
             incrementRollingCodeCounter();
         }
         return;
@@ -316,7 +316,7 @@ namespace ratgdo {
     void RATGDOComponent::query()
     {
         this->forceUpdate_ = true;
-        sendCommandAndSaveCounter(Commands.REBOOT2);
+        sendCommandAndSaveCounter(Command.REBOOT2);
     }
 
     void RATGDOComponent::sendDoorStatus()
@@ -398,22 +398,22 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        transmit(Commands.REBOOT1);
+        transmit(Command.REBOOT1);
         delay(65);
 
-        transmit(Commands.REBOOT2);
+        transmit(Command.REBOOT2);
         delay(65);
 
-        transmit(Commands.REBOOT3);
+        transmit(Command.REBOOT3);
         delay(65);
 
-        transmit(Commands.REBOOT4);
+        transmit(Command.REBOOT4);
         delay(65);
 
-        transmit(Commands.REBOOT5);
+        transmit(Command.REBOOT5);
         delay(65);
 
-        sendCommandAndSaveCounter(Commands.REBOOT6);
+        sendCommandAndSaveCounter(Command.REBOOT6);
         delay(65);
     }
 
@@ -446,9 +446,9 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        transmit(Commands.DOOR1);
+        transmit(Command.DOOR1);
         delay(40);
-        sendCommandAndSaveCounter(Commands.DOOR2);
+        sendCommandAndSaveCounter(Command.DOOR2);
     }
 
     bool RATGDOComponent::isLightOn()
@@ -482,7 +482,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLight()
     {
-        sendCommandAndSaveCounter(Commands.LIGHT);
+        sendCommandAndSaveCounter(Command.LIGHT);
     }
 
     // Lock functions
@@ -506,7 +506,7 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommandAndSaveCounter(Commands.LOCK);
+        sendCommandAndSaveCounter(Command.LOCK);
     }
 
     void RATGDOComponent::sendCommandAndSaveCounter(command command)
