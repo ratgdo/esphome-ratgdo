@@ -147,6 +147,7 @@ namespace ratgdo {
     protected:
         ESPPreferenceObject pref_;
         std::vector<RATGDOClient*> children_;
+        bool rollingCodeUpdatesEnabled_ { true };
         bool forceUpdate_ { false };
         RATGDOStore store_ {};
 

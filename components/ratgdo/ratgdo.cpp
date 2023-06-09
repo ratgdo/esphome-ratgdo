@@ -153,6 +153,10 @@ namespace ratgdo {
 
     void RATGDOComponent::sendRollingCodeChanged()
     {
+        if (!this->rollingCodeUpdatesEnabled_) {
+            ESP_LOGD(TAG, "Rolling code updates disabled");
+            return;
+        }
         for (auto* child : this->children_) {
             child->on_rolling_code_change(this->rollingCodeCounter);
         }
@@ -368,6 +372,7 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
+        this->rollingCodeUpdatesEnabled_ = false;
         for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
             transmit(Command.REBOOT1);
             delay(65);
@@ -380,6 +385,7 @@ namespace ratgdo {
         delay(65);
         transmit(Command.REBOOT5);
         delay(65);
+        this->rollingCodeUpdatesEnabled_ = true;
         sendCommandAndSaveCounter(Command.REBOOT6);
         delay(65);
     }
