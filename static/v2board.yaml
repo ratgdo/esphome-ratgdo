@@ -11,7 +11,7 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: ratgdo.esphome
-    version: "1.0"
+    version: "2.0"
 
 dashboard_import:
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo.yaml@main
