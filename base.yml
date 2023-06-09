@@ -42,7 +42,7 @@ binary_sensor:
     device_class: running
     entity_category: diagnostic
   - platform: gpio
-    pin: D5 # # D5 dry contact for opening door
+    pin: D5  # D5 dry contact for opening door
     name: "${friendly_name} Dry contact open"
     entity_category: diagnostic
     on_press:
@@ -86,10 +86,10 @@ light:
 
 uart:
   tx_pin: 
-    number: D4 # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
+    number: D4  # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
     inverted: true
   rx_pin:
-    number: D2 # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
+    number: D2  # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
     inverted: true
   baud_rate: 9600
 
