@@ -36,7 +36,7 @@ namespace ratgdo {
     typedef struct {
         uint64_t fixed;
         uint32_t data;
-        inline bool operator!=(const command &a) const
+        inline bool operator!=(command a)
         {
             return (fixed != a.fixed || data != a.data);
         }        
