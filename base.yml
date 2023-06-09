@@ -42,6 +42,7 @@ binary_sensor:
     device_class: running
     entity_category: diagnostic
   - platform: gpio
+    id: "${id_prefix}_dry_contact_open"
     pin: 
       number: D5  # D5 dry contact for opening door
       inverted: true
@@ -51,8 +52,13 @@ binary_sensor:
     name: "${friendly_name} Dry contact open"
     entity_category: diagnostic
     on_press:
-      - cover.open: ${id_prefix}_garage
+      - if:
+          condition:
+            binary_sensor.is_off: ${id_prefix}_dry_contact_close
+          then:
+            - cover.open: ${id_prefix}_garage    
   - platform: gpio
+    id: "${id_prefix}_dry_contact_close"
     pin: 
       number: D6  # D6 dry contact for closing door
       inverted: true
@@ -62,8 +68,13 @@ binary_sensor:
     name: "${friendly_name} Dry contact close"
     entity_category: diagnostic
     on_press:
-      - cover.close: ${id_prefix}_garage
+      - if:
+          condition:
+            binary_sensor.is_off: ${id_prefix}_dry_contact_open
+          then:
+            - cover.close: ${id_prefix}_garage
   - platform: gpio
+    id: "${id_prefix}_dry_contact_light"
     pin: 
       number: D3  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
       inverted: true
