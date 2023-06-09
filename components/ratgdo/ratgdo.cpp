@@ -112,7 +112,7 @@ namespace ratgdo {
         } else if (cmd == 0x284) {
             motor = 1;
         } else if (cmd == 0x280) {
-            button = byte1 == 1;
+            button = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
             ESP_LOGD(TAG, "Pressed: %s", byte1 == 1 ? "pressed" : "released");
         } else if (cmd == 0x48c) {
             openings = (byte1 << 8) | byte2;
