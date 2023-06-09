@@ -98,7 +98,7 @@ namespace ratgdo {
             door = nibble;
             light = (byte2 >> 1) & 1;
             lock = byte2 & 1;
-            motion = MotionState::MOTION_STATE_OFF; // when the status message is read, reset motion state to 0|clear
+            motion = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             motor = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d Motion: %d Obstruction: %d", door, light, lock, motion, obstruction);
