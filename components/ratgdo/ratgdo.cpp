@@ -316,10 +316,12 @@ namespace ratgdo {
                 this->rxRollingCode[byteCount] = serData;
                 byteCount++;
 
-                if (byteCount == 19) {
+                if (byteCount == CODE_LENGTH) {
                     reading = false;
                     msgStart = 0;
                     byteCount = 0;
+                    isStatus = false;
+
                     readRollingCode(isStatus, this->doorState, this->lightState, this->lockState, this->motionState, this->obstructionState, this->motorState);
                     if (isStatus && this->forceUpdate_) {
                         this->forceUpdate_ = false;
@@ -327,7 +329,6 @@ namespace ratgdo {
                         this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
                         this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
                     }
-                    isStatus = false;
                 }
             }
         }
