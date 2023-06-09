@@ -142,7 +142,7 @@ namespace ratgdo {
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
         void sendCommandAndSaveCounter(cmd command);
-        LightState RATGDOComponent::get_light_state();
+        LightState getLightState();
         /** Register a child component. */
         void register_child(RATGDOClient* obj);
 
