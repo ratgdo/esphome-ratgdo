@@ -308,7 +308,7 @@ namespace ratgdo {
             }
             this->previousLockState = this->lockState;
         }
-        if (this->obstructionState != this->previousObstructionState){
+        if (this->obstructionState != this->previousObstructionState) {
             ObstructionState val = static_cast<ObstructionState>(this->obstructionState);
             ESP_LOGD(TAG, "Obstruction state %s", obstruction_state_to_string(val));
             for (auto* child : this->children_) {
