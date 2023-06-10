@@ -21,7 +21,6 @@ namespace ratgdo {
     }
     void RATGDOSwitch::write_state(bool state)
     {
-        ESP_LOGD(TAG, "name: %s this->type_:%d state: %d", this->get_name(), this->switch_type_, state);
         if (state) {
             this->parent_->lock();
         } else {

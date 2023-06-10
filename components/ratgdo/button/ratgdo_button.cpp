@@ -15,7 +15,6 @@ namespace ratgdo {
 
     void RATGDOButton::press_action()
     {
-        ESP_LOGD(TAG, "name: %s this->type_:%d", this->get_name(), this->button_type_);
         if (this->button_type_ == ButtonType::RATGDO_SYNC) {
             this->parent_->sync();
         } else if (this->button_type_ == ButtonType::RATGDO_QUERY) {

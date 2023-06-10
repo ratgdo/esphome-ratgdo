@@ -146,7 +146,6 @@ namespace ratgdo {
 
     void RATGDOComponent::incrementRollingCodeCounter()
     {
-        ESP_LOGD(TAG, "Incrementing rolling code counter");
         this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
         sendRollingCodeChanged();
     }
@@ -154,7 +153,6 @@ namespace ratgdo {
     void RATGDOComponent::sendRollingCodeChanged()
     {
         if (!this->rollingCodeUpdatesEnabled_) {
-            ESP_LOGD(TAG, "Rolling code updates disabled");
             return;
         }
         for (auto* child : this->children_) {

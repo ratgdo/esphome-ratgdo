@@ -15,7 +15,6 @@ namespace ratgdo {
     }
     void RATGDOLightOutput::on_light_state(esphome::ratgdo::LightState state)
     {
-        ESP_LOGD(TAG, "on_light_state: %d", state);
         if (this->light_state_) {
             this->has_initial_state_ = true;
             set_state(state);
@@ -32,7 +31,6 @@ namespace ratgdo {
     void RATGDOLightOutput::setup_state(light::LightState* light_state)
     {
         esphome::ratgdo::LightState state = this->parent_->getLightState();
-        ESP_LOGD(TAG, "setup_state: getLightState: %d", state);
         this->light_state_ = light_state;
         this->set_state(state);
     }
@@ -50,10 +48,8 @@ namespace ratgdo {
         bool binary;
         state->current_values_as_binary(&binary);
         if (binary) {
-            ESP_LOGD(TAG, "output call lightOn");
             this->parent_->lightOn();
         } else {
-            ESP_LOGD(TAG, "output call lightOff");
             this->parent_->lightOff();
         }
     }
