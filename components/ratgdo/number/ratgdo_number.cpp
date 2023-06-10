@@ -19,7 +19,6 @@ namespace ratgdo {
     }
     void RATGDONumber::control(float value)
     {
-        ESP_LOGD(TAG, "name: %s this->type_:%d control: %f", this->get_name(), this->number_type_, value);
         this->parent_->setRollingCodeCounter(value);
         this->publish_state(value);
     }

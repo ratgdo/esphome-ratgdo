@@ -39,4 +39,3 @@ wifi:
   ap:
 
 logger:
-  level: DEBUG
