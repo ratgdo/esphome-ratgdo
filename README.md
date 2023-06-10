@@ -11,3 +11,5 @@ This project is not affiliated with RATGDO or Paul Wieland. Please buy his board
 
 [ESPHome config for v2 board](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/static/v2board.yaml)
 [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
+
+![Home Assistant Screen Shot](static/hass.png)
