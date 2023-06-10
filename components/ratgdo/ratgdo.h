@@ -25,13 +25,13 @@ extern "C" {
 #include "ratgdo_child.h"
 #include "ratgdo_state.h"
 
-#define CODE_LENGTH 19
-
 namespace esphome {
 namespace ratgdo {
 
     // Forward declare RATGDOClient
     class RATGDOClient;
+
+    static const uint8_t CODE_LENGTH = 19;
 
     struct cmd {
         uint64_t fixed;
