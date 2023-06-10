@@ -316,7 +316,7 @@ namespace ratgdo {
             }
             this->previousMotorState = this->motorState;
         }
-        if (this->motionState == this->previousMotionState) {
+        if (this->motionState != this->previousMotionState) {
             MotionState val = static_cast<MotionState>(this->motionState);
             ESP_LOGD(TAG, "Motion state %s", motion_state_to_string(val));
             for (auto* child : this->children_) {
