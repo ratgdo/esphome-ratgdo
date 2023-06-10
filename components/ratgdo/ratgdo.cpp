@@ -105,10 +105,12 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Door: %d Light: %d Lock: %d", this->doorState, this->lightState, this->lockState);
 
         } else if (cmd == 0x281) {
-            this->lightState ^= 1; // toggle bit
+            if (this->lightState == LightState::LIGHT_STATE_ON) {
+                this->lightState = LightState::LIGHT_STATE_OFF;
+            } else {
+                this->lightState = LightState::LIGHT_STATE_ON;
+            }
             ESP_LOGD(TAG, "Light: %d (toggle)", this->lightState);
-        } else if (cmd == 0x84) {
-            ESP_LOGD(TAG, "Unknown 0x84");
         } else if (cmd == 0x284) {
             this->motorState = MotorState::MOTOR_STATE_ON;
         } else if (cmd == 0x280) {
@@ -121,6 +123,7 @@ namespace ratgdo {
             this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
             ESP_LOGD(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
+            // 0x84 -- is it used?
             ESP_LOGD(TAG, "Unknown command: %04x", cmd);
         }
         return cmd;
