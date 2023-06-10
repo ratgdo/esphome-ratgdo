@@ -9,5 +9,5 @@ This project is not affiliated with RATGDO or Paul Wieland. Please buy his board
 
 # ESPHome config
 
-[ESPHome config for v2 board](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/docs/v2board.yaml)
+[ESPHome config for v2 board](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/v2board.yaml)
 [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
