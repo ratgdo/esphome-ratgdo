@@ -45,9 +45,6 @@ namespace ratgdo {
     {
         auto traits = CoverTraits();
         traits.set_supports_stop(true);
-        traits.set_supports_position(false);
-        traits.set_supports_tilt(false);
-        traits.set_is_assumed_state(false);
         return traits;
     }
     void RATGDOCover::control(const CoverCall& call)
