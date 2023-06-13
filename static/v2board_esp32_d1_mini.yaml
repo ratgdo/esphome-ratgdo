@@ -24,7 +24,7 @@ esp32:
   board: wemos_d1_mini32
 
 dashboard_import:
-  package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo_v2board_esp32_d1_mini.yaml@main
+  package_import_url: github://esphome-ratgdo/esphome-ratgdo/v2board_esp32_d1_mini.yaml@main
 
 packages:
   remote_package:
