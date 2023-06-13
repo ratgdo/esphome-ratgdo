@@ -2,6 +2,13 @@
 substitutions:
   id_prefix: ratgdov2
   friendly_name: "RATGDOv2"
+  uart_tx_pin: D4
+  uart_rx_pin: D2
+  status_door_pin: D0
+  status_obstruction_pin: D8
+  dry_contact_open_pin: D5
+  dry_contact_close_pin: D6
+  dry_contact_light_pin: D3
 
 web_server:
 
@@ -16,24 +23,14 @@ esphome:
 esp32:
   board: d1_mini32
 
-substitutions:
-  uart_tx_pin: D4
-  uart_rx_pin: D2
-  status_door_pin: D0
-  status_obstruction_pin: D8
-  dry_contact_open_pin: D5
-  dry_contact_close_pin: D6
-  dry_contact_light_pin: D3
-
 dashboard_import:
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo_v2board_esp32_d1_mini.yaml@main
 
 packages:
-  # Git repo examples
   remote_package:
     url: https://github.com/esphome-ratgdo/esphome-ratgdo
     files: [base.yaml]
-    refresh: 1s # optional
+    refresh: 1s
 
 # Sync time with Home Assistant.
 time:

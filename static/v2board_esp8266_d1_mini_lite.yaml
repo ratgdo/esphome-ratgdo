@@ -28,11 +28,10 @@ dashboard_import:
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo_v2board_esp8266_d1_mini_lite.yaml@main
 
 packages:
-  # Git repo examples
   remote_package:
     url: https://github.com/esphome-ratgdo/esphome-ratgdo
     files: [base.yaml]
-    refresh: 1s # optional
+    refresh: 1s
 
 # Sync time with Home Assistant.
 time:
