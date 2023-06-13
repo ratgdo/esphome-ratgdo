@@ -16,9 +16,12 @@ jobs:
     strategy:
       matrix:
         firmware:
-          - file: v2board.yaml
-            name: V2 Board
-            manifest_filename: v2board-manifest.json
+          - file: v2board_esp8266_d1_mini.yaml
+            name: V2 Board ESP8266 D1 Mini
+            manifest_filename: v2board_esp8266_d1_mini-manifest.json
+          - file: v2board_esp32_d1_mini.yaml
+            name: V2 Board ESP32 D1 Mini
+            manifest_filename: v2board_esp32_d1_mini-manifest.json            
       fail-fast: false
     steps:
       - name: Checkout source code
