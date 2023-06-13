@@ -3,7 +3,7 @@
 
 This is a port of the ratgdo software for the v2 board to esphome.
 
-[Visit the github.io page to purchase boards](https://paulwieland.github.io/ratgdo/).
+[Visit the github.io page to purchase boards](https://paulwieland.github.io/ratgdo/#order)
 
 This project is not affiliated with ratgdo or Paul Wieland. Please buy his boards to support his excellent work.
 
