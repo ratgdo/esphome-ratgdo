@@ -1,7 +1,7 @@
 ---
 substitutions:
   id_prefix: ratgdov2
-  friendly_name: "RATGDOv2"
+  friendly_name: "ratgdov2"
   uart_tx_pin: D4
   uart_rx_pin: D2
   status_door_pin: D0
