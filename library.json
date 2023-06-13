@@ -11,8 +11,7 @@
     "license": "GPLv3",
     "homepage": "https://github.com/bdraco/esphome-esphome",
     "dependencies": {
-        "secplus": "*",
-        "espsoftwareserial": "*"
+        "secplus": "*"
     },
     "frameworks": "arduino",
     "platforms": "*"
