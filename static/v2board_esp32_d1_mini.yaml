@@ -21,7 +21,7 @@ esphome:
     version: "2.0"
 
 esp32:
-  board: d1_mini32
+  board: wemos_d1_mini32
 
 dashboard_import:
   package_import_url: github://esphome-ratgdo/esphome-ratgdo/ratgdo_v2board_esp32_d1_mini.yaml@main
