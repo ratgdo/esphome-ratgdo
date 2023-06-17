@@ -432,9 +432,6 @@ namespace ratgdo {
             return;
         }
         toggleLight();
-        // We don't always get the state back so be optimistic
-        this->previousLightState = this->lightState;
-        this->lightState = LightState::LIGHT_STATE_ON;
     }
 
     void RATGDOComponent::lightOff()
@@ -444,9 +441,6 @@ namespace ratgdo {
             return;
         }
         toggleLight();
-        // We don't always get the state back so be optimistic
-        this->previousLightState = this->lightState;
-        this->lightState = LightState::LIGHT_STATE_OFF;
     }
 
     void RATGDOComponent::toggleLight()
