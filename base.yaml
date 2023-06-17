@@ -3,7 +3,6 @@
 external_components:
   - source:
       type: git
-      ref: dev
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
     refresh: 1s
 
