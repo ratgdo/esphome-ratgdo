@@ -2,8 +2,6 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
 from esphome.const import CONF_ID
-from esphome.const import CONF_ID
-from esphome import pins
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -26,23 +24,20 @@ DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
 CONF_RATGDO_ID = "ratgdo_id"
 
-CONFIG_SCHEMA = (
-    cv.Schema(
-        {
-            cv.GenerateID(): cv.declare_id(RATGDO),
-            cv.Optional(
-                CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO
-            ): pins.gpio_output_pin_schema,
-            cv.Optional(
-                CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
-            ): pins.gpio_input_pin_schema,
-            cv.Optional(
-                CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
-            ): pins.gpio_input_pin_schema,
-        }
-    )
-    .extend(cv.COMPONENT_SCHEMA)
-)
+CONFIG_SCHEMA = cv.Schema(
+    {
+        cv.GenerateID(): cv.declare_id(RATGDO),
+        cv.Optional(
+            CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO
+        ): pins.gpio_output_pin_schema,
+        cv.Optional(
+            CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
+        ): pins.gpio_input_pin_schema,
+        cv.Optional(
+            CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
+        ): pins.gpio_input_pin_schema,
+    }
+).extend(cv.COMPONENT_SCHEMA)
 
 RATGDO_CLIENT_SCHMEA = cv.Schema(
     {
