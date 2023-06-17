@@ -3,20 +3,12 @@
 external_components:
   - source:
       type: git
+      ref: dev
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
     refresh: 1s
 
 ratgdo:
   id: ${id_prefix}
-
-uart:
-  tx_pin:
-    number: ${uart_tx_pin}  # red control terminal / GarageDoorOpener (UART1 TX) pin is D4 on D1 Mini
-    inverted: true
-  rx_pin:
-    number: ${uart_rx_pin}  # red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
-    inverted: true
-  baud_rate: 9600
 
 sensor:
   - platform: ratgdo

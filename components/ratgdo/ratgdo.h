@@ -12,7 +12,7 @@
  ************************************/
 
 #pragma once
-#include "esphome/components/uart/uart.h"
+#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
@@ -76,11 +76,13 @@ namespace ratgdo {
         static void IRAM_ATTR HOT isrObstruction(RATGDOStore* arg);
     };
 
-    class RATGDOComponent : public uart::UARTDevice, public Component {
+    class RATGDOComponent : public Component {
     public:
         void setup() override;
         void loop() override;
         void dump_config() override;
+
+        EspSoftwareSerial::UART swSerial;
 
         uint32_t rollingCodeCounter { 0 };
         uint32_t lastSyncedRollingCodeCounter { 0 };
