@@ -69,7 +69,7 @@ namespace ratgdo {
         .DOOR2 = (cmd) { 0x200000000, 0x01009280 },
         .LIGHT = (cmd) { 0x200000000, 0x00009281 },
         .LOCK = (cmd) { 0x0100000000, 0x0000728c },
-        .DEEP_BEEP1 = (cmd) {  0x400000000, 0x0000f10a },
+        .DOOR_BEEP1 = (cmd) {  0x400000000, 0x0000f10a },
         .DOOR_BEEP2 = (cmd) { 0, 0x000b11a1 },
         .DOOR_BEEP3 = (cmd) { 0, 0x000c61a1 },
         // At auto close
