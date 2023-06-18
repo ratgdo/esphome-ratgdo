@@ -95,6 +95,8 @@ namespace ratgdo {
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
+        ESP_LOGV(TAG, "command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%010"PRIx64" data=%08"PRIx32, cmd, nibble, byte1, byte2, fixed, data);
+
         if (cmd == STATUS_CMD) {
             this->doorState = nibble;
             this->lightState = (byte2 >> 1) & 1;
@@ -124,7 +126,7 @@ namespace ratgdo {
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
             // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%010"PRIx64" data=%08"PRIx32, cmd, nibble, byte1, byte2, fixed, data);
+            //ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%010"PRIx64" data=%08"PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
