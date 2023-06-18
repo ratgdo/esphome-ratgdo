@@ -166,3 +166,8 @@ button:
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
     name: "Query"
+  - platform: ratgdo
+    id: ${id_prefix}_close_beep
+    type: close_beep
+    ratgdo_id: ${id_prefix}
+    name: "Close with beep"

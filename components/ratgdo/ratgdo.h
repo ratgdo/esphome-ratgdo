@@ -53,6 +53,7 @@ namespace ratgdo {
         cmd DOOR2;
         cmd LIGHT;
         cmd LOCK;
+        cmd CLOSE_BEEP;
     } cmds;
 
     const cmds Command = {
@@ -66,6 +67,10 @@ namespace ratgdo {
         .DOOR2 = (cmd) { 0x200000000, 0x01009280 },
         .LIGHT = (cmd) { 0x200000000, 0x00009281 },
         .LOCK = (cmd) { 0x0100000000, 0x0000728c },
+        .CLOSE_BEEP = (cmd) { 0x0400000000, 0x0000010a },
+        // command: cmd=040a nibble=01 byte1=01 byte2=e0 fixed=c4a3d2c00a data=e001010a
+        // time = (byte1 << 8) | byte2;
+        // .AUTO_CLOSE = (cmd) { 0x0400000000, 0x0000010a },
     };
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
@@ -132,6 +137,7 @@ namespace ratgdo {
         void lightOff();
         bool isLightOn();
         void toggleLock();
+        void closeBeep();
         void lock();
         void unlock();
         void query();

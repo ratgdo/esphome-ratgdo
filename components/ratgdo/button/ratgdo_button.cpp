@@ -10,7 +10,13 @@ namespace ratgdo {
     void RATGDOButton::dump_config()
     {
         LOG_BUTTON("", "RATGDO Button", this);
-        ESP_LOGCONFIG(TAG, "  Type: %s", this->button_type_ == ButtonType::RATGDO_SYNC ? "Sync" : "Query");
+        if (this->button_type_ == ButtonType::RATGDO_SYNC) {
+            ESP_LOGCONFIG(TAG, "  Type: Sync");
+        } else if (this->button_type_ == ButtonType::RATGDO_QUERY) {
+            ESP_LOGCONFIG(TAG, "  Type: Query");
+        } else if (this->button_type_ == ButtonType::RATGDO_CLOSE_BEEP) {
+            ESP_LOGCONFIG(TAG, "  Type: Close Beep");
+        }
     }
 
     void RATGDOButton::press_action()
@@ -19,6 +25,8 @@ namespace ratgdo {
             this->parent_->sync();
         } else if (this->button_type_ == ButtonType::RATGDO_QUERY) {
             this->parent_->query();
+        } else if (this->button_type == ButtonType::RATGDO_CLOSE_BEEP) {
+            this->parent_->closeBeep();
         }
     }
 

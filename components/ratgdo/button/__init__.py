@@ -14,6 +14,7 @@ CONF_TYPE = "type"
 TYPES = {
     "sync": ButtonType.RATGDO_SYNC,
     "query": ButtonType.RATGDO_QUERY,
+    "close_beep": ButtonType.RATGDO_CLOSE_BEEP,
 }
 
 
