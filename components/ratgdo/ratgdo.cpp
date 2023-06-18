@@ -450,6 +450,11 @@ namespace ratgdo {
         sendCommandAndSaveCounter(Command.LIGHT);
     }
 
+    void RATGDOComponent::closeBeep()
+    {
+        sendCommandAndSaveCounter(Command.CLOSE_BEEP);
+    }
+
     // Lock functions
     void RATGDOComponent::lock()
     {
