@@ -124,7 +124,7 @@ namespace ratgdo {
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
             // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: %04x", cmd);
+            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
         }
         return cmd;
     }
@@ -432,9 +432,6 @@ namespace ratgdo {
             return;
         }
         toggleLight();
-        // We don't always get the state back so be optimistic
-        this->previousLightState = this->lightState;
-        this->lightState = LightState::LIGHT_STATE_ON;
     }
 
     void RATGDOComponent::lightOff()
@@ -444,9 +441,6 @@ namespace ratgdo {
             return;
         }
         toggleLight();
-        // We don't always get the state back so be optimistic
-        this->previousLightState = this->lightState;
-        this->lightState = LightState::LIGHT_STATE_OFF;
     }
 
     void RATGDOComponent::toggleLight()

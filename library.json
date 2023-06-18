@@ -5,14 +5,13 @@
     "keywords": "ratgdo, esphome",
     "repository": {
         "type": "git",
-        "url": "https://github.com/bdraco/esphome-ratgdo"
+        "url": "https://github.com/esphome-ratgdo/esphome-ratgdo"
     },
     "authors": [],
     "license": "GPLv3",
-    "homepage": "https://github.com/bdraco/esphome-esphome",
+    "homepage": "https://github.com/esphome-ratgdo/esphome-esphome",
     "dependencies": {
-        "secplus": "*",
-        "espsoftwareserial": "*"
+        "secplus": "*"
     },
     "frameworks": "arduino",
     "platforms": "*"
