@@ -454,7 +454,11 @@ namespace ratgdo {
     {
         transmit(Command.DOOR_BEEP1);
         delay(40);
-        sendCommandAndSaveCounter(Command.DOOR_BEEP2);
+        transmit(Command.DOOR_BEEP1);
+        delay(40);
+        transmit(Command.DOOR_BEEP2);
+        delay(40);                
+        sendCommandAndSaveCounter(Command.DOOR_BEEP3);
     }
 
     // Lock functions
