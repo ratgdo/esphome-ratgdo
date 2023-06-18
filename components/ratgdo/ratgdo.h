@@ -53,7 +53,8 @@ namespace ratgdo {
         cmd DOOR2;
         cmd LIGHT;
         cmd LOCK;
-        cmd CLOSE_BEEP;
+        cmd DOOR_BEEP1;
+        cmd DOOR_BEEP2;
     } cmds;
 
     const cmds Command = {
@@ -67,7 +68,8 @@ namespace ratgdo {
         .DOOR2 = (cmd) { 0x200000000, 0x01009280 },
         .LIGHT = (cmd) { 0x200000000, 0x00009281 },
         .LOCK = (cmd) { 0x0100000000, 0x0000728c },
-        .CLOSE_BEEP = (cmd) { 0x400000000, 0x0000010a },
+        .DOOR_BEEP1 = (cmd) { 0, 0x000b11a1 },
+        .DOOR_BEEP2 = (cmd) { 0, 0x000c61a1 },
         // command: cmd=040a nibble=01 byte1=01 byte2=e0 fixed=c4a3d2c00a data=e001010a
         // time = (byte1 << 8) | byte2;
         // .AUTO_CLOSE = (cmd) { 0x0400000000, 0x0000010a },

@@ -452,7 +452,9 @@ namespace ratgdo {
 
     void RATGDOComponent::closeBeep()
     {
-        sendCommandAndSaveCounter(Command.CLOSE_BEEP);
+        transmit(Command.DOOR_BEEP1);
+        delay(40);
+        sendCommandAndSaveCounter(Command.DOOR_BEEP2);
     }
 
     // Lock functions
