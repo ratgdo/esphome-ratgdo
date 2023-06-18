@@ -25,7 +25,7 @@ namespace ratgdo {
             this->parent_->sync();
         } else if (this->button_type_ == ButtonType::RATGDO_QUERY) {
             this->parent_->query();
-        } else if (this->button_type == ButtonType::RATGDO_CLOSE_BEEP) {
+        } else if (this->button_type_ == ButtonType::RATGDO_CLOSE_BEEP) {
             this->parent_->closeBeep();
         }
     }
