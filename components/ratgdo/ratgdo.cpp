@@ -124,7 +124,7 @@ namespace ratgdo {
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
             // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
+            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%"PRIu32" data=%"PRIu64, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
