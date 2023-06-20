@@ -8,6 +8,9 @@ external_components:
 
 ratgdo:
   id: ${id_prefix}
+  input_gdo_pin: ${uart_rx_pin}
+  output_gdo_pin: ${uart_tx_pin}
+  input_obst_pin: ${input_obst_pin}
 
 sensor:
   - platform: ratgdo
