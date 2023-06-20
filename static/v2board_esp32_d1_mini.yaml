@@ -9,6 +9,7 @@ substitutions:
   dry_contact_open_pin: D5
   dry_contact_close_pin: D6
   dry_contact_light_pin: D3
+  motion_triggers_light: false
 
 web_server:
 

@@ -8,6 +8,7 @@ external_components:
 
 ratgdo:
   id: ${id_prefix}
+  motion_triggers_light: ${motion_triggers_light}
 
 sensor:
   - platform: ratgdo

@@ -21,6 +21,8 @@ DEFAULT_INPUT_GDO = (
 )
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
+CONF_MOTION_TRIGGERS_LIGHT = "motion_triggers_light"
+DEFAULT_MOTION_TRIGGERS_LIGHT = "false"
 
 CONF_RATGDO_ID = "ratgdo_id"
 
@@ -36,6 +38,9 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(
             CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
         ): pins.gpio_input_pin_schema,
+        cv.Optional(
+            CONF_MOTION_TRIGGERS_LIGHT, default=DEFAULT_MOTION_TRIGGERS_LIGHT
+        ): cv.boolean,
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -60,6 +65,7 @@ async def to_code(config):
     cg.add(var.set_input_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
     cg.add(var.set_input_obst_pin(pin))
+    cg.add(var.set_motion_triggers_light(config[CONF_MOTION_TRIGGERS_LIGHT]))
 
     cg.add_library(
         name="secplus",

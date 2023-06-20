@@ -74,6 +74,7 @@ namespace ratgdo {
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
         LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
+        ESP_LOGCONFIG(TAG, "  Motion triggers light: %s", YESNO(this->motion_triggers_light_));
     }
 
     uint16_t RATGDOComponent::readRollingCode()
@@ -121,6 +122,9 @@ namespace ratgdo {
             ESP_LOGV(TAG, "Openings: %d", this->openings);
         } else if (cmd == 0x285) {
             this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
+            if (this->motion_triggers_light_ && this->lightState == LightState::LIGHT_STATE_OFF) {
+                this->lightState = LightState::LIGHT_STATE_ON;
+            }
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
             // 0x84 -- is it used?
