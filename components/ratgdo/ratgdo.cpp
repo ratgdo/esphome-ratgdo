@@ -96,6 +96,8 @@ namespace ratgdo {
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
+        ESP_LOGD(TAG, "cmd=%04x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, fixed, data);
+
         if (cmd == STATUS_CMD) {
             this->doorState = nibble;
             this->lightState = (byte2 >> 1) & 1;
@@ -103,9 +105,10 @@ namespace ratgdo {
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
-            ESP_LOGV(TAG, "Door: %d Light: %d Lock: %d", this->doorState, this->lightState, this->lockState);
+            ESP_LOGD(TAG, "Status cmd: Door: %d Light: %d Lock: %d", this->doorState, this->lightState, this->lockState);
 
         } else if (cmd == 0x281) {
+            ESP_LOGD(TAG, "Light toggle: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             if (this->lightState == LightState::LIGHT_STATE_ON) {
                 this->lightState = LightState::LIGHT_STATE_OFF;
             } else {
@@ -113,14 +116,18 @@ namespace ratgdo {
             }
             ESP_LOGV(TAG, "Light: %d (toggle)", this->lightState);
         } else if (cmd == 0x284) {
+            ESP_LOGD(TAG, "Motor on: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->motorState = MotorState::MOTOR_STATE_ON;
         } else if (cmd == 0x280) {
+            ESP_LOGD(TAG, "Button pressed: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->buttonState = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
             ESP_LOGV(TAG, "Pressed: %d", this->buttonState);
         } else if (cmd == 0x48c) {
+            ESP_LOGD(TAG, "Openings: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->openings = (byte1 << 8) | byte2;
             ESP_LOGV(TAG, "Openings: %d", this->openings);
         } else if (cmd == 0x285) {
+            ESP_LOGD(TAG, "Motion: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
             if (this->motion_triggers_light_ && this->lightState == LightState::LIGHT_STATE_OFF) {
                 this->lightState = LightState::LIGHT_STATE_ON;
@@ -128,7 +135,8 @@ namespace ratgdo {
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
         } else {
             // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
+            // ESP_LOGD(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
+            ESP_LOGD(TAG, "Unhandled command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
@@ -360,6 +368,8 @@ namespace ratgdo {
      */
     void RATGDOComponent::transmit(cmd command)
     {
+
+        ESP_LOGD(TAG, "Transmit fixed=%010" PRIx64 " data=%08" PRIx32, command.fixed, command.data);
         getRollingCode(command);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
