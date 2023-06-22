@@ -33,40 +33,60 @@ namespace ratgdo {
 
     static const uint8_t CODE_LENGTH = 19;
 
-    struct cmd {
-        uint64_t fixed;
-        uint32_t data;
-        inline bool operator!=(cmd const& other) const
-        {
-            return (fixed != other.fixed || data != other.data);
-        }
-    };
+/*
+_WIRELINE_COMMANDS = {
+    # sent by opener
+    0x081: "status",
+    0x084: "unknown_1",
+    0x085: "unknown_2",
+    0x0a1: "pair_3_resp",
+    0x284: "motor_on",
+    0x393: "learn_3_resp",
+    0x401: "pair_2_resp",
+    0x48c: "openings",
 
-    typedef struct {
-        cmd REBOOT1;
-        cmd REBOOT2;
-        cmd REBOOT3;
-        cmd REBOOT4;
-        cmd REBOOT5;
-        cmd REBOOT6;
-        cmd DOOR1;
-        cmd DOOR2;
-        cmd LIGHT;
-        cmd LOCK;
-    } cmds;
+    # sent by switch
+    0x080: "get_status",
+    0x0a0: "pair_3",
+    0x181: "learn_2",
+    0x18c: "lock",
+    0x280: "open",
+    0x281: "light",
+    0x285: "motion",
+    0x391: "learn_1",
+    0x392: "learn_3",
+    0x400: "pair_2",
+    0x48b: "get_openings",
+}
+*/
+ 
+    namespace data {
+        enum CmdData: uint32_t {
+            OFF = 0,
+            CLOSE = 0,
+            ON = 1,
+            OPEN = 1,
+            TOGGLE = 2,
+        };
+    }
 
-    const cmds Command = {
-        .REBOOT1 = (cmd) { 0x400000000, 0x0000618b },
-        .REBOOT2 = (cmd) { 0, 0x01009080 },
-        .REBOOT3 = (cmd) { 0, 0x0000b1a0 },
-        .REBOOT4 = (cmd) { 0, 0x01009080 },
-        .REBOOT5 = (cmd) { 0x300000000, 0x00008092 },
-        .REBOOT6 = (cmd) { 0x300000000, 0x00008092 },
-        .DOOR1 = (cmd) { 0x200000000, 0x01018280 },
-        .DOOR2 = (cmd) { 0x200000000, 0x01009280 },
-        .LIGHT = (cmd) { 0x200000000, 0x00009281 },
-        .LOCK = (cmd) { 0x0100000000, 0x0000728c },
-    };
+    namespace command {
+
+        enum cmd: uint64_t {
+            GET_STATUS      = 0x080,
+            STATUS          = 0x081,
+            PAIR            = 0x0a0,
+            LEARN           = 0x392,
+            DOOR            = 0x280,
+            LIGHT           = 0x281,
+            MOTOR_ON        = 0x284,
+            MOTION          = 0x285,
+            LOCK            = 0x18c,
+            GET_OPENINGS    = 0x48b,
+            OPENINGS        = 0x48c,
+        };
+    }
+
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
 
@@ -116,14 +136,16 @@ namespace ratgdo {
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
-        void transmit(cmd command);
+        void transmit(command::cmd command, uint32_t data = 0, bool increment = true);
         void sync();
 
         void gdoStateLoop();
         void obstructionLoop();
         void statusUpdateLoop();
 
-        void sendCommandAndSaveCounter(cmd command);
+        void sendCommandAndSaveCounter(command::cmd command, uint32_t data = 0, bool increment = true);
+        
+        void _doorCommand(uint32_t data);
         void toggleDoor();
         void openDoor();
         void closeDoor();
@@ -131,14 +153,13 @@ namespace ratgdo {
         void toggleLight();
         void lightOn();
         void lightOff();
-        bool isLightOn();
         void toggleLock();
         void lock();
         void unlock();
         void query();
 
         void printRollingCode();
-        void getRollingCode(cmd command);
+        void getRollingCode(command::cmd command, uint32_t data, bool increment);
         uint16_t readRollingCode();
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
