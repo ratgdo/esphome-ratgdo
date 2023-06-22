@@ -38,6 +38,7 @@ namespace ratgdo {
         LIGHT_STATE_UNKNOWN = 2,
     };
     const char* light_state_to_string(LightState state);
+    LightState light_state_toggle(LightState state);
 
     /// Enum for all states a the lock can be in.
     enum LockState : uint8_t {
@@ -46,6 +47,7 @@ namespace ratgdo {
         LOCK_STATE_UNKNOWN = 2,
     };
     const char* lock_state_to_string(LockState state);
+    LockState lock_state_toggle(LockState state);
 
     /// Enum for all states a the motion can be in.
     enum MotionState : uint8_t {

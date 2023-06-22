@@ -23,7 +23,6 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
     static const uint64_t REMOTE_ID = 0x539;
-    static const uint16_t STATUS_CMD = 0x81;
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
@@ -76,6 +75,56 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
     }
 
+    const char* cmd_name(uint16_t cmd)
+    {
+        // from: https://github.com/argilo/secplus/blob/f98c3220356c27717a25102c0b35815ebbd26ccc/secplus.py#L540
+        switch (cmd) {
+        // sent by opener (motor)
+        case 0x081:
+            return "status";
+        case 0x084:
+            return "unknown_1";
+        case 0x085:
+            return "unknown_2";
+        case 0x0a1:
+            return "pair_3_resp";
+        case 0x284:
+            return "motor_on";
+        case 0x393:
+            return "learn_3_resp";
+        case 0x401:
+            return "pair_2_resp";
+        case 0x48c:
+            return "openings";
+
+        // sent by switch
+        case 0x080:
+            return "get_status";
+        case 0x0a0:
+            return "pair_3";
+        case 0x181:
+            return "learn_2";
+        case 0x18c:
+            return "lock";
+        case 0x280:
+            return "open";
+        case 0x281:
+            return "light";
+        case 0x285:
+            return "motion";
+        case 0x391:
+            return "learn_1";
+        case 0x392:
+            return "learn_3";
+        case 0x400:
+            return "pair_2";
+        case 0x48b:
+            return "get_openings";
+        default:
+            return "unknown";
+        }
+    }
+
     uint16_t RATGDOComponent::readRollingCode()
     {
         uint32_t rolling = 0;
@@ -90,51 +139,80 @@ namespace ratgdo {
         decode_wireline(this->rxRollingCode, &rolling, &fixed, &data);
 
         cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
+        data &= ~0xf000; // clear parity nibble
 
-        nibble = (data >> 8) & 0xf;
+        if ((fixed & 0xfff) == REMOTE_ID) { // my commands
+            ESP_LOGD(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            return 0;
+        } else {
+            ESP_LOGD(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+        }
+
+        nibble = (data >> 8) & 0xff;
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
-        if (cmd == STATUS_CMD) {
-            this->doorState = nibble;
-            this->lightState = (byte2 >> 1) & 1;
-            this->lockState = byte2 & 1;
+        ESP_LOGD(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, cmd_name(cmd), byte2, byte1, nibble);
+
+        if (cmd == command::STATUS) {
+            auto doorState = static_cast<DoorState>(nibble);
+            if (doorState == DoorState::DOOR_STATE_CLOSED && this->doorState != doorState) {
+                transmit(command::GET_OPENINGS);
+            }
+
+            this->doorState = doorState;
+            this->lightState = static_cast<LightState>((byte2 >> 1) & 1);
+            this->lockState = static_cast<LockState>(byte2 & 1);
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
-            // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
-            ESP_LOGV(TAG, "Door: %d Light: %d Lock: %d", this->doorState, this->lightState, this->lockState);
-
-        } else if (cmd == 0x281) {
-            if (this->lightState == LightState::LIGHT_STATE_ON) {
+            // this->obstructionState = static_cast<ObstructionState>((byte1 >> 6) & 1);
+            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
+                door_state_to_string(this->doorState),
+                light_state_to_string(this->lightState),
+                lock_state_to_string(this->lockState));
+        } else if (cmd == command::LIGHT) {
+            if (nibble == 0) {
                 this->lightState = LightState::LIGHT_STATE_OFF;
-            } else {
+            } else if (nibble == 1) {
                 this->lightState = LightState::LIGHT_STATE_ON;
+            } else if (nibble == 2) { // toggle
+                this->lightState = light_state_toggle(this->lightState);
             }
-            ESP_LOGV(TAG, "Light: %d (toggle)", this->lightState);
-        } else if (cmd == 0x284) {
+            ESP_LOGD(TAG, "Light: action=%s state=%s",
+                nibble == 0 ? "OFF" : nibble == 1 ? "ON"
+                                                  : "TOGGLE",
+                light_state_to_string(this->lightState));
+        } else if (cmd == command::MOTOR_ON) {
             this->motorState = MotorState::MOTOR_STATE_ON;
-        } else if (cmd == 0x280) {
-            this->buttonState = byte1 == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
-            ESP_LOGV(TAG, "Pressed: %d", this->buttonState);
-        } else if (cmd == 0x48c) {
+            ESP_LOGD(TAG, "Motor: state=%s", motor_state_to_string(this->motorState));
+        } else if (cmd == command::OPEN) {
+            this->buttonState = (byte1 & 1) == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
+            ESP_LOGD(TAG, "Open: button=%s", button_state_to_string(this->buttonState));
+        } else if (cmd == command::OPENINGS) {
             this->openings = (byte1 << 8) | byte2;
-            ESP_LOGV(TAG, "Openings: %d", this->openings);
-        } else if (cmd == 0x285) {
-            this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
-            ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
+            ESP_LOGD(TAG, "Openings: %d", this->openings);
+        } else if (cmd == command::MOTION) {
+            this->motionState = MotionState::MOTION_STATE_DETECTED;
+            if (this->lightState == LightState::LIGHT_STATE_OFF) {
+                transmit(command::GET_STATUS);
+            }
+            ESP_LOGD(TAG, "Motion: %s", motion_state_to_string(this->motionState));
         } else {
-            // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
+            ESP_LOGD(TAG, "Unhandled command: cmd=%03x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
 
-    void RATGDOComponent::getRollingCode(cmd command)
+    void RATGDOComponent::getRollingCode(command::cmd command, uint32_t data, bool increment)
     {
-        uint64_t fixed = command.fixed | REMOTE_ID;
-        encode_wireline(this->rollingCodeCounter, fixed, command.data, this->txRollingCode);
+        uint64_t fixed = ((command & ~0xff) << 24) | REMOTE_ID;
+        uint32_t send_data = (data << 8) | (command & 0xff);
+
+        ESP_LOGD(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), this->rollingCodeCounter, fixed, send_data);
+        encode_wireline(this->rollingCodeCounter, fixed, send_data, this->txRollingCode);
+
         printRollingCode();
-        if (command != Command.DOOR1) { // door2 is created with same counter and should always be called after door1
+        if (increment) {
             incrementRollingCodeCounter();
         }
     }
@@ -260,7 +338,7 @@ namespace ratgdo {
                 if (byte_count == CODE_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
-                    if (readRollingCode() == STATUS_CMD && this->forceUpdate_) {
+                    if (readRollingCode() == command::STATUS && this->forceUpdate_) {
                         this->forceUpdate_ = false;
                         this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
                         this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
@@ -275,58 +353,51 @@ namespace ratgdo {
     void RATGDOComponent::statusUpdateLoop()
     {
         if (this->doorState != this->previousDoorState) {
-            DoorState val = static_cast<DoorState>(this->doorState);
-            ESP_LOGV(TAG, "Door state: %s", door_state_to_string(val));
+            ESP_LOGV(TAG, "Door state: %s", door_state_to_string(this->doorState));
             for (auto* child : this->children_) {
-                child->on_door_state(val);
+                child->on_door_state(this->doorState);
             }
             this->previousDoorState = this->doorState;
         }
         if (this->lightState != this->previousLightState) {
-            LightState val = static_cast<LightState>(this->lightState);
-            ESP_LOGV(TAG, "Light state %s (%d)", light_state_to_string(val), this->lightState);
+            ESP_LOGV(TAG, "Light state %s (%d)", light_state_to_string(this->lightState), this->lightState);
             for (auto* child : this->children_) {
-                child->on_light_state(val);
+                child->on_light_state(this->lightState);
             }
             this->previousLightState = this->lightState;
         }
         if (this->lockState != this->previousLockState) {
-            LockState val = static_cast<LockState>(this->lockState);
-            ESP_LOGV(TAG, "Lock state %s", lock_state_to_string(val));
+            ESP_LOGV(TAG, "Lock state %s", lock_state_to_string(this->lockState));
             for (auto* child : this->children_) {
-                child->on_lock_state(val);
+                child->on_lock_state(this->lockState);
             }
             this->previousLockState = this->lockState;
         }
         if (this->obstructionState != this->previousObstructionState) {
-            ObstructionState val = static_cast<ObstructionState>(this->obstructionState);
-            ESP_LOGV(TAG, "Obstruction state %s", obstruction_state_to_string(val));
+            ESP_LOGV(TAG, "Obstruction state %s", obstruction_state_to_string(this->obstructionState));
             for (auto* child : this->children_) {
-                child->on_obstruction_state(val);
+                child->on_obstruction_state(this->obstructionState);
             }
             this->previousObstructionState = this->obstructionState;
         }
         if (this->motorState != this->previousMotorState) {
-            MotorState val = static_cast<MotorState>(this->motorState);
-            ESP_LOGV(TAG, "Motor state %s", motor_state_to_string(val));
+            ESP_LOGV(TAG, "Motor state %s", motor_state_to_string(this->motorState));
             for (auto* child : this->children_) {
-                child->on_motor_state(val);
+                child->on_motor_state(this->motorState);
             }
             this->previousMotorState = this->motorState;
         }
         if (this->motionState != this->previousMotionState) {
-            MotionState val = static_cast<MotionState>(this->motionState);
-            ESP_LOGV(TAG, "Motion state %s", motion_state_to_string(val));
+            ESP_LOGV(TAG, "Motion state %s", motion_state_to_string(this->motionState));
             for (auto* child : this->children_) {
-                child->on_motion_state(val);
+                child->on_motion_state(this->motionState);
             }
             this->previousMotionState = this->motionState;
         }
         if (this->buttonState != this->previousButtonState) {
-            ButtonState val = static_cast<ButtonState>(this->buttonState);
-            ESP_LOGV(TAG, "Button state %s", button_state_to_string(val));
+            ESP_LOGV(TAG, "Button state %s", button_state_to_string(this->buttonState));
             for (auto* child : this->children_) {
-                child->on_button_state(val);
+                child->on_button_state(this->buttonState);
             }
             this->previousButtonState = this->buttonState;
         }
@@ -342,7 +413,7 @@ namespace ratgdo {
     void RATGDOComponent::query()
     {
         this->forceUpdate_ = true;
-        sendCommandAndSaveCounter(Command.REBOOT2);
+        sendCommandAndSaveCounter(command::GET_STATUS);
     }
 
     /************************* DOOR COMMUNICATION *************************/
@@ -354,9 +425,9 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(cmd command)
+    void RATGDOComponent::transmit(command::cmd command, uint32_t data, bool increment)
     {
-        getRollingCode(command);
+        getRollingCode(command, data, increment);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
         delayMicroseconds(1305);
@@ -370,38 +441,30 @@ namespace ratgdo {
     {
         this->rollingCodeUpdatesEnabled_ = false;
         for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
-            transmit(Command.REBOOT1); // get openings
+            transmit(command::GET_OPENINGS); // get openings
             delay(65);
         }
-        transmit(Command.REBOOT2); // get state
+        transmit(command::GET_STATUS); // get state
         delay(65);
-        transmit(Command.REBOOT3);
+        transmit(command::PAIR_3);
         delay(65);
-        transmit(Command.REBOOT4);
+        transmit(command::GET_STATUS);
         delay(65);
-        transmit(Command.REBOOT5);
+        transmit(command::LEARN_3);
         delay(65);
         this->rollingCodeUpdatesEnabled_ = true;
-        sendCommandAndSaveCounter(Command.REBOOT6);
+        sendCommandAndSaveCounter(command::LEARN_3);
         delay(65);
     }
 
     void RATGDOComponent::openDoor()
     {
-        if (this->doorState == DoorState::DOOR_STATE_OPEN || this->doorState == DoorState::DOOR_STATE_OPENING) {
-            ESP_LOGV(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->doorState)));
-            return;
-        }
-        toggleDoor();
+        doorCommand(data::OPEN);
     }
 
     void RATGDOComponent::closeDoor()
     {
-        if (this->doorState == DoorState::DOOR_STATE_CLOSED || this->doorState == DoorState::DOOR_STATE_CLOSING) {
-            ESP_LOGV(TAG, "The door is already %s", door_state_to_string(static_cast<DoorState>(this->doorState)));
-            return;
-        }
-        toggleDoor();
+        doorCommand(data::CLOSE);
     }
 
     void RATGDOComponent::stopDoor()
@@ -415,66 +478,59 @@ namespace ratgdo {
 
     void RATGDOComponent::toggleDoor()
     {
-        transmit(Command.DOOR1);
-        delay(40);
-        sendCommandAndSaveCounter(Command.DOOR2);
+        doorCommand(data::TOGGLE);
     }
 
-    bool RATGDOComponent::isLightOn()
+    void RATGDOComponent::doorCommand(uint32_t data)
     {
-        return this->lightState == LightState::LIGHT_STATE_ON;
+        data |= (1 << 16); // button 1 ?
+        data |= (1 << 8); // button press
+        transmit(command::OPEN, data, false);
+        delay(40);
+        data &= ~(1 << 8); // button release
+        sendCommandAndSaveCounter(command::OPEN, data);
     }
 
     void RATGDOComponent::lightOn()
     {
-        if (this->lightState == LightState::LIGHT_STATE_ON) {
-            ESP_LOGV(TAG, "The light is already on");
-            return;
-        }
-        toggleLight();
+        this->lightState = LightState::LIGHT_STATE_ON;
+        sendCommandAndSaveCounter(command::LIGHT, data::ON);
     }
 
     void RATGDOComponent::lightOff()
     {
-        if (this->lightState == LightState::LIGHT_STATE_OFF) {
-            ESP_LOGV(TAG, "The light is already off");
-            return;
-        }
-        toggleLight();
+        this->lightState = LightState::LIGHT_STATE_OFF;
+        sendCommandAndSaveCounter(command::LIGHT, data::OFF);
     }
 
     void RATGDOComponent::toggleLight()
     {
-        sendCommandAndSaveCounter(Command.LIGHT);
+        this->lightState = light_state_toggle(this->lightState);
+        sendCommandAndSaveCounter(command::LIGHT, data::TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
-        if (this->lockState == LockState::LOCK_STATE_LOCKED) {
-            ESP_LOGV(TAG, "already locked");
-            return;
-        }
-        toggleLock();
+        this->lockState = LockState::LOCK_STATE_LOCKED;
+        sendCommandAndSaveCounter(command::LOCK, data::ON);
     }
 
     void RATGDOComponent::unlock()
     {
-        if (this->lockState == LockState::LOCK_STATE_UNLOCKED) {
-            ESP_LOGV(TAG, "already unlocked");
-            return;
-        }
-        toggleLock();
+        this->lockState = LockState::LOCK_STATE_UNLOCKED;
+        sendCommandAndSaveCounter(command::LOCK, data::OFF);
     }
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommandAndSaveCounter(Command.LOCK);
+        this->lockState = lock_state_toggle(this->lockState);
+        sendCommandAndSaveCounter(command::LOCK, data::TOGGLE);
     }
 
-    void RATGDOComponent::sendCommandAndSaveCounter(cmd command)
+    void RATGDOComponent::sendCommandAndSaveCounter(command::cmd command, uint32_t data, bool increment)
     {
-        transmit(command);
+        transmit(command, data, increment);
         this->pref_.save(&this->rollingCodeCounter);
         if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= MAX_CODES_WITHOUT_FLASH_WRITE) {
             this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
@@ -489,7 +545,7 @@ namespace ratgdo {
     }
     LightState RATGDOComponent::getLightState()
     {
-        return static_cast<LightState>(this->lightState);
+        return this->lightState;
     }
 
 } // namespace ratgdo
