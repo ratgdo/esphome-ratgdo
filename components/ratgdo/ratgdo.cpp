@@ -156,7 +156,7 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Motor on: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->motorState = MotorState::MOTOR_STATE_ON;
         } 
-        else if (cmd == command::DOOR) {
+        else if (cmd == command::OPEN) {
             ESP_LOGD(TAG, "Door open: nibble=%02d byte1=%02d byte2=%02d", nibble, byte1, byte2);
             this->buttonState = (byte1 & 1) == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
             ESP_LOGV(TAG, "Pressed: %d", this->buttonState);
@@ -439,10 +439,10 @@ namespace ratgdo {
     {
         data |= (1<<16); // button 1 ?
         data |= (1<<8); // button press
-        transmit(command::DOOR, data, false); 
+        transmit(command::OPEN, data, false); 
         set_timeout(100, [=] {
             auto data2  = data & ~(1<<8); // button release
-            transmit(command::DOOR, data2);
+            transmit(command::OPEN, data2);
         });
     }
 

@@ -62,27 +62,37 @@ _WIRELINE_COMMANDS = {
 */
  
     namespace data {
-        enum CmdData: uint32_t {
-            OFF = 0,
-            CLOSE = 0,
-            ON = 1,
-            OPEN = 1,
-            TOGGLE = 2,
-        };
+        const uint32_t OFF = 0;
+        const uint32_t CLOSE = 0;
+        const uint32_t ON = 1;
+        const uint32_t OPEN = 1;
+        const uint32_t TOGGLE = 2;
     }
 
     namespace command {
 
         enum cmd: uint64_t {
-            GET_STATUS      = 0x080,
+            GET_STATUS      = 0x080, 
             STATUS          = 0x081,
-            PAIR            = 0x0a0,
-            LEARN           = 0x392,
-            DOOR            = 0x280,
+            OBST_1          = 0x084, // sent when an obstruction happens? 
+            OBST_2          = 0x085, // sent when an obstruction happens?
+            PAIR_3          = 0x0a0,
+            PAIR_3_RESP     = 0x0a1,
+
+            LEARN_2         = 0x181,
+            LOCK            = 0x18c,
+
+            OPEN            = 0x280,
             LIGHT           = 0x281,
             MOTOR_ON        = 0x284,
             MOTION          = 0x285,
-            LOCK            = 0x18c,
+
+            LEARN_1         = 0x391,
+            LEARN_3         = 0x392,
+            LEARN_3_RESP    = 0x393,
+
+            PAIR_2          = 0x400,
+            PAIR_2_RESP     = 0x401,
             GET_OPENINGS    = 0x48b,
             OPENINGS        = 0x48c,
         };
