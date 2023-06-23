@@ -400,10 +400,33 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::query()
+    void RATGDOComponent::query_status()
     {
         this->forceUpdate_ = true;
-        sendCommandAndSaveCounter(command::GET_STATUS);
+        transmit(command::GET_STATUS);
+    }
+
+    void RATGDOComponent::query_openings()
+    {
+        transmit(command::GET_OPENINGS);
+    }
+
+    void RATGDOComponent::sync()
+    {
+        if (this->rollingCodeCounter == 0) { // first time use
+            this->rollingCodeCounter = 1;
+            // the opener only sends a reply when the rolling code > previous rolling code for a given remote id
+            // when used the first time there is no previous rolling code, so first command is ignored
+            set_timeout(30, [=] {
+                transmit(command::GET_STATUS);
+            });
+        }
+        set_timeout(100, [=] {
+            transmit(command::GET_STATUS);
+        });
+        set_timeout(200, [=] {
+            transmit(command::GET_OPENINGS);
+        });
     }
 
     /************************* DOOR COMMUNICATION *************************/
@@ -425,26 +448,6 @@ namespace ratgdo {
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->swSerial.write(this->txRollingCode, CODE_LENGTH);
-    }
-
-    void RATGDOComponent::sync()
-    {
-        this->rollingCodeUpdatesEnabled_ = false;
-        for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
-            transmit(command::GET_OPENINGS); // get openings
-            delay(65);
-        }
-        transmit(command::GET_STATUS); // get state
-        delay(65);
-        transmit(command::PAIR);
-        delay(65);
-        transmit(command::GET_STATUS);
-        delay(65);
-        transmit(command::LEARN);
-        delay(65);
-        this->rollingCodeUpdatesEnabled_ = true;
-        sendCommandAndSaveCounter(command::LEARN);
-        delay(65);
     }
 
     void RATGDOComponent::openDoor()

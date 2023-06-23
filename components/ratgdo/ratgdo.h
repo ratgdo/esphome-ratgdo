@@ -156,7 +156,8 @@ _WIRELINE_COMMANDS = {
         void toggleLock();
         void lock();
         void unlock();
-        void query();
+        void query_status();
+        void query_openings();
 
         void printRollingCode();
         void getRollingCode(command::cmd command, uint32_t data, bool increment);
