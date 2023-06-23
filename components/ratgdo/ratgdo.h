@@ -145,7 +145,7 @@ _WIRELINE_COMMANDS = {
 
         void saveCounter();
         
-        void _doorCommand(uint32_t data);
+        void doorCommand(uint32_t data);
         void toggleDoor();
         void openDoor();
         void closeDoor();
