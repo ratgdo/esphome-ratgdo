@@ -23,7 +23,7 @@ namespace ratgdo {
     }
     void RATGDOSensor::on_auto_close_time_change(time_t autoCloseTime)
     {
-        if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_AUTO_CLOSE_TIME) {
+        if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_AUTO_CLOSE_TIME && autoCloseTime != 0) {
             this->publish_state(autoCloseTime);
         }
     }

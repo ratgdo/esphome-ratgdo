@@ -11,10 +11,10 @@
  * GNU GENERAL PUBLIC LICENSE
  ************************************/
 
-#include <ctime>
 #include "ratgdo.h"
 #include "ratgdo_child.h"
 #include "ratgdo_state.h"
+#include <ctime>
 
 #include "esphome/core/log.h"
 
