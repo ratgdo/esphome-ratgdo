@@ -143,7 +143,7 @@ _WIRELINE_COMMANDS = {
         void obstructionLoop();
         void statusUpdateLoop();
 
-        void sendCommandAndSaveCounter(command::cmd command, uint32_t data = 0, bool increment = true);
+        void saveCounter();
         
         void _doorCommand(uint32_t data);
         void toggleDoor();

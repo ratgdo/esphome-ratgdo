@@ -21,9 +21,6 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
-    static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
-    static const uint64_t REMOTE_ID = 0x539;
-    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -55,8 +52,11 @@ namespace ratgdo {
 
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
-        ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
-        sync(); // reboot/sync to the opener on startup
+        // save counter to flash every 10s if it changed
+        set_interval(10000, std::bind(&RATGDOComponent::saveCounter, this));
+
+        // sync state on startup
+        sync();
     }
 
     void RATGDOComponent::loop()
@@ -489,13 +489,13 @@ namespace ratgdo {
     void RATGDOComponent::lightOn()
     {
         this->lightState = LightState::LIGHT_STATE_ON;
-        sendCommandAndSaveCounter(command::LIGHT, data::ON);
+        transmit(command::LIGHT, data::ON);
     }
 
     void RATGDOComponent::lightOff()
     {
         this->lightState = LightState::LIGHT_STATE_OFF;
-        sendCommandAndSaveCounter(command::LIGHT, data::OFF);
+        transmit(command::LIGHT, data::OFF);
     }
 
     void RATGDOComponent::toggleLight()
@@ -505,38 +505,34 @@ namespace ratgdo {
         } else {
             this->lightState = LightState::LIGHT_STATE_ON;
         }
-        sendCommandAndSaveCounter(command::LIGHT, data::TOGGLE);
+        transmit(command::LIGHT, data::TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
-        if (this->lockState == LockState::LOCK_STATE_LOCKED) {
-            ESP_LOGV(TAG, "already locked");
-            return;
-        }
-        toggleLock();
+        transmit(command::LOCK, data::ON);
     }
 
     void RATGDOComponent::unlock()
     {
-        if (this->lockState == LockState::LOCK_STATE_UNLOCKED) {
-            ESP_LOGV(TAG, "already unlocked");
-            return;
-        }
-        toggleLock();
+        transmit(command::LOCK, data::OFF);
     }
 
     void RATGDOComponent::toggleLock()
     {
-        sendCommandAndSaveCounter(command::LOCK, data::TOGGLE);
+        if (this->lockState == LockState::LOCK_STATE_LOCKED) {
+            this->lockState = LockState::LOCK_STATE_UNLOCKED;
+        } else {
+            this->lockState = LockState::LOCK_STATE_LOCKED;
+        }
+        transmit(command::LOCK, data::TOGGLE);
     }
 
-    void RATGDOComponent::sendCommandAndSaveCounter(command::cmd command, uint32_t data, bool increment)
+    void RATGDOComponent::saveCounter()
     {
-        transmit(command, data, increment);
         this->pref_.save(&this->rollingCodeCounter);
-        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= MAX_CODES_WITHOUT_FLASH_WRITE) {
+        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter > this->lastSyncedRollingCodeCounter) {
             this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
             global_preferences->sync();
         }
