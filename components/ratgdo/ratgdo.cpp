@@ -73,7 +73,7 @@ namespace ratgdo {
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
         LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
-        ESP_LOGCONFIG(TAG, "  Motion triggers light: %s", YESNO(this->motion_triggers_light_));
+        ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id);
     }
 
     const char* cmd_name(uint16_t cmd) {
@@ -121,7 +121,7 @@ namespace ratgdo {
         cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
 
-        if ((fixed & 0xfff) == REMOTE_ID) { // my commands
+        if ((fixed & 0xfff) == this->remote_id) { // my commands
             ESP_LOGD(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return 0;
         } else {
@@ -188,7 +188,7 @@ namespace ratgdo {
 
     void RATGDOComponent::getRollingCode(command::cmd command, uint32_t data, bool increment)
     {
-        uint64_t fixed = ((command & ~0xff) << 24) | REMOTE_ID;
+        uint64_t fixed = ((command & ~0xff) << 24) | this->remote_id;
         uint32_t send_data = (data << 8) | (command & 0xff);
 
         ESP_LOGD(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), this->rollingCodeCounter, fixed, send_data);

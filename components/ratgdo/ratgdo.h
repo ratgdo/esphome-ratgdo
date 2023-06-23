@@ -132,7 +132,7 @@ _WIRELINE_COMMANDS = {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
-        void set_motion_triggers_light(bool value) { this->motion_triggers_light_ = value; };
+        void set_remote_id(uint64_t remote_id) { this->remote_id = remote_id & 0xffffff; };
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
@@ -178,7 +178,7 @@ _WIRELINE_COMMANDS = {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        bool motion_triggers_light_;
+        uint64_t remote_id;
 
     }; // RATGDOComponent
 
