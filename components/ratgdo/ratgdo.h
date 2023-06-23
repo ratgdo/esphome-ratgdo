@@ -34,6 +34,7 @@ namespace ratgdo {
     static const uint8_t CODE_LENGTH = 19;
 
 /*
+from: https://github.com/argilo/secplus/blob/f98c3220356c27717a25102c0b35815ebbd26ccc/secplus.py#L540
 _WIRELINE_COMMANDS = {
     # sent by opener
     0x081: "status",

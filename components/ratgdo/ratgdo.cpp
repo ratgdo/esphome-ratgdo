@@ -60,6 +60,7 @@ namespace ratgdo {
     }
 
     const char* cmd_name(uint16_t cmd) {
+        // from: https://github.com/argilo/secplus/blob/f98c3220356c27717a25102c0b35815ebbd26ccc/secplus.py#L540
         switch (cmd) {
             // sent by opener (motor)
             case 0x081: return "status";
