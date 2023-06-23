@@ -287,47 +287,47 @@ namespace ratgdo {
 
     void RATGDOComponent::gdoStateLoop()
     {
-        if (!this->swSerial.available()) {
-            // ESP_LOGD(TAG, "No data available input:%d output:%d", this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin());
-            return;
-        }
-        uint8_t serData = this->swSerial.read();
-        static uint32_t msgStart;
-        static bool reading = false;
-        static uint16_t byteCount = 0;
+        static bool reading_msg = false;
+        static uint32_t msg_start = 0;
+        static uint16_t byte_count = 0;
 
-        if (!reading) {
-            // shift serial byte onto msg start
-            msgStart <<= 8;
-            msgStart |= serData;
+        if (!reading_msg) {
+            while (this->swSerial.available()) {
+                uint8_t ser_byte = this->swSerial.read();
+                if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
+                    byte_count = 0;
+                    continue;
+                }
+                msg_start = ((msg_start << 8) | ser_byte) & 0xffffff;
+                byte_count++;
 
-            // truncate to 3 bytes
-            msgStart &= 0x00FFFFFF;
+                // if we are at the start of a message, capture the next 16 bytes
+                if (msg_start == 0x550100) {
+                    this->rxRollingCode[0] = 0x55;
+                    this->rxRollingCode[1] = 0x01;
+                    this->rxRollingCode[2] = 0x00;
 
-            // if we are at the start of a message, capture the next 16 bytes
-            if (msgStart == 0x550100) {
-                byteCount = 3;
-                rxRollingCode[0] = 0x55;
-                rxRollingCode[1] = 0x01;
-                rxRollingCode[2] = 0x00;
-
-                reading = true;
-                return;
+                    reading_msg = true;
+                    break;
+                }
             }
         }
-        if (reading) {
-            this->rxRollingCode[byteCount] = serData;
-            byteCount++;
+        if (reading_msg) {
+            while (this->swSerial.available()) {
+                uint8_t ser_byte = this->swSerial.read();
+                this->rxRollingCode[byte_count] = ser_byte;
+                byte_count++;
 
-            if (byteCount == CODE_LENGTH) {
-                reading = false;
-                msgStart = 0;
-                byteCount = 0;
-                if (readRollingCode() == command::STATUS && this->forceUpdate_) {
-                    this->forceUpdate_ = false;
-                    this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
-                    this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
-                    this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
+                if (byte_count == CODE_LENGTH) {
+                    reading_msg = false;
+                    byte_count = 0;
+                    if (readRollingCode() == command::STATUS && this->forceUpdate_) {
+                        this->forceUpdate_ = false;
+                        this->previousDoorState = DoorState::DOOR_STATE_UNKNOWN;
+                        this->previousLightState = LightState::LIGHT_STATE_UNKNOWN;
+                        this->previousLockState = LockState::LOCK_STATE_UNKNOWN;
+                    }
+                    return;
                 }
             }
         }
