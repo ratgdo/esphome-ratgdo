@@ -50,7 +50,7 @@ namespace ratgdo {
 
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
-        this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
+        // this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         // save counter to flash every 10s if it changed
         set_interval(10000, std::bind(&RATGDOComponent::saveCounter, this));
@@ -61,7 +61,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        obstructionLoop();
+        // obstructionLoop();
         gdoStateLoop();
         statusUpdateLoop();
     }
@@ -146,6 +146,7 @@ namespace ratgdo {
             this->lockState = byte2 & 1;
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
+            this->obstructionState = (byte1 >> 6) & 1;
             // obstruction = (byte1 >> 6) & 1; // unreliable due to the time it takes to register an obstruction
             ESP_LOGD(TAG, "Status cmd: Door: %d Light: %d Lock: %d", this->doorState, this->lightState, this->lockState);
 
