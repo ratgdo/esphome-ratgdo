@@ -87,15 +87,6 @@ _WIRELINE_COMMANDS = {
         };
     }
 
-    struct RATGDOStore {
-        ISRInternalGPIOPin input_obst;
-
-        int obstructionLowCount = 0; // count obstruction low pulses
-        long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
-
-        static void IRAM_ATTR HOT isrObstruction(RATGDOStore* arg);
-    };
-
     class RATGDOComponent : public Component {
     public:
         void setup() override;
@@ -131,7 +122,6 @@ _WIRELINE_COMMANDS = {
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
-        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
         void set_remote_id(uint64_t remote_id) { this->remote_id = remote_id & 0xffffff; };
 
         /********************************** FUNCTION DECLARATION
@@ -174,11 +164,9 @@ _WIRELINE_COMMANDS = {
         std::vector<RATGDOClient*> children_;
         bool rollingCodeUpdatesEnabled_ { true };
         bool forceUpdate_ { false };
-        RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
-        InternalGPIOPin* input_obst_pin_;
         uint64_t remote_id;
 
     }; // RATGDOComponent

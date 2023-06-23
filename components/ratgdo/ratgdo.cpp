@@ -22,15 +22,6 @@ namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
 
-    void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
-    {
-        if (arg->input_obst.digital_read()) {
-            arg->lastObstructionHigh = millis();
-        } else {
-            arg->obstructionLowCount++;
-        }
-    }
-
     void RATGDOComponent::setup()
     {
         this->pref_ = global_preferences->make_preference<int>(734874333U);
@@ -40,17 +31,11 @@ namespace ratgdo {
 
         this->output_gdo_pin_->setup();
         this->input_gdo_pin_->setup();
-        this->input_obst_pin_->setup();
-
-        this->store_.input_obst = this->input_obst_pin_->to_isr();
 
         this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
-
-        // this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         // save counter to flash every 10s if it changed
         set_interval(10000, std::bind(&RATGDOComponent::saveCounter, this));
@@ -61,7 +46,6 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        // obstructionLoop();
         gdoStateLoop();
         statusUpdateLoop();
     }
@@ -71,7 +55,6 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id);
     }
@@ -261,41 +244,6 @@ namespace ratgdo {
             this->txRollingCode[18]);
     }
 
-    /*************************** OBSTRUCTION DETECTION ***************************/
-
-    void RATGDOComponent::obstructionLoop()
-    {
-        long currentMillis = millis();
-        static unsigned long lastMillis = 0;
-
-        // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
-        // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
-        // and is high without pulses when waking up
-
-        // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
-
-        // Every 50ms
-        if (currentMillis - lastMillis > 50) {
-            // check to see if we got between 3 and 8 low pulses on the line
-            if (this->store_.obstructionLowCount >= 3 && this->store_.obstructionLowCount <= 8) {
-                // obstructionCleared();
-                this->obstructionState = ObstructionState::OBSTRUCTION_STATE_CLEAR;
-
-                // if there have been no pulses the line is steady high or low
-            } else if (this->store_.obstructionLowCount == 0) {
-                // if the line is high and the last high pulse was more than 70ms ago, then there is an obstruction present
-                if (this->input_obst_pin_->digital_read() && currentMillis - this->store_.lastObstructionHigh > 70) {
-                    this->obstructionState = ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED;
-                    // obstructionDetected();
-                } else {
-                    // asleep
-                }
-            }
-
-            lastMillis = currentMillis;
-            this->store_.obstructionLowCount = 0;
-        }
-    }
 
     void RATGDOComponent::gdoStateLoop()
     {

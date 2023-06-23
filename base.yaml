@@ -10,7 +10,6 @@ ratgdo:
   id: ${id_prefix}
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
-  input_obst_pin: ${input_obst_pin}
   remote_id: 0x539
 
 sensor:
@@ -157,7 +156,7 @@ button:
   - platform: safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
-    
+
   - platform: template
     id: ${id_prefix}_query_status
     entity_category: diagnostic

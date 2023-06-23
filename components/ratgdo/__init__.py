@@ -19,8 +19,6 @@ CONF_INPUT_GDO = "input_gdo_pin"
 DEFAULT_INPUT_GDO = (
     "D2"  # D2 red control terminal / GarageDoorOpener (UART1 RX) pin is D2 on D1 Mini
 )
-CONF_INPUT_OBST = "input_obst_pin"
-DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
 CONF_REMOTE_ID = "remote_id"
 DEFAULT_REMOTE_ID = 0x539
@@ -35,9 +33,6 @@ CONFIG_SCHEMA = cv.Schema(
         ): pins.gpio_output_pin_schema,
         cv.Optional(
             CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
-        ): pins.gpio_input_pin_schema,
-        cv.Optional(
-            CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
         ): pins.gpio_input_pin_schema,
         cv.Optional(
             CONF_REMOTE_ID, default=DEFAULT_REMOTE_ID
@@ -64,8 +59,6 @@ async def to_code(config):
     cg.add(var.set_output_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_GDO])
     cg.add(var.set_input_gdo_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
-    cg.add(var.set_input_obst_pin(pin))
     cg.add(var.set_remote_id(config[CONF_REMOTE_ID]))
 
     cg.add_library(
