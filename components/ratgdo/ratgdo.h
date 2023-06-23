@@ -86,6 +86,8 @@ namespace ratgdo {
 
         uint32_t rollingCodeCounter { 0 };
         uint32_t lastSyncedRollingCodeCounter { 0 };
+        time_t autoCloseTime { 0 };
+        time_t previousAutoCloseTime { 0 };
 
         uint16_t previousOpenings { 0 }; // number of times the door has been opened
         uint16_t openings { 0 }; // number of times the door has been opened

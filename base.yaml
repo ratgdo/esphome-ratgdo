@@ -3,6 +3,7 @@
 external_components:
   - source:
       type: git
+      ref: dev
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
     refresh: 1s
 
@@ -21,6 +22,13 @@ sensor:
     name: "Openings"
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
+  - platform: ratgdo
+    id: ${id_prefix}_auto_close_time
+    type: auto_close_time
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Auto close time"
+    device_class: timestamp
 
 switch:
   - platform: ratgdo

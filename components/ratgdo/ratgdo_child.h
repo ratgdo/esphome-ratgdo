@@ -21,6 +21,7 @@ namespace ratgdo {
         virtual void on_motor_state(MotorState state);
         virtual void on_rolling_code_change(uint32_t rollingCodeCounter);
         virtual void on_openings_change(uint32_t openings);
+        virtual void on_auto_close_time_change(time_t autoCloseTime);
         virtual void on_button_state(ButtonState state);
 
     protected:

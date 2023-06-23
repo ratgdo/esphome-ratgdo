@@ -13,6 +13,7 @@ RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 CONF_TYPE = "type"
 TYPES = {
     "openings": RATGDOSensorType.RATGDO_OPENINGS,
+    "auto_close_time": RATGDOSensorType.RATGDO_AUTO_CLOSE_TIME,
 }
 
 

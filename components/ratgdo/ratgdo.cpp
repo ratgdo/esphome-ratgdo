@@ -122,9 +122,15 @@ namespace ratgdo {
         } else if (cmd == 0x285) {
             this->motionState = MotionState::MOTION_STATE_DETECTED; // toggle bit
             ESP_LOGV(TAG, "Motion: %d (toggle)", this->motionState);
+        } else if (cmd == 0x40a) {
+            time_t newAutoCloseTime = std::time(0) + ((byte1 << 8) | byte2);
+            if (newAutoCloseTime + 1 != this->autoCloseTime && newAutoCloseTime - 1 != this->autoCloseTime) {
+                this->autoCloseTime = newAutoCloseTime;
+                ESP_LOGV(TAG, "Auto close time: %d", this->autoCloseTime);
+            }
         } else {
             // 0x84 -- is it used?
-            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02d byte1=%02d byte2=%02d", cmd, nibble, byte1, byte2);
+            ESP_LOGV(TAG, "Unknown command: cmd=%04x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
@@ -336,6 +342,13 @@ namespace ratgdo {
                 child->on_openings_change(this->openings);
             }
             this->previousOpenings = this->openings;
+        }
+        if (this->autoCloseTime != this->previousAutoCloseTime) {
+            ESP_LOGV(TAG, "Auto close time: %d", this->autoCloseTime);
+            for (auto* child : this->children_) {
+                child->on_auto_close_time_change(this->autoCloseTime);
+            }
+            this->previousAutoCloseTime = this->autoCloseTime;
         }
     }
 
