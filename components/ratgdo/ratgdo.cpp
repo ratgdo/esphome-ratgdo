@@ -136,7 +136,12 @@ namespace ratgdo {
 
 
         if (cmd == command::STATUS) {
-            this->doorState = nibble;
+            auto doorState = nibble;
+            if (doorState == DoorState::DOOR_STATE_CLOSED && this->doorState != doorState) {
+                transmit(command::GET_OPENINGS);
+            }
+
+            this->doorState = doorState;
             this->lightState = (byte2 >> 1) & 1;
             this->lockState = byte2 & 1;
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
@@ -480,9 +485,10 @@ namespace ratgdo {
         data |= (1<<16); // button 1 ?
         data |= (1<<8); // button press
         transmit(command::DOOR, data, false); 
-        delay(40);
-        data &= ~(1<<8); // button release
-        sendCommandAndSaveCounter(command::DOOR, data);
+        set_timeout(100, [=] {
+            auto data2  = data & ~(1<<8); // button release
+            transmit(command::DOOR, data2);
+        });
     }
 
 
