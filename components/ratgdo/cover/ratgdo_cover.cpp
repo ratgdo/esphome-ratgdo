@@ -26,12 +26,15 @@ namespace ratgdo {
             break;
         case DoorState::DOOR_STATE_OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
+            this->position = 0.5;
             break;
         case DoorState::DOOR_STATE_CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
+            this->position = 0.5;
             break;
         case DoorState::DOOR_STATE_STOPPED:
-            this->position = COVER_OPEN;
+            this->current_operation = COVER_OPERATION_IDLE;
+            this->position = 0.5;
         default:
             this->current_operation = COVER_OPERATION_IDLE;
 
@@ -45,12 +48,17 @@ namespace ratgdo {
     {
         auto traits = CoverTraits();
         traits.set_supports_stop(true);
+        traits.set_supports_toggle(true);
+        traits.set_supports_position(true);
         return traits;
     }
     void RATGDOCover::control(const CoverCall& call)
     {
         if (call.get_stop()) {
             this->parent_->stopDoor();
+        }
+        if (call.get_toggle()) {
+            this->parent_->toggleDoor();
         }
         if (call.get_position().has_value()) {
             auto pos = *call.get_position();
