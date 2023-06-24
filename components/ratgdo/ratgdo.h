@@ -148,6 +148,7 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
+        void set_remote_id(uint64_t remote_id) { this->remote_id = remote_id & 0xffffff; }; // not sure how large remote_id can be, assuming not more than 24 bits
 
         /********************************** FUNCTION DECLARATION
          * *****************************************/
@@ -196,6 +197,7 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
+        uint64_t remote_id;
 
     }; // RATGDOComponent
 
