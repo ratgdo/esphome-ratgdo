@@ -4,6 +4,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
+      ref: remote_id_param
     refresh: 1s
 
 ratgdo:
