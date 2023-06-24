@@ -23,6 +23,7 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 2000;
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
+    static const uint32_t FLASH_WRITE_INTERVAL = 10000;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -53,6 +54,9 @@ namespace ratgdo {
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
+
+        // save counter to flash every 10s if it changed
+        set_interval(FLASH_WRITE_INTERVAL, std::bind(&RATGDOComponent::saveCounter, this, 1));
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
@@ -415,7 +419,7 @@ namespace ratgdo {
     void RATGDOComponent::query()
     {
         this->forceUpdate_ = true;
-        sendCommandAndSaveCounter(command::GET_STATUS);
+        transmit(command::GET_STATUS);
     }
 
     /************************* DOOR COMMUNICATION *************************/
@@ -437,6 +441,8 @@ namespace ratgdo {
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->swSerial.write(this->txRollingCode, CODE_LENGTH);
+
+        saveCounter(MAX_CODES_WITHOUT_FLASH_WRITE);
     }
 
     void RATGDOComponent::sync()
@@ -446,20 +452,20 @@ namespace ratgdo {
             // the opener only sends a reply when the rolling code > previous rolling code for a given remote id
             // when used the first time there is no previous rolling code, so first command is ignored
             set_timeout(100, [=] {
-                sendCommandAndSaveCounter(command::GET_STATUS);
+                transmit(command::GET_STATUS);
             });
             // send it twice since manual says it can take 3 button presses for door to open on first use
             set_timeout(200, [=] {
-                sendCommandAndSaveCounter(command::GET_STATUS);
+                transmit(command::GET_STATUS);
             });
         }
         for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
             set_timeout(300 + i * 100, [=] {
-                sendCommandAndSaveCounter(command::GET_STATUS);
+                transmit(command::GET_STATUS);
             });
         }
         set_timeout(400 + 100 * MAX_CODES_WITHOUT_FLASH_WRITE, [=] {
-            sendCommandAndSaveCounter(command::GET_OPENINGS);
+            transmit(command::GET_OPENINGS);
         });
     }
 
@@ -501,47 +507,48 @@ namespace ratgdo {
     void RATGDOComponent::lightOn()
     {
         this->lightState = LightState::LIGHT_STATE_ON;
-        sendCommandAndSaveCounter(command::LIGHT, data::ON);
+        transmit(command::LIGHT, data::ON);
     }
 
     void RATGDOComponent::lightOff()
     {
         this->lightState = LightState::LIGHT_STATE_OFF;
-        sendCommandAndSaveCounter(command::LIGHT, data::OFF);
+        transmit(command::LIGHT, data::OFF);
     }
 
     void RATGDOComponent::toggleLight()
     {
         this->lightState = light_state_toggle(this->lightState);
-        sendCommandAndSaveCounter(command::LIGHT, data::TOGGLE);
+        transmit(command::LIGHT, data::TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
         this->lockState = LockState::LOCK_STATE_LOCKED;
-        sendCommandAndSaveCounter(command::LOCK, data::ON);
+        transmit(command::LOCK, data::ON);
     }
 
     void RATGDOComponent::unlock()
     {
-        this->lockState = LockState::LOCK_STATE_UNLOCKED;
-        sendCommandAndSaveCounter(command::LOCK, data::OFF);
+        transmit(command::LOCK, data::OFF);
     }
 
     void RATGDOComponent::toggleLock()
     {
         this->lockState = lock_state_toggle(this->lockState);
-        sendCommandAndSaveCounter(command::LOCK, data::TOGGLE);
+        transmit(command::LOCK, data::TOGGLE);
     }
 
-    void RATGDOComponent::sendCommandAndSaveCounter(command::cmd command, uint32_t data, bool increment)
+    void RATGDOComponent::saveCounter(int threshold)
     {
-        transmit(command, data, increment);
         this->pref_.save(&this->rollingCodeCounter);
-        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= MAX_CODES_WITHOUT_FLASH_WRITE) {
-            this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
-            global_preferences->sync();
+        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= threshold) {
+            // do flash write outside of the component loop
+            defer([=] {
+                this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
+                global_preferences->sync();
+            });
         }
     }
 
