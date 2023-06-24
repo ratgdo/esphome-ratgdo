@@ -30,7 +30,7 @@ sensor:
     name: "Auto close time"
     device_class: timestamp
     icon: mdi:timer
-    
+
 
 switch:
   - platform: ratgdo
