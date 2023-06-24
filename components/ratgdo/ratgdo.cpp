@@ -131,7 +131,6 @@ namespace ratgdo {
                 // we only update if the time is off by more than 30 seconds
                 if (newAutoCloseTime + 30 < this->autoCloseTime || newAutoCloseTime - 30 > this->autoCloseTime) {
                     this->autoCloseTime = newAutoCloseTime;
-                    ESP_LOGV(TAG, "Auto close time: %d", this->autoCloseTime);
                 }
             }
         } else {
