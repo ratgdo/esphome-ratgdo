@@ -126,7 +126,7 @@ namespace ratgdo {
         } else if (cmd == 0x40a) {
             uint32_t secondsUntilClose = ((byte1 << 8) | byte2);
             if (secondsUntilClose) {
-                time_t newAutoCloseTime = std::time(0) + secondsUntilClose;
+                time_t newAutoCloseTime = std::time(nullptr) + secondsUntilClose;
                 // The time will wobble a bit and since TTC close times are measured in minutes
                 // we only update if the time is off by more than 30 seconds
                 if (newAutoCloseTime + 30 != this->autoCloseTime && newAutoCloseTime - 30 != this->autoCloseTime) {
