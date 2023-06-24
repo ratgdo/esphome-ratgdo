@@ -21,7 +21,7 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
-    static const int STARTUP_DELAY = 2000; // delay before enabling interrupts
+    static const int SYNC_DELAY = 2000;
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
@@ -55,7 +55,9 @@ namespace ratgdo {
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
-        sync(); // reboot/sync to the opener on startup
+
+        // many things happening at startup, use some delay for sync
+        set_timeout(SYNC_DELAY, std::bind(&RATGDOComponent::sync, this));
     }
 
     void RATGDOComponent::loop()
@@ -439,22 +441,26 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        this->rollingCodeUpdatesEnabled_ = false;
-        for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
-            transmit(command::GET_OPENINGS); // get openings
-            delay(65);
+        if (this->rollingCodeCounter == 0) { // first time use
+            this->rollingCodeCounter = 1;
+            // the opener only sends a reply when the rolling code > previous rolling code for a given remote id
+            // when used the first time there is no previous rolling code, so first command is ignored
+            set_timeout(100, [=] {
+                sendCommandAndSaveCounter(command::GET_STATUS);
+            });
+            // send it twice since manual says it can take 3 button presses for door to open on first use
+            set_timeout(200, [=] {
+                sendCommandAndSaveCounter(command::GET_STATUS);
+            });
         }
-        transmit(command::GET_STATUS); // get state
-        delay(65);
-        transmit(command::PAIR_3);
-        delay(65);
-        transmit(command::GET_STATUS);
-        delay(65);
-        transmit(command::LEARN_3);
-        delay(65);
-        this->rollingCodeUpdatesEnabled_ = true;
-        sendCommandAndSaveCounter(command::LEARN_3);
-        delay(65);
+        for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
+            set_timeout(300 + i * 100, [=] {
+                sendCommandAndSaveCounter(command::GET_STATUS);
+            });
+        }
+        set_timeout(400 + 100 * MAX_CODES_WITHOUT_FLASH_WRITE, [=] {
+            sendCommandAndSaveCounter(command::GET_OPENINGS);
+        });
     }
 
     void RATGDOComponent::openDoor()
@@ -486,9 +492,10 @@ namespace ratgdo {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
         transmit(command::OPEN, data, false);
-        delay(40);
-        data &= ~(1 << 8); // button release
-        sendCommandAndSaveCounter(command::OPEN, data);
+        set_timeout(100, [=] {
+            auto data2 = data & ~(1 << 8); // button release
+            transmit(command::OPEN, data2);
+        });
     }
 
     void RATGDOComponent::lightOn()
