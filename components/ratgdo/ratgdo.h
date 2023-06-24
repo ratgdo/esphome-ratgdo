@@ -160,9 +160,10 @@ namespace ratgdo {
         void obstructionLoop();
         void statusUpdateLoop();
 
-        void sendCommandAndSaveCounter(command::cmd command, uint32_t data = 0, bool increment = true);
+        void saveCounter(int threshold);
 
         void doorCommand(uint32_t data);
+
         void toggleDoor();
         void openDoor();
         void closeDoor();
