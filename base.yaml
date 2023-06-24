@@ -157,15 +157,30 @@ button:
   - platform: safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
-  - platform: ratgdo
-    id: ${id_prefix}_sync
-    type: sync
+  
+  - platform: template
+    id: ${id_prefix}_query_status
     entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
+    name: "Query status"
+    on_press: 
+      then:
+        lambda: !lambda |-
+          id($id_prefix).query_status();  
+  
+  - platform: template
+    id: ${id_prefix}_query_openings
+    name: "Query openings"
+    entity_category: diagnostic
+    on_press: 
+      then:
+        lambda: !lambda |-
+          id($id_prefix).query_openings();
+
+  - platform: template
+    id: ${id_prefix}_test
     name: "Sync"
-  - platform: ratgdo
-    id: ${id_prefix}_query
-    type: query
     entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Query"
+    on_press: 
+      then:
+        lambda: !lambda |-
+          id($id_prefix).sync();

@@ -416,10 +416,15 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::query()
+    void RATGDOComponent::query_status()
     {
         this->forceUpdate_ = true;
         transmit(command::GET_STATUS);
+    }
+
+    void RATGDOComponent::query_openings()
+    {
+        transmit(command::GET_OPENINGS);
     }
 
     /************************* DOOR COMMUNICATION *************************/
