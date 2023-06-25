@@ -148,17 +148,17 @@ namespace ratgdo {
         data &= ~0xf000; // clear parity nibble
 
         if ((fixed & 0xfff) == this->remote_id) { // my commands
-            ESP_LOGD(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOGV(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return 0;
         } else {
-            ESP_LOGD(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOGV(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
         }
 
         nibble = (data >> 8) & 0xff;
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
-        ESP_LOGD(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, cmd_name(cmd), byte2, byte1, nibble);
+        ESP_LOGV(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, cmd_name(cmd), byte2, byte1, nibble);
 
         if (cmd == command::STATUS) {
             auto doorState = static_cast<DoorState>(nibble);
@@ -172,7 +172,7 @@ namespace ratgdo {
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
             // this->obstructionState = static_cast<ObstructionState>((byte1 >> 6) & 1);
-            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
+            ESP_LOGV(TAG, "Status: door=%s light=%s lock=%s",
                 door_state_to_string(this->doorState),
                 light_state_to_string(this->lightState),
                 lock_state_to_string(this->lockState));
@@ -184,27 +184,27 @@ namespace ratgdo {
             } else if (nibble == 2) { // toggle
                 this->lightState = light_state_toggle(this->lightState);
             }
-            ESP_LOGD(TAG, "Light: action=%s state=%s",
+            ESP_LOGV(TAG, "Light: action=%s state=%s",
                 nibble == 0 ? "OFF" : nibble == 1 ? "ON"
                                                   : "TOGGLE",
                 light_state_to_string(this->lightState));
         } else if (cmd == command::MOTOR_ON) {
             this->motorState = MotorState::MOTOR_STATE_ON;
-            ESP_LOGD(TAG, "Motor: state=%s", motor_state_to_string(this->motorState));
+            ESP_LOGV(TAG, "Motor: state=%s", motor_state_to_string(this->motorState));
         } else if (cmd == command::OPEN) {
             this->buttonState = (byte1 & 1) == 1 ? ButtonState::BUTTON_STATE_PRESSED : ButtonState::BUTTON_STATE_RELEASED;
-            ESP_LOGD(TAG, "Open: button=%s", button_state_to_string(this->buttonState));
+            ESP_LOGV(TAG, "Open: button=%s", button_state_to_string(this->buttonState));
         } else if (cmd == command::OPENINGS) {
             this->openings = (byte1 << 8) | byte2;
-            ESP_LOGD(TAG, "Openings: %d", this->openings);
+            ESP_LOGV(TAG, "Openings: %d", this->openings);
         } else if (cmd == command::MOTION) {
             this->motionState = MotionState::MOTION_STATE_DETECTED;
             if (this->lightState == LightState::LIGHT_STATE_OFF) {
                 transmit(command::GET_STATUS);
             }
-            ESP_LOGD(TAG, "Motion: %s", motion_state_to_string(this->motionState));
+            ESP_LOGV(TAG, "Motion: %s", motion_state_to_string(this->motionState));
         } else {
-            ESP_LOGD(TAG, "Unhandled command: cmd=%03x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
+            ESP_LOGV(TAG, "Unhandled command: cmd=%03x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
@@ -214,7 +214,7 @@ namespace ratgdo {
         uint64_t fixed = ((command & ~0xff) << 24) | this->remote_id;
         uint32_t send_data = (data << 8) | (command & 0xff);
 
-        ESP_LOGD(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), this->rollingCodeCounter, fixed, send_data);
+        ESP_LOGV(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), this->rollingCodeCounter, fixed, send_data);
         encode_wireline(this->rollingCodeCounter, fixed, send_data, this->txRollingCode);
 
         printRollingCode();
