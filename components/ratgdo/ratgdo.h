@@ -103,6 +103,8 @@ namespace ratgdo {
             PAIR_2_RESP = 0x401,
             GET_OPENINGS = 0x48b,
             OPENINGS = 0x48c,
+
+            TTC = 0x40a,  // Time to close
         };
     }
 

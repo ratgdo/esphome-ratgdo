@@ -211,7 +211,7 @@ namespace ratgdo {
                 transmit(command::GET_STATUS);
             }
             ESP_LOGV(TAG, "Motion: %s", motion_state_to_string(this->motionState));
-        } else if (cmd == 0x40a) {
+        } else if (cmd == command::TTC) {
             uint32_t secondsUntilClose = ((byte1 << 8) | byte2);
             if (secondsUntilClose) {
                 time_t newAutoCloseTime = std::time(nullptr) + secondsUntilClose;
