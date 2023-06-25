@@ -186,24 +186,24 @@ namespace ratgdo {
 
             this->doorState = static_cast<DoorState>(nibble);
 
-            if (this->doorState == DoorState::DOOR_STATE_OPENING && this->previousDoorState==DoorState::DOOR_STATE_CLOSED) {
+            if (this->doorState == DoorState::DOOR_STATE_OPENING && this->previousDoorState == DoorState::DOOR_STATE_CLOSED) {
                 this->startOpening = millis();
             }
-            if (this->doorState == DoorState::DOOR_STATE_OPEN && this->previousDoorState==DoorState::DOOR_STATE_OPENING) {
+            if (this->doorState == DoorState::DOOR_STATE_OPEN && this->previousDoorState == DoorState::DOOR_STATE_OPENING) {
                 if (this->startOpening > 0) {
-                    auto duration = (millis() - this->startOpening)/1000;
-                    duration = this->openingDuration > 0 ? (duration + this->openingDuration)/2 : duration;
-                    this->setOpeningDuration(round(duration*10)/10);
+                    auto duration = (millis() - this->startOpening) / 1000;
+                    duration = this->openingDuration > 0 ? (duration + this->openingDuration) / 2 : duration;
+                    this->setOpeningDuration(round(duration * 10) / 10);
                 }
             }
-            if (this->doorState == DoorState::DOOR_STATE_CLOSING && this->previousDoorState==DoorState::DOOR_STATE_OPEN) {
+            if (this->doorState == DoorState::DOOR_STATE_CLOSING && this->previousDoorState == DoorState::DOOR_STATE_OPEN) {
                 this->startClosing = millis();
             }
-            if (this->doorState == DoorState::DOOR_STATE_CLOSED && this->previousDoorState==DoorState::DOOR_STATE_CLOSING) {
+            if (this->doorState == DoorState::DOOR_STATE_CLOSED && this->previousDoorState == DoorState::DOOR_STATE_CLOSING) {
                 if (this->startClosing > 0) {
-                    auto duration = (millis() - this->startClosing)/1000;
-                    duration = this->closingDuration > 0 ? (duration + this->closingDuration)/2 : duration;
-                    this->setClosingDuration(round(duration*10)/10);
+                    auto duration = (millis() - this->startClosing) / 1000;
+                    duration = this->closingDuration > 0 ? (duration + this->closingDuration) / 2 : duration;
+                    this->setClosingDuration(round(duration * 10) / 10);
                 }
             }
             if (this->doorState == DoorState::DOOR_STATE_STOPPED) {
@@ -610,7 +610,7 @@ namespace ratgdo {
         }
         this->cancelPositionSyncCallbacks();
 
-        doorCommand(data::DOOR_CLOSE);        
+        doorCommand(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stopDoor()
@@ -628,41 +628,42 @@ namespace ratgdo {
             return; // gets ignored by opener
         }
         this->cancelPositionSyncCallbacks();
-        
+
         doorCommand(data::DOOR_TOGGLE);
     }
 
-
-    void RATGDOComponent::positionSyncWhileOpening(float delta, float update_period) {
-        if (this->openingDuration==0) {
+    void RATGDOComponent::positionSyncWhileOpening(float delta, float update_period)
+    {
+        if (this->openingDuration == 0) {
             ESP_LOGW(TAG, "I don't know opening duration, ignoring position sync");
             return;
         }
-        auto updates = this->openingDuration * 1000 * delta/update_period;
-        auto d = delta/updates;
+        auto updates = this->openingDuration * 1000 * delta / update_period;
+        auto position_update = delta / updates;
         auto count = int(updates);
         ESP_LOGD(TAG, "[Opening] Position sync %d times: ", count);
         // try to keep position in sync while door is moving
         set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
             ESP_LOGD(TAG, "[Opening] Position sync: %d: ", r);
-            this->doorPosition += d;
+            this->doorPosition += position_update;
             return RetryResult::RETRY;
         });
     }
 
-    void RATGDOComponent::positionSyncWhileClosing(float delta, float update_period) {
-        if (this->closingDuration==0) {
+    void RATGDOComponent::positionSyncWhileClosing(float delta, float update_period)
+    {
+        if (this->closingDuration == 0) {
             ESP_LOGW(TAG, "I don't know closing duration, ignoring position sync");
             return;
         }
-        auto updates = this->closingDuration * 1000 * delta/update_period;
-        auto d = delta/updates;
+        auto updates = this->closingDuration * 1000 * delta / update_period;
+        auto position_update = delta / updates;
         auto count = int(updates);
         ESP_LOGD(TAG, "[Closing] Position sync %d times: ", count);
         // try to keep position in sync while door is moving
         set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
             ESP_LOGD(TAG, "[Closing] Position sync: %d: ", r);
-            this->doorPosition -= d;
+            this->doorPosition -= position_update;
             return RetryResult::RETRY;
         });
     }
@@ -675,39 +676,36 @@ namespace ratgdo {
         }
 
         auto delta = position - this->doorPosition;
-        if (delta > 0) { // open
-            if (this->openingDuration==0) {
-                ESP_LOGW(TAG, "I don't know opening duration, ignoring move to position");
-                return;
-            }
-            auto opening_time = this->openingDuration * 1000 * delta;
-            doorCommand(data::DOOR_OPEN);
-            this->movingToPosition = true;
-            set_timeout("move_to_position", opening_time, [=] {
-                doorCommand(data::DOOR_STOP);
-                this->movingToPosition = false;
-                this->doorPosition = position;
-            });
-            this->positionSyncWhileOpening(delta);
-        } else if (delta < 0) { // close
-            if (this->closingDuration==0) {
-                ESP_LOGW(TAG, "I don't know closing duration, ignoring move to position");
-                return;
-            }
-            delta = -delta;
-            auto closing_time = this->closingDuration * 1000 * delta;
-            doorCommand(data::DOOR_CLOSE);
-            this->movingToPosition = true;
-            set_timeout("move_to_position", closing_time, [=] {
-                doorCommand(data::DOOR_STOP);
-                this->movingToPosition = false;
-                this->doorPosition = position;
-            });
-            this->positionSyncWhileClosing(delta);
+        if (delta == 0) {
+            ESP_LOGD(TAG, "Door is already at position %.2f", position);
+            return;
         }
+
+        auto duration = delta > 0 ? this->openingDuration : this->closingDuration;
+        if (duration == 0) {
+            ESP_LOGW(TAG, "I don't know duration, ignoring move to position");
+            return;
+        }
+        
+        if (delta > 0) { // open
+            doorCommand(data::DOOR_OPEN);
+            this->positionSyncWhileOpening(delta);
+        } else { // close
+            doorCommand(data::DOOR_CLOSE);
+            this->positionSyncWhileClosing(-delta);
+        }
+
+        auto operation_time = duration * 1000 * delta;
+        this->movingToPosition = true;
+        set_timeout("move_to_position", operation_time, [=] {
+            doorCommand(data::DOOR_STOP);
+            this->movingToPosition = false;
+            this->doorPosition = position;
+        });
     }
 
-    void RATGDOComponent::cancelPositionSyncCallbacks() {
+    void RATGDOComponent::cancelPositionSyncCallbacks()
+    {
         if (this->movingToPosition) {
             ESP_LOGD(TAG, "Cancelling position callbacks");
             cancel_timeout("move_to_position");
