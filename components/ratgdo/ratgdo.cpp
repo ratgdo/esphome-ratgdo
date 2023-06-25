@@ -135,7 +135,7 @@ namespace ratgdo {
         case 0x48b:
             return "get_openings";
         case 0x48d:
-            return "ttc";
+            return "ttc"; // Time to close
         default:
             return "unknown";
         }
@@ -452,6 +452,11 @@ namespace ratgdo {
     void RATGDOComponent::query_openings()
     {
         transmit(command::GET_OPENINGS);
+    }
+
+    void RATGDOComponent::close_with_alarm()
+    {
+        transmit(command::TTC, 0x0000);
     }
 
     /************************* DOOR COMMUNICATION *************************/

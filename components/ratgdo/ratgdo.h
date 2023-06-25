@@ -191,6 +191,7 @@ namespace ratgdo {
 
         void query_status();
         void query_openings();
+        void close_with_alarm();
 
         void printRollingCode();
         void getRollingCode(command::cmd command, uint32_t data, bool increment);

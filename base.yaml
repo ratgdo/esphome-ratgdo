@@ -197,3 +197,12 @@ button:
       then:
         lambda: !lambda |-
           id($id_prefix).sync();
+
+
+  - platform: template
+    id: ${id_prefix}_close_alarm
+    name: "Close with alarm"
+    on_press: 
+      then:
+        lambda: !lambda |-
+          id($id_prefix).close_with_alarm();
