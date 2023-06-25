@@ -19,9 +19,9 @@ namespace ratgdo {
         }
     }
 
-    void RATGDONumber::set_number_type(NumberType number_type_) 
-    { 
-        this->number_type_ = number_type_; 
+    void RATGDONumber::set_number_type(NumberType number_type_)
+    {
+        this->number_type_ = number_type_;
         if (this->number_type_ == RATGDO_OPENING_DURATION || this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->traits.set_step(0.1);
         }
