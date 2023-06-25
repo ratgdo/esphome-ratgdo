@@ -60,7 +60,6 @@ namespace ratgdo {
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->setClosingDuration(value);
         }
-        // this->publish_state(value);
     }
 
 } // namespace ratgdo
