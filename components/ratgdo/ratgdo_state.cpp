@@ -38,6 +38,20 @@ namespace ratgdo {
         }
     }
 
+    LightState light_state_toggle(LightState state)
+    {
+        switch (state) {
+        case LIGHT_STATE_OFF:
+            return LIGHT_STATE_ON;
+        case LIGHT_STATE_ON:
+            return LIGHT_STATE_OFF;
+            // 2 and 3 appears sometimes
+        case LIGHT_STATE_UNKNOWN:
+        default:
+            return LIGHT_STATE_UNKNOWN;
+        }
+    }
+
     const char* lock_state_to_string(LockState state)
     {
         switch (state) {
@@ -48,6 +62,20 @@ namespace ratgdo {
         case LOCK_STATE_UNKNOWN:
         default:
             return "UNKNOWN";
+        }
+    }
+
+    LockState lock_state_toggle(LockState state)
+    {
+        switch (state) {
+        case LOCK_STATE_UNLOCKED:
+            return LOCK_STATE_LOCKED;
+        case LOCK_STATE_LOCKED:
+            return LOCK_STATE_UNLOCKED;
+            // 2 and 3 appears sometimes
+        case LOCK_STATE_UNKNOWN:
+        default:
+            return LOCK_STATE_UNKNOWN;
         }
     }
 
