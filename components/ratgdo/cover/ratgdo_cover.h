@@ -13,7 +13,7 @@ namespace ratgdo {
     public:
         void dump_config() override;
         cover::CoverTraits get_traits() override;
-        void on_door_state(DoorState state) override;
+        void on_door_state(DoorState state, float position) override;
 
     protected:
         void control(const cover::CoverCall& call) override;
