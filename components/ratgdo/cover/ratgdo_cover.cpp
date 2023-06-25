@@ -13,7 +13,7 @@ namespace ratgdo {
     {
         LOG_COVER("", "RATGDO Cover", this);
     }
-    void RATGDOCover::on_door_state(DoorState state)
+    void RATGDOCover::on_door_state(DoorState state, float position)
     {
         switch (state) {
         case DoorState::DOOR_STATE_OPEN:
@@ -26,15 +26,15 @@ namespace ratgdo {
             break;
         case DoorState::DOOR_STATE_OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
-            this->position = 0.5;
+            this->position = position;
             break;
         case DoorState::DOOR_STATE_CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
-            this->position = 0.5;
+            this->position = position;
             break;
         case DoorState::DOOR_STATE_STOPPED:
             this->current_operation = COVER_OPERATION_IDLE;
-            this->position = 0.5;
+            this->position = position;
         default:
             this->current_operation = COVER_OPERATION_IDLE;
 
@@ -66,6 +66,8 @@ namespace ratgdo {
                 this->parent_->openDoor();
             } else if (pos == COVER_CLOSED) {
                 this->parent_->closeDoor();
+            } else {
+                this->parent_->setDoorPosition(pos);
             }
         }
     }

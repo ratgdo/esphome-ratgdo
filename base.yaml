@@ -136,6 +136,22 @@ number:
     name: "Rolling code counter"
     mode: box
     unit_of_measurement: "codes"
+  
+  - platform: ratgdo
+    id: ${id_prefix}_opening_duration
+    type: opening_duration
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Opening duration"
+    unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_closing_duration
+    type: closing_duration
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Closing duration"
+    unit_of_measurement: "s"
 
 cover:
   - platform: ratgdo
