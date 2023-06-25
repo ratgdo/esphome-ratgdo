@@ -131,7 +131,9 @@ namespace ratgdo {
         uint32_t rollingCodeCounter { 0 };
         uint32_t lastSyncedRollingCodeCounter { 0 };
 
+        float startOpening { -1 };
         float openingDuration { 0 };
+        float startClosing { -1 };
         float closingDuration { 0 };
 
         uint8_t txRollingCode[CODE_LENGTH];
