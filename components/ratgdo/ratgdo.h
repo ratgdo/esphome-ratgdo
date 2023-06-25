@@ -62,11 +62,19 @@ namespace ratgdo {
     */
 
     namespace data {
-        const uint32_t OFF = 0;
-        const uint32_t CLOSE = 0;
-        const uint32_t ON = 1;
-        const uint32_t OPEN = 1;
-        const uint32_t TOGGLE = 2;
+        const uint32_t LIGHT_OFF = 0;
+        const uint32_t LIGHT_ON = 1;
+        const uint32_t LIGHT_TOGGLE = 2;
+        const uint32_t LIGHT_TOGGLE2 = 3;
+
+        const uint32_t LOCK_OFF = 0;
+        const uint32_t LOCK_ON = 1;
+        const uint32_t LOCK_TOGGLE = 2;
+
+        const uint32_t DOOR_CLOSE = 0;
+        const uint32_t DOOR_OPEN = 1;
+        const uint32_t DOOR_TOGGLE = 2;
+        const uint32_t DOOR_STOP = 3;
     }
 
     namespace command {
@@ -176,7 +184,7 @@ namespace ratgdo {
         void toggleLock();
         void lock();
         void unlock();
-        
+
         void query_status();
         void query_openings();
 

@@ -177,7 +177,7 @@ button:
           id($id_prefix).query_openings();
 
   - platform: template
-    id: ${id_prefix}_test
+    id: ${id_prefix}_sync
     name: "Sync"
     entity_category: diagnostic
     on_press: 
