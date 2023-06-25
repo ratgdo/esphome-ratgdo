@@ -691,11 +691,13 @@ namespace ratgdo {
             doorCommand(data::DOOR_OPEN);
             this->positionSyncWhileOpening(delta);
         } else { // close
+            delta = -delta;
             doorCommand(data::DOOR_CLOSE);
-            this->positionSyncWhileClosing(-delta);
+            this->positionSyncWhileClosing(delta);
         }
 
         auto operation_time = duration * 1000 * delta;
+        ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0)
         this->movingToPosition = true;
         set_timeout("move_to_position", operation_time, [=] {
             doorCommand(data::DOOR_STOP);
