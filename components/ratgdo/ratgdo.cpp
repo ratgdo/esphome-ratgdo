@@ -22,7 +22,17 @@ namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 2000;
-    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
+    //
+    // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
+    // since we write the flash at most every every 5s
+    //
+    // We want the rolling counter to be high enough that the
+    // GDO will accept the command after an unexpected reboot
+    // that did not save the counter to flash in time which
+    // results in the rolling counter being behind what the GDO
+    // expects.
+    //
+    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 5;
     static const uint32_t FLASH_WRITE_INTERVAL = 10000;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
@@ -54,9 +64,6 @@ namespace ratgdo {
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
-
-        // save counter to flash every 10s if it changed
-        set_interval(FLASH_WRITE_INTERVAL, std::bind(&RATGDOComponent::saveCounter, this, 1));
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
@@ -447,7 +454,7 @@ namespace ratgdo {
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->swSerial.write(this->txRollingCode, CODE_LENGTH);
 
-        saveCounter(MAX_CODES_WITHOUT_FLASH_WRITE);
+        saveCounter();
     }
 
     void RATGDOComponent::sync()
@@ -545,16 +552,12 @@ namespace ratgdo {
         transmit(command::LOCK, data::TOGGLE);
     }
 
-    void RATGDOComponent::saveCounter(int threshold)
+    void RATGDOComponent::saveCounter()
     {
         this->pref_.save(&this->rollingCodeCounter);
-        if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= threshold) {
-            // do flash write outside of the component loop
-            defer([=] {
-                this->lastSyncedRollingCodeCounter = this->rollingCodeCounter;
-                global_preferences->sync();
-            });
-        }
+        // Forcing a sync results in a soft reset if there are too many
+        // writes to flash in a short period of time. To avoid this,
+        // we have configured preferences to write every 5s
     }
 
     void RATGDOComponent::register_child(RATGDOClient* obj)
