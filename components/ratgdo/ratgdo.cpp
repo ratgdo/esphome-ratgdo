@@ -25,15 +25,6 @@ namespace ratgdo {
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 3;
     static const uint32_t FLASH_WRITE_INTERVAL = 10000;
 
-    void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
-    {
-        if (arg->input_obst.digital_read()) {
-            arg->lastObstructionHigh = millis();
-        } else {
-            arg->obstructionLowCount++;
-        }
-    }
-
     void RATGDOComponent::setup()
     {
         this->pref_ = global_preferences->make_preference<int>(734874333U);
@@ -43,17 +34,11 @@ namespace ratgdo {
 
         this->output_gdo_pin_->setup();
         this->input_gdo_pin_->setup();
-        this->input_obst_pin_->setup();
-
-        this->store_.input_obst = this->input_obst_pin_->to_isr();
 
         this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
         this->swSerial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
-
-        this->input_obst_pin_->attach_interrupt(RATGDOStore::isrObstruction, &this->store_, gpio::INTERRUPT_ANY_EDGE);
 
         // save counter to flash every 10s if it changed
         set_interval(FLASH_WRITE_INTERVAL, std::bind(&RATGDOComponent::saveCounter, this, 1));
@@ -66,7 +51,6 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        obstructionLoop();
         gdoStateLoop();
         statusUpdateLoop();
     }
@@ -76,7 +60,6 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", this->rollingCodeCounter);
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id);
     }
@@ -133,6 +116,8 @@ namespace ratgdo {
 
     uint16_t RATGDOComponent::readRollingCode()
     {
+        static bool have_obstruction_status_retry = false;
+
         uint32_t rolling = 0;
         uint64_t fixed = 0;
         uint32_t data = 0;
@@ -171,11 +156,39 @@ namespace ratgdo {
             this->lockState = static_cast<LockState>(byte2 & 1);
             this->motionState = MotionState::MOTION_STATE_CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motorState = MotorState::MOTOR_STATE_OFF; // when the status message is read, reset motor state to 0|off
-            // this->obstructionState = static_cast<ObstructionState>((byte1 >> 6) & 1);
-            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
+            this->obstructionState = ((byte2 >> 2) & 1) == 1 ? ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED : ObstructionState::OBSTRUCTION_STATE_CLEAR;
+            uint8_t motorEnabled = (byte1 >> 6) & 1;  // motor enabled? bit that gets cleared about 4s after an obstruction and is set after the obstruction clears
+
+            if (motorEnabled && !this->motorEnabled) {
+                // if motor is enabled after having been disabled, clear obstruction flag
+                this->obstructionState = ObstructionState::OBSTRUCTION_STATE_CLEAR;   
+            }
+            this->motorEnabled = motorEnabled;
+
+            if (this->obstructionState == ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED) {
+                // no status sent when onstruction is cleared, 
+                // query status with back-off until obstruction is cleared
+                if (!have_obstruction_status_retry) {
+                    set_retry("obstruction_status", 1000, 100, [=] (uint8_t call){
+                        ESP_LOGD(TAG, "Get obstruction status: %d", call);
+                        transmit(command::GET_STATUS);
+                        return RetryResult::RETRY;
+                    }, 1.5);
+                    have_obstruction_status_retry = true;
+                }
+            } else {
+                if (have_obstruction_status_retry) {
+                    ESP_LOGD(TAG, "Cancel get obstruction status");
+                    cancel_retry("obstruction_status");
+                    have_obstruction_status_retry = false;
+                }
+            }
+
+            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s obstruction=%s",
                 door_state_to_string(this->doorState),
                 light_state_to_string(this->lightState),
-                lock_state_to_string(this->lockState));
+                lock_state_to_string(this->lockState),
+                obstruction_state_to_string(this->obstructionState));
         } else if (cmd == command::LIGHT) {
             if (nibble == 0) {
                 this->lightState = LightState::LIGHT_STATE_OFF;
@@ -270,42 +283,6 @@ namespace ratgdo {
             this->txRollingCode[16],
             this->txRollingCode[17],
             this->txRollingCode[18]);
-    }
-
-    /*************************** OBSTRUCTION DETECTION ***************************/
-
-    void RATGDOComponent::obstructionLoop()
-    {
-        long currentMillis = millis();
-        static unsigned long lastMillis = 0;
-
-        // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
-        // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
-        // and is high without pulses when waking up
-
-        // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
-
-        // Every 50ms
-        if (currentMillis - lastMillis > 50) {
-            // check to see if we got between 3 and 8 low pulses on the line
-            if (this->store_.obstructionLowCount >= 3 && this->store_.obstructionLowCount <= 8) {
-                // obstructionCleared();
-                this->obstructionState = ObstructionState::OBSTRUCTION_STATE_CLEAR;
-
-                // if there have been no pulses the line is steady high or low
-            } else if (this->store_.obstructionLowCount == 0) {
-                // if the line is high and the last high pulse was more than 70ms ago, then there is an obstruction present
-                if (this->input_obst_pin_->digital_read() && currentMillis - this->store_.lastObstructionHigh > 70) {
-                    this->obstructionState = ObstructionState::OBSTRUCTION_STATE_OBSTRUCTED;
-                    // obstructionDetected();
-                } else {
-                    // asleep
-                }
-            }
-
-            lastMillis = currentMillis;
-            this->store_.obstructionLowCount = 0;
-        }
     }
 
     void RATGDOComponent::gdoStateLoop()

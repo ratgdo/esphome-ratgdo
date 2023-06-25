@@ -98,15 +98,6 @@ namespace ratgdo {
         };
     }
 
-    struct RATGDOStore {
-        ISRInternalGPIOPin input_obst;
-
-        int obstructionLowCount = 0; // count obstruction low pulses
-        long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
-
-        static void IRAM_ATTR HOT isrObstruction(RATGDOStore* arg);
-    };
-
     class RATGDOComponent : public Component {
     public:
         void setup() override;
@@ -123,6 +114,8 @@ namespace ratgdo {
 
         uint16_t previousOpenings { 0 }; // number of times the door has been opened
         uint16_t openings { 0 }; // number of times the door has been opened
+
+        uint8_t motorEnabled { 1 };
 
         DoorState previousDoorState { DoorState::DOOR_STATE_UNKNOWN };
         DoorState doorState { DoorState::DOOR_STATE_UNKNOWN };
@@ -147,7 +140,6 @@ namespace ratgdo {
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
-        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
         void set_remote_id(uint64_t remote_id) { this->remote_id = remote_id & 0xffffff; }; // not sure how large remote_id can be, assuming not more than 24 bits
 
         /********************************** FUNCTION DECLARATION
@@ -157,7 +149,6 @@ namespace ratgdo {
         void sync();
 
         void gdoStateLoop();
-        void obstructionLoop();
         void statusUpdateLoop();
 
         void saveCounter(int threshold);
@@ -176,7 +167,7 @@ namespace ratgdo {
         void toggleLock();
         void lock();
         void unlock();
-        
+
         void query_status();
         void query_openings();
 
@@ -195,11 +186,9 @@ namespace ratgdo {
         std::vector<RATGDOClient*> children_;
         bool rollingCodeUpdatesEnabled_ { true };
         bool forceUpdate_ { false };
-        RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
-        InternalGPIOPin* input_obst_pin_;
         uint64_t remote_id;
 
     }; // RATGDOComponent
