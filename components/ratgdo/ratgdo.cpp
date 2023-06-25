@@ -686,7 +686,7 @@ namespace ratgdo {
             ESP_LOGW(TAG, "I don't know duration, ignoring move to position");
             return;
         }
-        
+
         if (delta > 0) { // open
             doorCommand(data::DOOR_OPEN);
             this->positionSyncWhileOpening(delta);
