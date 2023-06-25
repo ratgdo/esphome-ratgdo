@@ -176,7 +176,7 @@ namespace ratgdo {
         void toggleLock();
         void lock();
         void unlock();
-        
+
         void query_status();
         void query_openings();
 
