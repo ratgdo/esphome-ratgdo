@@ -483,12 +483,12 @@ namespace ratgdo {
 
     void RATGDOComponent::openDoor()
     {
-        doorCommand(data::OPEN);
+        doorCommand(data::DOOR_OPEN);
     }
 
     void RATGDOComponent::closeDoor()
     {
-        doorCommand(data::CLOSE);
+        doorCommand(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stopDoor()
@@ -497,12 +497,12 @@ namespace ratgdo {
             ESP_LOGV(TAG, "The door is not moving.");
             return;
         }
-        toggleDoor();
+        doorCommand(data::DOOR_STOP);
     }
 
     void RATGDOComponent::toggleDoor()
     {
-        doorCommand(data::TOGGLE);
+        doorCommand(data::DOOR_TOGGLE);
     }
 
     void RATGDOComponent::doorCommand(uint32_t data)
@@ -519,37 +519,37 @@ namespace ratgdo {
     void RATGDOComponent::lightOn()
     {
         this->lightState = LightState::LIGHT_STATE_ON;
-        transmit(command::LIGHT, data::ON);
+        transmit(command::LIGHT, data::LIGHT_ON);
     }
 
     void RATGDOComponent::lightOff()
     {
         this->lightState = LightState::LIGHT_STATE_OFF;
-        transmit(command::LIGHT, data::OFF);
+        transmit(command::LIGHT, data::LIGHT_OFF);
     }
 
     void RATGDOComponent::toggleLight()
     {
         this->lightState = light_state_toggle(this->lightState);
-        transmit(command::LIGHT, data::TOGGLE);
+        transmit(command::LIGHT, data::LIGHT_TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
         this->lockState = LockState::LOCK_STATE_LOCKED;
-        transmit(command::LOCK, data::ON);
+        transmit(command::LOCK, data::LOCK_ON);
     }
 
     void RATGDOComponent::unlock()
     {
-        transmit(command::LOCK, data::OFF);
+        transmit(command::LOCK, data::LOCK_OFF);
     }
 
     void RATGDOComponent::toggleLock()
     {
         this->lockState = lock_state_toggle(this->lockState);
-        transmit(command::LOCK, data::TOGGLE);
+        transmit(command::LOCK, data::LOCK_TOGGLE);
     }
 
     void RATGDOComponent::saveCounter()
