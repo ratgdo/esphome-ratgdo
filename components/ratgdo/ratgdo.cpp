@@ -457,6 +457,12 @@ namespace ratgdo {
     void RATGDOComponent::close_with_alarm()
     {
         transmit(command::TTC, 0x0000);
+        set_timeout(100, [=] {
+            transmit(command::PAIR_3_RESP, 0x1100);
+        });
+        set_timeout(200, [=] {
+            transmit(command::PAIR_3_RESP, 0x1200);
+        });        
     }
 
     /************************* DOOR COMMUNICATION *************************/
