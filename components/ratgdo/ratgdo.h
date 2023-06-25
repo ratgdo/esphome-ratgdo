@@ -104,7 +104,7 @@ namespace ratgdo {
             GET_OPENINGS = 0x48b,
             OPENINGS = 0x48c,
 
-            TTC = 0x40a,  // Time to close
+            TTC = 0x40a, // Time to close
         };
     }
 
