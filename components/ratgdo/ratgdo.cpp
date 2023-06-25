@@ -134,6 +134,8 @@ namespace ratgdo {
             return "pair_2";
         case 0x48b:
             return "get_openings";
+        case 0x48d:
+            return "ttc";
         default:
             return "unknown";
         }
