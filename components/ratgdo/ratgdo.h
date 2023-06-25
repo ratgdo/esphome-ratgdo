@@ -160,7 +160,7 @@ namespace ratgdo {
         void obstructionLoop();
         void statusUpdateLoop();
 
-        void saveCounter(int threshold);
+        void saveCounter();
 
         void doorCommand(uint32_t data);
 
@@ -176,7 +176,7 @@ namespace ratgdo {
         void toggleLock();
         void lock();
         void unlock();
-        
+
         void query_status();
         void query_openings();
 

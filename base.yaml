@@ -6,6 +6,9 @@ external_components:
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
     refresh: 1s
 
+preferences:
+  flash_write_interval: 5s
+
 ratgdo:
   id: ${id_prefix}
   input_gdo_pin: ${uart_rx_pin}
