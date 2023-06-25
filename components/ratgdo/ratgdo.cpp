@@ -548,6 +548,7 @@ namespace ratgdo {
     void RATGDOComponent::saveCounter(int threshold)
     {
         this->pref_.save(&this->rollingCodeCounter);
+        /*
         if (!this->lastSyncedRollingCodeCounter || this->rollingCodeCounter - this->lastSyncedRollingCodeCounter >= threshold) {
             // do flash write outside of the component loop
             defer([=] {
@@ -555,6 +556,7 @@ namespace ratgdo {
                 global_preferences->sync();
             });
         }
+        */
     }
 
     void RATGDOComponent::register_child(RATGDOClient* obj)
