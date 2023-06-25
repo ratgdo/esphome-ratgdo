@@ -133,6 +133,8 @@ namespace ratgdo {
             return "pair_2";
         case 0x48b:
             return "get_openings";
+        case 0x40a:
+            return "ttc"; // Time to close
         default:
             return "unknown";
         }
