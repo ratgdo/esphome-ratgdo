@@ -209,7 +209,7 @@ namespace ratgdo {
         void printRollingCode();
         void getRollingCode(command::cmd command, uint32_t data, bool increment);
         uint16_t readRollingCode();
-        void incrementRollingCodeCounter();
+        void incrementRollingCodeCounter(int delta = 1);
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
 
