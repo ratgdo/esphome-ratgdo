@@ -19,7 +19,7 @@ This project is not affiliated with ratgdo or Paul Wieland. Please buy his board
 
 The ESPHome firmware will allow you to open the door to any position after calibration. To calibrate the door, open and close it once without stopping.
 
-![position_demo](https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/22a9873e-67bb-4b2f-bb32-70047cfe666d)
+<img width="560" alt="position_demo" src="https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/22a9873e-67bb-4b2f-bb32-70047cfe666d">
 
 
 # ESPHome config
