@@ -33,6 +33,8 @@ namespace ratgdo {
 
     static const uint8_t CODE_LENGTH = 19;
 
+    const float DOOR_POSITION_UNKNOWN = -1.0;
+
     /*
     from: https://github.com/argilo/secplus/blob/f98c3220356c27717a25102c0b35815ebbd26ccc/secplus.py#L540
     _WIRELINE_COMMANDS = {
@@ -131,6 +133,11 @@ namespace ratgdo {
         time_t autoCloseTime { 0 };
         time_t previousAutoCloseTime { 0 };
 
+        float startOpening { -1 };
+        float openingDuration { 0 };
+        float startClosing { -1 };
+        float closingDuration { 0 };
+
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
 
@@ -139,6 +146,10 @@ namespace ratgdo {
 
         DoorState previousDoorState { DoorState::DOOR_STATE_UNKNOWN };
         DoorState doorState { DoorState::DOOR_STATE_UNKNOWN };
+
+        float doorPosition { DOOR_POSITION_UNKNOWN };
+        float previousDoorPosition { DOOR_POSITION_UNKNOWN };
+        bool movingToPosition { false };
 
         LightState previousLightState { LightState::LIGHT_STATE_UNKNOWN };
         LightState lightState { LightState::LIGHT_STATE_UNKNOWN };
@@ -181,6 +192,10 @@ namespace ratgdo {
         void openDoor();
         void closeDoor();
         void stopDoor();
+        void setDoorPosition(float position);
+        void positionSyncWhileOpening(float delta, float update_period = 500);
+        void positionSyncWhileClosing(float delta, float update_period = 500);
+        void cancelPositionSyncCallbacks();
 
         void toggleLight();
         void lightOn();
@@ -200,12 +215,20 @@ namespace ratgdo {
         void incrementRollingCodeCounter();
         void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
+
+        void setOpeningDuration(float duration);
+        void sendOpeningDuration();
+        void setClosingDuration(float duration);
+        void sendClosingDuration();
+
         LightState getLightState();
         /** Register a child component. */
         void register_child(RATGDOClient* obj);
 
     protected:
-        ESPPreferenceObject pref_;
+        ESPPreferenceObject rollingCodePref_;
+        ESPPreferenceObject openingDurationPref_;
+        ESPPreferenceObject closingDurationPref_;
         std::vector<RATGDOClient*> children_;
         bool rollingCodeUpdatesEnabled_ { true };
         bool forceUpdate_ { false };
