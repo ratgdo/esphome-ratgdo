@@ -21,7 +21,7 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
-    static const int SYNC_DELAY = 2000;
+    static const int SYNC_DELAY = 1000;
     //
     // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
     // since we write the flash at most every every 5s
@@ -32,8 +32,7 @@ namespace ratgdo {
     // results in the rolling counter being behind what the GDO
     // expects.
     //
-    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 5;
-    static const uint32_t FLASH_WRITE_INTERVAL = 10000;
+    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
@@ -81,7 +80,7 @@ namespace ratgdo {
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
         // many things happening at startup, use some delay for sync
-        set_timeout(SYNC_DELAY, std::bind(&RATGDOComponent::sync, this));
+        set_timeout(SYNC_DELAY, [=] { this->sync(); });
     }
 
     void RATGDOComponent::loop()
@@ -343,9 +342,9 @@ namespace ratgdo {
         sendRollingCodeChanged();
     }
 
-    void RATGDOComponent::incrementRollingCodeCounter()
+    void RATGDOComponent::incrementRollingCodeCounter(int delta)
     {
-        this->rollingCodeCounter = (this->rollingCodeCounter + 1) & 0xfffffff;
+        this->rollingCodeCounter = (this->rollingCodeCounter + delta) & 0xfffffff;
         sendRollingCodeChanged();
     }
 
@@ -571,26 +570,24 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        if (this->rollingCodeCounter == 0) { // first time use
-            this->rollingCodeCounter = 1;
-            // the opener only sends a reply when the rolling code > previous rolling code for a given remote id
-            // when used the first time there is no previous rolling code, so first command is ignored
-            set_timeout(100, [=] {
-                transmit(command::GET_STATUS);
-            });
-            // send it twice since manual says it can take 3 button presses for door to open on first use
-            set_timeout(200, [=] {
-                transmit(command::GET_STATUS);
-            });
-        }
-        for (int i = 0; i <= MAX_CODES_WITHOUT_FLASH_WRITE; i++) {
-            set_timeout(300 + i * 100, [=] {
-                transmit(command::GET_STATUS);
-            });
-        }
-        set_timeout(400 + 100 * MAX_CODES_WITHOUT_FLASH_WRITE, [=] {
-            transmit(command::GET_OPENINGS);
-        });
+        // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
+        this->incrementRollingCodeCounter(MAX_CODES_WITHOUT_FLASH_WRITE);
+
+        set_retry(
+            300, 10, [=](auto r) {
+                if (this->doorState != DoorState::DOOR_STATE_UNKNOWN) { // have status
+                    if (this->openings != 0) { // have openings
+                        return RetryResult::DONE;
+                    } else {
+                        transmit(command::GET_OPENINGS);
+                        return RetryResult::RETRY;
+                    }
+                } else {
+                    transmit(command::GET_STATUS);
+                    return RetryResult::RETRY;
+                }
+            },
+            1.5f);
     }
 
     void RATGDOComponent::openDoor()
