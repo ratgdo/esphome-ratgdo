@@ -81,7 +81,7 @@ namespace ratgdo {
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
         // many things happening at startup, use some delay for sync
-        set_timeout(SYNC_DELAY, [=]{ this->sync(); });
+        set_timeout(SYNC_DELAY, [=] { this->sync(); });
     }
 
     void RATGDOComponent::loop()
@@ -574,19 +574,21 @@ namespace ratgdo {
         // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
         this->incrementRollingCodeCounter(MAX_CODES_WITHOUT_FLASH_WRITE);
 
-        set_retry(300, 10, [=] (auto r) {
-            if (this->doorState != DoorState::DOOR_STATE_UNKNOWN) { // have status
-                if (this->openings != 0) { // have openings
-                    return RetryResult::DONE;
+        set_retry(
+            300, 10, [=](auto r) {
+                if (this->doorState != DoorState::DOOR_STATE_UNKNOWN) { // have status
+                    if (this->openings != 0) { // have openings
+                        return RetryResult::DONE;
+                    } else {
+                        transmit(command::GET_OPENINGS);
+                        return RetryResult::RETRY;
+                    }
                 } else {
-                    transmit(command::GET_OPENINGS);
+                    transmit(command::GET_STATUS);
                     return RetryResult::RETRY;
-                }   
-            } else {
-                transmit(command::GET_STATUS);
-                return RetryResult::RETRY;
-            }
-        }, 1.5f);
+                }
+            },
+            1.5f);
     }
 
     void RATGDOComponent::openDoor()
