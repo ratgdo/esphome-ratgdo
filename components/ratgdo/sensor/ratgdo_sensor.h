@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ratgdo.h"
-#include "../ratgdo_child.h"
 #include "../ratgdo_state.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/core/component.h"
@@ -16,9 +15,8 @@ namespace ratgdo {
     class RATGDOSensor : public sensor::Sensor, public RATGDOClient, public Component {
     public:
         void dump_config() override;
+        void setup() override;
         void set_ratgdo_sensor_type(RATGDOSensorType ratgdo_sensor_type_) { this->ratgdo_sensor_type_ = ratgdo_sensor_type_; }
-
-        void on_openings_change(uint32_t openings) override;
 
     protected:
         RATGDOSensorType ratgdo_sensor_type_;

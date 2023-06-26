@@ -13,6 +13,13 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Type: Lock");
     }
 
+    void RATGDOSwitch::setup()
+    {
+        this->parent_->subscribe_lock_state([=](LockState state) {
+            this->on_lock_state(state);
+        });
+    }
+
     void RATGDOSwitch::on_lock_state(LockState state)
     {
         bool value = state == LockState::LOCK_STATE_LOCKED;

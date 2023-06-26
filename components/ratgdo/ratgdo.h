@@ -17,19 +17,19 @@
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/preferences.h"
+#include "observable.h"
 
 extern "C" {
 #include "secplus.h"
 }
 
-#include "ratgdo_child.h"
 #include "ratgdo_state.h"
 
 namespace esphome {
 namespace ratgdo {
 
-    // Forward declare RATGDOClient
-    class RATGDOClient;
+    class RATGDOComponent;
+    typedef Parented<RATGDOComponent> RATGDOClient;
 
     static const uint8_t CODE_LENGTH = 19;
 
@@ -128,44 +128,29 @@ namespace ratgdo {
 
         EspSoftwareSerial::UART swSerial;
 
-        uint32_t rollingCodeCounter { 0 };
+        observable<uint32_t> rollingCodeCounter { 0 };
         uint32_t lastSyncedRollingCodeCounter { 0 };
 
         float startOpening { -1 };
-        float openingDuration { 0 };
+        observable<float> openingDuration { 0 };
         float startClosing { -1 };
-        float closingDuration { 0 };
+        observable<float> closingDuration { 0 };
 
         uint8_t txRollingCode[CODE_LENGTH];
         uint8_t rxRollingCode[CODE_LENGTH];
 
-        uint16_t previousOpenings { 0 }; // number of times the door has been opened
-        uint16_t openings { 0 }; // number of times the door has been opened
+        observable<uint16_t> openings { 0 }; // number of times the door has been opened
 
-        DoorState previousDoorState { DoorState::DOOR_STATE_UNKNOWN };
-        DoorState doorState { DoorState::DOOR_STATE_UNKNOWN };
-
-        float doorPosition { DOOR_POSITION_UNKNOWN };
-        float previousDoorPosition { DOOR_POSITION_UNKNOWN };
+        observable<DoorState> doorState { DoorState::DOOR_STATE_UNKNOWN };
+        observable<float> doorPosition { DOOR_POSITION_UNKNOWN };
         bool movingToPosition { false };
 
-        LightState previousLightState { LightState::LIGHT_STATE_UNKNOWN };
-        LightState lightState { LightState::LIGHT_STATE_UNKNOWN };
-
-        LockState previousLockState { LockState::LOCK_STATE_UNKNOWN };
-        LockState lockState { LockState::LOCK_STATE_UNKNOWN };
-
-        ObstructionState previousObstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
-        ObstructionState obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
-
-        MotorState previousMotorState { MotorState::MOTOR_STATE_UNKNOWN };
-        MotorState motorState { MotorState::MOTOR_STATE_UNKNOWN };
-
-        ButtonState previousButtonState { ButtonState::BUTTON_STATE_UNKNOWN };
-        ButtonState buttonState { ButtonState::BUTTON_STATE_UNKNOWN };
-
-        MotionState previousMotionState { MotionState::MOTION_STATE_UNKNOWN };
-        MotionState motionState { MotionState::MOTION_STATE_UNKNOWN };
+        observable<LightState> lightState { LightState::LIGHT_STATE_UNKNOWN };
+        observable<LockState> lockState { LockState::LOCK_STATE_UNKNOWN };
+        observable<ObstructionState> obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+        observable<MotorState> motorState { MotorState::MOTOR_STATE_UNKNOWN };
+        observable<ButtonState> buttonState { ButtonState::BUTTON_STATE_UNKNOWN };
+        observable<MotionState> motionState { MotionState::MOTION_STATE_UNKNOWN };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
@@ -180,7 +165,6 @@ namespace ratgdo {
 
         void gdoStateLoop();
         void obstructionLoop();
-        void statusUpdateLoop();
 
         void saveCounter();
 
@@ -210,25 +194,30 @@ namespace ratgdo {
         void getRollingCode(command::cmd command, uint32_t data, bool increment);
         uint16_t readRollingCode();
         void incrementRollingCodeCounter(int delta = 1);
-        void sendRollingCodeChanged();
         void setRollingCodeCounter(uint32_t counter);
 
         void setOpeningDuration(float duration);
-        void sendOpeningDuration();
         void setClosingDuration(float duration);
-        void sendClosingDuration();
 
         LightState getLightState();
-        /** Register a child component. */
-        void register_child(RATGDOClient* obj);
+
+        void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
+        void subscribe_opening_duration(std::function<void(float)>&& f);
+        void subscribe_closing_duration(std::function<void(float)>&& f);
+        void subscribe_openings(std::function<void(uint16_t)>&& f);
+        void subscribe_door_state(std::function<void(DoorState, float)>&& f);
+        void subscribe_light_state(std::function<void(LightState)>&& f);
+        void subscribe_lock_state(std::function<void(LockState)>&& f);
+        void subscribe_obstruction_state(std::function<void(ObstructionState)>&& f);
+        void subscribe_motor_state(std::function<void(MotorState)>&& f);
+        void subscribe_button_state(std::function<void(ButtonState)>&& f);
+        void subscribe_motion_state(std::function<void(MotionState)>&& f);
 
     protected:
         ESPPreferenceObject rollingCodePref_;
         ESPPreferenceObject openingDurationPref_;
         ESPPreferenceObject closingDurationPref_;
-        std::vector<RATGDOClient*> children_;
         bool rollingCodeUpdatesEnabled_ { true };
-        bool forceUpdate_ { false };
         RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;

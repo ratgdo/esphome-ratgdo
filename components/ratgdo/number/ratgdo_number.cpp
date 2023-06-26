@@ -19,36 +19,29 @@ namespace ratgdo {
         }
     }
 
+    void RATGDONumber::setup()
+    {
+        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+            this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
+                this->publish_state(value);
+            });
+        } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
+            this->parent_->subscribe_opening_duration([=](float value) {
+                this->publish_state(value);
+            });
+        } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
+            this->parent_->subscribe_closing_duration([=](float value) {
+                this->publish_state(value);
+            });
+        }
+    }
+
     void RATGDONumber::set_number_type(NumberType number_type_)
     {
         this->number_type_ = number_type_;
         if (this->number_type_ == RATGDO_OPENING_DURATION || this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->traits.set_step(0.1);
         }
-    }
-
-    void RATGDONumber::on_rolling_code_change(uint32_t rollingCodeCounter)
-    {
-        if (this->number_type_ != RATGDO_ROLLING_CODE_COUNTER) {
-            return;
-        }
-        this->publish_state(rollingCodeCounter);
-    }
-
-    void RATGDONumber::on_opening_duration_change(float duration)
-    {
-        if (this->number_type_ != RATGDO_OPENING_DURATION) {
-            return;
-        }
-        this->publish_state(duration);
-    }
-
-    void RATGDONumber::on_closing_duration_change(float duration)
-    {
-        if (this->number_type_ != RATGDO_CLOSING_DURATION) {
-            return;
-        }
-        this->publish_state(duration);
     }
 
     void RATGDONumber::control(float value)
