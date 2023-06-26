@@ -19,7 +19,7 @@ namespace ratgdo {
     public:
         void setup() override;
         void dump_config() override;
-        void set_binary_sensor_type(SensorType binary_sensor_type_) { this->binary_sensor_type_ = binary_sensor_type_; }
+        void set_binary_sensor_type(SensorType binary_sensor_type) { this->binary_sensor_type_ = binary_sensor_type; }
 
     protected:
         SensorType binary_sensor_type_;
