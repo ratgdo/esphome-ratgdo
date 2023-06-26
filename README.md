@@ -1,7 +1,7 @@
 
-# ratgdo
+# ratgdo for ESPHome
 
-This is a port of the ratgdo software for the v2 board to esphome.
+This is a port of the ratgdo software for the v2 board to ESPHome.
 
 [Visit the github.io page to purchase boards](https://paulwieland.github.io/ratgdo/#order)
 
