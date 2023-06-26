@@ -32,8 +32,7 @@ namespace ratgdo {
     // results in the rolling counter being behind what the GDO
     // expects.
     //
-    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 5;
-    static const uint32_t FLASH_WRITE_INTERVAL = 10000;
+    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
 
     void IRAM_ATTR HOT RATGDOStore::isrObstruction(RATGDOStore* arg)
     {
