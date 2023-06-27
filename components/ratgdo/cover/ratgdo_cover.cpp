@@ -24,26 +24,26 @@ namespace ratgdo {
     void RATGDOCover::on_door_state(DoorState state, float position)
     {
         switch (state) {
-        case DoorState::DOOR_STATE_OPEN:
+        case DoorState::OPEN:
             this->position = COVER_OPEN;
             this->current_operation = COVER_OPERATION_IDLE;
             break;
-        case DoorState::DOOR_STATE_CLOSED:
+        case DoorState::CLOSED:
             this->position = COVER_CLOSED;
             this->current_operation = COVER_OPERATION_IDLE;
             break;
-        case DoorState::DOOR_STATE_OPENING:
+        case DoorState::OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
             this->position = position;
             break;
-        case DoorState::DOOR_STATE_CLOSING:
+        case DoorState::CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
             this->position = position;
             break;
-        case DoorState::DOOR_STATE_STOPPED:
+        case DoorState::STOPPED:
             this->current_operation = COVER_OPERATION_IDLE;
             this->position = position;
-        case DoorState::DOOR_STATE_UNKNOWN:
+        case DoorState::UNKNOWN:
         default:
             this->current_operation = COVER_OPERATION_IDLE;
             this->position = position;
