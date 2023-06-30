@@ -54,7 +54,7 @@ namespace ratgdo {
         const uint32_t DOOR_STOP = 3;
     }
 
-    ENUM(Command, uint64_t,
+    ENUM(Command, uint16_t,
         (UNKNOWN, 0x000),
         (GET_STATUS, 0x080),
         (STATUS, 0x081),
@@ -71,8 +71,8 @@ namespace ratgdo {
         (MOTION, 0x285),
 
         (LEARN_1, 0x391),
-        (LEARN_3, 0x392),
-        (LEARN_3_RESP, 0x393),
+        (PING, 0x392),
+        (PING_RESP, 0x393),
 
         (PAIR_2, 0x400),
         (PAIR_2_RESP, 0x401),
@@ -83,10 +83,8 @@ namespace ratgdo {
         (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
     )
 
-    inline bool operator==(const uint64_t some, const Command& other)
-    {
-        return some == static_cast<uint64_t>(other);
-    }
+    inline bool operator==(const uint16_t cmd_i, const Command& cmd_e) { return cmd_i == static_cast<uint16_t>(cmd_e); }
+    inline bool operator==(const Command& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
 
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
@@ -181,7 +179,7 @@ namespace ratgdo {
         void subscribe_motor_state(std::function<void(MotorState)>&& f);
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
-
+        
     protected:
         ESPPreferenceObject rolling_code_counter_pref_;
         ESPPreferenceObject opening_duration_pref_;

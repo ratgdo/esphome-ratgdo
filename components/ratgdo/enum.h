@@ -37,7 +37,7 @@
     enum class name : type {                            \
         FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)       \
     };                                                  \
-    inline const char*                        \
+    inline const char*                                  \
         name##_to_string(name _e)                       \
     {                                                   \
         switch (_e) {                                   \
@@ -46,7 +46,7 @@
             return "UNKNOWN";                           \
         }                                               \
     }                                                   \
-    inline name                               \
+    inline name                                         \
         to_##name(type _t, name _unknown)               \
     {                                                   \
         switch (_t) {                                   \

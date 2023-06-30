@@ -44,6 +44,9 @@ namespace ratgdo {
             this->traits.set_min_value(0.0);
             this->traits.set_max_value(180.0);
         }
+        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+            this->traits.set_max_value(0xfffffff);
+        }
     }
 
     void RATGDONumber::control(float value)

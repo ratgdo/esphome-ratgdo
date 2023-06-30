@@ -85,8 +85,8 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        obstruction_loop();
-        gdo_state_loop();
+        this->obstruction_loop();
+        this->gdo_state_loop();
     }
 
     void RATGDOComponent::dump_config()
@@ -99,7 +99,6 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id_);
     }
 
-
     uint16_t RATGDOComponent::decode_packet(const WirePacket& packet)
     {
         uint32_t rolling = 0;
@@ -110,13 +109,12 @@ namespace ratgdo {
 
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
-
+        
         Command cmd_enum = to_Command(cmd, Command::UNKNOWN);
-        auto cmd_str = Command_to_string(cmd_enum);
 
-        if ((fixed & 0xfff) == this->remote_id_) { // my commands
+        if ((fixed & 0xfffffff) == this->remote_id_) { // my commands
             ESP_LOGV(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
-            return 0;
+            return static_cast<uint16_t>(Command::UNKNOWN);
         } else {
             ESP_LOGV(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
         }
@@ -188,7 +186,7 @@ namespace ratgdo {
             // this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
-                transmit(Command::GET_OPENINGS);
+                this->transmit(Command::GET_OPENINGS);
             }
 
             ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
@@ -219,12 +217,14 @@ namespace ratgdo {
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
             if (*this->light_state == LightState::OFF) {
-                transmit(Command::GET_STATUS);
+                this->transmit(Command::GET_STATUS);
             }
             ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
-        } else {
-            ESP_LOGV(TAG, "Unhandled command: cmd=%03x byte2=%02x byte1=%02x nibble=%01x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, byte2, byte1, nibble, fixed, data);
+        } else if (cmd == Command::SET_TTC) {
+            auto seconds = (byte1 << 8) | byte2;
+            ESP_LOGD(TAG, "Time to close (TTC): %ds", seconds);
         }
+
         return cmd;
     }
 
@@ -237,9 +237,9 @@ namespace ratgdo {
         ESP_LOGV(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rolling_code_counter, fixed, send_data);
         encode_wireline(*this->rolling_code_counter, fixed, send_data, packet);
 
-        print_packet(packet);
+        this->print_packet(packet);
         if (increment) {
-            increment_rolling_code_counter();
+            this->increment_rolling_code_counter();
         }
     }
 
@@ -375,7 +375,7 @@ namespace ratgdo {
                 if (byte_count == PACKET_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
-                    decode_packet(rx_packet);
+                    this->decode_packet(rx_packet);
                     return;
                 }
             }
@@ -405,7 +405,7 @@ namespace ratgdo {
     {
         WirePacket tx_packet;
 
-        encode_packet(command, data, increment, tx_packet);
+        this->encode_packet(command, data, increment, tx_packet);
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
         delayMicroseconds(1305);
@@ -414,7 +414,7 @@ namespace ratgdo {
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->sw_serial_.write(tx_packet, PACKET_LENGTH);
 
-        save_rolling_code_counter();
+        this->save_rolling_code_counter();
     }
 
     void RATGDOComponent::sync()
@@ -428,11 +428,11 @@ namespace ratgdo {
                     if (*this->openings != 0) { // have openings
                         return RetryResult::DONE;
                     } else {
-                        transmit(Command::GET_OPENINGS);
+                        this->transmit(Command::GET_OPENINGS);
                         return RetryResult::RETRY;
                     }
                 } else {
-                    transmit(Command::GET_STATUS);
+                    this->transmit(Command::GET_STATUS);
                     return RetryResult::RETRY;
                 }
             },
@@ -446,7 +446,7 @@ namespace ratgdo {
         }
         this->cancel_position_sync_callbacks();
 
-        door_command(data::DOOR_OPEN);
+        this->door_command(data::DOOR_OPEN);
     }
 
     void RATGDOComponent::close_door()
@@ -456,7 +456,7 @@ namespace ratgdo {
         }
         this->cancel_position_sync_callbacks();
 
-        door_command(data::DOOR_CLOSE);
+        this->door_command(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stop_door()
@@ -465,7 +465,7 @@ namespace ratgdo {
             ESP_LOGW(TAG, "The door is not moving.");
             return;
         }
-        door_command(data::DOOR_STOP);
+        this->door_command(data::DOOR_STOP);
     }
 
     void RATGDOComponent::toggle_door()
@@ -475,7 +475,7 @@ namespace ratgdo {
         }
         this->cancel_position_sync_callbacks();
 
-        door_command(data::DOOR_TOGGLE);
+        this->door_command(data::DOOR_TOGGLE);
     }
 
     void RATGDOComponent::position_sync_while_opening(float delta, float update_period)
@@ -534,11 +534,11 @@ namespace ratgdo {
         }
 
         if (delta > 0) { // open
-            door_command(data::DOOR_OPEN);
+            this->door_command(data::DOOR_OPEN);
             this->position_sync_while_opening(delta);
         } else { // close
             delta = -delta;
-            door_command(data::DOOR_CLOSE);
+            this->door_command(data::DOOR_CLOSE);
             this->position_sync_while_closing(delta);
         }
 
@@ -546,7 +546,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0);
         this->moving_to_position = true;
         set_timeout("move_to_position", operation_time, [=] {
-            door_command(data::DOOR_STOP);
+            this->door_command(data::DOOR_STOP);
             this->moving_to_position = false;
             this->door_position = position;
         });
@@ -566,48 +566,48 @@ namespace ratgdo {
     {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
-        transmit(Command::OPEN, data, false);
+        this->transmit(Command::OPEN, data, false);
         set_timeout(100, [=] {
             auto data2 = data & ~(1 << 8); // button release
-            transmit(Command::OPEN, data2);
+            this->transmit(Command::OPEN, data2);
         });
     }
 
     void RATGDOComponent::light_on()
     {
         this->light_state = LightState::ON;
-        transmit(Command::LIGHT, data::LIGHT_ON);
+        this->transmit(Command::LIGHT, data::LIGHT_ON);
     }
 
     void RATGDOComponent::light_off()
     {
         this->light_state = LightState::OFF;
-        transmit(Command::LIGHT, data::LIGHT_OFF);
+        this->transmit(Command::LIGHT, data::LIGHT_OFF);
     }
 
     void RATGDOComponent::toggle_light()
     {
         this->light_state = light_state_toggle(*this->light_state);
-        transmit(Command::LIGHT, data::LIGHT_TOGGLE);
+        this->transmit(Command::LIGHT, data::LIGHT_TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
         this->lock_state = LockState::LOCKED;
-        transmit(Command::LOCK, data::LOCK_ON);
+        this->transmit(Command::LOCK, data::LOCK_ON);
     }
 
     void RATGDOComponent::unlock()
     {
         this->lock_state = LockState::UNLOCKED;
-        transmit(Command::LOCK, data::LOCK_OFF);
+        this->transmit(Command::LOCK, data::LOCK_OFF);
     }
 
     void RATGDOComponent::toggle_lock()
     {
         this->lock_state = lock_state_toggle(*this->lock_state);
-        transmit(Command::LOCK, data::LOCK_TOGGLE);
+        this->transmit(Command::LOCK, data::LOCK_TOGGLE);
     }
 
     void RATGDOComponent::save_rolling_code_counter()
