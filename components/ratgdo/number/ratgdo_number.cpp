@@ -41,8 +41,8 @@ namespace ratgdo {
         this->number_type_ = number_type_;
         if (this->number_type_ == RATGDO_OPENING_DURATION || this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->traits.set_step(0.1);
-            this->traits.set_min(0.0);
-            this->traits.set_max(360.0);
+            this->traits.set_min_value(0.0);
+            this->traits.set_max_value(360.0);
         }
     }
 
