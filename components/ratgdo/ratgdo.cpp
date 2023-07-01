@@ -276,7 +276,7 @@ namespace ratgdo {
             }
             ESP_LOGD(TAG, "Motion: %s", motion_state_to_string(*this->motionState));
         } else {
-            ESP_LOGD(TAG, "Unhandled command: cmd=%03x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
+            ESP_LOGV(TAG, "Unhandled command: cmd=%03x nibble=%02x byte1=%02x byte2=%02x fixed=%010" PRIx64 " data=%08" PRIx32, cmd, nibble, byte1, byte2, fixed, data);
         }
         return cmd;
     }
