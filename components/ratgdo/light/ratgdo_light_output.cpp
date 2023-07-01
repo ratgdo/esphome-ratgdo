@@ -13,6 +13,14 @@ namespace ratgdo {
     {
         ESP_LOGCONFIG("", "RATGDO Light");
     }
+
+    void RATGDOLightOutput::setup()
+    {
+        this->parent_->subscribe_light_state([=](LightState s) {
+            this->on_light_state(s);
+        });
+    }
+
     void RATGDOLightOutput::on_light_state(esphome::ratgdo::LightState state)
     {
         if (this->light_state_) {

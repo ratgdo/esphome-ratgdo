@@ -13,6 +13,14 @@ namespace ratgdo {
     {
         LOG_COVER("", "RATGDO Cover", this);
     }
+
+    void RATGDOCover::setup()
+    {
+        this->parent_->subscribe_door_state([=](DoorState state, float position) {
+            this->on_door_state(state, position);
+        });
+    }
+
     void RATGDOCover::on_door_state(DoorState state, float position)
     {
         switch (state) {

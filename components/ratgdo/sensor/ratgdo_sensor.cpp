@@ -12,9 +12,12 @@ namespace ratgdo {
         LOG_SENSOR("", "RATGDO Sensor", this);
         ESP_LOGCONFIG(TAG, "  Type: Openings");
     }
-    void RATGDOSensor::on_openings_change(uint32_t openings)
+
+    void RATGDOSensor::setup()
     {
-        this->publish_state(openings);
+        this->parent_->subscribe_openings([=](uint16_t value) {
+            this->publish_state(value);
+        });
     }
 
 } // namespace ratgdo

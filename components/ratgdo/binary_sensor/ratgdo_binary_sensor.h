@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ratgdo.h"
-#include "../ratgdo_child.h"
 #include "../ratgdo_state.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/core/component.h"
@@ -21,11 +20,6 @@ namespace ratgdo {
         void setup() override;
         void dump_config() override;
         void set_binary_sensor_type(SensorType binary_sensor_type_) { this->binary_sensor_type_ = binary_sensor_type_; }
-
-        void on_motion_state(MotionState state) override;
-        void on_obstruction_state(ObstructionState state) override;
-        void on_motor_state(MotorState state) override;
-        void on_button_state(ButtonState state) override;
 
     protected:
         SensorType binary_sensor_type_;
