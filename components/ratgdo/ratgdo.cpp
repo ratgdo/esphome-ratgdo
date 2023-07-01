@@ -73,7 +73,7 @@ namespace ratgdo {
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
         this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 
-        this->sw_serial.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
+        this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_ANY_EDGE);
 
@@ -346,8 +346,8 @@ namespace ratgdo {
         static WirePacket rx_packet;
 
         if (!reading_msg) {
-            while (this->sw_serial.available()) {
-                uint8_t ser_byte = this->sw_serial.read();
+            while (this->sw_serial_.available()) {
+                uint8_t ser_byte = this->sw_serial_.read();
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
                     byte_count = 0;
                     continue;
@@ -367,8 +367,8 @@ namespace ratgdo {
             }
         }
         if (reading_msg) {
-            while (this->sw_serial.available()) {
-                uint8_t ser_byte = this->sw_serial.read();
+            while (this->sw_serial_.available()) {
+                uint8_t ser_byte = this->sw_serial_.read();
                 rx_packet[byte_count] = ser_byte;
                 byte_count++;
 
@@ -412,7 +412,7 @@ namespace ratgdo {
         this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->sw_serial.write(tx_packet, PACKET_LENGTH);
+        this->sw_serial_.write(tx_packet, PACKET_LENGTH);
 
         save_rolling_code_counter();
     }

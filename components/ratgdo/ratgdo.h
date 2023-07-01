@@ -103,8 +103,6 @@ namespace ratgdo {
         void loop() override;
         void dump_config() override;
 
-        EspSoftwareSerial::UART sw_serial;
-
         observable<uint32_t> rolling_code_counter { 0 };
 
         float start_opening { -1 };
@@ -189,6 +187,7 @@ namespace ratgdo {
         ESPPreferenceObject opening_duration_pref_;
         ESPPreferenceObject closing_duration_pref_;
         RATGDOStore isr_store_ {};
+        SoftwareSerial sw_serial_;
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
