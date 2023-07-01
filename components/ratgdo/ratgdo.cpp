@@ -168,17 +168,17 @@ namespace ratgdo {
         data &= ~0xf000; // clear parity nibble
 
         if ((fixed & 0xfff) == this->remote_id) { // my commands
-            ESP_LOGD(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOGV(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return 0;
         } else {
-            ESP_LOGD(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOGV(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
         }
 
         nibble = (data >> 8) & 0xff;
         byte1 = (data >> 16) & 0xff;
         byte2 = (data >> 24) & 0xff;
 
-        ESP_LOGD(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, cmd_name(cmd), byte2, byte1, nibble);
+        ESP_LOGV(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, cmd_name(cmd), byte2, byte1, nibble);
 
         if (cmd == command::STATUS) {
 
@@ -286,7 +286,7 @@ namespace ratgdo {
         uint64_t fixed = ((command & ~0xff) << 24) | this->remote_id;
         uint32_t send_data = (data << 8) | (command & 0xff);
 
-        ESP_LOGD(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rollingCodeCounter, fixed, send_data);
+        ESP_LOGV(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rollingCodeCounter, fixed, send_data);
         encode_wireline(*this->rollingCodeCounter, fixed, send_data, this->txRollingCode);
 
         printRollingCode();
