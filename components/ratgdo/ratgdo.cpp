@@ -44,25 +44,6 @@ namespace ratgdo {
 
     void RATGDOComponent::setup()
     {
-        this->rolling_code_counter_pref_ = global_preferences->make_preference<int>(734874333U);
-        uint32_t rolling_code_counter = 0;
-        this->rolling_code_counter_pref_.load(&rolling_code_counter);
-        this->rolling_code_counter = rolling_code_counter;
-        // observers are subscribed in the setup() of children defer notify until after setup()
-        defer([=] { this->rolling_code_counter.notify(); });
-
-        this->opening_duration_pref_ = global_preferences->make_preference<float>(734874334U);
-        float opening_duration = 0;
-        this->opening_duration_pref_.load(&opening_duration);
-        this->set_opening_duration(opening_duration);
-        defer([=] { this->opening_duration.notify(); });
-
-        this->closing_duration_pref_ = global_preferences->make_preference<float>(734874335U);
-        float closing_duration = 0;
-        this->closing_duration_pref_.load(&closing_duration);
-        this->set_closing_duration(closing_duration);
-        defer([=] { this->closing_duration.notify(); });
-
         this->output_gdo_pin_->setup();
         this->input_gdo_pin_->setup();
         this->input_obst_pin_->setup();
@@ -247,7 +228,6 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "Set opening duration: %.1fs", duration);
         this->opening_duration = duration;
-        this->opening_duration_pref_.save(&this->opening_duration);
 
         if (*this->closing_duration == 0 && duration != 0) {
             this->set_closing_duration(duration);
@@ -258,7 +238,6 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "Set closing duration: %.1fs", duration);
         this->closing_duration = duration;
-        this->closing_duration_pref_.save(&this->closing_duration);
 
         if (*this->opening_duration == 0 && duration != 0) {
             this->set_opening_duration(duration);
@@ -269,7 +248,6 @@ namespace ratgdo {
     {
         ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
         this->rolling_code_counter = counter;
-        this->rolling_code_counter_pref_.save(&this->rolling_code_counter);
     }
 
     void RATGDOComponent::increment_rolling_code_counter(int delta)
@@ -413,8 +391,6 @@ namespace ratgdo {
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->sw_serial_.write(tx_packet, PACKET_LENGTH);
-
-        this->save_rolling_code_counter();
     }
 
     void RATGDOComponent::sync()
@@ -608,14 +584,6 @@ namespace ratgdo {
     {
         this->lock_state = lock_state_toggle(*this->lock_state);
         this->transmit(Command::LOCK, data::LOCK_TOGGLE);
-    }
-
-    void RATGDOComponent::save_rolling_code_counter()
-    {
-        this->rolling_code_counter_pref_.save(&this->rolling_code_counter);
-        // Forcing a sync results in a soft reset if there are too many
-        // writes to flash in a short period of time. To avoid this,
-        // we have configured preferences to write every 5s
     }
 
     LightState RATGDOComponent::get_light_state() const

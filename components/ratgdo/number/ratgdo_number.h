@@ -18,12 +18,14 @@ namespace ratgdo {
     public:
         void dump_config() override;
         void setup() override;
-        void set_number_type(NumberType number_type_);
+        void set_number_type(NumberType number_type);
 
+        void update_state(float value);
         void control(float value) override;
 
     protected:
         NumberType number_type_;
+        ESPPreferenceObject pref_;
     };
 
 } // namespace ratgdo
