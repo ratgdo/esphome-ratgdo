@@ -4,6 +4,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
+      ref: enums_refactor
     refresh: 1s
 
 preferences:
