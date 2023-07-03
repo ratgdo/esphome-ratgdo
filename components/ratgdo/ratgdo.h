@@ -25,6 +25,7 @@ extern "C" {
 
 #include "ratgdo_state.h"
 
+
 namespace esphome {
 namespace ratgdo {
 
@@ -164,7 +165,8 @@ namespace ratgdo {
         void set_rolling_code_counter(uint32_t code);
         void save_rolling_code_counter();
 
-        // door
+
+        // door 
         void door_command(uint32_t data);
         void toggle_door();
         void open_door();
