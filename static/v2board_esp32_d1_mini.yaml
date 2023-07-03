@@ -32,7 +32,6 @@ packages:
     url: https://github.com/esphome-ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
-    ref: enums_refactor
 
 # Sync time with Home Assistant.
 time:
