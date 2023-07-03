@@ -62,7 +62,7 @@ namespace ratgdo {
         traits.set_supports_position(true);
         return traits;
     }
-    
+
     void RATGDOCover::control(const CoverCall& call)
     {
         if (call.get_stop()) {

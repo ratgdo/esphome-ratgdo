@@ -28,7 +28,7 @@ namespace ratgdo {
             set_state(state);
         }
     }
-    
+
     void RATGDOLightOutput::set_state(esphome::ratgdo::LightState state)
     {
 
