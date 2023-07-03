@@ -22,7 +22,7 @@ namespace ratgdo {
 
     void RATGDOSwitch::on_lock_state(LockState state)
     {
-        bool value = state == LockState::LOCK_STATE_LOCKED;
+        bool value = state == LockState::LOCKED;
         this->state = value;
         this->publish_state(value);
     }
