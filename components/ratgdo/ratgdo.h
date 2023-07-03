@@ -25,15 +25,13 @@ extern "C" {
 
 #include "ratgdo_state.h"
 
-
 namespace esphome {
 namespace ratgdo {
 
     class RATGDOComponent;
     typedef Parented<RATGDOComponent> RATGDOClient;
 
-    static const uint8_t PACKET_LENGTH = 19;
-    typedef uint8_t WirePacket[PACKET_LENGTH];
+    static const uint8_t CODE_LENGTH = 19;
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
 
@@ -106,6 +104,7 @@ namespace ratgdo {
             PAIR_2 = 0x400,
             PAIR_2_RESP = 0x401,
             TTC = 0x40a, // Time to close
+
             GET_OPENINGS = 0x48b,
             OPENINGS = 0x48c,
 
@@ -115,10 +114,10 @@ namespace ratgdo {
     struct RATGDOStore {
         ISRInternalGPIOPin input_obst;
 
-        int obstruction_low_count = 0; // count obstruction low pulses
-        long last_obstruction_high = 0; // count time between high pulses from the obst ISR
+        int obstructionLowCount = 0; // count obstruction low pulses
+        long lastObstructionHigh = 0; // count time between high pulses from the obst ISR
 
-        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg);
+        static void IRAM_ATTR HOT isrObstruction(RATGDOStore* arg);
     };
 
     class RATGDOComponent : public Component {
@@ -127,75 +126,81 @@ namespace ratgdo {
         void loop() override;
         void dump_config() override;
 
-        EspSoftwareSerial::UART sw_serial;
+        EspSoftwareSerial::UART swSerial;
 
-        observable<uint32_t> rolling_code_counter { 0 };
+        observable<uint32_t> rollingCodeCounter { 0 };
+        uint32_t lastSyncedRollingCodeCounter { 0 };
 
-        float start_opening { -1 };
-        observable<float> opening_duration { 0 };
-        float start_closing { -1 };
-        observable<float> closing_duration { 0 };
+        float startOpening { -1 };
+        observable<float> openingDuration { 0 };
+        float startClosing { -1 };
+        observable<float> closingDuration { 0 };
+
+        uint8_t txRollingCode[CODE_LENGTH];
+        uint8_t rxRollingCode[CODE_LENGTH];
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
 
-        observable<DoorState> door_state { DoorState::DOOR_STATE_UNKNOWN };
-        observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        bool moving_to_position { false };
+        observable<DoorState> doorState { DoorState::DOOR_STATE_UNKNOWN };
+        observable<float> doorPosition { DOOR_POSITION_UNKNOWN };
+        bool movingToPosition { false };
 
-        observable<LightState> light_state { LightState::LIGHT_STATE_UNKNOWN };
-        observable<LockState> lock_state { LockState::LOCK_STATE_UNKNOWN };
-        observable<ObstructionState> obstruction_state { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
-        observable<MotorState> motor_state { MotorState::MOTOR_STATE_UNKNOWN };
-        observable<ButtonState> button_state { ButtonState::BUTTON_STATE_UNKNOWN };
-        observable<MotionState> motion_state { MotionState::MOTION_STATE_UNKNOWN };
+        observable<LightState> lightState { LightState::LIGHT_STATE_UNKNOWN };
+        observable<LockState> lockState { LockState::LOCK_STATE_UNKNOWN };
+        observable<ObstructionState> obstructionState { ObstructionState::OBSTRUCTION_STATE_UNKNOWN };
+        observable<MotorState> motorState { MotorState::MOTOR_STATE_UNKNOWN };
+        observable<ButtonState> buttonState { ButtonState::BUTTON_STATE_UNKNOWN };
+        observable<MotionState> motionState { MotionState::MOTION_STATE_UNKNOWN };
 
-        void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
-        void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
-        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        void set_remote_id(uint64_t remote_id) { this->remote_id_ = remote_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
+        void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; };
+        void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; };
+        void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; };
+        void set_remote_id(uint64_t remote_id) { this->remote_id = remote_id & 0xffffff; }; // not sure how large remote_id can be, assuming not more than 24 bits
 
-        void gdo_state_loop();
-        uint16_t decode_packet(const WirePacket& packet);
-        void obstruction_loop();
+        /********************************** FUNCTION DECLARATION
+         * *****************************************/
         void transmit(command::cmd command, uint32_t data = 0, bool increment = true);
-        void encode_packet(command::cmd command, uint32_t data, bool increment, WirePacket& packet);
-        void print_packet(const WirePacket& packet) const;
 
-        void increment_rolling_code_counter(int delta = 1);
-        void set_rolling_code_counter(uint32_t code);
-        void save_rolling_code_counter();
+        void sync();
 
+        void gdoStateLoop();
+        void obstructionLoop();
 
-        // door 
-        void door_command(uint32_t data);
-        void toggle_door();
-        void open_door();
-        void close_door();
-        void stop_door();
-        void door_move_to_position(float position);
-        void position_sync_while_opening(float delta, float update_period = 500);
-        void position_sync_while_closing(float delta, float update_period = 500);
-        void cancel_position_sync_callbacks();
-        void set_opening_duration(float duration);
-        void set_closing_duration(float duration);
+        void saveCounter();
 
-        // light
-        void toggle_light();
-        void light_on();
-        void light_off();
-        LightState get_light_state() const;
+        void doorCommand(uint32_t data);
 
-        // lock
-        void toggle_lock();
+        void toggleDoor();
+        void openDoor();
+        void closeDoor();
+        void stopDoor();
+        void setDoorPosition(float position);
+        void positionSyncWhileOpening(float delta, float update_period = 500);
+        void positionSyncWhileClosing(float delta, float update_period = 500);
+        void cancelPositionSyncCallbacks();
+
+        void toggleLight();
+        void lightOn();
+        void lightOff();
+
+        void toggleLock();
         void lock();
         void unlock();
 
-        // button functionality
         void query_status();
         void query_openings();
-        void sync();
 
-        // children subscriptions
+        void printRollingCode();
+        void getRollingCode(command::cmd command, uint32_t data, bool increment);
+        uint16_t readRollingCode();
+        void incrementRollingCodeCounter(int delta = 1);
+        void setRollingCodeCounter(uint32_t counter);
+
+        void setOpeningDuration(float duration);
+        void setClosingDuration(float duration);
+
+        LightState getLightState();
+
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
@@ -209,15 +214,16 @@ namespace ratgdo {
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
 
     protected:
-        ESPPreferenceObject rolling_code_counter_pref_;
-        ESPPreferenceObject opening_duration_pref_;
-        ESPPreferenceObject closing_duration_pref_;
-        RATGDOStore isr_store_ {};
+        ESPPreferenceObject rollingCodePref_;
+        ESPPreferenceObject openingDurationPref_;
+        ESPPreferenceObject closingDurationPref_;
+        bool rollingCodeUpdatesEnabled_ { true };
+        RATGDOStore store_ {};
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        uint64_t remote_id_;
+        uint64_t remote_id;
 
     }; // RATGDOComponent
 

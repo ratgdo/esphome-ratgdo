@@ -49,11 +49,11 @@ namespace ratgdo {
     void RATGDONumber::control(float value)
     {
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
-            this->parent_->set_rolling_code_counter(value);
+            this->parent_->setRollingCodeCounter(value);
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
-            this->parent_->set_opening_duration(value);
+            this->parent_->setOpeningDuration(value);
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
-            this->parent_->set_closing_duration(value);
+            this->parent_->setClosingDuration(value);
         }
     }
 

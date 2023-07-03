@@ -16,8 +16,8 @@ namespace ratgdo {
 
     void RATGDOLightOutput::setup()
     {
-        this->parent_->subscribe_light_state([=](LightState state) {
-            this->on_light_state(state);
+        this->parent_->subscribe_light_state([=](LightState s) {
+            this->on_light_state(s);
         });
     }
 
@@ -28,7 +28,6 @@ namespace ratgdo {
             set_state(state);
         }
     }
-    
     void RATGDOLightOutput::set_state(esphome::ratgdo::LightState state)
     {
 
@@ -37,14 +36,12 @@ namespace ratgdo {
         this->light_state_->remote_values.set_state(is_on);
         this->light_state_->publish_state();
     }
-
     void RATGDOLightOutput::setup_state(light::LightState* light_state)
     {
-        esphome::ratgdo::LightState state = this->parent_->get_light_state();
+        esphome::ratgdo::LightState state = this->parent_->getLightState();
         this->light_state_ = light_state;
         this->set_state(state);
     }
-
     LightTraits RATGDOLightOutput::get_traits()
     {
         auto traits = LightTraits();
@@ -59,9 +56,9 @@ namespace ratgdo {
         bool binary;
         state->current_values_as_binary(&binary);
         if (binary) {
-            this->parent_->light_on();
+            this->parent_->lightOn();
         } else {
-            this->parent_->light_off();
+            this->parent_->lightOff();
         }
     }
 
