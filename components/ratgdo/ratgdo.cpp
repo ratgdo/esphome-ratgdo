@@ -66,6 +66,11 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
+        if (this->transmit_pending_) {
+            if (!this->transmit_packet()) {
+                return;
+            }
+        }
         this->obstruction_loop();
         this->gdo_state_loop();
     }
@@ -167,7 +172,7 @@ namespace ratgdo {
             // this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
-                this->transmit(Command::GET_OPENINGS);
+                this->send_command(Command::GET_OPENINGS);
             }
 
             ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
@@ -204,7 +209,7 @@ namespace ratgdo {
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
             if (*this->light_state == LightState::OFF) {
-                this->transmit(Command::GET_STATUS);
+                this->send_command(Command::GET_STATUS);
             }
             ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
         } else if (cmd == Command::SET_TTC) {
@@ -368,12 +373,12 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        transmit(Command::GET_STATUS);
+        send_command(Command::GET_STATUS);
     }
 
     void RATGDOComponent::query_openings()
     {
-        transmit(Command::GET_OPENINGS);
+        send_command(Command::GET_OPENINGS);
     }
 
     /************************* DOOR COMMUNICATION *************************/
@@ -385,18 +390,39 @@ namespace ratgdo {
      * The opener requires a specific duration low/high pulse before it will accept
      * a message
      */
-    void RATGDOComponent::transmit(Command command, uint32_t data, bool increment)
+    void RATGDOComponent::send_command(Command command, uint32_t data, bool increment)
     {
-        WirePacket tx_packet;
+        if (!this->transmit_pending_) { // have an untransmitted packet
+            this->encode_packet(command, data, increment, this->tx_packet_);
+        } else {
+            // unlikely this would happed, we're ensuring any pending packet 
+            // is transmitted each loop before doing anyting else
+            ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
+        }
+        this->transmit_packet();
+    }
 
-        this->encode_packet(command, data, increment, tx_packet);
+    bool RATGDOComponent::transmit_packet()
+    {
+        auto now = micros64();
+        while (micros64() - now < 1300) {
+            if (this->input_gdo_pin_->digital_read()) {
+                ESP_LOGD(TAG, "Collision detected, waiting to send packet");
+                this->transmit_pending_ = true;
+                return false;
+            }
+            delayMicroseconds(200);
+        }
+
         this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
                                                     // door opener responds to the message
         delayMicroseconds(1305);
         this->output_gdo_pin_->digital_write(false); // bring the line low
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
-        this->sw_serial_.write(tx_packet, PACKET_LENGTH);
+        this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
+        this->transmit_pending_ = false;
+        return true;
     }
 
     void RATGDOComponent::sync()
@@ -414,7 +440,7 @@ namespace ratgdo {
                             ESP_LOGD(TAG, "Triggering sync failed actions.");
                             this->sync_failed = true;
                         };
-                        this->transmit(Command::GET_OPENINGS);
+                        this->send_command(Command::GET_OPENINGS);
                         return RetryResult::RETRY;
                     }
                 } else {
@@ -422,7 +448,7 @@ namespace ratgdo {
                         ESP_LOGD(TAG, "Triggering sync failed actions.");
                         this->sync_failed = true;
                     };
-                    this->transmit(Command::GET_STATUS);
+                    this->send_command(Command::GET_STATUS);
                     return RetryResult::RETRY;
                 }
             },
@@ -556,48 +582,48 @@ namespace ratgdo {
     {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
-        this->transmit(Command::OPEN, data, false);
+        this->send_command(Command::OPEN, data, false);
         set_timeout(100, [=] {
             auto data2 = data & ~(1 << 8); // button release
-            this->transmit(Command::OPEN, data2);
+            this->send_command(Command::OPEN, data2);
         });
     }
 
     void RATGDOComponent::light_on()
     {
         this->light_state = LightState::ON;
-        this->transmit(Command::LIGHT, data::LIGHT_ON);
+        this->send_command(Command::LIGHT, data::LIGHT_ON);
     }
 
     void RATGDOComponent::light_off()
     {
         this->light_state = LightState::OFF;
-        this->transmit(Command::LIGHT, data::LIGHT_OFF);
+        this->send_command(Command::LIGHT, data::LIGHT_OFF);
     }
 
     void RATGDOComponent::toggle_light()
     {
         this->light_state = light_state_toggle(*this->light_state);
-        this->transmit(Command::LIGHT, data::LIGHT_TOGGLE);
+        this->send_command(Command::LIGHT, data::LIGHT_TOGGLE);
     }
 
     // Lock functions
     void RATGDOComponent::lock()
     {
         this->lock_state = LockState::LOCKED;
-        this->transmit(Command::LOCK, data::LOCK_ON);
+        this->send_command(Command::LOCK, data::LOCK_ON);
     }
 
     void RATGDOComponent::unlock()
     {
         this->lock_state = LockState::UNLOCKED;
-        this->transmit(Command::LOCK, data::LOCK_OFF);
+        this->send_command(Command::LOCK, data::LOCK_OFF);
     }
 
     void RATGDOComponent::toggle_lock()
     {
         this->lock_state = lock_state_toggle(*this->lock_state);
-        this->transmit(Command::LOCK, data::LOCK_TOGGLE);
+        this->send_command(Command::LOCK, data::LOCK_TOGGLE);
     }
 
     LightState RATGDOComponent::get_light_state() const
