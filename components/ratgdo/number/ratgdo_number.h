@@ -19,6 +19,7 @@ namespace ratgdo {
         void dump_config() override;
         void setup() override;
         void set_number_type(NumberType number_type);
+        float get_setup_priority() const override { return setup_priority::HARDWARE; }
 
         void update_state(float value);
         void control(float value) override;
