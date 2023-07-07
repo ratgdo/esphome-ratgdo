@@ -399,7 +399,7 @@ namespace ratgdo {
         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
 
         set_retry(
-            300, 10, [=](uint8_t r) {
+            500, 10, [=](uint8_t r) {
                 if (*this->door_state != DoorState::UNKNOWN) { // have status
                     if (*this->openings != 0) { // have openings
                         return RetryResult::DONE;
