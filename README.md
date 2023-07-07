@@ -22,6 +22,10 @@ The ESPHome firmware will allow you to open the door to any position after calib
 <img width="560" alt="position_demo" src="https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/22a9873e-67bb-4b2f-bb32-70047cfe666d">
 
 
+## Updating from versions older than 2023.07.07
+
+When updating from older versions, save the rolling counter value and restore it via the number entity after flashing the new firmware. If you forget to save the code, check the Home Assistant history.
+
 # ESPHome config
 
 - [ESPHome config for v2 board with ESP8266 D1 Mini lite](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/static/v2board_esp8266_d1_mini_lite.yaml)
