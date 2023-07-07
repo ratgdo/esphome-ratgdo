@@ -11,7 +11,7 @@ namespace ratgdo {
 
     void RATGDOLightOutput::dump_config()
     {
-        ESP_LOGCONFIG("", "RATGDO Light");
+        ESP_LOGCONFIG(TAG, "RATGDO Light");
     }
 
     void RATGDOLightOutput::setup()

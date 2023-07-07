@@ -21,17 +21,25 @@ namespace ratgdo {
 
     void RATGDONumber::setup()
     {
+        float value;
+        this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
+        if (!this->pref_.load(&value)) {
+            value = 0;
+        }
+        this->publish_state(value);
+        this->control(value);
+
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
-                this->publish_state(value);
+                this->update_state(value);
             });
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             this->parent_->subscribe_opening_duration([=](float value) {
-                this->publish_state(value);
+                this->update_state(value);
             });
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->subscribe_closing_duration([=](float value) {
-                this->publish_state(value);
+                this->update_state(value);
             });
         }
     }
@@ -49,6 +57,12 @@ namespace ratgdo {
         }
     }
 
+    void RATGDONumber::update_state(float value)
+    {
+        this->pref_.save(&value);
+        this->publish_state(value);
+    }
+
     void RATGDONumber::control(float value)
     {
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
@@ -58,6 +72,7 @@ namespace ratgdo {
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->set_closing_duration(value);
         }
+        this->pref_.save(&value);
     }
 
 } // namespace ratgdo

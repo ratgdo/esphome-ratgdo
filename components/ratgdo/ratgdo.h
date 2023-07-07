@@ -26,7 +26,6 @@ extern "C" {
 
 #include "ratgdo_state.h"
 
-
 namespace esphome {
 namespace ratgdo {
 
@@ -121,6 +120,8 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
 
+        observable<bool> sync_failed { false };
+
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
@@ -136,7 +137,6 @@ namespace ratgdo {
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t code);
-        void save_rolling_code_counter();
 
         // door
         void door_command(uint32_t data);
@@ -148,6 +148,7 @@ namespace ratgdo {
         void position_sync_while_opening(float delta, float update_period = 500);
         void position_sync_while_closing(float delta, float update_period = 500);
         void cancel_position_sync_callbacks();
+        void set_door_position(float door_position) { this->door_position = door_position; }
         void set_opening_duration(float duration);
         void set_closing_duration(float duration);
 
@@ -179,11 +180,9 @@ namespace ratgdo {
         void subscribe_motor_state(std::function<void(MotorState)>&& f);
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
-        
+        void subscribe_sync_failed(std::function<void(bool)>&& f);
+
     protected:
-        ESPPreferenceObject rolling_code_counter_pref_;
-        ESPPreferenceObject opening_duration_pref_;
-        ESPPreferenceObject closing_duration_pref_;
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;
 

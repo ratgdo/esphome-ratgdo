@@ -15,6 +15,14 @@ ratgdo:
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
   remote_id: 0x539
+  on_sync_failed:
+    then:
+      - homeassistant.service:
+          service: persistent_notification.create
+          data:
+            title: "${friendly_name} sync failed"
+            message: "Failed to communicate with garage opener on startup; Check the ${friendly_name} Rolling code counter number entity history and set the entity to one number larger than the largest value in history. [ESPHome devices](/config/devices/dashboard?domain=esphome)"
+            notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
 
 sensor:
   - platform: ratgdo

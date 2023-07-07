@@ -44,25 +44,6 @@ namespace ratgdo {
 
     void RATGDOComponent::setup()
     {
-        this->rolling_code_counter_pref_ = global_preferences->make_preference<int>(734874333U);
-        uint32_t rolling_code_counter = 0;
-        this->rolling_code_counter_pref_.load(&rolling_code_counter);
-        this->rolling_code_counter = rolling_code_counter;
-        // observers are subscribed in the setup() of children defer notify until after setup()
-        defer([=] { this->rolling_code_counter.notify(); });
-
-        this->opening_duration_pref_ = global_preferences->make_preference<float>(734874334U);
-        float opening_duration = 0;
-        this->opening_duration_pref_.load(&opening_duration);
-        this->set_opening_duration(opening_duration);
-        defer([=] { this->opening_duration.notify(); });
-
-        this->closing_duration_pref_ = global_preferences->make_preference<float>(734874335U);
-        float closing_duration = 0;
-        this->closing_duration_pref_.load(&closing_duration);
-        this->set_closing_duration(closing_duration);
-        defer([=] { this->closing_duration.notify(); });
-
         this->output_gdo_pin_->setup();
         this->input_gdo_pin_->setup();
         this->input_obst_pin_->setup();
@@ -109,7 +90,7 @@ namespace ratgdo {
 
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
-        
+
         Command cmd_enum = to_Command(cmd, Command::UNKNOWN);
 
         if ((fixed & 0xfffffff) == this->remote_id_) { // my commands
@@ -212,8 +193,14 @@ namespace ratgdo {
             this->button_state = (byte1 & 1) == 1 ? ButtonState::PRESSED : ButtonState::RELEASED;
             ESP_LOGD(TAG, "Open: button=%s", ButtonState_to_string(*this->button_state));
         } else if (cmd == Command::OPENINGS) {
-            this->openings = (byte1 << 8) | byte2;
-            ESP_LOGD(TAG, "Openings: %d", *this->openings);
+            // nibble==0 if it's our request
+            // update openings only from our request or if it's not unknown state
+            if (nibble == 0 || *this->openings != 0) {
+                this->openings = (byte1 << 8) | byte2;
+                ESP_LOGD(TAG, "Openings: %d", *this->openings);
+            } else {
+                ESP_LOGD(TAG, "Ignoreing openings, not from our request");
+            }
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
             if (*this->light_state == LightState::OFF) {
@@ -247,7 +234,6 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "Set opening duration: %.1fs", duration);
         this->opening_duration = duration;
-        this->opening_duration_pref_.save(&this->opening_duration);
 
         if (*this->closing_duration == 0 && duration != 0) {
             this->set_closing_duration(duration);
@@ -258,7 +244,6 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "Set closing duration: %.1fs", duration);
         this->closing_duration = duration;
-        this->closing_duration_pref_.save(&this->closing_duration);
 
         if (*this->opening_duration == 0 && duration != 0) {
             this->set_opening_duration(duration);
@@ -269,7 +254,6 @@ namespace ratgdo {
     {
         ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
         this->rolling_code_counter = counter;
-        this->rolling_code_counter_pref_.save(&this->rolling_code_counter);
     }
 
     void RATGDOComponent::increment_rolling_code_counter(int delta)
@@ -280,7 +264,7 @@ namespace ratgdo {
     void RATGDOComponent::print_packet(const WirePacket& packet) const
     {
         ESP_LOGV(TAG, "Counter: %d Send code: [%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X]",
-            *this->rollingCodeCounter,
+            *this->rolling_code_counter,
             packet[0],
             packet[1],
             packet[2],
@@ -413,8 +397,6 @@ namespace ratgdo {
 
         delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->sw_serial_.write(tx_packet, PACKET_LENGTH);
-
-        this->save_rolling_code_counter();
     }
 
     void RATGDOComponent::sync()
@@ -423,15 +405,23 @@ namespace ratgdo {
         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
 
         set_retry(
-            300, 10, [=](uint8_t r) {
+            500, 10, [=](uint8_t r) {
                 if (*this->door_state != DoorState::UNKNOWN) { // have status
                     if (*this->openings != 0) { // have openings
                         return RetryResult::DONE;
                     } else {
+                        if (r == 0) { // failed to sync probably rolling counter is wrong, notify
+                            ESP_LOGD(TAG, "Triggering sync failed actions.");
+                            this->sync_failed = true;
+                        };
                         this->transmit(Command::GET_OPENINGS);
                         return RetryResult::RETRY;
                     }
                 } else {
+                    if (r == 0) { // failed to sync probably rolling counter is wrong, notify
+                        ESP_LOGD(TAG, "Triggering sync failed actions.");
+                        this->sync_failed = true;
+                    };
                     this->transmit(Command::GET_STATUS);
                     return RetryResult::RETRY;
                 }
@@ -610,14 +600,6 @@ namespace ratgdo {
         this->transmit(Command::LOCK, data::LOCK_TOGGLE);
     }
 
-    void RATGDOComponent::save_rolling_code_counter()
-    {
-        this->rolling_code_counter_pref_.save(&this->rolling_code_counter);
-        // Forcing a sync results in a soft reset if there are too many
-        // writes to flash in a short period of time. To avoid this,
-        // we have configured preferences to write every 5s
-    }
-
     LightState RATGDOComponent::get_light_state() const
     {
         return *this->light_state;
@@ -673,6 +655,10 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_motion_state(std::function<void(MotionState)>&& f)
     {
         this->motion_state.subscribe([=](MotionState state) { defer("motion_state", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
+    {
+        this->sync_failed.subscribe(std::move(f));
     }
 
 } // namespace ratgdo
