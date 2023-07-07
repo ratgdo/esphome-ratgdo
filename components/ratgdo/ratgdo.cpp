@@ -405,6 +405,7 @@ namespace ratgdo {
                         return RetryResult::DONE;
                     } else {
                         if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                            ESP_LOGD(TAG, "Triggering sync failed actions.");
                             this->sync_failed = true;
                         };
                         this->transmit(Command::GET_OPENINGS);
@@ -412,6 +413,7 @@ namespace ratgdo {
                     }
                 } else {
                     if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                        ESP_LOGD(TAG, "Triggering sync failed actions.");
                         this->sync_failed = true;
                     };
                     this->transmit(Command::GET_STATUS);
