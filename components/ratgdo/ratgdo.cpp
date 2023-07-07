@@ -193,9 +193,14 @@ namespace ratgdo {
             this->button_state = (byte1 & 1) == 1 ? ButtonState::PRESSED : ButtonState::RELEASED;
             ESP_LOGD(TAG, "Open: button=%s", ButtonState_to_string(*this->button_state));
         } else if (cmd == Command::OPENINGS) {
-            this->openings = (byte1 << 8) | byte2;
-            ESP_LOGD(TAG, "Openings: %d", *this->openings);
-        } else if (cmd == Command::MOTION) {
+            // nibble==0 if it's our request
+            // update openings only from our request or if it's not unknown state
+            if (nibble==0 || *this->openings!=0) {
+                this->openings = (byte1 << 8) | byte2;
+                ESP_LOGD(TAG, "Openings: %d", *this->openings);
+            } else {
+                ESP_LOGD(TAG, "Ignoreing openings, not from our request");
+            }        } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
             if (*this->light_state == LightState::OFF) {
                 this->transmit(Command::GET_STATUS);
