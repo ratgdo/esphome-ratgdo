@@ -4,7 +4,6 @@ external_components:
   - source:
       type: git
       url: https://github.com/esphome-ratgdo/esphome-ratgdo
-      ref: component_restore_state
     refresh: 1s
 
 preferences:
