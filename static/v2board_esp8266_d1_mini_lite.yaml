@@ -33,6 +33,7 @@ packages:
     url: https://github.com/esphome-ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
+    ref: collision_detection
 
 # Sync time with Home Assistant.
 time:
