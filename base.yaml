@@ -22,7 +22,7 @@ ratgdo:
           service: persistent_notification.create
           data:
             title: "RATGDO sync failed"
-            message: "Failed to communicate with garage opener on startup, check rolling code counter and restore from history."
+            message: "Failed to communicate with garage opener on startup, check rolling code counter and restore from history. [esphome devices](/config/devices/dashboard?domain=esphome)""
 
 sensor:
   - platform: ratgdo

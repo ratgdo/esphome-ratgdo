@@ -404,6 +404,9 @@ namespace ratgdo {
                     if (*this->openings != 0) { // have openings
                         return RetryResult::DONE;
                     } else {
+                        if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                            this->sync_failed = true;
+                        };
                         this->transmit(Command::GET_OPENINGS);
                         return RetryResult::RETRY;
                     }
