@@ -21,7 +21,7 @@ ratgdo:
       - homeassistant.service:
           service: persistent_notification.create
           data:
-            title: "RATGDO sync failed"
+            title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup, check rolling code counter and restore from history. [esphome devices](/config/devices/dashboard?domain=esphome)"
 
 sensor:
