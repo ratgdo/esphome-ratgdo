@@ -15,6 +15,13 @@ ratgdo:
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
   remote_id: 0x539
+  on_sync_failed:
+    then:
+      - homeassistant.service:
+          service: persistent_notification.create
+          data:
+            title: "RATGDO sync failed"
+            message: "Failed to communicate with garage opener on startup, check rolling code counter and restore from history."
 
 sensor:
   - platform: ratgdo

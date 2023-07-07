@@ -15,6 +15,7 @@
 #include "ratgdo_state.h"
 
 #include "esphome/core/log.h"
+#include "esphome/components/api/api_server.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -408,6 +409,9 @@ namespace ratgdo {
                         return RetryResult::RETRY;
                     }
                 } else {
+                    if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                        this->sync_failed = true;
+                    };
                     this->transmit(Command::GET_STATUS);
                     return RetryResult::RETRY;
                 }
@@ -641,6 +645,10 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_motion_state(std::function<void(MotionState)>&& f)
     {
         this->motion_state.subscribe([=](MotionState state) { defer("motion_state", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
+    {
+        this->sync_failed.subscribe(std::move(f));
     }
 
 } // namespace ratgdo

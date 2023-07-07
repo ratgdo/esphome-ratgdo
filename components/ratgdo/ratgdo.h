@@ -121,6 +121,8 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
 
+        observable<bool> sync_failed { false };
+
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
@@ -179,6 +181,7 @@ namespace ratgdo {
         void subscribe_motor_state(std::function<void(MotorState)>&& f);
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
+        void subscribe_sync_failed(std::function<void(bool)>&& f);
         
     protected:
         RATGDOStore isr_store_ {};

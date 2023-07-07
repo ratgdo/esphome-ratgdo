@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome import pins
-from esphome.const import CONF_ID
+from esphome import automation, pins
+from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -10,6 +10,8 @@ MULTI_CONF = True
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
 RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
 
+
+SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
 DEFAULT_OUTPUT_GDO = (
@@ -27,6 +29,9 @@ DEFAULT_REMOTE_ID = 0x539
 
 CONF_RATGDO_ID = "ratgdo_id"
 
+CONF_ON_SYNC_FAILED = "on_sync_failed"
+
+
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
@@ -42,6 +47,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(
             CONF_REMOTE_ID, default=DEFAULT_REMOTE_ID
         ): cv.uint64_t,
+        cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
+            }
+        ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -67,6 +77,10 @@ async def to_code(config):
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
     cg.add(var.set_input_obst_pin(pin))
     cg.add(var.set_remote_id(config[CONF_REMOTE_ID]))
+    
+    for conf in config.get(CONF_ON_SYNC_FAILED, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
 
     cg.add_library(
         name="secplus",
