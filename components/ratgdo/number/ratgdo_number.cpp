@@ -56,13 +56,12 @@ namespace ratgdo {
             this->traits.set_max_value(0xfffffff);
         }
     }
-    
-    void RATGDONumber::update_state(float value) 
+
+    void RATGDONumber::update_state(float value)
     {
         this->pref_.save(&value);
         this->publish_state(value);
     }
-
 
     void RATGDONumber::control(float value)
     {

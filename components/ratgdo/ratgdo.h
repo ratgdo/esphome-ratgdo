@@ -26,7 +26,6 @@ extern "C" {
 
 #include "ratgdo_state.h"
 
-
 namespace esphome {
 namespace ratgdo {
 
@@ -182,7 +181,7 @@ namespace ratgdo {
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
         void subscribe_sync_failed(std::function<void(bool)>&& f);
-        
+
     protected:
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;

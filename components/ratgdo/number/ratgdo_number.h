@@ -20,9 +20,9 @@ namespace ratgdo {
         void setup() override;
         void set_number_type(NumberType number_type);
         // other esphome components that persist state in the flash have HARDWARE priority
-        // ensure we get initialized before them, so that the state doesn't get invalidated 
+        // ensure we get initialized before them, so that the state doesn't get invalidated
         // by components that might be added in the future
-        float get_setup_priority() const override { return setup_priority::HARDWARE + 1 ; }
+        float get_setup_priority() const override { return setup_priority::HARDWARE + 1; }
 
         void update_state(float value);
         void control(float value) override;

@@ -90,7 +90,7 @@ namespace ratgdo {
 
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
-        
+
         Command cmd_enum = to_Command(cmd, Command::UNKNOWN);
 
         if ((fixed & 0xfffffff) == this->remote_id_) { // my commands
@@ -195,12 +195,13 @@ namespace ratgdo {
         } else if (cmd == Command::OPENINGS) {
             // nibble==0 if it's our request
             // update openings only from our request or if it's not unknown state
-            if (nibble==0 || *this->openings!=0) {
+            if (nibble == 0 || *this->openings != 0) {
                 this->openings = (byte1 << 8) | byte2;
                 ESP_LOGD(TAG, "Openings: %d", *this->openings);
             } else {
                 ESP_LOGD(TAG, "Ignoreing openings, not from our request");
-            }        } else if (cmd == Command::MOTION) {
+            }
+        } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
             if (*this->light_state == LightState::OFF) {
                 this->transmit(Command::GET_STATUS);
@@ -409,7 +410,7 @@ namespace ratgdo {
                     if (*this->openings != 0) { // have openings
                         return RetryResult::DONE;
                     } else {
-                        if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                        if (r == 0) { // failed to sync probably rolling counter is wrong, notify
                             ESP_LOGD(TAG, "Triggering sync failed actions.");
                             this->sync_failed = true;
                         };
@@ -417,7 +418,7 @@ namespace ratgdo {
                         return RetryResult::RETRY;
                     }
                 } else {
-                    if (r==0) { // failed to sync probably rolling counter is wrong, notify
+                    if (r == 0) { // failed to sync probably rolling counter is wrong, notify
                         ESP_LOGD(TAG, "Triggering sync failed actions.");
                         this->sync_failed = true;
                     };
