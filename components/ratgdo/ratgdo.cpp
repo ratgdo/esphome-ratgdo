@@ -258,7 +258,7 @@ namespace ratgdo {
     void RATGDOComponent::print_packet(const WirePacket& packet) const
     {
         ESP_LOGV(TAG, "Counter: %d Send code: [%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X]",
-            *this->rollingCodeCounter,
+            *this->rolling_code_counter,
             packet[0],
             packet[1],
             packet[2],
