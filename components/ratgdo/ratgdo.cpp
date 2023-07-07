@@ -20,7 +20,7 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo";
-    static const int SYNC_DELAY = 20000;
+    static const int SYNC_DELAY = 1000;
     //
     // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
     // since we write the flash at most every every 5s
