@@ -404,8 +404,8 @@ namespace ratgdo {
 
     bool RATGDOComponent::transmit_packet()
     {
-        auto now = micros64();
-        while (micros64() - now < 1300) {
+        auto now = micros();
+        while (micros() - now < 1300) {
             if (this->input_gdo_pin_->digital_read()) {
                 ESP_LOGD(TAG, "Collision detected, waiting to send packet");
                 this->transmit_pending_ = true;
