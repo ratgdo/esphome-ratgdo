@@ -131,7 +131,8 @@ namespace ratgdo {
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
         void obstruction_loop();
-        void transmit(Command command, uint32_t data = 0, bool increment = true);
+        void send_command(Command command, uint32_t data = 0, bool increment = true);
+        bool transmit_packet();
         void encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet);
         void print_packet(const WirePacket& packet) const;
 
@@ -183,6 +184,10 @@ namespace ratgdo {
         void subscribe_sync_failed(std::function<void(bool)>&& f);
 
     protected:
+        // tx data
+        bool transmit_pending_ {false};
+        WirePacket tx_packet_;
+
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;
 
