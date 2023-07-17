@@ -17,7 +17,7 @@ If you have not used the stock ratgdo firmware, and are starting with a fresh in
 
 <img width="560" alt="number_entity" src="https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/e177029e-f42f-46a8-a87a-81fa04caaa57">
 
-## Installing the firmware
+## Fresh install when the stock ratgdo firmware was not used before
 
 - Flash the new ESPHome based firmware using the [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
 
