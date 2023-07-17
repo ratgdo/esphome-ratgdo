@@ -9,7 +9,7 @@ This project is not affiliated with ratgdo or Paul Wieland. Please buy his board
 
 ## Moving from stock ratgdo
 
-If you have not used the stock ratgdo firmware, and are starting with a fresh install of the ESPHome based firmware, skip these steps.
+If you have not used the stock ratgdo firmware, and are starting with a fresh install of the ESPHome based firmware, [skip these steps](#fresh-install-when-the-stock-ratgdo-firmware-was-not-used-before).
 
 - Use the [`Logs & Console`](https://paulwieland.github.io/ratgdo/flash.html) to view and make note of the current rolling code
 - Flash the new ESPHome based firmware using the [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
