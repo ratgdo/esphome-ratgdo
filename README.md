@@ -21,7 +21,7 @@ If you have not used the stock ratgdo firmware, and are starting with a fresh in
 
 - Flash the new ESPHome based firmware using the [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
 
-## First use
+## First use after adding to Home Assistant
 
 The ESPHome firmware will allow you to open the door to any position after calibration. To calibrate the door, open and close it once without stopping.
 
