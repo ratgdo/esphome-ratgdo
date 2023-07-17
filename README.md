@@ -17,18 +17,21 @@ If you have not used the stock ratgdo firmware, and are starting with a fresh in
 
 <img width="560" alt="number_entity" src="https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/e177029e-f42f-46a8-a87a-81fa04caaa57">
 
-# First use
+## Installing the firmware
+
+- Flash the new ESPHome based firmware using the [Web Installer](https://esphome-ratgdo.github.io/esphome-ratgdo/)
+
+## First use
 
 The ESPHome firmware will allow you to open the door to any position after calibration. To calibrate the door, open and close it once without stopping.
 
 <img width="560" alt="position_demo" src="https://github.com/ESPHome-RATGDO/esphome-ratgdo/assets/663432/22a9873e-67bb-4b2f-bb32-70047cfe666d">
 
-
 ## Updating from versions older than 2023.07.07
 
 When updating from older versions, save the rolling counter value and restore it via the number entity after flashing the new firmware. If you forget to save the code, check the Home Assistant history.
 
-# ESPHome config
+## ESPHome config
 
 - [ESPHome config for v2 board with ESP8266 D1 Mini lite](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/static/v2board_esp8266_d1_mini_lite.yaml)
 - [ESPHome config for v2 board with ESP32 D1 Mini](https://github.com/ESPHome-RATGDO/esphome-ratgdo/blob/main/static/v2board_esp32_d1_mini.yaml)
