@@ -116,29 +116,31 @@ namespace ratgdo {
             auto door_state = to_DoorState(nibble, DoorState::UNKNOWN);
             auto prev_door_state = *this->door_state;
 
-            if (door_state == DoorState::OPENING && prev_door_state == DoorState::CLOSED) {
-                this->start_opening = millis();
-            }
-            if (door_state == DoorState::OPEN && prev_door_state == DoorState::OPENING) {
-                if (this->start_opening > 0) {
+             // opening duration calibration
+            if (*this->opening_duration == 0) {
+                if (door_state == DoorState::OPENING && prev_door_state == DoorState::CLOSED) {
+                    this->start_opening = millis();
+                }
+                if (door_state == DoorState::OPEN && prev_door_state == DoorState::OPENING && this->start_opening > 0) {
                     auto duration = (millis() - this->start_opening) / 1000;
-                    duration = *this->opening_duration > 0 ? (duration + *this->opening_duration) / 2 : duration;
                     this->set_opening_duration(round(duration * 10) / 10);
                 }
-            }
-            if (door_state == DoorState::CLOSING && prev_door_state == DoorState::OPEN) {
-                this->start_closing = millis();
-            }
-            if (door_state == DoorState::CLOSED && prev_door_state == DoorState::CLOSING) {
-                if (this->start_closing > 0) {
-                    auto duration = (millis() - this->start_closing) / 1000;
-                    duration = *this->closing_duration > 0 ? (duration + *this->closing_duration) / 2 : duration;
-                    this->set_closing_duration(round(duration * 10) / 10);
+                if (door_state == DoorState::STOPPED) {
+                    this->start_opening = -1;
                 }
             }
-            if (door_state == DoorState::STOPPED) {
-                this->start_opening = -1;
-                this->start_closing = -1;
+            // closing duration calibration
+            if (*this->closing_duration == 0) {
+                if (door_state == DoorState::CLOSING && prev_door_state == DoorState::OPEN) {
+                    this->start_closing = millis();
+                }
+                if (door_state == DoorState::CLOSED && prev_door_state == DoorState::CLOSING && this->start_closing > 0) {
+                    auto duration = (millis() - this->start_closing) / 1000;
+                    this->set_closing_duration(round(duration * 10) / 10);
+                }
+                if (door_state == DoorState::STOPPED) {
+                    this->start_closing = -1;
+                }
             }
 
             if (door_state == DoorState::OPEN) {
@@ -239,20 +241,12 @@ namespace ratgdo {
     {
         ESP_LOGD(TAG, "Set opening duration: %.1fs", duration);
         this->opening_duration = duration;
-
-        if (*this->closing_duration == 0 && duration != 0) {
-            this->set_closing_duration(duration);
-        }
     }
 
     void RATGDOComponent::set_closing_duration(float duration)
     {
         ESP_LOGD(TAG, "Set closing duration: %.1fs", duration);
         this->closing_duration = duration;
-
-        if (*this->opening_duration == 0 && duration != 0) {
-            this->set_opening_duration(duration);
-        }
     }
 
     void RATGDOComponent::set_rolling_code_counter(uint32_t counter)
@@ -510,6 +504,12 @@ namespace ratgdo {
             this->door_position = *this->door_position + position_update;
             return RetryResult::RETRY;
         });
+
+        // this would only get called if no status message is received after door stops moving
+        // request a status message in that case, will get cancelled if a status message is received before
+        set_timeout("door_status_update", (*this->opening_duration + 1) * 1000, [=]() {
+            this->send_command(Command::GET_STATUS);
+        });
     }
 
     void RATGDOComponent::position_sync_while_closing(float delta, float update_period)
@@ -527,6 +527,12 @@ namespace ratgdo {
             ESP_LOGV(TAG, "[Closing] Position sync: %d: ", r);
             this->door_position = *this->door_position - position_update;
             return RetryResult::RETRY;
+        });
+
+        // this would only get called if no status message is received after door stops moving
+        // request a status message in that case
+        set_timeout("door_status_update", (*this->closing_duration + 1) * 1000, [=]() {
+            this->send_command(Command::GET_STATUS);
         });
     }
 
@@ -574,6 +580,7 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Cancelling position callbacks");
             cancel_timeout("move_to_position");
             cancel_retry("position_sync_while_moving");
+            cancel_timeout("door_status_update");
         }
         moving_to_position = false;
     }
