@@ -82,7 +82,11 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
+        if (this->input_obst_pin_->get_pin() != 0) {
+            LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
+        } else {
+            ESP_LOGCONFIG(TAG, "  Input Obstruction Pin: not used, will detect from GDO status");
+        }
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter);
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id_);
     }
