@@ -185,7 +185,7 @@ namespace ratgdo {
 
     protected:
         // tx data
-        bool transmit_pending_ {false};
+        bool transmit_pending_ { false };
         WirePacket tx_packet_;
 
         RATGDOStore isr_store_ {};
