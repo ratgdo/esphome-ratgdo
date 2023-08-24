@@ -181,8 +181,9 @@ namespace ratgdo {
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
 
             if (this->obstruction_from_status_) {
+                ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1)
                 this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
-                ESP_LOGD(TAG, "Obstruction: reading from GDO status=%s", ObstructionState_to_string(*this->obstruction_state));
+                ESP_LOGD(TAG, "Obstruction: reading from GDO status byte1, bit6=%s", ObstructionState_to_string(*this->obstruction_state));
             }
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
