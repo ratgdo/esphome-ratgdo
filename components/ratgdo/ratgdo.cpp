@@ -180,6 +180,7 @@ namespace ratgdo {
 
             if (this->input_obst_pin_->get_pin() == 0) {
                 this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+                ESP_LOGD(TAG, "Obstruction: reading from GDO status=%s", ObstructionState_to_string(this->obstruction_state));
             }
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
