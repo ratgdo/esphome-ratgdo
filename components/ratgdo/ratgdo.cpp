@@ -50,7 +50,7 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
-        if (this->input_obst_pin_->get_pin() != 0)
+        if (this->input_obst_pin_->get_pin() != 0) {
             this->input_obst_pin_->setup();
             this->isr_store_.input_obst = this->input_obst_pin_->to_isr();
             this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
