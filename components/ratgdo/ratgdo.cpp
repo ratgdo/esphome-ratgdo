@@ -71,7 +71,9 @@ namespace ratgdo {
                 return;
             }
         }
-        this->obstruction_loop();
+        if (this->input_obst_pin_->get_pin() != 0) {        
+            this->obstruction_loop();
+        }
         this->gdo_state_loop();
     }
 
@@ -171,7 +173,10 @@ namespace ratgdo {
             this->lock_state = static_cast<LockState>(byte2 & 1); // safe because it can only be 0 or 1
             this->motion_state = MotionState::CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
-            // this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+            
+            if (this->input_obst_pin_->get_pin() == 0) {
+                this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+            }
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
                 this->send_command(Command::GET_OPENINGS);
