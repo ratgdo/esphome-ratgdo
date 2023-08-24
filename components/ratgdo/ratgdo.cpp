@@ -50,7 +50,9 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
-        if (this->input_obst_pin_->get_pin() != 0) {
+        if (his->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
+            this->obstruction_from_status_ = true;
+        } else {
             this->input_obst_pin_->setup();
             this->isr_store_.input_obst = this->input_obst_pin_->to_isr();
             this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
@@ -71,7 +73,7 @@ namespace ratgdo {
                 return;
             }
         }
-        if (this->input_obst_pin_->get_pin() != 0) {
+        if (!this->obstruction_from_status_) {
             this->obstruction_loop();
         }
         this->gdo_state_loop();
@@ -82,10 +84,10 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        if (this->input_obst_pin_->get_pin() != 0) {
-            LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
-        } else {
+        if (this->obstruction_from_status_) {
             ESP_LOGCONFIG(TAG, "  Input Obstruction Pin: not used, will detect from GDO status");
+        } else {
+            LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         }
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter);
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id_);
@@ -178,7 +180,7 @@ namespace ratgdo {
             this->motion_state = MotionState::CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
 
-            if (this->input_obst_pin_->get_pin() == 0) {
+            if (this->obstruction_from_status_) {
                 this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
                 ESP_LOGD(TAG, "Obstruction: reading from GDO status=%s", ObstructionState_to_string(*this->obstruction_state));
             }

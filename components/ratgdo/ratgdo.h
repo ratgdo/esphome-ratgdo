@@ -191,6 +191,8 @@ namespace ratgdo {
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;
 
+        bool obstruction_from_status_ { false };
+
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
