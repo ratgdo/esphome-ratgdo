@@ -181,8 +181,11 @@ namespace ratgdo {
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
 
             if (this->obstruction_from_status_) {
-                ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1);
+                // ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1);
                 this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+                // This isn't very fast to update, but its still better
+                // than nothing in the case the obstruction sensor is not
+                // wired up.
                 ESP_LOGD(TAG, "Obstruction: reading from GDO status byte1, bit6=%s", ObstructionState_to_string(*this->obstruction_state));
             }
 
