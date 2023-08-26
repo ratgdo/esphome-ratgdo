@@ -185,11 +185,13 @@ namespace ratgdo {
 
     protected:
         // tx data
-        bool transmit_pending_ {false};
+        bool transmit_pending_ { false };
         WirePacket tx_packet_;
 
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;
+
+        bool obstruction_from_status_ { false };
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;

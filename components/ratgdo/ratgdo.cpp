@@ -45,17 +45,21 @@ namespace ratgdo {
     void RATGDOComponent::setup()
     {
         this->output_gdo_pin_->setup();
-        this->input_gdo_pin_->setup();
-        this->input_obst_pin_->setup();
-
-        this->isr_store_.input_obst = this->input_obst_pin_->to_isr();
-
         this->output_gdo_pin_->pin_mode(gpio::FLAG_OUTPUT);
-        this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
-        
-        this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_ANY_EDGE);
 
+        this->input_gdo_pin_->setup();
+        this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+
+        if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
+            // Our base.yaml is always going to set this so we check for 0
+            // as well to avoid a breaking change.
+            this->obstruction_from_status_ = true;
+        } else {
+            this->input_obst_pin_->setup();
+            this->isr_store_.input_obst = this->input_obst_pin_->to_isr();
+            this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
+            this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_ANY_EDGE);
+        }
         this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
@@ -71,7 +75,9 @@ namespace ratgdo {
                 return;
             }
         }
-        this->obstruction_loop();
+        if (!this->obstruction_from_status_) {
+            this->obstruction_loop();
+        }
         this->gdo_state_loop();
     }
 
@@ -80,7 +86,11 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
+        if (this->obstruction_from_status_) {
+            ESP_LOGCONFIG(TAG, "  Input Obstruction Pin: not used, will detect from GDO status");
+        } else {
+            LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
+        }
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter);
         ESP_LOGCONFIG(TAG, "  Remote ID: %d", this->remote_id_);
     }
@@ -116,7 +126,7 @@ namespace ratgdo {
             auto door_state = to_DoorState(nibble, DoorState::UNKNOWN);
             auto prev_door_state = *this->door_state;
 
-             // opening duration calibration
+            // opening duration calibration
             if (*this->opening_duration == 0) {
                 if (door_state == DoorState::OPENING && prev_door_state == DoorState::CLOSED) {
                     this->start_opening = millis();
@@ -171,7 +181,15 @@ namespace ratgdo {
             this->lock_state = static_cast<LockState>(byte2 & 1); // safe because it can only be 0 or 1
             this->motion_state = MotionState::CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
-            // this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+
+            if (this->obstruction_from_status_) {
+                // ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1);
+                this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
+                // This isn't very fast to update, but its still better
+                // than nothing in the case the obstruction sensor is not
+                // wired up.
+                ESP_LOGD(TAG, "Obstruction: reading from GDO status byte1, bit6=%s", ObstructionState_to_string(*this->obstruction_state));
+            }
 
             if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
                 this->send_command(Command::GET_OPENINGS);
@@ -389,7 +407,7 @@ namespace ratgdo {
         if (!this->transmit_pending_) { // have an untransmitted packet
             this->encode_packet(command, data, increment, this->tx_packet_);
         } else {
-            // unlikely this would happed, we're ensuring any pending packet 
+            // unlikely this would happed, we're ensuring any pending packet
             // is transmitted each loop before doing anyting else
             ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
         }
