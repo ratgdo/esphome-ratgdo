@@ -35,11 +35,7 @@ namespace ratgdo {
 
     void IRAM_ATTR HOT RATGDOStore::isr_obstruction(RATGDOStore* arg)
     {
-        if (arg->input_obst.digital_read()) {
-            arg->last_obstruction_high = millis();
-        } else {
-            arg->obstruction_low_count++;
-        }
+        arg->obstruction_low_count++;
     }
 
     void RATGDOComponent::setup()
@@ -56,9 +52,8 @@ namespace ratgdo {
             this->obstruction_from_status_ = true;
         } else {
             this->input_obst_pin_->setup();
-            this->isr_store_.input_obst = this->input_obst_pin_->to_isr();
             this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
-            this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_ANY_EDGE);
+            this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
         }
         this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
 
@@ -309,6 +304,7 @@ namespace ratgdo {
     {
         long current_millis = millis();
         static unsigned long last_millis = 0;
+        static unsigned long last_asleep = 0;
 
         // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
         // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
@@ -316,24 +312,30 @@ namespace ratgdo {
 
         // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
 
-        // Every 50ms
-        if (current_millis - last_millis > 50) {
-            // check to see if we got between 3 and 8 low pulses on the line
-            if (this->isr_store_.obstruction_low_count >= 3 && this->isr_store_.obstruction_low_count <= 8) {
-                // obstructionCleared();
-                this->obstruction_state = ObstructionState::CLEAR;
+        const long CHECK_PERIOD = 50;
+        const long PULSES_EXPECTED = CHECK_PERIOD/7;
 
-                // if there have been no pulses the line is steady high or low
+        if (current_millis - last_millis > CHECK_PERIOD) {
+            // ESP_LOGD(TAG, "[%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
+            //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
+            //     current_millis - last_asleep
+            // );
+
+            // check to see if we got between 3 and PULSES_EXPECTED + 1 low pulses on the line
+            if (this->isr_store_.obstruction_low_count >= 3 && this->isr_store_.obstruction_low_count <= PULSES_EXPECTED + 1) {
+                this->obstruction_state = ObstructionState::CLEAR;
             } else if (this->isr_store_.obstruction_low_count == 0) {
-                // if the line is high and the last high pulse was more than 70ms ago, then there is an obstruction present
-                if (this->input_obst_pin_->digital_read() && current_millis - this->isr_store_.last_obstruction_high > 70) {
-                    this->obstruction_state = ObstructionState::OBSTRUCTED;
-                    // obstructionDetected();
-                } else {
+                // if there have been no pulses the line is steady high or low
+                if (!this->input_obst_pin_->digital_read()) {
                     // asleep
+                    last_asleep = current_millis;
+                } else {
+                    // if the line is high and was last asleep more than 700ms ago, then there is an obstruction present
+                    if (current_millis - last_asleep > 700) {
+                        this->obstruction_state = ObstructionState::OBSTRUCTED;
+                    }
                 }
             }
-
             last_millis = current_millis;
             this->isr_store_.obstruction_low_count = 0;
         }

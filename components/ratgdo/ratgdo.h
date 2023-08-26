@@ -89,7 +89,6 @@ namespace ratgdo {
         ISRInternalGPIOPin input_obst;
 
         int obstruction_low_count = 0; // count obstruction low pulses
-        long last_obstruction_high = 0; // count time between high pulses from the obst ISR
 
         static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg);
     };
