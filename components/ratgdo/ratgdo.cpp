@@ -311,10 +311,10 @@ namespace ratgdo {
         const long PULSES_EXPECTED = CHECK_PERIOD/7;
 
         if (current_millis - last_millis > CHECK_PERIOD) {
-            // ESP_LOGD(TAG, "[%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
-            //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
-            //     current_millis - last_asleep
-            // );
+            ESP_LOGD(TAG, "[%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
+                 current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
+                 current_millis - last_asleep
+            );
 
             // check to see if we got between 3 and PULSES_EXPECTED + 1 low pulses on the line
             if (this->isr_store_.obstruction_low_count >= 3 && this->isr_store_.obstruction_low_count <= PULSES_EXPECTED + 1) {
