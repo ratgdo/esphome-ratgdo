@@ -308,16 +308,16 @@ namespace ratgdo {
         // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
 
         const long CHECK_PERIOD = 50;
-        const long PULSES_EXPECTED = CHECK_PERIOD/7;
+        const long PULSES_LOWER_LIMIT = 3;
 
         if (current_millis - last_millis > CHECK_PERIOD) {
-            ESP_LOGD(TAG, "[%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
-                 current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
-                 current_millis - last_asleep
-            );
+            // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
+            //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
+            //     current_millis - last_asleep
+            // );
 
-            // check to see if we got between 3 and PULSES_EXPECTED + 1 low pulses on the line
-            if (this->isr_store_.obstruction_low_count >= 3 && this->isr_store_.obstruction_low_count <= PULSES_EXPECTED + 1) {
+            // check to see if we got more then PULSES_LOWER_LIMIT pulses
+            if (this->isr_store_.obstruction_low_count > PULSES_LOWER_LIMIT) {
                 this->obstruction_state = ObstructionState::CLEAR;
             } else if (this->isr_store_.obstruction_low_count == 0) {
                 // if there have been no pulses the line is steady high or low
