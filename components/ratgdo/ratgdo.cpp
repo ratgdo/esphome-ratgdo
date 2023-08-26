@@ -33,11 +33,6 @@ namespace ratgdo {
     //
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
 
-    void IRAM_ATTR HOT RATGDOStore::isr_obstruction(RATGDOStore* arg)
-    {
-        arg->obstruction_low_count++;
-    }
-
     void RATGDOComponent::setup()
     {
         this->output_gdo_pin_->setup();

@@ -86,11 +86,12 @@ namespace ratgdo {
     inline bool operator==(const Command& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
 
     struct RATGDOStore {
-        ISRInternalGPIOPin input_obst;
-
         int obstruction_low_count = 0; // count obstruction low pulses
 
-        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg);
+        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg) 
+        {
+            arg->obstruction_low_count++;
+        }
     };
 
     class RATGDOComponent : public Component {
