@@ -51,6 +51,12 @@ namespace ratgdo {
         const uint32_t DOOR_OPEN = 1;
         const uint32_t DOOR_TOGGLE = 2;
         const uint32_t DOOR_STOP = 3;
+
+        const uint32_t TTC_0_SEC = 0x000001;
+        const uint32_t TTC_1_SEC = 0x010001;
+        const uint32_t TTC_1_MIN = 0x3c0001;
+        const uint32_t TTC_5_MIN = 0x2c0101;
+        const uint32_t TTC_10_MIN = 0x580201;
     }
 
     ENUM(Command, uint16_t,
@@ -168,6 +174,7 @@ namespace ratgdo {
         void query_status();
         void query_openings();
         void sync();
+        void close_with_alert();
 
         // children subscriptions
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);

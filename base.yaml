@@ -204,6 +204,14 @@ button:
           id($id_prefix).query_openings();
 
   - platform: template
+    id: ${id_prefix}_close_with_alert
+    name: "Close with Alert"
+    on_press: 
+      then:
+        lambda: !lambda |-
+          id($id_prefix).close_with_alert();          
+
+  - platform: template
     id: ${id_prefix}_sync
     name: "Sync"
     entity_category: diagnostic

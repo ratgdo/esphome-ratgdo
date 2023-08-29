@@ -390,6 +390,13 @@ namespace ratgdo {
         send_command(Command::GET_OPENINGS);
     }
 
+    void RATGDOComponent::close_with_alert()
+    {
+        //TODO check if door is closed and ignore
+        //SET_TTC persists, works for 1 sec.
+        send_command(Command::TTC, data::TTC_1_SEC);
+    }
+
     /************************* DOOR COMMUNICATION *************************/
     /*
      * Transmit a message to the door opener over uart1
