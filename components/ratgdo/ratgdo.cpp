@@ -147,6 +147,10 @@ namespace ratgdo {
                 this->door_position = 1.0;
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
+                if(this->clear_TTC_) {
+                    this->send_command(Command::SET_TTC, data::TTC_0_SEC);
+                    this->clear_TTC_ = false;
+                }
             } else {
                 if (*this->closing_duration == 0 || *this->opening_duration == 0 || *this->door_position == DOOR_POSITION_UNKNOWN) {
                     this->door_position = 0.5; // best guess
@@ -393,8 +397,11 @@ namespace ratgdo {
     void RATGDOComponent::close_with_alert()
     {
         //TODO check if door is closed and ignore
-        //SET_TTC persists, works for 1 sec.
-        send_command(Command::TTC, data::TTC_1_SEC);
+        //TODO check if this will work with door partially open
+
+        //SET_TTC closes door in 1 second with light and beeper
+        send_command(Command::SET_TTC, data::TTC_1_SEC);
+        this->clear_TTC_  = true;
     }
 
     /************************* DOOR COMMUNICATION *************************/
