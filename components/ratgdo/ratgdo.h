@@ -57,6 +57,8 @@ namespace ratgdo {
         const uint32_t TTC_1_MIN = 0x3c0001;
         const uint32_t TTC_5_MIN = 0x2c0101;
         const uint32_t TTC_10_MIN = 0x580201;
+
+        const uint32_t CANCEL_TTC = 0x000501;  //Unknown meaning for these bytes, mimic button pad
     }
 
     ENUM(Command, uint16_t,

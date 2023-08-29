@@ -148,7 +148,8 @@ namespace ratgdo {
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
                 if(this->clear_TTC_) {
-                    this->send_command(Command::SET_TTC, data::TTC_0_SEC);
+                    //TODO this send_command gets sent same time as GET_OPENINGS on line 189
+                    this->send_command(Command::CANCEL_TTC, data::CANCEL_TTC);
                     this->clear_TTC_ = false;
                 }
             } else {
