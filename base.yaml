@@ -209,7 +209,7 @@ button:
     on_press: 
       then:
         lambda: !lambda |-
-          id($id_prefix).close_with_alert();          
+          id($id_prefix).close_with_alert();
 
   - platform: template
     id: ${id_prefix}_sync
