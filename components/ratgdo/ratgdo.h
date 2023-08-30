@@ -52,13 +52,20 @@ namespace ratgdo {
         const uint32_t DOOR_TOGGLE = 2;
         const uint32_t DOOR_STOP = 3;
 
+        const uint32_t GET_TTC_DURATION= 1 ;
+
         const uint32_t TTC_0_SEC = 0x000001;
         const uint32_t TTC_1_SEC = 0x010001;
         const uint32_t TTC_1_MIN = 0x3c0001;
         const uint32_t TTC_5_MIN = 0x2c0101;
         const uint32_t TTC_10_MIN = 0x580201;
+        
+        const uint32_t TTC_255_SEC = 0xFF0001;  ////TODO remove test values
+        const uint32_t TTC_291_SEC = 0x230101;  ////TODO remove test values
+        const uint32_t TTC_BEEF = 0xBEEF01;     ////TODO remove test values
 
-        const uint32_t CANCEL_TTC = 0x000501;  //Unknown meaning for these bytes, mimic button pad
+        const uint32_t CANCEL_TTC_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
+        const uint32_t CANCEL_TTC_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
     }
 
     ENUM(Command, uint16_t,
@@ -81,11 +88,12 @@ namespace ratgdo {
         (PING, 0x392),
         (PING_RESP, 0x393),
 
-        (PAIR_2, 0x400),
-        (PAIR_2_RESP, 0x401),
-        (SET_TTC, 0x402), // ttc_in_seconds = (byte1<<8)+byte2
-        (CANCEL_TTC, 0x408), // ?
-        (TTC, 0x40a), // Time to close
+        (GET_TTC_DURATION, 0x400),
+        (TTC_DURATION, 0x401),  //data appears to contain the current TTC setting in gdo
+        (SET_TTC_DURATION, 0x402), // Set time to close in seconds = (byte1<<8)+byte2
+        (CANCEL_TTC, 0x408), //OFF or TOGGLE_HOLD are options
+        (TTC_COUNTDOWN, 0x40a), // Time to close countdown in seconds
+
         (GET_OPENINGS, 0x48b),
         (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
     )
