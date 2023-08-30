@@ -149,7 +149,7 @@ namespace ratgdo {
                 this->door_position = 0.0;
                 if(this->clear_TTC_) {
                     //TODO this send_command gets sent same time as GET_OPENINGS on line 189
-                    this->send_command(Command::CANCEL_TTC, data::CANCEL_TTC_OFF);
+                    this->send_command(Command::TTC_CANCEL, data::TTC_CANCEL_OFF);
                     this->clear_TTC_ = false;
                 }
             } else {
@@ -227,7 +227,7 @@ namespace ratgdo {
                 this->send_command(Command::GET_STATUS);
             }
             ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
-        } else if (cmd == Command::SET_TTC_DURATION) {
+        } else if (cmd == Command::TTC_SET_DURATION) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC) update request: %ds", seconds);
         } else if (cmd == Command::TTC_DURATION) {
@@ -236,13 +236,13 @@ namespace ratgdo {
         } else if (cmd == Command::TTC_COUNTDOWN) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "(TTC) door will close in: %ds", seconds);
-        } else if (cmd == Command::CANCEL_TTC) {
+        } else if (cmd == Command::TTC_CANCEL) {
             if (byte1 == 0x04) {
-                ESP_LOGD(TAG, "CANCEL_TTC: Auto Hold Toggled");
+                ESP_LOGD(TAG, "TTC: Auto Hold Toggled");
             } else if (byte1 == 0x05) {
-                ESP_LOGD(TAG, "CANCEL_TTC: Disabled");
+                ESP_LOGD(TAG, "TTC: Disabled");
             } else {
-                ESP_LOGD(TAG, "CANCEL_TTC: Unknown Data");
+                ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
             }
         }
 
@@ -401,10 +401,7 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        //send_command(Command::GET_STATUS);
-        
-        //TODO revert testing
-        send_command(Command::GET_TTC_DURATION, data::GET_TTC_DURATION);
+        send_command(Command::GET_STATUS);
     }
 
     void RATGDOComponent::query_openings()
@@ -415,13 +412,64 @@ namespace ratgdo {
     void RATGDOComponent::close_with_alert()
     {
         //TODO check if door is closed and ignore
-        //TODO check if this will work with door partially open
+        //Only works if fully open
 
         //SET_TTC closes door in 1 second with light and beeper
-        send_command(Command::SET_TTC_DURATION, data::TTC_BEEF);
-        
-        //this->clear_TTC_  = true;
+        send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
+        this->clear_TTC_  = true;
     }
+
+    void RATGDOComponent::get_ttc_duration()
+    {
+        send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);
+    }   
+
+    void RATGDOComponent::turn_ttc_off()
+    {
+        send_command(Command::TTC_CANCEL, data::TTC_CANCEL_OFF);
+    }
+
+    void RATGDOComponent::ttc_toggle_hold()
+    {
+        send_command(Command::TTC_CANCEL, data::TTC_CANCEL_TOGGLE_HOLD);
+    }
+
+    void RATGDOComponent::set_ttc_1_min()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_1_MIN);
+    }
+
+    void RATGDOComponent::set_ttc_5_min()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_5_MIN);
+    }
+
+    void RATGDOComponent::set_ttc_10_min()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_10_MIN);
+    }
+
+    void RATGDOComponent::set_ttc_beef()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_BEEF);
+    }
+
+    void RATGDOComponent::set_ttc_0_sec()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_0_SEC);
+    }
+
+    void RATGDOComponent::set_ttc_1_sec()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
+    }
+
+    void RATGDOComponent::set_ttc_255_sec()
+    {
+        send_command(Command::TTC_SET_DURATION, data::TTC_255_SEC);
+    }
+
+
 
     /************************* DOOR COMMUNICATION *************************/
     /*

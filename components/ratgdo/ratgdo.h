@@ -52,7 +52,7 @@ namespace ratgdo {
         const uint32_t DOOR_TOGGLE = 2;
         const uint32_t DOOR_STOP = 3;
 
-        const uint32_t GET_TTC_DURATION= 1 ;
+        const uint32_t TTC_GET_DURATION= 1 ;
 
         const uint32_t TTC_0_SEC = 0x000001;
         const uint32_t TTC_1_SEC = 0x010001;
@@ -64,8 +64,8 @@ namespace ratgdo {
         const uint32_t TTC_291_SEC = 0x230101;  ////TODO remove test values
         const uint32_t TTC_BEEF = 0xBEEF01;     ////TODO remove test values
 
-        const uint32_t CANCEL_TTC_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
-        const uint32_t CANCEL_TTC_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
+        const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
+        const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
     }
 
     ENUM(Command, uint16_t,
@@ -88,10 +88,10 @@ namespace ratgdo {
         (PING, 0x392),
         (PING_RESP, 0x393),
 
-        (GET_TTC_DURATION, 0x400),
+        (TTC_GET_DURATION, 0x400),
         (TTC_DURATION, 0x401),  //data appears to contain the current TTC setting in gdo
-        (SET_TTC_DURATION, 0x402), // Set time to close in seconds = (byte1<<8)+byte2
-        (CANCEL_TTC, 0x408), //OFF or TOGGLE_HOLD are options
+        (TTC_SET_DURATION, 0x402), // Set time to close in seconds = (byte1<<8)+byte2
+        (TTC_CANCEL, 0x408), //OFF or TOGGLE_HOLD are options
         (TTC_COUNTDOWN, 0x40a), // Time to close countdown in seconds
 
         (GET_OPENINGS, 0x48b),
@@ -185,6 +185,18 @@ namespace ratgdo {
         void query_openings();
         void sync();
         void close_with_alert();
+
+        //TODO remove these buttons for testing
+        void get_ttc_duration();
+        void turn_ttc_off();
+        void ttc_toggle_hold();
+        void set_ttc_1_min();
+        void set_ttc_5_min();
+        void set_ttc_10_min();
+        void set_ttc_beef();
+        void set_ttc_0_sec();
+        void set_ttc_1_sec();
+        void set_ttc_255_sec();
 
         // children subscriptions
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
