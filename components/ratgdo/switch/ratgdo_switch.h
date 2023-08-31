@@ -9,7 +9,8 @@ namespace esphome {
 namespace ratgdo {
 
     enum SwitchType {
-        RATGDO_LOCK
+        RATGDO_LOCK,
+        RATGDO_HOLDOPEN
     };
 
     class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
@@ -19,6 +20,7 @@ namespace ratgdo {
         void set_switch_type(SwitchType switch_type_) { this->switch_type_ = switch_type_; }
 
         void on_lock_state(LockState state);
+        void on_hold_state(HoldState state);
         void write_state(bool state) override;
 
     protected:

@@ -31,5 +31,19 @@ namespace ratgdo {
         }
     }
 
+    HoldState hold_state_toggle(HoldState state)
+    {
+        switch (state) {
+        case HoldState::HOLD_DISABLED:
+            return HoldState::HOLD_ENABLED;
+        case HoldState::HOLD_ENABLED:
+            return HoldState::HOLD_DISABLED;
+            // 2 and 3 appears sometimes
+        case HoldState::UNKNOWN:
+        default:
+            return HoldState::UNKNOWN;
+        }
+    }    
+
 } // namespace ratgdo
 } // namespace esphome

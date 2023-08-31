@@ -13,6 +13,7 @@ SwitchType = ratgdo_ns.enum("SwitchType")
 CONF_TYPE = "type"
 TYPES = {
     "lock": SwitchType.RATGDO_LOCK,
+    "hold": SwitchType.RATGDO_HOLDOPEN,
 }
 
 

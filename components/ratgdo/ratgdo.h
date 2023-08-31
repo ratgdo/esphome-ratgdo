@@ -53,29 +53,30 @@ namespace ratgdo {
         const uint32_t DOOR_STOP = 3;
 
         const uint32_t TTC_GET_DURATION= 1 ;
-
         const uint32_t TTC_0_SEC = 0x000001;
         const uint32_t TTC_1_SEC = 0x010001;
         const uint32_t TTC_1_MIN = 0x3c0001;
         const uint32_t TTC_5_MIN = 0x2c0101;
         const uint32_t TTC_10_MIN = 0x580201;
-        
         const uint32_t TTC_255_SEC = 0xFF0001;  ////TODO remove test values
         const uint32_t TTC_291_SEC = 0x230101;  ////TODO remove test values
         const uint32_t TTC_BEEF = 0xBEEF01;     ////TODO remove test values
-
         const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
         const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
+
+        const uint32_t GET_EXT_STATUS = 1;
     }
 
     ENUM(Command, uint16_t,
         (UNKNOWN, 0x000),
-        (GET_STATUS, 0x080),
-        (STATUS, 0x081),
+
+        (GET_STATUS, 0x080),  
+        (STATUS, 0x081),  
+        (GET_EXT_STATUS, 0x0a0),  //Extended status has TTC state in bit0 to bit2 of byte1. Bit3 has something but not sure what it is
+        (EXT_STATUS, 0x0a1),
+
         (OBST_1, 0x084), // sent when an obstruction happens?
         (OBST_2, 0x085), // sent when an obstruction happens?
-        (PAIR_3, 0x0a0),
-        (PAIR_3_RESP, 0x0a1),
 
         (LEARN_2, 0x181),
         (LOCK, 0x18c),
@@ -91,7 +92,7 @@ namespace ratgdo {
         (TTC_GET_DURATION, 0x400),
         (TTC_DURATION, 0x401),  //data appears to contain the current TTC setting in gdo
         (TTC_SET_DURATION, 0x402), // Set time to close in seconds = (byte1<<8)+byte2
-        (TTC_CANCEL, 0x408), //OFF or TOGGLE_HOLD are options
+        (TTC_CANCEL, 0x408), //OFF or TOGGLE_HOLD are options in data
         (TTC_COUNTDOWN, 0x40a), // Time to close countdown in seconds
 
         (GET_OPENINGS, 0x48b),
@@ -131,6 +132,7 @@ namespace ratgdo {
 
         observable<LightState> light_state { LightState::UNKNOWN };
         observable<LockState> lock_state { LockState::UNKNOWN };
+        observable<HoldState> hold_state { HoldState::UNKNOWN };
         observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
         observable<MotorState> motor_state { MotorState::UNKNOWN };
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
@@ -180,8 +182,14 @@ namespace ratgdo {
         void lock();
         void unlock();
 
+        // hold
+        void toggle_hold();
+        void hold_enable();
+        void hold_disable();        
+
         // button functionality
         void query_status();
+        [[deprecated("query_status() now requests the opening count.")]]
         void query_openings();
         void sync();
         void close_with_alert();
@@ -206,6 +214,7 @@ namespace ratgdo {
         void subscribe_door_state(std::function<void(DoorState, float)>&& f);
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);
+        void subscribe_hold_state(std::function<void(HoldState)>&& f);
         void subscribe_obstruction_state(std::function<void(ObstructionState)>&& f);
         void subscribe_motor_state(std::function<void(MotorState)>&& f);
         void subscribe_button_state(std::function<void(ButtonState)>&& f);

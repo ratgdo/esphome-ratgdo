@@ -244,7 +244,18 @@ namespace ratgdo {
             } else {
                 ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
             }
-        }
+        } else if (cmd == Command::EXT_STATUS) {
+            if ( (byte1 & 0b00000111) == 0b00000001) {
+                ESP_LOGD(TAG, "TTC is disabled.");
+                this->hold_state = HoldState::HOLD_DISABLED;
+            } else if ( (byte1 & 0b00000111) == 0b00000010) {
+                ESP_LOGD(TAG, "TTC is enabled but in Hold Open.");
+                this->hold_state = HoldState::HOLD_ENABLED;
+            } else if ( (byte1 & 0b00000111) == 0b00000100) {
+                ESP_LOGD(TAG, "TTC is enabled.");
+                this->hold_state = HoldState::HOLD_DISABLED;
+            } 
+        }            
 
         return cmd;
     }
@@ -402,11 +413,14 @@ namespace ratgdo {
     void RATGDOComponent::query_status()
     {
         send_command(Command::GET_STATUS);
+        set_timeout(100, [=] {this->send_command(Command::GET_EXT_STATUS, data::GET_EXT_STATUS);} );
+        set_timeout(200, [=] {this->send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);} );
+        set_timeout(300, [=] {this->send_command(Command::GET_OPENINGS);} );        
     }
-
+    
     void RATGDOComponent::query_openings()
     {
-        send_command(Command::GET_OPENINGS);
+        this->query_status();
     }
 
     void RATGDOComponent::close_with_alert()
@@ -729,6 +743,27 @@ namespace ratgdo {
         this->send_command(Command::LOCK, data::LOCK_TOGGLE);
     }
 
+    // Hold functions  
+    void RATGDOComponent::hold_enable()
+    {
+        if(*(this->hold_state) == HoldState::HOLD_DISABLED) {
+            this->toggle_hold();
+        }
+    }
+
+    void RATGDOComponent::hold_disable()
+    {
+        if(*(this->hold_state) == HoldState::HOLD_ENABLED) {
+            this->toggle_hold();
+        }
+    }
+
+    void RATGDOComponent::toggle_hold()
+    {
+        this->hold_state = hold_state_toggle(*this->hold_state);
+        this->send_command(Command::TTC_CANCEL, data::TTC_CANCEL_TOGGLE_HOLD);
+    }    
+
     LightState RATGDOComponent::get_light_state() const
     {
         return *this->light_state;
@@ -768,6 +803,10 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_lock_state(std::function<void(LockState)>&& f)
     {
         this->lock_state.subscribe([=](LockState state) { defer("lock_state", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_hold_state(std::function<void(HoldState)>&& f)
+    {
+        this->hold_state.subscribe([=](HoldState state) { defer("hold_state", [=] { f(state); }); });
     }
     void RATGDOComponent::subscribe_obstruction_state(std::function<void(ObstructionState)>&& f)
     {
