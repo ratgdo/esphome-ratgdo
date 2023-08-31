@@ -34,6 +34,14 @@ sensor:
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
 
+select:
+  - platform: ratgdo
+    id: ${id_prefix}_ttc_select
+    type: ttc
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Time to close"
+
 switch:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
