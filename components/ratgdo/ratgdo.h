@@ -133,6 +133,7 @@ namespace ratgdo {
         observable<LightState> light_state { LightState::UNKNOWN };
         observable<LockState> lock_state { LockState::UNKNOWN };
         observable<HoldState> hold_state { HoldState::UNKNOWN };
+        observable<uint16_t> ttc_time_seconds { 0xFFFF };        
         observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
         observable<MotorState> motor_state { MotorState::UNKNOWN };
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
@@ -187,6 +188,13 @@ namespace ratgdo {
         void hold_enable();
         void hold_disable();        
 
+        //TTC
+        void turn_ttc_off();
+        void ttc_toggle_hold();
+        void set_ttc_1_min();
+        void set_ttc_5_min();
+        void set_ttc_10_min();
+
         // button functionality
         void query_status();
         [[deprecated("query_status() now requests the opening count.")]]
@@ -194,14 +202,9 @@ namespace ratgdo {
         void sync();
         void close_with_alert();
 
-        //TODO remove these buttons for testing
-        void get_ttc_duration();
-        void turn_ttc_off();
-        void ttc_toggle_hold();
-        void set_ttc_1_min();
-        void set_ttc_5_min();
-        void set_ttc_10_min();
+        //TODO remove these just for testing
         void set_ttc_beef();
+        void get_ttc_duration();      
         void set_ttc_0_sec();
         void set_ttc_1_sec();
         void set_ttc_255_sec();
@@ -215,6 +218,7 @@ namespace ratgdo {
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);
         void subscribe_hold_state(std::function<void(HoldState)>&& f);
+        void subscribe_ttc_seconds(std::function<void(uint16_t)>&& f);
         void subscribe_obstruction_state(std::function<void(ObstructionState)>&& f);
         void subscribe_motor_state(std::function<void(MotorState)>&& f);
         void subscribe_button_state(std::function<void(ButtonState)>&& f);

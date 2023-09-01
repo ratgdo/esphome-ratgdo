@@ -233,6 +233,18 @@ namespace ratgdo {
         } else if (cmd == Command::TTC_DURATION) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC) set to: %ds", seconds);
+            if (seconds == 60) {
+                this->ttc_time_seconds=seconds;
+            } else if (seconds == 300) {
+                this->ttc_time_seconds=seconds;
+            } else if (seconds == 600) {
+                this->ttc_time_seconds=seconds;
+            } else if (seconds == 0) {
+                this->ttc_time_seconds=seconds;
+            } else {
+                this->ttc_time_seconds=0;
+                ESP_LOGW(TAG, "Unsupported TTC time: %ds", seconds);
+            }
         } else if (cmd == Command::TTC_COUNTDOWN) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "(TTC) door will close in: %ds", seconds);
@@ -441,6 +453,7 @@ namespace ratgdo {
     void RATGDOComponent::turn_ttc_off()
     {
         send_command(Command::TTC_CANCEL, data::TTC_CANCEL_OFF);
+        this->ttc_time_seconds=0;
     }
 
     void RATGDOComponent::ttc_toggle_hold()
@@ -534,6 +547,7 @@ namespace ratgdo {
         // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
 
+        //TODO need extended status and TTC time to init the TTC controls
         set_retry(
             500, 10, [=](uint8_t r) {
                 if (*this->door_state != DoorState::UNKNOWN) { // have status
@@ -808,6 +822,10 @@ namespace ratgdo {
     {
         this->hold_state.subscribe([=](HoldState state) { defer("hold_state", [=] { f(state); }); });
     }
+    void RATGDOComponent::subscribe_ttc_seconds(std::function<void(uint16_t)>&& f)
+    {
+        this->ttc_time_seconds.subscribe([=](uint16_t state) { defer("ttc_time", [=] { f(state); }); });
+    }    
     void RATGDOComponent::subscribe_obstruction_state(std::function<void(ObstructionState)>&& f)
     {
         this->obstruction_state.subscribe([=](ObstructionState state) { defer("obstruction_state", [=] { f(state); }); });

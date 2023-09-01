@@ -15,9 +15,17 @@ namespace ratgdo {
 
     void RATGDOSelect::setup()
     {
-        // this->parent_->subscribe_openings([=](uint16_t value) {
-        //     this->publish_state(value);
-        // });
+        this->parent_->subscribe_ttc_seconds([=](uint16_t value) {
+            if (value == 0) {
+                this->publish_state(std::string("Off"));
+            } else if (value == 60) {
+                this->publish_state(std::string("1 Minute"));
+            } else if (value == 300) {
+                this->publish_state(std::string("5 Minutes"));
+            } else if (value == 600) {
+                this->publish_state(std::string("10 Minutes"));
+            }
+        });
     }
 
     void RATGDOSelect::control(const std::string &value) 
@@ -25,15 +33,17 @@ namespace ratgdo {
         // if (this->optimistic_)
              this->publish_state(value);
 
-        // auto idx = this->index_of(value);
-        // if (idx.has_value()) {
-        //     uint8_t mapping = this->mappings_.at(idx.value());
-        //     ESP_LOGV(TAG, "Setting %u datapoint value to %u:%s", this->select_id_, mapping, value.c_str());
-        //     this->parent_->set_enum_datapoint_value(this->select_id_, mapping);
-        //     return;
-        // }
-
-        ESP_LOGW(TAG, "Invalid value %s", value.c_str());
+        if (value == std::string("Off")) {
+            this->parent_->turn_ttc_off();
+        } else if (value == std::string("1 Minute")) {
+            this->parent_->set_ttc_1_min();
+        } else if (value == std::string("5 Minutes")) {
+            this->parent_->set_ttc_5_min();
+        } else if (value == std::string("10 Minutes")) {
+            this->parent_->set_ttc_10_min();
+        } else {
+            ESP_LOGW(TAG, "Invalid value %s", value.c_str());
+        }
     }
 
 } // namespace ratgdo
