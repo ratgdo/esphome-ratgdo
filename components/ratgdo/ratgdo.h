@@ -58,9 +58,6 @@ namespace ratgdo {
         const uint32_t TTC_1_MIN = 0x3c0001;
         const uint32_t TTC_5_MIN = 0x2c0101;
         const uint32_t TTC_10_MIN = 0x580201;
-        const uint32_t TTC_255_SEC = 0xFF0001;  ////TODO remove test values
-        const uint32_t TTC_291_SEC = 0x230101;  ////TODO remove test values
-        const uint32_t TTC_BEEF = 0xBEEF01;     ////TODO remove test values
         const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
         const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
 
@@ -191,6 +188,7 @@ namespace ratgdo {
         //TTC
         void turn_ttc_off();
         void ttc_toggle_hold();
+        void set_ttc_1_sec();
         void set_ttc_1_min();
         void set_ttc_5_min();
         void set_ttc_10_min();
@@ -201,13 +199,6 @@ namespace ratgdo {
         void query_openings();
         void sync();
         void close_with_alert();
-
-        //TODO remove these just for testing
-        void set_ttc_beef();
-        void get_ttc_duration();      
-        void set_ttc_0_sec();
-        void set_ttc_1_sec();
-        void set_ttc_255_sec();
 
         // children subscriptions
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
@@ -234,7 +225,7 @@ namespace ratgdo {
         SoftwareSerial sw_serial_;
 
         bool obstruction_from_status_ { false };
-        bool clear_TTC_ { false };
+        bool restore_TTC_ { false };
         
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;

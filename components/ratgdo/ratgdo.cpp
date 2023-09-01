@@ -147,10 +147,20 @@ namespace ratgdo {
                 this->door_position = 1.0;
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
-                if(this->clear_TTC_) {
-                    //TODO this send_command gets sent same time as GET_OPENINGS on line 189
-                    this->send_command(Command::TTC_CANCEL, data::TTC_CANCEL_OFF);
-                    this->clear_TTC_ = false;
+                if(this->restore_TTC_) {
+                    //GET_OPENINGS is sent when door closes, delay this tx
+                    set_timeout(100, [=] {
+                        if (*this->ttc_time_seconds == (uint16_t) 0) {
+                            this->turn_ttc_off();
+                        } else if (*this->ttc_time_seconds == (uint16_t)60) {
+                            this->set_ttc_1_min();
+                        } else if (*this->ttc_time_seconds == (uint16_t)300) {
+                            this->set_ttc_5_min();
+                        } else if (*this->ttc_time_seconds == (uint16_t) 600) {
+                            this->set_ttc_10_min();
+                        }
+                    } );
+                    this->restore_TTC_ = false;
                 }
             } else {
                 if (*this->closing_duration == 0 || *this->opening_duration == 0 || *this->door_position == DOOR_POSITION_UNKNOWN) {
@@ -162,7 +172,7 @@ namespace ratgdo {
                 this->position_sync_while_opening(1.0 - *this->door_position);
                 this->moving_to_position = true;
             }
-            if (door_state == DoorState::CLOSING && !this->moving_to_position) {  //TODO add check for TTC closing
+            if (door_state == DoorState::CLOSING && !this->moving_to_position) {  
                 this->position_sync_while_closing(*this->door_position);
                 this->moving_to_position = true;
             }
@@ -435,20 +445,18 @@ namespace ratgdo {
         this->query_status();
     }
 
+    //TODO does gdo send status that door is closing???
     void RATGDOComponent::close_with_alert()
     {
-        //TODO check if door is closed and ignore
-        //Only works if fully open
-
+        //Check if door is closed and ignore, only works if fully open
+        if(*this->door_state != DoorState::OPEN) {
+            ESP_LOGW(TAG, "Door must be fully open to Close with alert!");
+            return;
+        }
         //SET_TTC closes door in 1 second with light and beeper
         send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
-        this->clear_TTC_  = true;
+        this->restore_TTC_  = true;
     }
-
-    void RATGDOComponent::get_ttc_duration()
-    {
-        send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);
-    }   
 
     void RATGDOComponent::turn_ttc_off()
     {
@@ -476,26 +484,10 @@ namespace ratgdo {
         send_command(Command::TTC_SET_DURATION, data::TTC_10_MIN);
     }
 
-    void RATGDOComponent::set_ttc_beef()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_BEEF);
-    }
-
-    void RATGDOComponent::set_ttc_0_sec()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_0_SEC);
-    }
-
     void RATGDOComponent::set_ttc_1_sec()
     {
         send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
     }
-
-    void RATGDOComponent::set_ttc_255_sec()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_255_SEC);
-    }
-
 
 
     /************************* DOOR COMMUNICATION *************************/
@@ -547,20 +539,11 @@ namespace ratgdo {
         // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
 
-        //TODO need extended status and TTC time to init the TTC controls
         set_retry(
             500, 10, [=](uint8_t r) {
-                if (*this->door_state != DoorState::UNKNOWN) { // have status
-                    if (*this->openings != 0) { // have openings
-                        return RetryResult::DONE;
-                    } else {
-                        if (r == 0) { // failed to sync probably rolling counter is wrong, notify
-                            ESP_LOGD(TAG, "Triggering sync failed actions.");
-                            this->sync_failed = true;
-                        };
-                        this->send_command(Command::GET_OPENINGS);
-                        return RetryResult::RETRY;
-                    }
+                if (*this->door_state != DoorState::UNKNOWN) { // GET_STATUS succeeded
+                    this->query_status();  //Get openings and TTC settings to initalize
+                    return RetryResult::DONE;
                 } else {
                     if (r == 0) { // failed to sync probably rolling counter is wrong, notify
                         ESP_LOGD(TAG, "Triggering sync failed actions.");
