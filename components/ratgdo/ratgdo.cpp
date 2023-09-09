@@ -444,14 +444,23 @@ namespace ratgdo {
     //TODO does gdo send status that door is closing???
     void RATGDOComponent::close_with_alert()
     {
-        //Check if door is closed and ignore, only works if fully open
-        if(*this->door_state != DoorState::OPEN) {
-            ESP_LOGW(TAG, "Door must be fully open to Close with alert!");
+        if(*this->door_state == DoorState::CLOSED) {
+            ESP_LOGW(TAG, "close_with_alert door already closed!");
             return;
         }
-        //SET_TTC closes door in 1 second with light and beeper
-        set_ttc_sec(1);
-        this->restore_TTC_  = true;
+
+        //TODO need to disable hold if set and restore
+        if(*this->door_state == DoorState::OPEN) {
+            //SET_TTC closes door in 1 second with builtin gdo alert
+            set_ttc_sec(1);
+            this->restore_TTC_  = true;
+            return;
+        }
+
+        //If not open or closed, open the door and que to retry in 1/2 second
+        //TTC only works with door fully open
+        open_door();
+        set_timeout(500, [=] {this->close_with_alert();} );
     }
 
     void RATGDOComponent::turn_ttc_off()
