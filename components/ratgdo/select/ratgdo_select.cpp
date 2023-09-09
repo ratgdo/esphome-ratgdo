@@ -36,11 +36,11 @@ namespace ratgdo {
         if (value == std::string("Off")) {
             this->parent_->turn_ttc_off();
         } else if (value == std::string("1 Minute")) {
-            this->parent_->set_ttc_1_min();
+            this->parent_->set_ttc_sec(60);
         } else if (value == std::string("5 Minutes")) {
-            this->parent_->set_ttc_5_min();
+            this->parent_->set_ttc_sec(300);
         } else if (value == std::string("10 Minutes")) {
-            this->parent_->set_ttc_10_min();
+            this->parent_->set_ttc_sec(600);
         } else {
             ESP_LOGW(TAG, "Invalid value %s", value.c_str());
         }

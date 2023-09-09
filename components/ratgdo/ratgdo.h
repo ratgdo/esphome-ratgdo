@@ -53,11 +53,6 @@ namespace ratgdo {
         const uint32_t DOOR_STOP = 3;
 
         const uint32_t TTC_GET_DURATION= 1 ;
-        const uint32_t TTC_0_SEC = 0x000001;
-        const uint32_t TTC_1_SEC = 0x010001;
-        const uint32_t TTC_1_MIN = 0x3c0001;
-        const uint32_t TTC_5_MIN = 0x2c0101;
-        const uint32_t TTC_10_MIN = 0x580201;
         const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
         const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
 
@@ -188,10 +183,7 @@ namespace ratgdo {
         //TTC
         void turn_ttc_off();
         void ttc_toggle_hold();
-        void set_ttc_1_sec();
-        void set_ttc_1_min();
-        void set_ttc_5_min();
-        void set_ttc_10_min();
+        void set_ttc_sec(uint16_t duration);
 
         // button functionality
         void query_status();

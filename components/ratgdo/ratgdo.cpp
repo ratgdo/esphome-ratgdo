@@ -150,14 +150,10 @@ namespace ratgdo {
                 if(this->restore_TTC_) {
                     //GET_OPENINGS is sent when door closes, delay this tx
                     set_timeout(100, [=] {
-                        if (*this->ttc_time_seconds == (uint16_t) 0) {
+                        if (*this->ttc_time_seconds == 0) {
                             this->turn_ttc_off();
-                        } else if (*this->ttc_time_seconds == (uint16_t)60) {
-                            this->set_ttc_1_min();
-                        } else if (*this->ttc_time_seconds == (uint16_t)300) {
-                            this->set_ttc_5_min();
-                        } else if (*this->ttc_time_seconds == (uint16_t) 600) {
-                            this->set_ttc_10_min();
+                        } else {
+                            this->set_ttc_sec(*ttc_time_seconds);
                         }
                     } );
                     this->restore_TTC_ = false;
@@ -454,7 +450,7 @@ namespace ratgdo {
             return;
         }
         //SET_TTC closes door in 1 second with light and beeper
-        send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
+        set_ttc_sec(1);
         this->restore_TTC_  = true;
     }
 
@@ -469,24 +465,9 @@ namespace ratgdo {
         send_command(Command::TTC_CANCEL, data::TTC_CANCEL_TOGGLE_HOLD);
     }
 
-    void RATGDOComponent::set_ttc_1_min()
+    void RATGDOComponent::set_ttc_sec(uint16_t duration)
     {
-        send_command(Command::TTC_SET_DURATION, data::TTC_1_MIN);
-    }
-
-    void RATGDOComponent::set_ttc_5_min()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_5_MIN);
-    }
-
-    void RATGDOComponent::set_ttc_10_min()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_10_MIN);
-    }
-
-    void RATGDOComponent::set_ttc_1_sec()
-    {
-        send_command(Command::TTC_SET_DURATION, data::TTC_1_SEC);
+        send_command(Command::TTC_SET_DURATION, (duration & 0xff) << 16 | (duration & 0xff00) | 0x01);
     }
 
 
