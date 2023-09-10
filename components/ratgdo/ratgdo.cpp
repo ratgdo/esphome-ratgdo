@@ -259,6 +259,7 @@ namespace ratgdo {
                 ESP_LOGD(TAG, "TTC: Auto Hold Toggled");
             } else if (byte1 == 0x05) {
                 ESP_LOGD(TAG, "TTC: Disabled");
+                this->ttc_time_seconds=0;
             } else {
                 ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
             }
