@@ -147,7 +147,7 @@ namespace ratgdo {
                 this->door_position = 1.0;
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
-                if(this->restore_TTC_) {
+                if(this->restore_ttc_) {
                     //GET_OPENINGS is sent when door closes, delay this tx
                     set_timeout(100, [=] {
                         if (*this->ttc_time_seconds == 0) {
@@ -156,7 +156,7 @@ namespace ratgdo {
                             this->set_ttc_sec(*ttc_time_seconds);
                         }
                     } );
-                    this->restore_TTC_ = false;
+                    this->restore_ttc_ = false;
                 }
             } else {
                 if (*this->closing_duration == 0 || *this->opening_duration == 0 || *this->door_position == DOOR_POSITION_UNKNOWN) {
@@ -239,18 +239,16 @@ namespace ratgdo {
         } else if (cmd == Command::TTC_DURATION) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC) set to: %ds", seconds);
-            if (seconds == 60) {
+            if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
                 this->ttc_time_seconds=seconds;
-            } else if (seconds == 300) {
-                this->ttc_time_seconds=seconds;
-            } else if (seconds == 600) {
-                this->ttc_time_seconds=seconds;
-            } else if (seconds == 0) {
-                this->ttc_time_seconds=seconds;
-            } else {
+            } else if (seconds != 1) {
                 this->ttc_time_seconds=0;
                 ESP_LOGW(TAG, "Unsupported TTC time: %ds", seconds);
             }
+            if(this->restore_hold_state_  == true && this->restore_ttc_ == false) {
+                this->hold_enable();
+                this->restore_hold_state_  = false;
+            } 
         } else if (cmd == Command::TTC_COUNTDOWN) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "(TTC) door will close in: %ds", seconds);
@@ -450,15 +448,17 @@ namespace ratgdo {
             return;
         }
 
-        //TODO need to disable hold if set and restore
         if(*this->door_state == DoorState::OPEN) {
+            if(*this->hold_state == HoldState::HOLD_ENABLED) {
+                this->restore_hold_state_  = true;
+            }
             //SET_TTC closes door in 1 second with builtin gdo alert
             set_ttc_sec(1);
-            this->restore_TTC_  = true;
+            this->restore_ttc_  = true;
             return;
         }
 
-        //If not open or closed, open the door and que to retry in 1/2 second
+        //If not opened or closed, open the door and que to retry TTC every 1/2 second
         //TTC only works with door fully open
         open_door();
         set_timeout(500, [=] {this->close_with_alert();} );

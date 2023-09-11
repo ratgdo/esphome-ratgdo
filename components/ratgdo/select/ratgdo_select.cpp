@@ -30,17 +30,18 @@ namespace ratgdo {
 
     void RATGDOSelect::control(const std::string &value) 
     {
-        // if (this->optimistic_)
-             this->publish_state(value);
-
-        if (value == std::string("Off")) {
+        if (value.compare("Off") == 0) {
             this->parent_->turn_ttc_off();
-        } else if (value == std::string("1 Minute")) {
+            this->publish_state(value);
+        } else if (value.compare("1 Minute") == 0) {
             this->parent_->set_ttc_sec(60);
-        } else if (value == std::string("5 Minutes")) {
+            this->publish_state(value);
+        } else if (value.compare("5 Minutes") == 0) {
             this->parent_->set_ttc_sec(300);
-        } else if (value == std::string("10 Minutes")) {
+            this->publish_state(value);
+        } else if (value.compare("10 Minutes") == 0) {
             this->parent_->set_ttc_sec(600);
+            this->publish_state(value);
         } else {
             ESP_LOGW(TAG, "Invalid value %s", value.c_str());
         }

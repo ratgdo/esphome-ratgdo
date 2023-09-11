@@ -217,7 +217,8 @@ namespace ratgdo {
         SoftwareSerial sw_serial_;
 
         bool obstruction_from_status_ { false };
-        bool restore_TTC_ { false };
+        bool restore_ttc_ { false };
+        bool restore_hold_state_ { false };
         
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
