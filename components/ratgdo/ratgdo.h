@@ -24,6 +24,12 @@ extern "C" {
 #include "secplus.h"
 }
 
+//query_status_flags 
+#define QSF_STATUS     0b0000001
+#define QSF_EXT_STATUS 0b0000010
+#define QSF_TCC_DUR    0b0000100
+#define QSF_OPENINGS   0b0001000
+
 #include "ratgdo_state.h"
 
 namespace esphome {
@@ -224,6 +230,8 @@ namespace ratgdo {
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
         uint64_t remote_id_;
+
+        uint16_t query_status_flags_;
 
     }; // RATGDOComponent
 

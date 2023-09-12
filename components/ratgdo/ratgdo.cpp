@@ -115,6 +115,7 @@ namespace ratgdo {
 
             auto door_state = to_DoorState(nibble, DoorState::UNKNOWN);
             auto prev_door_state = *this->door_state;
+            query_status_flags_ |= QSF_STATUS;
 
             // opening duration calibration
             if (*this->opening_duration == 0) {
@@ -224,6 +225,7 @@ namespace ratgdo {
             if (nibble == 0 || *this->openings != 0) {
                 this->openings = (byte1 << 8) | byte2;
                 ESP_LOGD(TAG, "Openings: %d", *this->openings);
+                query_status_flags_ |= QSF_OPENINGS;
             } else {
                 ESP_LOGD(TAG, "Ignoreing openings, not from our request");
             }
@@ -239,6 +241,7 @@ namespace ratgdo {
         } else if (cmd == Command::TTC_DURATION) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC) set to: %ds", seconds);
+            query_status_flags_ |= QSF_TCC_DUR;
             if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
                 this->ttc_time_seconds=seconds;
             } else if (seconds != 1) {
@@ -262,6 +265,7 @@ namespace ratgdo {
                 ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
             }
         } else if (cmd == Command::EXT_STATUS) {
+            query_status_flags_ |= QSF_EXT_STATUS;
             if ( (byte1 & 0b00000111) == 0b00000001) {
                 ESP_LOGD(TAG, "TTC is disabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
@@ -429,10 +433,29 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        send_command(Command::GET_STATUS);
-        set_timeout(100, [=] {this->send_command(Command::GET_EXT_STATUS, data::GET_EXT_STATUS);} );
-        set_timeout(200, [=] {this->send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);} );
-        set_timeout(300, [=] {this->send_command(Command::GET_OPENINGS);} );        
+        query_status_flags_ = 0;        
+
+        set_retry(
+            750, 10, [=](uint8_t r) {
+                //Once a new message is returned for each status then query_status has completed successfully
+                if(query_status_flags_ == (QSF_STATUS | QSF_EXT_STATUS | QSF_TCC_DUR | QSF_OPENINGS) ) {
+                    ESP_LOGD(TAG, "query_status completed successfully");
+                    return RetryResult::DONE;                    
+                }
+                ESP_LOGD(TAG, "query_status retry %d" , 10-r);
+                //on each retry, queue up a request to GET_ each status item
+                send_command(Command::GET_STATUS);
+                set_timeout(150, [=] {this->send_command(Command::GET_EXT_STATUS, data::GET_EXT_STATUS);} );
+                set_timeout(300, [=] {this->send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);} );
+                set_timeout(450, [=] {this->send_command(Command::GET_OPENINGS);} ); 
+
+                if (r == 0) { // failed to sync probably rolling counter is wrong, notify
+                    ESP_LOGD(TAG, "Triggering sync failed actions.");
+                    this->sync_failed = true;
+                };
+                return RetryResult::RETRY;
+            },
+            1.5f);               
     }
     
     void RATGDOComponent::query_openings()
@@ -440,7 +463,7 @@ namespace ratgdo {
         this->query_status();
     }
 
-    //TODO does gdo send status that door is closing???
+    //TODO does gdo send status that door is closing, yes it does
     void RATGDOComponent::close_with_alert()
     {
         if(*this->door_state == DoorState::CLOSED) {
@@ -467,7 +490,6 @@ namespace ratgdo {
     void RATGDOComponent::turn_ttc_off()
     {
         send_command(Command::TTC_CANCEL, data::TTC_CANCEL_OFF);
-        this->ttc_time_seconds=0;
     }
 
     void RATGDOComponent::ttc_toggle_hold()
@@ -529,22 +551,7 @@ namespace ratgdo {
     {
         // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
-
-        set_retry(
-            500, 10, [=](uint8_t r) {
-                if (*this->door_state != DoorState::UNKNOWN) { // GET_STATUS succeeded
-                    this->query_status();  //Get openings and TTC settings to initalize
-                    return RetryResult::DONE;
-                } else {
-                    if (r == 0) { // failed to sync probably rolling counter is wrong, notify
-                        ESP_LOGD(TAG, "Triggering sync failed actions.");
-                        this->sync_failed = true;
-                    };
-                    this->send_command(Command::GET_STATUS);
-                    return RetryResult::RETRY;
-                }
-            },
-            1.5f);
+        query_status();
     }
 
     void RATGDOComponent::open_door()
