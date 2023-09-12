@@ -59,8 +59,8 @@ namespace ratgdo {
         const uint32_t DOOR_STOP = 3;
 
         const uint32_t TTC_GET_DURATION= 1 ;
-        const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic button pad
-        const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic button pad
+        const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic wall pad
+        const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic wall pad
 
         const uint32_t GET_EXT_STATUS = 1;
     }

@@ -260,7 +260,6 @@ namespace ratgdo {
                 ESP_LOGD(TAG, "TTC: Auto Hold Toggled");
             } else if (byte1 == 0x05) {
                 ESP_LOGD(TAG, "TTC: Disabled");
-                this->ttc_time_seconds=0;
             } else {
                 ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
             }
@@ -275,7 +274,13 @@ namespace ratgdo {
             } else if ( (byte1 & 0b00000111) == 0b00000100) {
                 ESP_LOGD(TAG, "TTC is enabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } 
+            } else if ( (byte1 & 0b00000111) == 0b00000101) {
+                ESP_LOGW(TAG, "TTC closing was interrupted!  101");
+                this->hold_state = HoldState::HOLD_DISABLED;
+            } else if ( (byte1 & 0b00000111) == 0b00000110) {
+                ESP_LOGW(TAG, "TTC closing was interrupted!  110");
+                this->hold_state = HoldState::HOLD_DISABLED;
+            }
         }            
 
         return cmd;
@@ -463,7 +468,8 @@ namespace ratgdo {
         this->query_status();
     }
 
-    //TODO does gdo send status that door is closing, yes it does
+    //TODO test behavior if TTC closing is interrupted by obstruction sensor activation
+    //TODO close with alert seems to get ignored right after opening door
     void RATGDOComponent::close_with_alert()
     {
         if(*this->door_state == DoorState::CLOSED) {
