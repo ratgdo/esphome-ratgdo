@@ -20,7 +20,7 @@ namespace ratgdo {
 
     protected:
         RATGDOSelectType ratgdo_select_type_;
-        void control(const std::string &value);
+        void control(const std::string& value);
     };
 
 } // namespace ratgdo

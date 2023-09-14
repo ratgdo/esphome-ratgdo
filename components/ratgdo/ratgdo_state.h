@@ -39,7 +39,7 @@ namespace ratgdo {
         (LOCKED, 1),
         (UNKNOWN, 2))
     LockState lock_state_toggle(LockState state);
-    
+
     /// Enum for all states the TTC hold open can be in.
     ENUM(HoldState, uint8_t,
         (HOLD_DISABLED, 0),

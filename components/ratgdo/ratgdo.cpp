@@ -148,15 +148,15 @@ namespace ratgdo {
                 this->door_position = 1.0;
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
-                if(this->restore_ttc_) {
-                    //GET_OPENINGS is sent when door closes, delay this tx
+                if (this->restore_ttc_) {
+                    // GET_OPENINGS is sent when door closes, delay this tx
                     set_timeout(100, [=] {
                         if (*this->ttc_time_seconds == 0) {
                             this->turn_ttc_off();
                         } else {
                             this->set_ttc_sec(*ttc_time_seconds);
                         }
-                    } );
+                    });
                     this->restore_ttc_ = false;
                 }
             } else {
@@ -169,7 +169,7 @@ namespace ratgdo {
                 this->position_sync_while_opening(1.0 - *this->door_position);
                 this->moving_to_position = true;
             }
-            if (door_state == DoorState::CLOSING && !this->moving_to_position) {  
+            if (door_state == DoorState::CLOSING && !this->moving_to_position) {
                 this->position_sync_while_closing(*this->door_position);
                 this->moving_to_position = true;
             }
@@ -243,15 +243,15 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Time to close (TTC) set to: %ds", seconds);
             query_status_flags_ |= QSF_TCC_DUR;
             if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
-                this->ttc_time_seconds=seconds;
+                this->ttc_time_seconds = seconds;
             } else if (seconds != 1) {
-                this->ttc_time_seconds=0;
+                this->ttc_time_seconds = 0;
                 ESP_LOGW(TAG, "Unsupported TTC time: %ds", seconds);
             }
-            if(this->restore_hold_state_  == true && this->restore_ttc_ == false) {
+            if (this->restore_hold_state_ == true && this->restore_ttc_ == false) {
                 this->hold_enable();
-                this->restore_hold_state_  = false;
-            } 
+                this->restore_hold_state_ = false;
+            }
         } else if (cmd == Command::TTC_COUNTDOWN) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "(TTC) door will close in: %ds", seconds);
@@ -265,23 +265,23 @@ namespace ratgdo {
             }
         } else if (cmd == Command::EXT_STATUS) {
             query_status_flags_ |= QSF_EXT_STATUS;
-            if ( (byte1 & 0b00000111) == 0b00000001) {
+            if ((byte1 & 0b00000111) == 0b00000001) {
                 ESP_LOGD(TAG, "TTC is disabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ( (byte1 & 0b00000111) == 0b00000010) {
+            } else if ((byte1 & 0b00000111) == 0b00000010) {
                 ESP_LOGD(TAG, "TTC is enabled but in Hold Open.");
                 this->hold_state = HoldState::HOLD_ENABLED;
-            } else if ( (byte1 & 0b00000111) == 0b00000100) {
+            } else if ((byte1 & 0b00000111) == 0b00000100) {
                 ESP_LOGD(TAG, "TTC is enabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ( (byte1 & 0b00000111) == 0b00000101) {
+            } else if ((byte1 & 0b00000111) == 0b00000101) {
                 ESP_LOGW(TAG, "TTC closing was interrupted!  101");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ( (byte1 & 0b00000111) == 0b00000110) {
+            } else if ((byte1 & 0b00000111) == 0b00000110) {
                 ESP_LOGW(TAG, "TTC closing was interrupted!  110");
                 this->hold_state = HoldState::HOLD_DISABLED;
             }
-        }            
+        }
 
         return cmd;
     }
@@ -367,7 +367,7 @@ namespace ratgdo {
         const long PULSES_LOWER_LIMIT = 3;
 
         if (current_millis - last_millis > CHECK_PERIOD) {
-            // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
+            // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
             //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
             //     current_millis - last_asleep
             // );
@@ -438,21 +438,21 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        query_status_flags_ = 0;        
+        query_status_flags_ = 0;
 
         set_retry(
             750, 10, [=](uint8_t r) {
-                //Once a new message is returned for each status then query_status has completed successfully
-                if(query_status_flags_ == (QSF_STATUS | QSF_EXT_STATUS | QSF_TCC_DUR | QSF_OPENINGS) ) {
+                // Once a new message is returned for each status then query_status has completed successfully
+                if (query_status_flags_ == (QSF_STATUS | QSF_EXT_STATUS | QSF_TCC_DUR | QSF_OPENINGS)) {
                     ESP_LOGD(TAG, "query_status completed successfully");
-                    return RetryResult::DONE;                    
+                    return RetryResult::DONE;
                 }
-                ESP_LOGD(TAG, "query_status retry %d" , 10-r);
-                //on each retry, queue up a request to GET_ each status item
+                ESP_LOGD(TAG, "query_status retry %d", 10 - r);
+                // on each retry, queue up a request to GET_ each status item
                 send_command(Command::GET_STATUS);
-                set_timeout(150, [=] {this->send_command(Command::GET_EXT_STATUS, data::GET_EXT_STATUS);} );
-                set_timeout(300, [=] {this->send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);} );
-                set_timeout(450, [=] {this->send_command(Command::GET_OPENINGS);} ); 
+                set_timeout(150, [=] { this->send_command(Command::GET_EXT_STATUS, data::GET_EXT_STATUS); });
+                set_timeout(300, [=] { this->send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION); });
+                set_timeout(450, [=] { this->send_command(Command::GET_OPENINGS); });
 
                 if (r == 0) { // failed to sync probably rolling counter is wrong, notify
                     ESP_LOGD(TAG, "Triggering sync failed actions.");
@@ -460,37 +460,37 @@ namespace ratgdo {
                 };
                 return RetryResult::RETRY;
             },
-            1.5f);               
+            1.5f);
     }
-    
+
     void RATGDOComponent::query_openings()
     {
         this->query_status();
     }
 
-    //TODO test behavior if TTC closing is interrupted by obstruction sensor activation
-    //TODO close with alert seems to get ignored right after opening door
+    // TODO test behavior if TTC closing is interrupted by obstruction sensor activation
+    // TODO close with alert seems to get ignored right after opening door
     void RATGDOComponent::close_with_alert()
     {
-        if(*this->door_state == DoorState::CLOSED) {
+        if (*this->door_state == DoorState::CLOSED) {
             ESP_LOGW(TAG, "close_with_alert door already closed!");
             return;
         }
 
-        if(*this->door_state == DoorState::OPEN) {
-            if(*this->hold_state == HoldState::HOLD_ENABLED) {
-                this->restore_hold_state_  = true;
+        if (*this->door_state == DoorState::OPEN) {
+            if (*this->hold_state == HoldState::HOLD_ENABLED) {
+                this->restore_hold_state_ = true;
             }
-            //SET_TTC closes door in 1 second with builtin gdo alert
+            // SET_TTC closes door in 1 second with builtin gdo alert
             set_ttc_sec(1);
-            this->restore_ttc_  = true;
+            this->restore_ttc_ = true;
             return;
         }
 
-        //If not opened or closed, open the door and que to retry TTC every 1/2 second
-        //TTC only works with door fully open
+        // If not opened or closed, open the door and que to retry TTC every 1/2 second
+        // TTC only works with door fully open
         open_door();
-        set_timeout(500, [=] {this->close_with_alert();} );
+        set_timeout(500, [=] { this->close_with_alert(); });
     }
 
     void RATGDOComponent::turn_ttc_off()
@@ -507,7 +507,6 @@ namespace ratgdo {
     {
         send_command(Command::TTC_SET_DURATION, (duration & 0xff) << 16 | (duration & 0xff00) | 0x01);
     }
-
 
     /************************* DOOR COMMUNICATION *************************/
     /*
@@ -744,17 +743,17 @@ namespace ratgdo {
         this->send_command(Command::LOCK, data::LOCK_TOGGLE);
     }
 
-    // Hold functions  
+    // Hold functions
     void RATGDOComponent::hold_enable()
     {
-        if(*(this->hold_state) == HoldState::HOLD_DISABLED) {
+        if (*(this->hold_state) == HoldState::HOLD_DISABLED) {
             this->toggle_hold();
         }
     }
 
     void RATGDOComponent::hold_disable()
     {
-        if(*(this->hold_state) == HoldState::HOLD_ENABLED) {
+        if (*(this->hold_state) == HoldState::HOLD_ENABLED) {
             this->toggle_hold();
         }
     }
@@ -763,7 +762,7 @@ namespace ratgdo {
     {
         this->hold_state = hold_state_toggle(*this->hold_state);
         this->send_command(Command::TTC_CANCEL, data::TTC_CANCEL_TOGGLE_HOLD);
-    }    
+    }
 
     LightState RATGDOComponent::get_light_state() const
     {
@@ -812,7 +811,7 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_ttc_seconds(std::function<void(uint16_t)>&& f)
     {
         this->ttc_time_seconds.subscribe([=](uint16_t state) { defer("ttc_time", [=] { f(state); }); });
-    }    
+    }
     void RATGDOComponent::subscribe_obstruction_state(std::function<void(ObstructionState)>&& f)
     {
         this->obstruction_state.subscribe([=](ObstructionState state) { defer("obstruction_state", [=] { f(state); }); });

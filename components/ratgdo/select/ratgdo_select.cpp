@@ -28,7 +28,7 @@ namespace ratgdo {
         });
     }
 
-    void RATGDOSelect::control(const std::string &value) 
+    void RATGDOSelect::control(const std::string& value)
     {
         if (value.compare("Off") == 0) {
             this->parent_->turn_ttc_off();

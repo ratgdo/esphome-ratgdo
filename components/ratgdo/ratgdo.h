@@ -24,11 +24,11 @@ extern "C" {
 #include "secplus.h"
 }
 
-//query_status_flags 
-#define QSF_STATUS     0b0000001
+// query_status_flags
+#define QSF_STATUS 0b0000001
 #define QSF_EXT_STATUS 0b0000010
-#define QSF_TCC_DUR    0b0000100
-#define QSF_OPENINGS   0b0001000
+#define QSF_TCC_DUR 0b0000100
+#define QSF_OPENINGS 0b0001000
 
 #include "ratgdo_state.h"
 
@@ -58,9 +58,9 @@ namespace ratgdo {
         const uint32_t DOOR_TOGGLE = 2;
         const uint32_t DOOR_STOP = 3;
 
-        const uint32_t TTC_GET_DURATION= 1 ;
-        const uint32_t TTC_CANCEL_OFF = 0x000501;  //Unknown meaning for these bytes, mimic wall pad
-        const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401;  //Unknown meaning for these bytes, mimic wall pad
+        const uint32_t TTC_GET_DURATION = 1;
+        const uint32_t TTC_CANCEL_OFF = 0x000501; // Unknown meaning for these bytes, mimic wall pad
+        const uint32_t TTC_CANCEL_TOGGLE_HOLD = 0x000401; // Unknown meaning for these bytes, mimic wall pad
 
         const uint32_t GET_EXT_STATUS = 1;
     }
@@ -68,9 +68,9 @@ namespace ratgdo {
     ENUM(Command, uint16_t,
         (UNKNOWN, 0x000),
 
-        (GET_STATUS, 0x080),  
-        (STATUS, 0x081),  
-        (GET_EXT_STATUS, 0x0a0),  //Extended status has TTC state in bit0 to bit2 of byte1. Bit3 has something but not sure what it is
+        (GET_STATUS, 0x080),
+        (STATUS, 0x081),
+        (GET_EXT_STATUS, 0x0a0), // Extended status has TTC state in bit0 to bit2 of byte1. Bit3 has something but not sure what it is
         (EXT_STATUS, 0x0a1),
 
         (OBST_1, 0x084), // sent when an obstruction happens?
@@ -88,9 +88,9 @@ namespace ratgdo {
         (PING_RESP, 0x393),
 
         (TTC_GET_DURATION, 0x400),
-        (TTC_DURATION, 0x401),  //data appears to contain the current TTC setting in gdo
+        (TTC_DURATION, 0x401), // data appears to contain the current TTC setting in gdo
         (TTC_SET_DURATION, 0x402), // Set time to close in seconds = (byte1<<8)+byte2
-        (TTC_CANCEL, 0x408), //OFF or TOGGLE_HOLD are options in data
+        (TTC_CANCEL, 0x408), // OFF or TOGGLE_HOLD are options in data
         (TTC_COUNTDOWN, 0x40a), // Time to close countdown in seconds
 
         (GET_OPENINGS, 0x48b),
@@ -103,7 +103,7 @@ namespace ratgdo {
     struct RATGDOStore {
         int obstruction_low_count = 0; // count obstruction low pulses
 
-        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg) 
+        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg)
         {
             arg->obstruction_low_count++;
         }
@@ -131,7 +131,7 @@ namespace ratgdo {
         observable<LightState> light_state { LightState::UNKNOWN };
         observable<LockState> lock_state { LockState::UNKNOWN };
         observable<HoldState> hold_state { HoldState::UNKNOWN };
-        observable<uint16_t> ttc_time_seconds { 0xFFFF };        
+        observable<uint16_t> ttc_time_seconds { 0xFFFF };
         observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
         observable<MotorState> motor_state { MotorState::UNKNOWN };
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
@@ -184,17 +184,16 @@ namespace ratgdo {
         // hold
         void toggle_hold();
         void hold_enable();
-        void hold_disable();        
+        void hold_disable();
 
-        //TTC
+        // TTC
         void turn_ttc_off();
         void ttc_toggle_hold();
         void set_ttc_sec(uint16_t duration);
 
         // button functionality
         void query_status();
-        [[deprecated("query_status() now requests the opening count.")]]
-        void query_openings();
+        [[deprecated("query_status() now requests the opening count.")]] void query_openings();
         void sync();
         void close_with_alert();
 
@@ -225,7 +224,7 @@ namespace ratgdo {
         bool obstruction_from_status_ { false };
         bool restore_ttc_ { false };
         bool restore_hold_state_ { false };
-        
+
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;

@@ -43,7 +43,7 @@ namespace ratgdo {
         default:
             return HoldState::UNKNOWN;
         }
-    }    
+    }
 
 } // namespace ratgdo
 } // namespace esphome
