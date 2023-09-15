@@ -257,29 +257,28 @@ namespace ratgdo {
             ESP_LOGD(TAG, "(TTC) door will close in: %ds", seconds);
         } else if (cmd == Command::TTC_CANCEL) {
             if (byte1 == 0x04) {
-                ESP_LOGD(TAG, "TTC: Auto Hold Toggled");
+                ESP_LOGD(TAG, "TTC: Auto Hold Toggle Request");
             } else if (byte1 == 0x05) {
-                ESP_LOGD(TAG, "TTC: Disabled");
+                ESP_LOGD(TAG, "TTC: Disable Request");
             } else {
-                ESP_LOGD(TAG, "TTC_CANCEL: Unknown Data");
+                ESP_LOGW(TAG, "TTC_CANCEL: Unknown Data");
             }
         } else if (cmd == Command::EXT_STATUS) {
             query_status_flags_ |= QSF_EXT_STATUS;
-            if ((byte1 & 0b00000111) == 0b00000001) {
+            if (byte1 == 0x09) {
                 ESP_LOGD(TAG, "TTC is disabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ((byte1 & 0b00000111) == 0b00000010) {
+                this->ttc_time_seconds = 0;
+            } else if (byte1 == 0x0a) {
                 ESP_LOGD(TAG, "TTC is enabled but in Hold Open.");
                 this->hold_state = HoldState::HOLD_ENABLED;
-            } else if ((byte1 & 0b00000111) == 0b00000100) {
+            } else if (byte1 == 0x0c || byte1 == 0x01) {
                 ESP_LOGD(TAG, "TTC is enabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ((byte1 & 0b00000111) == 0b00000101) {
-                ESP_LOGW(TAG, "TTC closing was interrupted!  101");
-                this->hold_state = HoldState::HOLD_DISABLED;
-            } else if ((byte1 & 0b00000111) == 0b00000110) {
-                ESP_LOGW(TAG, "TTC closing was interrupted!  110");
-                this->hold_state = HoldState::HOLD_DISABLED;
+            } else if (byte1 == 0x0d || byte1 == 0x0e) {
+                ESP_LOGW(TAG, "TTC closing was interrupted!");
+            } else if (byte1 == 0x0b) {
+                ESP_LOGD(TAG, "TTC closing now");
             }
         }
 
