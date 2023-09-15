@@ -31,17 +31,13 @@ namespace ratgdo {
     void RATGDOSelect::control(const std::string& value)
     {
         if (value.compare("Off") == 0) {
-            this->parent_->turn_ttc_off();
-            this->publish_state(value);
+            defer("ttc control", [=] { this->parent_->turn_ttc_off(); });
         } else if (value.compare("1 Minute") == 0) {
-            this->parent_->set_ttc_sec(60);
-            this->publish_state(value);
+            defer("ttc select publish", [=] { this->parent_->set_ttc_sec(60); });
         } else if (value.compare("5 Minutes") == 0) {
-            this->parent_->set_ttc_sec(300);
-            this->publish_state(value);
+            defer("ttc select publish", [=] { this->parent_->set_ttc_sec(300); });
         } else if (value.compare("10 Minutes") == 0) {
-            this->parent_->set_ttc_sec(600);
-            this->publish_state(value);
+            defer("ttc select publish", [=] { this->parent_->set_ttc_sec(600); });
         } else {
             ESP_LOGW(TAG, "Invalid value %s", value.c_str());
         }
