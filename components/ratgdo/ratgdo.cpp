@@ -436,30 +436,34 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
-        this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
+        auto sync_step = [=]() {
+            if (*this->door_state == DoorState::UNKNOWN) {
+                this->send_command(Command::GET_STATUS);
+                return RetryResult::RETRY;
+            }
+            if (*this->openings == 0) {
+                this->send_command(Command::GET_OPENINGS);
+                return RetryResult::RETRY;
+            }
+            return RetryResult::DONE;
+        };
 
+        const uint8_t MAX_ATTEMPTS = 10;
         set_retry(
-            500, 10, [=](uint8_t r) {
-                if (*this->door_state != DoorState::UNKNOWN) { // have status
-                    if (*this->openings != 0) { // have openings
-                        return RetryResult::DONE;
-                    } else {
-                        if (r == 0) { // failed to sync probably rolling counter is wrong, notify
-                            ESP_LOGD(TAG, "Triggering sync failed actions.");
-                            this->sync_failed = true;
-                        };
-                        this->send_command(Command::GET_OPENINGS);
-                        return RetryResult::RETRY;
+            500, MAX_ATTEMPTS, [=](uint8_t r) {
+                auto result = sync_step();
+                if (result == RetryResult::RETRY) {
+                    if (r == MAX_ATTEMPTS-2 && *this->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
+                        // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
+                        this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
                     }
-                } else {
-                    if (r == 0) { // failed to sync probably rolling counter is wrong, notify
+                    if (r == 0) {
+                        // this was last attempt, notify of sync failure
                         ESP_LOGD(TAG, "Triggering sync failed actions.");
                         this->sync_failed = true;
-                    };
-                    this->send_command(Command::GET_STATUS);
-                    return RetryResult::RETRY;
+                    }
                 }
+                return result;
             },
             1.5f);
     }
