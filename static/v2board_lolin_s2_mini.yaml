@@ -2,14 +2,14 @@
 substitutions:
   id_prefix: ratgdov2
   friendly_name: "RATGDOv2"
-  uart_tx_pin: D4
-  uart_rx_pin: D2
-  input_obst_pin: D7
-  status_door_pin: D0
-  status_obstruction_pin: D8
-  dry_contact_open_pin: D5
-  dry_contact_close_pin: D6
-  dry_contact_light_pin: D3
+  uart_tx_pin: 16
+  uart_rx_pin: 33
+  input_obst_pin: 11
+  status_door_pin: 5
+  status_obstruction_pin: 12
+  dry_contact_open_pin: 7
+  dry_contact_close_pin: 9
+  dry_contact_light_pin: 18
 
 web_server:
 
