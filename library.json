@@ -5,11 +5,11 @@
     "keywords": "ratgdo, esphome",
     "repository": {
         "type": "git",
-        "url": "https://github.com/ratgdo/esphome-ratgdo"
+        "url": "https://github.com/rako77/esphome-ratgdo"
     },
     "authors": [],
     "license": "GPLv3",
-    "homepage": "https://github.com/esphome-ratgdo/esphome-esphome",
+    "homepage": "https://github.com/rako77/esphome-esphome",
     "dependencies": {
         "secplus": "*"
     },
