@@ -1,4 +1,4 @@
-name: Main
+name: Build
 
 on:
   workflow_dispatch:
@@ -75,7 +75,6 @@ jobs:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: consolidate
-    
     permissions:
       pages: write
       id-token: write
@@ -85,8 +84,6 @@ jobs:
     steps:
       - name: Setup Pages
         uses: actions/configure-pages@v2
-        with:
-          enablement: true
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v1.2.3
