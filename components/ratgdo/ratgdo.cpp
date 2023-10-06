@@ -51,6 +51,7 @@ namespace ratgdo {
             this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
         }
         this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
+        this->sw_serial_.enableIntTx(false);
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
@@ -390,15 +391,6 @@ namespace ratgdo {
         send_command(Command::GET_OPENINGS);
     }
 
-    /************************* DOOR COMMUNICATION *************************/
-    /*
-     * Transmit a message to the door opener over uart1
-     * The TX1 pin is controlling a transistor, so the logic is inverted
-     * A HIGH state on TX1 will pull the 12v line LOW
-     *
-     * The opener requires a specific duration low/high pulse before it will accept
-     * a message
-     */
     void RATGDOComponent::send_command(Command command, uint32_t data, bool increment)
     {
         if (!this->transmit_pending_) { // have an untransmitted packet
@@ -420,15 +412,17 @@ namespace ratgdo {
                 this->transmit_pending_ = true;
                 return false;
             }
-            delayMicroseconds(200);
+            delayMicroseconds(100);
         }
 
-        this->output_gdo_pin_->digital_write(true); // pull the line high for 1305 micros so the
-                                                    // door opener responds to the message
-        delayMicroseconds(1305);
-        this->output_gdo_pin_->digital_write(false); // bring the line low
+        // indicate the start of a frame by pulling the 12V line low for at leat 1 byte followed by
+        // one STOP bit, which indicates to the receiving end that the start of the message follows
+        // The output pin is controlling a transistor, so the logic is inverted
+        this->output_gdo_pin_->digital_write(true); // pull the line low for at least 1 byte
+        delayMicroseconds(1300);
+        this->output_gdo_pin_->digital_write(false); // line high for at least 1 bit
+        delayMicroseconds(130);
 
-        delayMicroseconds(1260); // "LOW" pulse duration before the message start
         this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
         this->transmit_pending_ = false;
         return true;
