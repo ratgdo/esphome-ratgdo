@@ -5,7 +5,6 @@ external_components:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
-    ref: enable_tx_int_false
 
 preferences:
   flash_write_interval: 5s
