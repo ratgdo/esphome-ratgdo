@@ -146,7 +146,6 @@ namespace ratgdo {
                 }
             }
 
-
             if (door_state == DoorState::OPENING) {
                 // door started opening
                 if (prev_door_state == DoorState::CLOSING) {
@@ -166,9 +165,7 @@ namespace ratgdo {
                 set_timeout("door_status_update", (*this->opening_duration + 1) * 1000, [=]() {
                     this->send_command(Command::GET_STATUS);
                 });
-            }
-
-            if (door_state == DoorState::CLOSING) {
+            } else if (door_state == DoorState::CLOSING) {
                 // door started closing
                 if (prev_door_state == DoorState::OPENING) {
                     this->door_position_update();
@@ -187,26 +184,20 @@ namespace ratgdo {
                 set_timeout("door_status_update", (*this->closing_duration + 1) * 1000, [=]() {
                     this->send_command(Command::GET_STATUS);
                 });
-            }
-
-            if (door_state == DoorState::STOPPED) {
+            } else if (door_state == DoorState::STOPPED) {
                 this->door_position_update();
                 if (*this->door_position == DOOR_POSITION_UNKNOWN) {
                     this->door_position = 0.5; // best guess
                 }
                 this->cancel_position_sync_callbacks();
-            } 
-            
-            if (door_state == DoorState::OPEN) {
+            } else if (door_state == DoorState::OPEN) {
                 this->door_position = 1.0;
                 this->cancel_position_sync_callbacks();
-            }
-            
-            if (door_state == DoorState::CLOSED) {
+            } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
                 this->cancel_position_sync_callbacks();
             }
-        
+
             this->door_state = door_state;
             this->light_state = static_cast<LightState>((byte2 >> 1) & 1); // safe because it can only be 0 or 1
             this->lock_state = static_cast<LockState>(byte2 & 1); // safe because it can only be 0 or 1
@@ -273,26 +264,26 @@ namespace ratgdo {
 
     void RATGDOComponent::schedule_door_position_sync(float update_period)
     {
-        ESP_LOGD(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d", 
+        ESP_LOGD(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
             this->door_move_delta, this->door_start_position, this->door_start_moving);
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
-        auto count = int(1000*duration*this->door_move_delta/update_period);
+        auto count = int(1000 * duration * this->door_move_delta / update_period);
         set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
             ESP_LOGV(TAG, "Position sync: %d: ", r);
             this->door_position_update();
             return RetryResult::RETRY;
-        });        
+        });
     }
 
     void RATGDOComponent::door_position_update()
     {
-        if (this->door_start_moving == 0 || this->door_start_position==DOOR_POSITION_UNKNOWN || this->door_move_delta==DOOR_DELTA_UNKNOWN) {
+        if (this->door_start_moving == 0 || this->door_start_position == DOOR_POSITION_UNKNOWN || this->door_move_delta == DOOR_DELTA_UNKNOWN) {
             return;
         }
 
         auto now = millis();
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
-        auto position = this->door_start_position + (now - this->door_start_moving) / (1000*duration);
+        auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
         ESP_LOGD(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
     }
@@ -377,7 +368,7 @@ namespace ratgdo {
         const long PULSES_LOWER_LIMIT = 3;
 
         if (current_millis - last_millis > CHECK_PERIOD) {
-            // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld", 
+            // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
             //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
             //     current_millis - last_asleep
             // );
@@ -483,7 +474,7 @@ namespace ratgdo {
 
         ESP_LOG2(TAG, "Sending packet");
         this->print_packet(this->tx_packet_);
-        
+
         // indicate the start of a frame by pulling the 12V line low for at leat 1 byte followed by
         // one STOP bit, which indicates to the receiving end that the start of the message follows
         // The output pin is controlling a transistor, so the logic is inverted
@@ -516,7 +507,7 @@ namespace ratgdo {
             500, MAX_ATTEMPTS, [=](uint8_t r) {
                 auto result = sync_step();
                 if (result == RetryResult::RETRY) {
-                    if (r == MAX_ATTEMPTS-2 && *this->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
+                    if (r == MAX_ATTEMPTS - 2 && *this->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
                         // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
                         this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
                     }
