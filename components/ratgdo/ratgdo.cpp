@@ -264,12 +264,11 @@ namespace ratgdo {
 
     void RATGDOComponent::schedule_door_position_sync(float update_period)
     {
-        ESP_LOGD(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
+        ESP_LOG1(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
             this->door_move_delta, this->door_start_position, this->door_start_moving);
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : *this->closing_duration;        
         auto count = int(1000 * duration / update_period);
         set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
-            ESP_LOGV(TAG, "Position sync: %d: ", r);
             this->door_position_update();
             return RetryResult::RETRY;
         });
@@ -280,11 +279,10 @@ namespace ratgdo {
         if (this->door_start_moving == 0 || this->door_start_position == DOOR_POSITION_UNKNOWN || this->door_move_delta == DOOR_DELTA_UNKNOWN) {
             return;
         }
-
         auto now = millis();
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
         auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
-        ESP_LOGD(TAG, "[%d] Position update: %f", now, position);
+        ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
     }
 
