@@ -525,7 +525,6 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             return; // gets ignored by opener
         }
-        this->cancel_position_sync_callbacks();
 
         this->door_command(data::DOOR_OPEN);
     }
@@ -535,7 +534,6 @@ namespace ratgdo {
         if (*this->door_state == DoorState::CLOSING || *this->door_state == DoorState::OPENING) {
             return; // gets ignored by opener
         }
-        this->cancel_position_sync_callbacks();
 
         this->door_command(data::DOOR_CLOSE);
     }
@@ -554,7 +552,6 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             return; // gets ignored by opener
         }
-        this->cancel_position_sync_callbacks();
 
         this->door_command(data::DOOR_TOGGLE);
     }
