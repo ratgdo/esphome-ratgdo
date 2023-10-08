@@ -4,8 +4,8 @@ external_components:
   - source:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
+      ref: door_position_sync
     refresh: 1s
-    ref: door_position_sync
 
 preferences:
   flash_write_interval: 5s
