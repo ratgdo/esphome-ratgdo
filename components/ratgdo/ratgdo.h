@@ -36,6 +36,7 @@ namespace ratgdo {
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
+    const float DOOR_DELTA_UNKNOWN = -2.0;
 
     namespace data {
         const uint32_t LIGHT_OFF = 0;
@@ -64,7 +65,7 @@ namespace ratgdo {
 
         (LEARN_2, 0x181),
         (LOCK, 0x18c),
-        (OPEN, 0x280),
+        (DOOR_ACTION, 0x280),
         (LIGHT, 0x281),
         (MOTOR_ON, 0x284),
         (MOTION, 0x285),
@@ -88,7 +89,7 @@ namespace ratgdo {
     struct RATGDOStore {
         int obstruction_low_count = 0; // count obstruction low pulses
 
-        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg) 
+        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg)
         {
             arg->obstruction_low_count++;
         }
@@ -111,7 +112,10 @@ namespace ratgdo {
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        bool moving_to_position { false };
+
+        unsigned long door_start_moving { 0 };
+        float door_start_position { DOOR_POSITION_UNKNOWN };
+        float door_move_delta { DOOR_DELTA_UNKNOWN };
 
         observable<LightState> light_state { LightState::UNKNOWN };
         observable<LockState> lock_state { LockState::UNKNOWN };
@@ -146,12 +150,12 @@ namespace ratgdo {
         void close_door();
         void stop_door();
         void door_move_to_position(float position);
-        void position_sync_while_opening(float delta, float update_period = 500);
-        void position_sync_while_closing(float delta, float update_period = 500);
-        void cancel_position_sync_callbacks();
         void set_door_position(float door_position) { this->door_position = door_position; }
         void set_opening_duration(float duration);
         void set_closing_duration(float duration);
+        void schedule_door_position_sync(float update_period = 500);
+        void door_position_update();
+        void cancel_position_sync_callbacks();
 
         // light
         void toggle_light();
