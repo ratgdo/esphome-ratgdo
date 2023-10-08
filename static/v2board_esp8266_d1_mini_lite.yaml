@@ -33,6 +33,7 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
+    ref: door_position_sync
 
 # Sync time with Home Assistant.
 time:
