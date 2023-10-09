@@ -16,8 +16,8 @@
 
 #include "esphome/core/log.h"
 
-#define ESP_LOG1 ESP_LOGV
-#define ESP_LOG2 ESP_LOGV
+#define ESP_LOG1 ESP_LOGD
+#define ESP_LOG2 ESP_LOGD
 
 namespace esphome {
 namespace ratgdo {
@@ -275,8 +275,8 @@ namespace ratgdo {
         auto now = millis();
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
         auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
-        ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
+        ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
     }
 
     void RATGDOComponent::encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet)
@@ -397,6 +397,7 @@ namespace ratgdo {
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
                     ESP_LOG2(TAG, "Ignoring byte: %02X, baud: %d", ser_byte, this->sw_serial_.baudRate());
                     byte_count = 0;
+                    ESP_LOGD(TAG, "Ignoring serial byte %02X", ser_byte);
                     continue;
                 }
                 msg_start = ((msg_start << 8) | ser_byte) & 0xffffff;
@@ -614,7 +615,7 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::door_command(uint32_t data)
+    void RATGDOComponent::door_command_(uint32_t data)
     {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
@@ -651,6 +652,23 @@ namespace ratgdo {
         set_timeout("door_command_retry", delay, [=]() {
             this->ensure_door_command(data);
         });
+    }
+
+    void RATGDOComponent::door_command(uint32_t data)
+    {
+        if (this->stop_while_closing_workaround && data==data::DOOR_STOP && *this->door_state==DoorState::CLOSING) {
+            ESP_LOGD(TAG, "Using double toggle door stop");
+
+            this->door_command_(data::DOOR_TOGGLE);
+            this->door_state_received.then([=](DoorState s) {
+                if (s==DoorState::OPENING) {
+                    this->door_command(data::DOOR_TOGGLE);
+                }
+            });
+        } else {
+            ESP_LOGD(TAG, "Door command: %X", data);
+            this->door_command_(data);
+        }
     }
 
     void RATGDOComponent::light_on()

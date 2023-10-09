@@ -58,6 +58,18 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
+  - platform: template
+    id: ${id_prefix}_stop_while_closing_workaround
+    entity_category: config
+    name: "Stop while closing workaround"
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    turn_on_action:
+      - lambda: |-
+          id(${id_prefix})->set_stop_while_closing_workaround(true);
+    turn_off_action:
+      - lambda: |-
+          id(${id_prefix})->set_stop_while_closing_workaround(false);
 
 binary_sensor:
   - platform: ratgdo
