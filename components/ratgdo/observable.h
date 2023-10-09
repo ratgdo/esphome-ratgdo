@@ -1,4 +1,7 @@
 #pragma once
+#include <vector>
+#include <functional>
+#include <utility>
 
 namespace esphome {
 namespace ratgdo {
