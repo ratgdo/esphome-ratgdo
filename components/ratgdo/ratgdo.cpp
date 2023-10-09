@@ -467,7 +467,6 @@ namespace ratgdo {
         this->query_status();
     }
 
-    // TODO test behavior if TTC closing is interrupted by obstruction sensor activation
     // TODO close with alert seems to get ignored right after opening door
     void RATGDOComponent::close_with_alert()
     {
