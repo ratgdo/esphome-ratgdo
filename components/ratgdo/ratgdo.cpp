@@ -620,9 +620,22 @@ namespace ratgdo {
     }
 
     void RATGDOComponent::ensure_door_command(uint32_t data, uint32_t delay)
-    {        
+    {
+        if (data == data::DOOR_TOGGLE) {
+            ESP_LOGW(TAG, "It's not recommended to use ensure_door_command with non-idempotent commands such as DOOR_TOGGLE");
+        }
+        auto prev_door_state = *this->door_state;
         this->door_state_received.then([=](DoorState s) {
-            // TODO: check door state is the expected one for command data?
+            if ((data == data::DOOR_STOP) && (s != DoorState::STOPPED) && !(prev_door_state == DoorState::OPENING && s == DoorState::OPEN) && !(prev_door_state == DoorState::CLOSING && s == DoorState::CLOSED)) {
+                return;
+            }
+            if (data == data::DOOR_OPEN && !(s == DoorState::OPENING || s == DoorState::OPEN)) {
+                return;
+            }
+            if (data == data::DOOR_CLOSE && !(s == DoorState::CLOSED || s == DoorState::CLOSING)) {
+                return;
+            }
+
             ESP_LOG1(TAG, "Received door status, cancel door command retry");
             cancel_timeout("door_command_retry");
         });
