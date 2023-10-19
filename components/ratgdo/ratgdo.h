@@ -13,6 +13,7 @@
 
 #pragma once
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
+#include "callbacks.h"
 #include "enum.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
@@ -124,6 +125,9 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
 
+        OnceCallbacks<void(DoorState)> door_state_received;
+        OnceCallbacks<void()> command_sent;
+
         observable<bool> sync_failed { false };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
@@ -136,6 +140,7 @@ namespace ratgdo {
         uint16_t decode_packet(const WirePacket& packet);
         void obstruction_loop();
         void send_command(Command command, uint32_t data = 0, bool increment = true);
+        void send_command(Command command, uint32_t data, bool increment, std::function<void()>&& on_sent);
         bool transmit_packet();
         void encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet);
         void print_packet(const WirePacket& packet) const;
@@ -145,6 +150,7 @@ namespace ratgdo {
 
         // door
         void door_command(uint32_t data);
+        void ensure_door_command(uint32_t data, uint32_t delay = 1500);
         void toggle_door();
         void open_door();
         void close_door();
