@@ -44,7 +44,7 @@ switch:
   - platform: gpio
     id: "${id_prefix}_status_door"
     internal: true
-    pin: 
+    pin:
       number: ${status_door_pin}  # D0 output door status, HIGH for open, LOW for closed
       mode:
         output: true
@@ -53,7 +53,7 @@ switch:
   - platform: gpio
     id: "${id_prefix}_status_obstruction"
     internal: true
-    pin: 
+    pin:
       number: ${status_obstruction_pin}  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
       mode:
         output: true
@@ -82,7 +82,7 @@ binary_sensor:
     id: ${id_prefix}_button
     ratgdo_id: ${id_prefix}
     name: "Button"
-    entity_category: diagnostic      
+    entity_category: diagnostic
   - platform: ratgdo
     type: motor
     id: ${id_prefix}_motor
@@ -92,7 +92,7 @@ binary_sensor:
     entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
-    pin: 
+    pin:
       number: ${dry_contact_open_pin}  # D5 dry contact for opening door
       inverted: true
       mode:
@@ -108,12 +108,12 @@ binary_sensor:
             - cover.open: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
-    pin: 
+    pin:
       number: ${dry_contact_close_pin}  # D6 dry contact for closing door
       inverted: true
       mode:
         input: true
-        pullup: true    
+        pullup: true
     name: "Dry contact close"
     entity_category: diagnostic
     on_press:
@@ -124,12 +124,12 @@ binary_sensor:
             - cover.close: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
-    pin: 
+    pin:
       number: ${dry_contact_light_pin}  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
       inverted: true
       mode:
         input: true
-        pullup: true    
+        pullup: true
     name: "Dry contact light"
     entity_category: diagnostic
     on_press:
@@ -144,7 +144,7 @@ number:
     name: "Rolling code counter"
     mode: box
     unit_of_measurement: "codes"
-  
+
   - platform: ratgdo
     id: ${id_prefix}_opening_duration
     type: opening_duration
@@ -184,21 +184,21 @@ button:
   - platform: safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
-  
+
   - platform: template
     id: ${id_prefix}_query_status
     entity_category: diagnostic
     name: "Query status"
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
-          id($id_prefix).query_status();  
-  
+          id($id_prefix).query_status();
+
   - platform: template
     id: ${id_prefix}_query_openings
     name: "Query openings"
     entity_category: diagnostic
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
           id($id_prefix).query_openings();
@@ -207,7 +207,7 @@ button:
     id: ${id_prefix}_sync
     name: "Sync"
     entity_category: diagnostic
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
           id($id_prefix).sync();
@@ -215,7 +215,7 @@ button:
   - platform: template
     id: ${id_prefix}_toggle_door
     name: "Toggle door"
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
           id($id_prefix).toggle_door();
