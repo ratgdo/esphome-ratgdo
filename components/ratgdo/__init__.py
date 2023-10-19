@@ -89,6 +89,6 @@ async def to_code(config):
     )
     cg.add_library(
         name="espsoftwareserial",
-        repository="https://github.com/ratgdo/espsoftwareserial#ab5b32a2af3842aa0d124121ca074d2c6b12f666",
+        repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
         version=None,
     )
