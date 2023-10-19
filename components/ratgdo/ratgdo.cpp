@@ -55,6 +55,7 @@ namespace ratgdo {
         }
         this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
         this->sw_serial_.enableIntTx(false);
+        this->sw_serial_.enableAutoBaud(true);
 
         ESP_LOGV(TAG, "Syncing rolling code counter after reboot...");
 
@@ -400,6 +401,7 @@ namespace ratgdo {
 
                 // if we are at the start of a message, capture the next 16 bytes
                 if (msg_start == 0x550100) {
+                    ESP_LOG1(TAG, "Baud: %d", this->sw_serial_.baudRate());
                     rx_packet[0] = 0x55;
                     rx_packet[1] = 0x01;
                     rx_packet[2] = 0x00;

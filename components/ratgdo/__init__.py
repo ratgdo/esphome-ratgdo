@@ -84,11 +84,11 @@ async def to_code(config):
 
     cg.add_library(
         name="secplus",
-        repository="https://github.com/esphome-ratgdo/secplus",
-        version="f98c3220356c27717a25102c0b35815ebbd26ccc",
+        repository="https://github.com/ratgdo/secplus#f98c3220356c27717a25102c0b35815ebbd26ccc",
+        version=None,
     )
     cg.add_library(
         name="espsoftwareserial",
-        repository="https://github.com/esphome-ratgdo/espsoftwareserial",
-        version="2f408224633316b997f82339e5b2731b1e561060",
+        repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
+        version=None,
     )
