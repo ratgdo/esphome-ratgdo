@@ -2,7 +2,7 @@
 substitutions:
   id_prefix: ratgdov25
   friendly_name: "RATGDOv2.5"
-  uart_tx_pin: D1 
+  uart_tx_pin: D1
   uart_rx_pin: D2
   input_obst_pin: D7
   status_door_pin: D0
