@@ -312,7 +312,7 @@ namespace ratgdo {
     {
         ESP_LOGV(TAG, "Set client id to %d", client_id);
         // not sure how large remote_id can be, assuming not more than 24 bits
-        this->client_id = client_id & 0xffffff; 
+        this->client_id = client_id & 0xffffff;
     }
 
     void RATGDOComponent::increment_rolling_code_counter(int delta)
