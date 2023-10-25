@@ -87,7 +87,7 @@ namespace ratgdo {
             LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         }
         ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter);
-        ESP_LOGCONFIG(TAG, "  Client ID: %d", *this->client_id);		
+        ESP_LOGCONFIG(TAG, "  Client ID: %d", *this->client_id);
     }
 
     uint16_t RATGDOComponent::decode_packet(const WirePacket& packet)
