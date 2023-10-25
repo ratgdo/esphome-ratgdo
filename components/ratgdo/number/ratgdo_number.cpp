@@ -83,6 +83,7 @@ namespace ratgdo {
             this->parent_->set_client_id(value);
         }
         this->pref_.save(&value);
+    }
 
-    } // namespace ratgdo
+} // namespace ratgdo
 } // namespace esphome
