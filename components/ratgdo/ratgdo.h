@@ -180,7 +180,6 @@ namespace ratgdo {
         void sync();
 
         // children subscriptions
-        void subscribe_client_id(std::function<void(uint64_t)>&& f);
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
