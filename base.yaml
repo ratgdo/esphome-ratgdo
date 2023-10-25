@@ -137,14 +137,6 @@ binary_sensor:
 
 number:
   - platform: ratgdo
-    id: ${id_prefix}_client_id
-    type: client_id
-    entity_category: config
-    ratgdo_id: ${id_prefix}
-    name: "Client ID"
-    mode: box
-
-  - platform: ratgdo
     id: ${id_prefix}_rolling_code_counter
     type: rolling_code_counter
     entity_category: config
@@ -168,6 +160,14 @@ number:
     ratgdo_id: ${id_prefix}
     name: "Closing duration"
     unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_client_id
+    type: client_id
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Client ID"
+    mode: box
 
 cover:
   - platform: ratgdo
