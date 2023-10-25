@@ -205,7 +205,7 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        uint64_t client_id_;
+        uint64_t client_id_ { 0x539 };
 
     }; // RATGDOComponent
 
