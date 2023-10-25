@@ -133,8 +133,8 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        void set_remote_id(uint64_t remote_id) { this->remote_id_ = remote_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
-        uint64_t get_remote_id() { return this->remote_id_; }
+        void set_client_id(uint64_t client_id) { this->client_id_ = client_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
+        uint64_t get_client_id() { return this->client_id_; }
 
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
@@ -180,6 +180,7 @@ namespace ratgdo {
         void sync();
 
         // children subscriptions
+        void subscribe_client_id(std::function<void(uint32_t)>&& f);
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
@@ -206,7 +207,7 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        uint64_t remote_id_;
+        uint64_t client_id_;
 
     }; // RATGDOComponent
 

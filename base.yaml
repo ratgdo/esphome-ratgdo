@@ -14,7 +14,6 @@ ratgdo:
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
-  remote_id: 0x539
   on_sync_failed:
     then:
       - homeassistant.service:
@@ -136,6 +135,15 @@ binary_sensor:
       - light.toggle: ${id_prefix}_light
 
 number:
+  - platform: ratgdo
+    id: ${id_prefix}_client_id
+    type: client_id
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Client ID"
+    mode: box
+    unit_of_measurement: "codes"
+
   - platform: ratgdo
     id: ${id_prefix}_rolling_code_counter
     type: rolling_code_counter
