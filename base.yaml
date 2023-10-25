@@ -143,7 +143,6 @@ number:
     ratgdo_id: ${id_prefix}
     name: "Client ID"
     mode: box
-    unit_of_measurement: "codes"
 
   - platform: ratgdo
     id: ${id_prefix}_rolling_code_counter
