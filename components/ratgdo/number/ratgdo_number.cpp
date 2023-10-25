@@ -73,17 +73,16 @@ namespace ratgdo {
 
     void RATGDONumber::control(float value)
     {
-        if (this->number_type_ == RATGDO_CLIENT_ID) {
-            this->parent_->set_client_id(value);
-        } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->set_rolling_code_counter(value);
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             this->parent_->set_opening_duration(value);
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->set_closing_duration(value);
+        } else if (this->number_type_ == RATGDO_CLIENT_ID) {
+            this->parent_->set_client_id(value);
         }
         this->pref_.save(&value);
-    }
 
-} // namespace ratgdo
+    } // namespace ratgdo
 } // namespace esphome
