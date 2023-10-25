@@ -76,7 +76,7 @@ namespace ratgdo {
     void RATGDONumber::control(float value)
     {
         if (this->number_type_ == RATGDO_CLIENT_ID) {
-            this->parent_->set_rolling_code_counter(value);
+            this->parent_->set_client_id(value);
         } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->set_rolling_code_counter(value);
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
