@@ -103,7 +103,6 @@ namespace ratgdo {
         void dump_config() override;
 
         observable<uint32_t> rolling_code_counter { 0 };
-        observable<uint64_t> client_id { 0 };
 
         float start_opening { -1 };
         observable<float> opening_duration { 0 };
