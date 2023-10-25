@@ -101,7 +101,7 @@ namespace ratgdo {
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
 
-        if ((fixed & 0xfffffff) == this->client_id) { // my commands
+        if ((fixed & 0xfffffff) == *this->client_id) { // my commands
             ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return static_cast<uint16_t>(Command::UNKNOWN);
         } else {
@@ -279,7 +279,7 @@ namespace ratgdo {
     void RATGDOComponent::encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet)
     {
         auto cmd = static_cast<uint64_t>(command);
-        uint64_t fixed = ((cmd & ~0xff) << 24) | this->client_id;
+        uint64_t fixed = ((cmd & ~0xff) << 24) | *this->client_id;
         uint32_t send_data = (data << 8) | (cmd & 0xff);
 
         ESP_LOG2(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rolling_code_counter, fixed, send_data);
