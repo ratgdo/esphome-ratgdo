@@ -33,7 +33,6 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
-    ref: random-client-id
 
 # Sync time with Home Assistant.
 time:
