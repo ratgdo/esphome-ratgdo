@@ -134,6 +134,7 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
+        void set_client_id(uint64_t client_id) { this->client_id_ = client_id & 0xffffff; } // not sure how large client_id can be, assuming not more than 24 bits
 
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
@@ -146,7 +147,6 @@ namespace ratgdo {
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t code);
-        void set_client_id(uint64_t client_id);
 
         // door
         void door_command(uint32_t data);

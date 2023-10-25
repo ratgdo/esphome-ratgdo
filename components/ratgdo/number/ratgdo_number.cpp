@@ -35,11 +35,7 @@ namespace ratgdo {
         this->publish_state(value);
         this->control(value);
 
-        if (this->number_type_ == RATGDO_CLIENT_ID) {
-            this->parent_->subscribe_client_id([=](uint64_t value) {
-                this->update_state(value);
-            });
-        } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
                 this->update_state(value);
             });
