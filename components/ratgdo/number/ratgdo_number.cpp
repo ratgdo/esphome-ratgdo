@@ -62,8 +62,14 @@ namespace ratgdo {
             this->traits.set_min_value(0.0);
             this->traits.set_max_value(180.0);
         }
-        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER || this->number_type_ == RATGDO_CLIENT_ID) {
+        elif (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER)
+        {
             this->traits.set_max_value(0xfffffff);
+        }
+        elif (this->number_type_ == RATGDO_CLIENT_ID)
+        {
+            // not sure how large remote_id can be, assuming not more than 24 bits
+            this->traits.set_max_value(0xffffff);
         }
     }
 
