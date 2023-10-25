@@ -103,6 +103,7 @@ namespace ratgdo {
         void dump_config() override;
 
         observable<uint32_t> rolling_code_counter { 0 };
+        observable<uint64_t> client_id { 0 };
 
         float start_opening { -1 };
         observable<float> opening_duration { 0 };
@@ -133,8 +134,6 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        void set_client_id(uint64_t client_id) { this->client_id_ = client_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
-        uint64_t get_client_id() { return this->client_id_; }
 
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
@@ -147,6 +146,7 @@ namespace ratgdo {
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t code);
+        void set_client_id(uint64_t client_id);
 
         // door
         void door_command(uint32_t data);
@@ -180,7 +180,7 @@ namespace ratgdo {
         void sync();
 
         // children subscriptions
-        void subscribe_client_id(std::function<void(uint32_t)>&& f);
+        void subscribe_client_id(std::function<void(uint64_t)>&& f);
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);

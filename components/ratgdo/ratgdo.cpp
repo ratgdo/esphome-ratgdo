@@ -308,6 +308,13 @@ namespace ratgdo {
         this->rolling_code_counter = counter;
     }
 
+    void RATGDOComponent::set_client_id(uint64_t client_id)
+    {
+        ESP_LOGV(TAG, "Set client id to %d", client_id);
+        // not sure how large remote_id can be, assuming not more than 24 bits
+        this->client_id = client_id & 0xffffff; 
+    }
+
     void RATGDOComponent::increment_rolling_code_counter(int delta)
     {
         this->rolling_code_counter = (*this->rolling_code_counter + delta) & 0xfffffff;
@@ -690,9 +697,9 @@ namespace ratgdo {
         return *this->light_state;
     }
 
-    void RATGDOComponent::subscribe_client_id(std::function<void(uint32_t)>&& f)
+    void RATGDOComponent::subscribe_client_id(std::function<void(uint64_t)>&& f)
     {
-        this->client_id.subscribe([=](uint32_t state) { defer("client_id", [=] { f(state); }); });
+        this->client_id.subscribe([=](uint64_t state) { defer("client_id", [=] { f(state); }); });
     }
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
     {
