@@ -24,9 +24,6 @@ DEFAULT_INPUT_GDO = (
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
-CONF_REMOTE_ID = "remote_id"
-DEFAULT_REMOTE_ID = 0x539
-
 CONF_RATGDO_ID = "ratgdo_id"
 
 CONF_ON_SYNC_FAILED = "on_sync_failed"
@@ -44,9 +41,6 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(
             CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
         ): pins.gpio_input_pin_schema,
-        cv.Optional(
-            CONF_REMOTE_ID, default=DEFAULT_REMOTE_ID
-        ): cv.uint64_t,
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
@@ -76,7 +70,6 @@ async def to_code(config):
     cg.add(var.set_input_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
     cg.add(var.set_input_obst_pin(pin))
-    cg.add(var.set_remote_id(config[CONF_REMOTE_ID]))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
