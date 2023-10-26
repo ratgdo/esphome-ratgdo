@@ -12,8 +12,12 @@ RATGDOCover = ratgdo_ns.class_("RATGDOCover", cover.Cover, cg.Component)
 
 
 # Triggers
-CoverOpeningTrigger = ratgdo_ns.class_("CoverOpeningTrigger", automation.Trigger.template())
-CoverClosingTrigger = ratgdo_ns.class_("CoverClosingTrigger", automation.Trigger.template())
+CoverOpeningTrigger = ratgdo_ns.class_(
+    "CoverOpeningTrigger", automation.Trigger.template()
+)
+CoverClosingTrigger = ratgdo_ns.class_(
+    "CoverClosingTrigger", automation.Trigger.template()
+)
 
 CONF_ON_OPENING = "on_opening"
 CONF_ON_CLOSING = "on_closing"
