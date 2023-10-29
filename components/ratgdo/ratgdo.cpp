@@ -276,7 +276,7 @@ namespace ratgdo {
             query_status_flags_ |= QSF_TCC_DUR;
             if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
                 this->ttc_time_seconds = seconds;
-            } else if (seconds != 1) {
+            } else if (seconds != 3) {
                 this->ttc_time_seconds = 0;
                 ESP_LOGW(TAG, "Unsupported TTC time: %ds", seconds);
             }
@@ -536,8 +536,8 @@ namespace ratgdo {
             if (*this->hold_state == HoldState::HOLD_ENABLED) {
                 this->restore_hold_state_ = true;
             }
-            // SET_TTC closes door in 1 second with builtin gdo alert
-            set_ttc_sec(1);
+            // SET_TTC closes door in 3 second with builtin gdo alert
+            set_ttc_sec(3);
             this->restore_ttc_ = true;
             return;
         }
