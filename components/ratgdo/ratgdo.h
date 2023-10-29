@@ -13,6 +13,7 @@
 
 #pragma once
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
+#include "callbacks.h"
 #include "enum.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
@@ -141,18 +142,21 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
 
+        OnceCallbacks<void(DoorState)> door_state_received;
+        OnceCallbacks<void()> command_sent;
+
         observable<bool> sync_failed { false };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        void set_remote_id(uint64_t remote_id) { this->remote_id_ = remote_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
-        uint64_t get_remote_id() { return this->remote_id_; }
+        void set_client_id(uint64_t client_id) { this->client_id_ = client_id & 0xffffff; } // not sure how large client_id can be, assuming not more than 24 bits
 
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
         void obstruction_loop();
         void send_command(Command command, uint32_t data = 0, bool increment = true);
+        void send_command(Command command, uint32_t data, bool increment, std::function<void()>&& on_sent);
         bool transmit_packet();
         void encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet);
         void print_packet(const WirePacket& packet) const;
@@ -162,6 +166,7 @@ namespace ratgdo {
 
         // door
         void door_command(uint32_t data);
+        void ensure_door_command(uint32_t data, uint32_t delay = 1500);
         void toggle_door();
         void open_door();
         void close_door();
@@ -232,7 +237,7 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        uint64_t remote_id_;
+        uint64_t client_id_ { 0x539 };
 
         uint16_t query_status_flags_;
 
