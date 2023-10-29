@@ -10,7 +10,9 @@ namespace ratgdo {
     void RATGDONumber::dump_config()
     {
         LOG_NUMBER("", "RATGDO Number", this);
-        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+        if (this->number_type_ == RATGDO_CLIENT_ID) {
+            ESP_LOGCONFIG(TAG, " Type: Client ID");
+        } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             ESP_LOGCONFIG(TAG, "  Type: Rolling Code Counter");
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             ESP_LOGCONFIG(TAG, "  Type: Opening Duration");
@@ -24,7 +26,11 @@ namespace ratgdo {
         float value;
         this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
         if (!this->pref_.load(&value)) {
-            value = 0;
+            if (this->number_type_ == RATGDO_CLIENT_ID) {
+                value = random(0x1, 0xFFFF);
+            } else {
+                value = 0;
+            }
         }
         this->publish_state(value);
         this->control(value);
@@ -51,9 +57,11 @@ namespace ratgdo {
             this->traits.set_step(0.1);
             this->traits.set_min_value(0.0);
             this->traits.set_max_value(180.0);
-        }
-        if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+        } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->traits.set_max_value(0xfffffff);
+        } else if (this->number_type_ == RATGDO_CLIENT_ID) {
+            // not sure how large remote_id can be, assuming not more than 24 bits
+            this->traits.set_max_value(0xffffff);
         }
     }
 
@@ -71,6 +79,8 @@ namespace ratgdo {
             this->parent_->set_opening_duration(value);
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->set_closing_duration(value);
+        } else if (this->number_type_ == RATGDO_CLIENT_ID) {
+            this->parent_->set_client_id(value);
         }
         this->pref_.save(&value);
     }

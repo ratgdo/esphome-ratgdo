@@ -13,6 +13,7 @@
 
 #pragma once
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
+#include "callbacks.h"
 #include "enum.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
@@ -36,6 +37,7 @@ namespace ratgdo {
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
+    const float DOOR_DELTA_UNKNOWN = -2.0;
 
     namespace data {
         const uint32_t LIGHT_OFF = 0;
@@ -64,7 +66,7 @@ namespace ratgdo {
 
         (LEARN_2, 0x181),
         (LOCK, 0x18c),
-        (OPEN, 0x280),
+        (DOOR_ACTION, 0x280),
         (LIGHT, 0x281),
         (MOTOR_ON, 0x284),
         (MOTION, 0x285),
@@ -86,12 +88,12 @@ namespace ratgdo {
     inline bool operator==(const Command& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
 
     struct RATGDOStore {
-        ISRInternalGPIOPin input_obst;
-
         int obstruction_low_count = 0; // count obstruction low pulses
-        long last_obstruction_high = 0; // count time between high pulses from the obst ISR
 
-        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg);
+        static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg)
+        {
+            arg->obstruction_low_count++;
+        }
     };
 
     class RATGDOComponent : public Component {
@@ -111,7 +113,10 @@ namespace ratgdo {
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        bool moving_to_position { false };
+
+        unsigned long door_start_moving { 0 };
+        float door_start_position { DOOR_POSITION_UNKNOWN };
+        float door_move_delta { DOOR_DELTA_UNKNOWN };
 
         observable<LightState> light_state { LightState::UNKNOWN };
         observable<LockState> lock_state { LockState::UNKNOWN };
@@ -120,18 +125,21 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
 
+        OnceCallbacks<void(DoorState)> door_state_received;
+        OnceCallbacks<void()> command_sent;
+
         observable<bool> sync_failed { false };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        void set_remote_id(uint64_t remote_id) { this->remote_id_ = remote_id & 0xffffff; } // not sure how large remote_id can be, assuming not more than 24 bits
-        uint64_t get_remote_id() { return this->remote_id_; }
+        void set_client_id(uint64_t client_id) { this->client_id_ = client_id & 0xffffff; } // not sure how large client_id can be, assuming not more than 24 bits
 
         void gdo_state_loop();
         uint16_t decode_packet(const WirePacket& packet);
         void obstruction_loop();
         void send_command(Command command, uint32_t data = 0, bool increment = true);
+        void send_command(Command command, uint32_t data, bool increment, std::function<void()>&& on_sent);
         bool transmit_packet();
         void encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet);
         void print_packet(const WirePacket& packet) const;
@@ -141,17 +149,18 @@ namespace ratgdo {
 
         // door
         void door_command(uint32_t data);
+        void ensure_door_command(uint32_t data, uint32_t delay = 1500);
         void toggle_door();
         void open_door();
         void close_door();
         void stop_door();
         void door_move_to_position(float position);
-        void position_sync_while_opening(float delta, float update_period = 500);
-        void position_sync_while_closing(float delta, float update_period = 500);
-        void cancel_position_sync_callbacks();
         void set_door_position(float door_position) { this->door_position = door_position; }
         void set_opening_duration(float duration);
         void set_closing_duration(float duration);
+        void schedule_door_position_sync(float update_period = 500);
+        void door_position_update();
+        void cancel_position_sync_callbacks();
 
         // light
         void toggle_light();
@@ -185,16 +194,18 @@ namespace ratgdo {
 
     protected:
         // tx data
-        bool transmit_pending_ {false};
+        bool transmit_pending_ { false };
         WirePacket tx_packet_;
 
         RATGDOStore isr_store_ {};
         SoftwareSerial sw_serial_;
 
+        bool obstruction_from_status_ { false };
+
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        uint64_t remote_id_;
+        uint64_t client_id_ { 0x539 };
 
     }; // RATGDOComponent
 

@@ -13,7 +13,7 @@
     <meta property="og:site_name" content="ESPHome ratgdo" />
     <meta
       property="og:url"
-      content="https://esphome-ratgdo.github.io/esphome-ratgdo/"
+      content="https://ratgdo.github.io/esphome-ratgdo/"
     />
     <meta property="og:type" content="website" />
     <meta
@@ -22,7 +22,7 @@
     />
     <meta
       property="og:image"
-      content="https://esphome-ratgdo.github.io/esphome-ratgdo/header.png"
+      content="https://ratgdo.github.io/esphome-ratgdo/header.png"
     />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@esphome_ratgdo" />
@@ -33,7 +33,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://esphome-ratgdo.github.io/esphome-ratgdo/header.png"
+      content="https://ratgdo.github.io/esphome-ratgdo/header.png"
     />
 
     <style>
@@ -155,9 +155,6 @@
         Pick your board to flash your ratgdo board with ESPhome for <a href="https://github.com/PaulWieland/ratgdo#ratgdo">ratgdo</a>.
         No programming or other software required.
       </p>
-      <p>
-        <b>Be sure to save the value of the rolling code counter and set it again or the board will not be able to control the garage door opener. If you forget to do this, you may be able to restore control by pressing the learn button, or factory resetting the garage door opener by pressing and holding the learn button 3 times for 10 seconds.</b>
-      </p>
 
       <div class="radios">
         <label>
@@ -167,7 +164,15 @@
         <label>
           <input type="radio" name="type" value="v2board_esp32_d1_mini" />
           <img src="./v2board_esp32_d1_mini.png" alt="ratgdo v2 board with ESP32 D1 Mini" />
-        </label>        
+        </label>
+        <label>
+          <input type="radio" name="type" value="v2board_esp32_lolin_s2_mini" />
+          <img src="./v2board_esp32_lolin_s2_mini.png" alt="ratgdo v2 board with ESP32 lolin s2 mini" />
+        </label>
+        <label>
+          <input type="radio" name="type" value="v25board_esp8266_d1_mini_lite" checked />
+          <img src="./v25board_esp8266_d1_mini_lite.png" alt="ratgdo v2.5 board with ESP8266 D1 Mini Lite" />
+        </label>
       </div>
 
       <p class="button-row" align="center">
@@ -175,9 +180,9 @@
       </p>
 
       <div class="hidden info v2board">
-        <h3>ratgdo Shield v2</h3>
+        <h3>ratgdo Shield v2.0/v2.5</h3>
         <p>
-          Replace the official ratgdo v2 board firmware with
+          Replace the official ratgdo v2.0/v2.5 board firmware with
           ESPHome.
         </p>
         <p>
@@ -186,14 +191,9 @@
           Please support his excellent work by buying his boards.
           <a
           href="https://paulwieland.github.io/ratgdo/#order"
-          >Buy boards from Paul</a>          
+          >Buy boards from Paul</a>
         </p>
       </div>
-
-      <h3>Updating from versions older than 2023.07.07</h3>
-      <p>
-        When updating from older versions, save the rolling counter value and restore it via the number entity after flashing the new firmware. If you forget to save the code, check the Home Assistant history.
-      </p>
 
       <h3>Advanced Users</h3>
       <ul>
@@ -206,7 +206,7 @@
         </li>
         <li>
           The YAML configuration is on
-          <a href="https://github.com/ESPHome-RATGDO/esphome-ratgdo/tree/main/static">GitHub</a>
+          <a href="https://github.com/RATGDO/esphome-ratgdo/tree/main/static">GitHub</a>
         </li>
       </ul>
 
