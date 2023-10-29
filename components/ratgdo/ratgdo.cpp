@@ -43,10 +43,16 @@ namespace ratgdo {
 
         this->input_gdo_pin_->setup();
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
-        
-        this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_ANY_EDGE);
 
+if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
+            // Our base.yaml is always going to set this so we check for 0
+            // as well to avoid a breaking change.
+            this->obstruction_from_status_ = true;
+        } else {
+            this->input_obst_pin_->setup();
+            this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
+            this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
+        }
         this->sw_serial_.begin(9600, SWSERIAL_8N1, this->input_gdo_pin_->get_pin(), this->output_gdo_pin_->get_pin(), true);
         this->sw_serial_.enableIntTx(false);
         this->sw_serial_.enableAutoBaud(true);
@@ -190,22 +196,6 @@ namespace ratgdo {
                     });
                     this->restore_ttc_ = false;
                 }
-            } else {
-                if (*this->closing_duration == 0 || *this->opening_duration == 0 || *this->door_position == DOOR_POSITION_UNKNOWN) {
-                    this->door_position = 0.5; // best guess
-                }
-            }
-
-            if (door_state == DoorState::OPENING && !this->moving_to_position) {
-                this->position_sync_while_opening(1.0 - *this->door_position);
-                this->moving_to_position = true;
-            }
-            if (door_state == DoorState::CLOSING && !this->moving_to_position) {
-                this->position_sync_while_closing(*this->door_position);
-                this->moving_to_position = true;
-            }
-
-            if (door_state == DoorState::OPEN || door_state == DoorState::CLOSED || door_state == DoorState::STOPPED) {
                 this->cancel_position_sync_callbacks();
             }
 
