@@ -119,7 +119,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
 
             auto door_state = to_DoorState(nibble, DoorState::UNKNOWN);
             auto prev_door_state = *this->door_state;
-            query_status_flags_ |= QSF_STATUS;
+            this->query_status_flags_ |= QSF_STATUS;
 
             // opening duration calibration
             if (*this->opening_duration == 0) {
@@ -247,7 +247,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
             if (nibble == 0 || *this->openings != 0) {
                 this->openings = (byte1 << 8) | byte2;
                 ESP_LOGD(TAG, "Openings: %d", *this->openings);
-                query_status_flags_ |= QSF_OPENINGS;
+                this->query_status_flags_ |= QSF_OPENINGS;
             } else {
                 ESP_LOGD(TAG, "Ignoring openings, not from our request");
             }
@@ -263,7 +263,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
         } else if (cmd == Command::TTC_DURATION) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC) set to: %ds", seconds);
-            query_status_flags_ |= QSF_TCC_DUR;
+            this->query_status_flags_ |= QSF_TCC_DUR;
             if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
                 this->ttc_time_seconds = seconds;
             } else if (seconds != 3) {
@@ -286,7 +286,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
                 ESP_LOGW(TAG, "TTC_CANCEL: Unknown Data");
             }
         } else if (cmd == Command::EXT_STATUS) {
-            query_status_flags_ |= QSF_EXT_STATUS;
+            this->query_status_flags_ |= QSF_EXT_STATUS;
             if (byte1 == 0x09) {
                 ESP_LOGD(TAG, "TTC is disabled.");
                 this->hold_state = HoldState::HOLD_DISABLED;
@@ -299,6 +299,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
                 this->hold_state = HoldState::HOLD_DISABLED;
             } else if (byte1 == 0x0d || byte1 == 0x0e) {
                 ESP_LOGW(TAG, "TTC closing was interrupted!");
+                ttc_failed = true;
             } else if (byte1 == 0x0b) {
                 ESP_LOGD(TAG, "TTC closing now");
             }
@@ -484,12 +485,12 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
 
     void RATGDOComponent::query_status()
     {
-        query_status_flags_ = 0;
+        this->query_status_flags_ = QSF_TCC_DUR; //todo Duration broken???? = 0;
 
         set_retry(
             750, 10, [=](uint8_t r) {
                 // Once a new message is returned for each status then query_status has completed successfully
-                if (query_status_flags_ == (QSF_STATUS | QSF_EXT_STATUS | QSF_TCC_DUR | QSF_OPENINGS)) {
+                if (this->query_status_flags_ == (QSF_STATUS | QSF_EXT_STATUS | QSF_TCC_DUR | QSF_OPENINGS)) {
                     ESP_LOGD(TAG, "query_status completed successfully");
                     return RetryResult::DONE;
                 }
@@ -862,6 +863,10 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
     void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
     {
         this->sync_failed.subscribe(std::move(f));
+    }
+    void RATGDOComponent::subscribe_ttc_failed(std::function<void(bool)>&& f)
+    {
+        this->ttc_failed.subscribe(std::move(f));
     }
 
 } // namespace ratgdo

@@ -12,6 +12,8 @@ RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())
+TTC_Failed = ratgdo_ns.class_("TTC_Failed", automation.Trigger.template())
+
 
 CONF_OUTPUT_GDO = "output_gdo_pin"
 DEFAULT_OUTPUT_GDO = (
@@ -27,7 +29,7 @@ DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 CONF_RATGDO_ID = "ratgdo_id"
 
 CONF_ON_SYNC_FAILED = "on_sync_failed"
-
+CONF_ON_TTC_FAILED = "on_ttc_close_failed"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -44,6 +46,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
+            }
+        ),
+        cv.Optional(CONF_ON_TTC_FAILED): automation.validate_automation(
+            {
+                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(TTC_Failed),
             }
         ),
     }
@@ -74,6 +81,9 @@ async def to_code(config):
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
         await automation.build_automation(trigger, [], conf)
+    for conf in config.get(CONF_ON_TTC_FAILED, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)        
 
     cg.add_library(
         name="secplus",

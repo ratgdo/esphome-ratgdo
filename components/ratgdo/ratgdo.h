@@ -146,6 +146,7 @@ namespace ratgdo {
         OnceCallbacks<void()> command_sent;
 
         observable<bool> sync_failed { false };
+        observable<bool> ttc_failed { false };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
@@ -221,6 +222,7 @@ namespace ratgdo {
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
         void subscribe_sync_failed(std::function<void(bool)>&& f);
+        void subscribe_ttc_failed(std::function<void(bool)>&& f);
 
     protected:
         // tx data
@@ -239,7 +241,7 @@ namespace ratgdo {
         InternalGPIOPin* input_obst_pin_;
         uint64_t client_id_ { 0x539 };
 
-        uint16_t query_status_flags_;
+        uint16_t query_status_flags_=0;
 
     }; // RATGDOComponent
 
