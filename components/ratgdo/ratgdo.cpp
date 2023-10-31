@@ -185,17 +185,6 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
                 this->cancel_position_sync_callbacks();
             } else if (door_state == DoorState::CLOSED) {
                 this->door_position = 0.0;
-                if (this->restore_ttc_) {
-                    // GET_OPENINGS is sent when door closes, delay this tx
-                    set_timeout(100, [=] {
-                        if (*this->ttc_time_seconds == 0) {
-                            this->turn_ttc_off();
-                        } else {
-                            this->set_ttc_sec(*ttc_time_seconds);
-                        }
-                    });
-                    this->restore_ttc_ = false;
-                }
                 this->cancel_position_sync_callbacks();
             }
 
@@ -266,13 +255,9 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
             this->query_status_flags_ |= QSF_TCC_DUR;
             if (seconds == 60 || seconds == 300 || seconds == 600 || seconds == 0) {
                 this->ttc_time_seconds = seconds;
-            } else if (seconds != 3) {
+            } else  {
                 this->ttc_time_seconds = 0;
                 ESP_LOGW(TAG, "Unsupported TTC time: %ds", seconds);
-            }
-            if (this->restore_hold_state_ == true && this->restore_ttc_ == false) {
-                this->hold_enable();
-                this->restore_hold_state_ = false;
             }
         } else if (cmd == Command::TTC_COUNTDOWN) {
             auto seconds = (byte1 << 8) | byte2;
@@ -485,7 +470,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
 
     void RATGDOComponent::query_status()
     {
-        this->query_status_flags_ = QSF_TCC_DUR; //todo Duration broken???? = 0;
+        this->query_status_flags_ = 0;
 
         set_retry(
             750, 10, [=](uint8_t r) {
@@ -518,25 +503,8 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
     // TODO close with alert seems to get ignored right after opening door
     void RATGDOComponent::close_with_alert()
     {
-        if (*this->door_state == DoorState::CLOSED) {
-            ESP_LOGW(TAG, "close_with_alert door already closed!");
-            return;
-        }
-
-        if (*this->door_state == DoorState::OPEN) {
-            if (*this->hold_state == HoldState::HOLD_ENABLED) {
-                this->restore_hold_state_ = true;
-            }
-            // SET_TTC closes door in 3 second with builtin gdo alert
-            set_ttc_sec(3);
-            this->restore_ttc_ = true;
-            return;
-        }
-
-        // If not opened or closed, open the door and que to retry TTC every 1/2 second
-        // TTC only works with door fully open
-        open_door();
-        set_timeout(500, [=] { this->close_with_alert(); });
+        //TODO replace with command for warning close
+        send_command(Command::TTC_GET_DURATION, data::TTC_GET_DURATION);
     }
 
     void RATGDOComponent::turn_ttc_off()
