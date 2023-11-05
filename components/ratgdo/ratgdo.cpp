@@ -549,7 +549,7 @@ namespace ratgdo {
 
         // Sometimes the door doesn't always close when its fully open
         // so we use ensure_door_command to make sure it closes
-        this->ensure_door_command(data::DOOR_CLOSE);
+        this->door_command(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stop_door()
