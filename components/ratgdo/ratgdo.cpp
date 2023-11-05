@@ -622,7 +622,7 @@ namespace ratgdo {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
         this->send_command(Command::DOOR_ACTION, data, false, [=]() {
-            set_timeout(120, [=] {
+            set_timeout(100, [=] {
                 auto data2 = data & ~(1 << 8); // button release
                 this->send_command(Command::DOOR_ACTION, data2);
             });
