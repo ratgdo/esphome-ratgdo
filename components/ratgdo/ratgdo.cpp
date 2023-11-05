@@ -530,20 +530,28 @@ namespace ratgdo {
 
     void RATGDOComponent::close_door()
     {
+        ESP_LOGD(TAG, "Close door called, current state: %s", DoorState_to_string(*this->door_state));
+
         if (*this->door_state == DoorState::CLOSING) {
             return; // gets ignored by opener
         }
 
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
+            ESP_LOGD(TAG, "Door is opening, stopping first");
             this->door_command(data::DOOR_STOP);
             this->door_state_received.then([=](DoorState s) {
+                ESP_LOGD(TAG, "Door state received after stop: %s", DoorState_to_string(s));
                 if (s == DoorState::STOPPED) {
                     this->door_command(data::DOOR_CLOSE);
+                } else {
+                    ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
             });
             return;
         }
+
+        ESP_LOGD(TAG, "Sending close door, current state: %s", DoorState_to_string(*this->door_state));
 
         this->door_command(data::DOOR_CLOSE);
     }
