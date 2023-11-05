@@ -475,7 +475,7 @@ namespace ratgdo {
         // one STOP bit, which indicates to the receiving end that the start of the message follows
         // The output pin is controlling a transistor, so the logic is inverted
         this->output_gdo_pin_->digital_write(true); // pull the line low for at least 1 byte
-        delayMicroseconds(1300);
+        delayMicroseconds(1305);
         this->output_gdo_pin_->digital_write(false); // line high for at least 1 bit
         delayMicroseconds(200);
 
