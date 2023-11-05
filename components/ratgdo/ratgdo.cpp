@@ -553,7 +553,7 @@ namespace ratgdo {
 
         ESP_LOGD(TAG, "Sending close door, current state: %s", DoorState_to_string(*this->door_state));
 
-        this->door_command(data::DOOR_CLOSE);
+        this->ensure_door_command(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stop_door()
