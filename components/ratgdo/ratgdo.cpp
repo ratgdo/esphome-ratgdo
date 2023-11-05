@@ -101,7 +101,7 @@ namespace ratgdo {
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
 
-        if ((fixed & 0xfffffff) == this->client_id_) { // my commands
+        if ((fixed & 0xFFFFFFFF) == this->client_id_) { // my commands
             ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return static_cast<uint16_t>(Command::UNKNOWN);
         } else {
@@ -547,9 +547,7 @@ namespace ratgdo {
             return;
         }
 
-        // Sometimes the door doesn't always close when its fully open
-        // so we use ensure_door_command to make sure it closes
-        this->ensure_door_command(data::DOOR_CLOSE);
+        this->door_command(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stop_door()

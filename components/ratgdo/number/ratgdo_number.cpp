@@ -27,7 +27,7 @@ namespace ratgdo {
         this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
         if (!this->pref_.load(&value)) {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
-                value = random(0x1, 0xFFFF);
+                value = ((random_uint32() + 1) % 0xFFFF) << 12 | 0x539;
             } else {
                 value = 0;
             }
@@ -82,7 +82,7 @@ namespace ratgdo {
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
             this->parent_->set_client_id(value);
         }
-        this->pref_.save(&value);
+        this->update_state(value);
     }
 
 } // namespace ratgdo
