@@ -621,9 +621,11 @@ namespace ratgdo {
     {
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
+        ESP_LOGD(TAG, "Door command press: %08" PRIx32, data);
         this->send_command(Command::DOOR_ACTION, data, false, [=]() {
             set_timeout(120, [=] {
                 auto data2 = data & ~(1 << 8); // button release
+                ESP_LOGD(TAG, "Door command release: %08" PRIx32, data2);
                 this->send_command(Command::DOOR_ACTION, data2);
             });
         });
