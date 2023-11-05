@@ -477,7 +477,7 @@ namespace ratgdo {
         this->output_gdo_pin_->digital_write(true); // pull the line low for at least 1 byte
         delayMicroseconds(1305);
         this->output_gdo_pin_->digital_write(false); // line high for at least 1 bit
-        delayMicroseconds(500);
+        delayMicroseconds(1260);
 
         this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
         this->transmit_pending_ = false;
