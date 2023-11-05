@@ -540,12 +540,16 @@ namespace ratgdo {
             this->door_state_received.then([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_command(data::DOOR_CLOSE);
+                } else {
+                    ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
             });
             return;
         }
 
-        this->door_command(data::DOOR_CLOSE);
+        // Sometimes the door doesn't always close when its fully open
+        // so we use ensure_door_command to make sure it closes
+        this->ensure_door_command(data::DOOR_CLOSE);
     }
 
     void RATGDOComponent::stop_door()
