@@ -27,7 +27,7 @@ namespace ratgdo {
         this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
         if (!this->pref_.load(&value)) {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
-                value = ((random_uint32() + 1) % 0xFFFF) << 12 | 0x539;
+                value = ((random_uint32() + 1) % 0x7FF) << 12 | 0x539;  // max size limited to be precisely convertible to float
             } else {
                 value = 0;
             }
@@ -36,7 +36,7 @@ namespace ratgdo {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
                 uint32_t int_value = static_cast<uint32_t>(value);
                 if ((int_value & 0xFFF) != 0x539) {
-                    value = ((random_uint32() + 1) % 0xFFFF) << 12 | 0x539;
+                    value = ((random_uint32() + 1) % 0x7FF) << 12 | 0x539; // max size limited to be precisely convertible to float
                     this->pref_.save(&value);
                 }
             }
@@ -69,7 +69,9 @@ namespace ratgdo {
         } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->traits.set_max_value(0xfffffff);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
-            this->traits.set_max_value(0xFFFFFFFF);
+            this->traits.set_step(0x1000);
+            this->traits.set_min_value(0x539);
+            this->traits.set_max_value(0x7ff539);
         }
     }
 
