@@ -32,6 +32,15 @@ namespace ratgdo {
                 value = 0;
             }
         }
+        else {
+            if (this->number_type_ == RATGDO_CLIENT_ID) {
+                uint32_t int_value = static_cast<uint32_t>(value);
+                if ((int_value & 0xFFF) != 0x539) {
+                    value = ((random_uint32() + 1) % 0xFFFF) << 12 | 0x539;
+                    this->pref_.save(&value);
+                }
+            }
+        }
         this->publish_state(value);
         this->control(value);
 
