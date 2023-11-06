@@ -70,7 +70,7 @@ namespace ratgdo {
             this->traits.set_max_value(0xfffffff);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
             // not sure how large remote_id can be, assuming not more than 24 bits
-            this->traits.set_max_value(0xffffff);
+            this->traits.set_max_value(0xFFFFFFFF);
         }
     }
 
