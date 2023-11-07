@@ -5,7 +5,7 @@
 namespace esphome {
 namespace ratgdo {
 
-    float normalize_client_id(float client_id) 
+    float normalize_client_id(float client_id)
     {
         uint32_t int_value = static_cast<uint32_t>(client_id);
         if ((int_value & 0xFFF) != 0x539) {
@@ -36,12 +36,11 @@ namespace ratgdo {
         this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
         if (!this->pref_.load(&value)) {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
-                value = ((random_uint32() + 1) % 0x7FF) << 12 | 0x539;  // max size limited to be precisely convertible to float
+                value = ((random_uint32() + 1) % 0x7FF) << 12 | 0x539; // max size limited to be precisely convertible to float
             } else {
                 value = 0;
             }
-        }
-        else {
+        } else {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
                 uint32_t int_value = static_cast<uint32_t>(value);
                 if ((int_value & 0xFFF) != 0x539) {
