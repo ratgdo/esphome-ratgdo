@@ -240,6 +240,9 @@ namespace ratgdo {
             }
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
+            this->set_timeout("clear_motion", 3000, [=] {
+                this->motion_state = MotionState::CLEAR;
+            });
             if (*this->light_state == LightState::OFF) {
                 this->send_command(Command::GET_STATUS);
             }
