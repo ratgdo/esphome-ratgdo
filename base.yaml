@@ -99,6 +99,8 @@ binary_sensor:
         pullup: true
     name: "Dry contact open"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - if:
           condition:
@@ -115,6 +117,8 @@ binary_sensor:
         pullup: true
     name: "Dry contact close"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - if:
           condition:
@@ -131,6 +135,8 @@ binary_sensor:
         pullup: true
     name: "Dry contact light"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - light.toggle: ${id_prefix}_light
 
