@@ -101,7 +101,7 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
 
-        if ((fixed & 0xfffffff) == this->client_id_) { // my commands
+        if ((fixed & 0xFFFFFFFF) == this->client_id_) { // my commands
             ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return static_cast<uint16_t>(Command::UNKNOWN);
         } else {
@@ -242,6 +242,9 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
             }
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
+            this->set_timeout("clear_motion", 3000, [=] {
+                this->motion_state = MotionState::CLEAR;
+            });
             if (*this->light_state == LightState::OFF) {
                 this->send_command(Command::GET_STATUS);
             }
@@ -598,6 +601,8 @@ if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
             this->door_state_received.then([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_command(data::DOOR_CLOSE);
+                } else {
+                    ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
             });
             return;
