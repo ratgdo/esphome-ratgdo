@@ -35,11 +35,11 @@ namespace ratgdo {
         } else if (state == LockState::UNLOCKED) {
             call.set_state(lock::LockState::LOCK_STATE_UNLOCKED);
         }
-        this->control(call);        
+        this->control(call);
     }
 
-    void RATGDOLock::control(const lock::LockCall &call)
-    {        
+    void RATGDOLock::control(const lock::LockCall& call)
+    {
         auto state = *call.get_state();
 
         if (state == lock::LockState::LOCK_STATE_LOCKED) {
