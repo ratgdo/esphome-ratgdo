@@ -33,6 +33,7 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
+    ref: lock_remotes
 
 # Sync time with Home Assistant.
 time:
