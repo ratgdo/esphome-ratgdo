@@ -33,13 +33,13 @@ sensor:
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
 
-switch:
+lock:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
-    type: lock
-    entity_category: config
     ratgdo_id: ${id_prefix}
     name: "Lock remotes"
+
+switch:
   - platform: gpio
     id: "${id_prefix}_status_door"
     internal: true

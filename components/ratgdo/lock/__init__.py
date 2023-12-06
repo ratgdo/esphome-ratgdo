@@ -1,35 +1,26 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import switch
+from esphome.components import lock
 from esphome.const import CONF_ID
 
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 
-RATGDOSwitch = ratgdo_ns.class_("RATGDOSwitch", switch.Switch, cg.Component)
-SwitchType = ratgdo_ns.enum("SwitchType")
-
-CONF_TYPE = "type"
-TYPES = {
-    "lock": SwitchType.RATGDO_LOCK,
-}
-
+RATGDOLock = ratgdo_ns.class_("RATGDOLock", lock.Lock, cg.Component)
 
 CONFIG_SCHEMA = (
-    switch.switch_schema(RATGDOSwitch)
+    lock.LOCK_SCHEMA
     .extend(
         {
-            cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
+            cv.GenerateID(): cv.declare_id(RATGDOLock),
         }
     )
     .extend(RATGDO_CLIENT_SCHMEA)
 )
 
-
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
-    await switch.register_switch(var, config)
+    await lock.register_lock(var, config)
     await cg.register_component(var, config)
-    cg.add(var.set_switch_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
