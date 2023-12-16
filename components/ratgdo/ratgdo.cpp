@@ -446,9 +446,13 @@ namespace ratgdo {
         if (!this->transmit_pending_) { // have an untransmitted packet
             this->encode_packet(command, data, increment, this->tx_packet_);
         } else {
-            // unlikely this would happed, we're ensuring any pending packet
+            // unlikely this would happed (unless not connected to GDO), we're ensuring any pending packet
             // is transmitted each loop before doing anyting else
-            ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
+            if (this->transmit_pending_start_ > 0) {
+                ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
+            } else {
+                ESP_LOGW(TAG, "Not connected to GDO, ignoring command: %s", Command_to_string(command));
+            }
         }
         this->transmit_packet();
     }
@@ -462,10 +466,20 @@ namespace ratgdo {
     bool RATGDOComponent::transmit_packet()
     {
         auto now = micros();
+
         while (micros() - now < 1300) {
             if (this->input_gdo_pin_->digital_read()) {
-                ESP_LOGD(TAG, "Collision detected, waiting to send packet");
-                this->transmit_pending_ = true;
+                if (!this->transmit_pending_) {
+                    this->transmit_pending_ = true;
+                    this->transmit_pending_start_ = millis();
+                    ESP_LOGD(TAG, "Collision detected, waiting to send packet");
+                } else {
+                    if (millis() - this->transmit_pending_start_ < 5000) {
+                        ESP_LOGD(TAG, "Collision detected, waiting to send packet");
+                    } else {
+                        this->transmit_pending_start_ = 0; // to indicate GDO not connected state
+                    }
+                }
                 return false;
             }
             delayMicroseconds(100);
@@ -484,6 +498,7 @@ namespace ratgdo {
 
         this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
         this->transmit_pending_ = false;
+        this->transmit_pending_start_ = 0;
         this->command_sent();
         return true;
     }

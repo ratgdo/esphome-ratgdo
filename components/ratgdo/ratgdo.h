@@ -195,6 +195,7 @@ namespace ratgdo {
     protected:
         // tx data
         bool transmit_pending_ { false };
+        uint32_t transmit_pending_start_ { 0 };
         WirePacket tx_packet_;
 
         RATGDOStore isr_store_ {};
