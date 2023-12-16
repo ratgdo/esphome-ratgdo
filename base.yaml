@@ -47,19 +47,13 @@ select:
     ratgdo_id: ${id_prefix}
     name: "Time to close"
 
-switch:
+lock:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
-    type: lock
-    entity_category: config
     ratgdo_id: ${id_prefix}
     name: "Lock remotes"
-  - platform: ratgdo
-    id: ${id_prefix}_TTC_hold
-    type: hold
-    entity_category: config
-    ratgdo_id: ${id_prefix}
-    name: "TTC Hold Open"    
+
+switch:
   - platform: gpio
     id: "${id_prefix}_status_door"
     internal: true
