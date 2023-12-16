@@ -152,48 +152,81 @@
       <h1>ESPHome ratgdo</h1>
       <p></p>
       <p>
-        Pick your board to flash your ratgdo board with ESPhome for <a href="https://github.com/PaulWieland/ratgdo#ratgdo">ratgdo</a>.
+        Pick your board to flash your ratgdo board with ESPhome for <a href="https://paulwieland.github.io/ratgdo/">ratgdo</a>.
         No programming or other software required.
       </p>
 
+      <p><em>Note: At the moment ESPHome only supports Security + 2.0 door openers (Yellow learn button). Support for other protocols is coming.</em></p>
+
+      <h3>v2.5i Board</h3>
       <div class="radios">
         <label>
-          <input type="radio" name="type" value="v2board_esp8266_d1_mini_lite" checked />
-          <img src="./v2board_esp8266_d1_mini_lite.png" alt="ratgdo v2 board with ESP8266 D1 Mini Lite" />
+          <input type="radio" name="type" value="v25iboard" checked />
+          <img src="./v25iboard.png" alt="ratgdo v2.5i board" />
+        </label>
+      </div>
+      <p>
+        <ul>
+          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5i Security + 1/2 Wiring Diagram</a></li>
+          <li><a href="https://user-images.githubusercontent.com/4663918/277838851-e338c3bf-4eda-447a-9e79-737aa1a622a0.png">Version 2.5i Dry Contact Wiring Diagram</a></li>
+        </ul>
+      </p>
+
+      <h3>v2.5 Board</h3>
+      <div class="radios">
+        <label>
+          <input type="radio" name="type" value="v25board_esp8266_d1_mini_lite" />
+          <img src="./v25board_esp8266_d1_mini_lite.png" alt="ratgdo v2.5 board with ESP8266 D1 Mini Lite" />
+        </label>
+        <label>
+          <input type="radio" name="type" value="v25board_esp32_d1_mini" />
+          <img src="./v25board_esp32_d1_mini.png" alt="ratgdo v2.5 board with ESP32 D1 Mini" />
+        </label>
+      </div>
+      <p>
+        <ul>
+          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5 Security + 1/2 Wiring Diagram</a></li>
+          <li><a href="https://user-images.githubusercontent.com/4663918/277838851-e338c3bf-4eda-447a-9e79-737aa1a622a0.png">Version 2.5 Dry Contact Wiring Diagram</a></li>
+        </ul>
+      </p>
+
+      <h3>v2.0 Board</h3>
+      <div class="radios">
+        <label>
+          <input type="radio" name="type" value="v2board_esp8266_d1_mini_lite" />
+          <img src="./v2board_esp8266_d1_mini_lite.png" alt="ratgdo v2.0 board with ESP8266 D1 Mini Lite" />
         </label>
         <label>
           <input type="radio" name="type" value="v2board_esp32_d1_mini" />
-          <img src="./v2board_esp32_d1_mini.png" alt="ratgdo v2 board with ESP32 D1 Mini" />
+          <img src="./v2board_esp32_d1_mini.png" alt="ratgdo v2.0 board with ESP32 D1 Mini" />
         </label>
         <label>
           <input type="radio" name="type" value="v2board_esp32_lolin_s2_mini" />
-          <img src="./v2board_esp32_lolin_s2_mini.png" alt="ratgdo v2 board with ESP32 lolin s2 mini" />
+          <img src="./v2board_esp32_lolin_s2_mini.png" alt="ratgdo v2.0 board with ESP32 lolin s2 mini" />
         </label>
-        <label>
-          <input type="radio" name="type" value="v25board_esp8266_d1_mini_lite" checked />
-          <img src="./v25board_esp8266_d1_mini_lite.png" alt="ratgdo v2.5 board with ESP8266 D1 Mini Lite" />
-        </label>
+      </div>
+      <p>
+        <ul>
+          <li><a href="https://user-images.githubusercontent.com/4663918/235453980-04a642fa-a181-4297-b4f3-06e1315e02fa.png">Version 2.0 Wiring Diagram</a></li>
+        </ul>
+      </p>
+
+      <h3>v1.0 Board</h3>
+      <div>
+        Not supported
       </div>
 
       <p class="button-row" align="center">
         <esp-web-install-button></esp-web-install-button>
       </p>
 
-      <div class="hidden info v2board">
-        <h3>ratgdo Shield v2.0/v2.5</h3>
-        <p>
-          Replace the official ratgdo v2.0/v2.5 board firmware with
-          ESPHome.
-        </p>
-        <p>
-          This project is not affiliated with ratgdo or Paul Wieland.
 
-          Please support his excellent work by buying his boards.
-          <a
-          href="https://paulwieland.github.io/ratgdo/#order"
-          >Buy boards from Paul</a>
-        </p>
-      </div>
+      <h3>Drivers</h3>
+      <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
+      <ul>
+        <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
+        <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
+      </ul>
 
       <h3>Advanced Users</h3>
       <ul>

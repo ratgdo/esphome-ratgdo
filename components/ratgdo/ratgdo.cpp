@@ -101,7 +101,7 @@ namespace ratgdo {
         uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
         data &= ~0xf000; // clear parity nibble
 
-        if ((fixed & 0xfffffff) == this->client_id_) { // my commands
+        if ((fixed & 0xFFFFFFFF) == this->client_id_) { // my commands
             ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return static_cast<uint16_t>(Command::UNKNOWN);
         } else {
@@ -240,6 +240,9 @@ namespace ratgdo {
             }
         } else if (cmd == Command::MOTION) {
             this->motion_state = MotionState::DETECTED;
+            this->set_timeout("clear_motion", 3000, [=] {
+                this->motion_state = MotionState::CLEAR;
+            });
             if (*this->light_state == LightState::OFF) {
                 this->send_command(Command::GET_STATUS);
             }
@@ -315,8 +318,7 @@ namespace ratgdo {
 
     void RATGDOComponent::print_packet(const WirePacket& packet) const
     {
-        ESP_LOGV(TAG, "Counter: %d Send code: [%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X]",
-            *this->rolling_code_counter,
+        ESP_LOG2(TAG, "Packet: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
             packet[0],
             packet[1],
             packet[2],
@@ -387,12 +389,15 @@ namespace ratgdo {
         static uint32_t msg_start = 0;
         static uint16_t byte_count = 0;
         static WirePacket rx_packet;
+        static uint32_t last_read = 0;
 
         if (!reading_msg) {
             while (this->sw_serial_.available()) {
                 uint8_t ser_byte = this->sw_serial_.read();
+                last_read = millis();
+
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
-                    ESP_LOG2(TAG, "Ignoring byte: %02X, baud: %d", ser_byte, this->sw_serial_.baudRate());
+                    ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
                     byte_count = 0;
                     continue;
                 }
@@ -414,15 +419,27 @@ namespace ratgdo {
         if (reading_msg) {
             while (this->sw_serial_.available()) {
                 uint8_t ser_byte = this->sw_serial_.read();
+                last_read = millis();
                 rx_packet[byte_count] = ser_byte;
                 byte_count++;
+                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
 
                 if (byte_count == PACKET_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
+                    this->print_packet(rx_packet);
                     this->decode_packet(rx_packet);
                     return;
                 }
+            }
+
+            if (millis() - last_read > 100) {
+                // if we have a partial packet and it's been over 100ms since last byte was read,
+                // the rest is not coming (a full packet should be received in ~20ms),
+                // discard it so we can read the following packet correctly
+                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
+                reading_msg = false;
+                byte_count = 0;
             }
         }
     }
@@ -443,9 +460,13 @@ namespace ratgdo {
         if (!this->transmit_pending_) { // have an untransmitted packet
             this->encode_packet(command, data, increment, this->tx_packet_);
         } else {
-            // unlikely this would happed, we're ensuring any pending packet
+            // unlikely this would happed (unless not connected to GDO), we're ensuring any pending packet
             // is transmitted each loop before doing anyting else
-            ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
+            if (this->transmit_pending_start_ > 0) {
+                ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", Command_to_string(command));
+            } else {
+                ESP_LOGW(TAG, "Not connected to GDO, ignoring command: %s", Command_to_string(command));
+            }
         }
         this->transmit_packet();
     }
@@ -459,10 +480,20 @@ namespace ratgdo {
     bool RATGDOComponent::transmit_packet()
     {
         auto now = micros();
+
         while (micros() - now < 1300) {
             if (this->input_gdo_pin_->digital_read()) {
-                ESP_LOGD(TAG, "Collision detected, waiting to send packet");
-                this->transmit_pending_ = true;
+                if (!this->transmit_pending_) {
+                    this->transmit_pending_ = true;
+                    this->transmit_pending_start_ = millis();
+                    ESP_LOGD(TAG, "Collision detected, waiting to send packet");
+                } else {
+                    if (millis() - this->transmit_pending_start_ < 5000) {
+                        ESP_LOGD(TAG, "Collision detected, waiting to send packet");
+                    } else {
+                        this->transmit_pending_start_ = 0; // to indicate GDO not connected state
+                    }
+                }
                 return false;
             }
             delayMicroseconds(100);
@@ -481,6 +512,7 @@ namespace ratgdo {
 
         this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
         this->transmit_pending_ = false;
+        this->transmit_pending_start_ = 0;
         this->command_sent();
         return true;
     }
@@ -540,6 +572,8 @@ namespace ratgdo {
             this->door_state_received.then([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_command(data::DOOR_CLOSE);
+                } else {
+                    ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
             });
             return;

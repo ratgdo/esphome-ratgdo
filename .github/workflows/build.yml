@@ -31,6 +31,9 @@ jobs:
           - file: v25board_esp32_d1_mini.yaml
             name: V2.5 Board ESP32 D1 Mini
             manifest_filename: v25board_esp32_d1_mini-manifest.json
+          - file: v25iboard.yaml
+            name: V2.5i Board
+            manifest_filename: v25iboard-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
