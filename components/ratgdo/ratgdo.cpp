@@ -318,8 +318,7 @@ namespace ratgdo {
 
     void RATGDOComponent::print_packet(const WirePacket& packet) const
     {
-        ESP_LOGV(TAG, "Counter: %d Send code: [%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X]",
-            *this->rolling_code_counter,
+        ESP_LOG2(TAG, "Packet: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
             packet[0],
             packet[1],
             packet[2],
@@ -390,12 +389,15 @@ namespace ratgdo {
         static uint32_t msg_start = 0;
         static uint16_t byte_count = 0;
         static WirePacket rx_packet;
+        static uint32_t last_read = 0;
 
         if (!reading_msg) {
             while (this->sw_serial_.available()) {
                 uint8_t ser_byte = this->sw_serial_.read();
+                last_read = millis();
+
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
-                    ESP_LOG2(TAG, "Ignoring byte: %02X, baud: %d", ser_byte, this->sw_serial_.baudRate());
+                    ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
                     byte_count = 0;
                     continue;
                 }
@@ -417,15 +419,27 @@ namespace ratgdo {
         if (reading_msg) {
             while (this->sw_serial_.available()) {
                 uint8_t ser_byte = this->sw_serial_.read();
+                last_read = millis();
                 rx_packet[byte_count] = ser_byte;
                 byte_count++;
+                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
 
                 if (byte_count == PACKET_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
+                    this->print_packet(rx_packet);
                     this->decode_packet(rx_packet);
                     return;
                 }
+            }
+
+            if (millis() - last_read > 100) {
+                // if we have a partial packet and it's been over 100ms since last byte was read,
+                // the rest is not coming (a full packet should be received in ~20ms),
+                // discard it so we can read the following packet correctly
+                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
+                reading_msg = false;
+                byte_count = 0;
             }
         }
     }
