@@ -435,7 +435,7 @@ namespace ratgdo {
 
             if (millis() - last_read > 100) {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
-                // the rest is not comming (a full packet should be received in ~20ms),
+                // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
                 ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
                 reading_msg = false;
