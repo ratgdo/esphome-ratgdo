@@ -762,7 +762,6 @@ namespace ratgdo {
     void RATGDOComponent::toggle_learn()
     {
         this->learn_state = learn_state_toggle(*this->learn_state);
-        // this->send_command(Command::learn, data::LOCK_TOGGLE);
     }
 
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
