@@ -194,6 +194,16 @@ namespace ratgdo {
             this->motion_state = MotionState::CLEAR; // when the status message is read, reset motion state to 0|clear
             this->motor_state = MotorState::OFF; // when the status message is read, reset motor state to 0|off
 
+            if (*this->learn_state != static_cast<LearnState>((byte2 >> 5) & 1)) {
+                this->learn_state = static_cast<LearnState>((byte2 >> 5) & 1);
+                if (*this->learn_state == LearnState::ACTIVE && this->learn_poll_status_) {
+                    set_interval("learn_poll", 1000, [=] { this->send_command(Command::GET_STATUS); });
+                } else {
+                    cancel_interval("learn_poll");
+                    learn_poll_status_ = true;
+                }
+            }
+
             if (this->obstruction_from_status_) {
                 // ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1);
                 this->obstruction_state = static_cast<ObstructionState>((byte1 >> 6) & 1);
@@ -207,10 +217,12 @@ namespace ratgdo {
                 this->send_command(Command::GET_OPENINGS);
             }
 
-            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s",
+            ESP_LOGD(TAG, "Status: door=%s light=%s lock=%s learn=%s",
                 DoorState_to_string(*this->door_state),
                 LightState_to_string(*this->light_state),
-                LockState_to_string(*this->lock_state));
+                LockState_to_string(*this->lock_state),
+                LearnState_to_string(*this->learn_state));
+
         } else if (cmd == Command::LIGHT) {
             if (nibble == 0) {
                 this->light_state = LightState::OFF;
@@ -250,6 +262,11 @@ namespace ratgdo {
         } else if (cmd == Command::SET_TTC) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC): %ds", seconds);
+        }
+        if (cmd == Command::LEARN) {
+            if (nibble == 1) { // LEARN sent from wall control, it will poll status every second
+                learn_poll_status_ = false;
+            }
         }
 
         return cmd;
@@ -724,6 +741,30 @@ namespace ratgdo {
         return *this->light_state;
     }
 
+    // Learn functions
+    void RATGDOComponent::activate_learn()
+    {
+        // Send LEARN with nibble = 0 then nibble = 1 to mimic wall control learn button
+        learn_poll_status_ = true;
+        this->send_command(Command::LEARN, 0);
+        set_timeout(150, [=] { this->send_command(Command::LEARN, 1); });
+        set_timeout(500, [=] { this->send_command(Command::GET_STATUS); });
+    }
+
+    void RATGDOComponent::inactivate_learn()
+    {
+        // Send LEARN twice with nibble = 0 to inactivate learn and get status to update switch state
+        this->send_command(Command::LEARN, 0);
+        set_timeout(150, [=] { this->send_command(Command::LEARN, 0); });
+        set_timeout(500, [=] { this->send_command(Command::GET_STATUS); });
+    }
+
+    void RATGDOComponent::toggle_learn()
+    {
+        this->learn_state = learn_state_toggle(*this->learn_state);
+        // this->send_command(Command::learn, data::LOCK_TOGGLE);
+    }
+
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
     {
         // change update to children is defered until after component loop
@@ -778,6 +819,10 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
     {
         this->sync_failed.subscribe(std::move(f));
+    }
+    void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
+    {
+        this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
     }
 
 } // namespace ratgdo

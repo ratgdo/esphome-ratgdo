@@ -64,5 +64,12 @@ namespace ratgdo {
         (RELEASED, 1),
         (UNKNOWN, 2))
 
+    /// Enum for learn states.
+    ENUM(LearnState, uint8_t,
+        (INACTIVE, 0),
+        (ACTIVE, 1),
+        (UNKNOWN, 2))
+    LearnState learn_state_toggle(LearnState state);
+
 } // namespace ratgdo
 } // namespace esphome

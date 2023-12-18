@@ -64,7 +64,7 @@ namespace ratgdo {
         (PAIR_3, 0x0a0),
         (PAIR_3_RESP, 0x0a1),
 
-        (LEARN_2, 0x181),
+        (LEARN, 0x181),
         (LOCK, 0x18c),
         (DOOR_ACTION, 0x280),
         (LIGHT, 0x281),
@@ -124,6 +124,7 @@ namespace ratgdo {
         observable<MotorState> motor_state { MotorState::UNKNOWN };
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
+        observable<LearnState> learn_state { LearnState::UNKNOWN };
 
         OnceCallbacks<void(DoorState)> door_state_received;
         OnceCallbacks<void()> command_sent;
@@ -173,6 +174,10 @@ namespace ratgdo {
         void lock();
         void unlock();
 
+        void toggle_learn();
+        void activate_learn();
+        void inactivate_learn();
+
         // button functionality
         void query_status();
         void query_openings();
@@ -191,6 +196,7 @@ namespace ratgdo {
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
         void subscribe_sync_failed(std::function<void(bool)>&& f);
+        void subscribe_learn_state(std::function<void(LearnState)>&& f);
 
     protected:
         // tx data
@@ -202,6 +208,8 @@ namespace ratgdo {
         SoftwareSerial sw_serial_;
 
         bool obstruction_from_status_ { false };
+
+        bool learn_poll_status_ { true };
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;

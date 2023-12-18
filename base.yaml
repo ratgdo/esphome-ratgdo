@@ -58,6 +58,13 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
+  - platform: ratgdo
+    id: "${id_prefix}_learn"
+    type: learn
+    ratgdo_id: ${id_prefix}    
+    name: "Learn"
+    icon: mdi:plus-box
+    entity_category: diagnostic    
 
 binary_sensor:
   - platform: ratgdo
