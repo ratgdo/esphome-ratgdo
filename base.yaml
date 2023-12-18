@@ -3,7 +3,7 @@
 external_components:
   - source:
       type: git
-      url: https://github.com/esphome-ratgdo/esphome-ratgdo
+      url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
 
 preferences:
@@ -14,7 +14,6 @@ ratgdo:
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
-  remote_id: 0x539
   on_sync_failed:
     then:
       - homeassistant.service:
@@ -23,6 +22,12 @@ ratgdo:
             title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup; Check the ${friendly_name} Rolling code counter number entity history and set the entity to one number larger than the largest value in history. [ESPHome devices](/config/devices/dashboard?domain=esphome)"
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
+
+api:
+  services:
+    - service: close_with_alert
+      then:
+        - lambda: id($id_prefix).close_with_alert();   
 
 sensor:
   - platform: ratgdo
@@ -34,17 +39,25 @@ sensor:
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
 
-switch:
+select:
   - platform: ratgdo
-    id: ${id_prefix}_lock_remotes
-    type: lock
+    id: ${id_prefix}_ttc_select
+    type: ttc
     entity_category: config
     ratgdo_id: ${id_prefix}
+    name: "Time to close"
+
+lock:
+  - platform: ratgdo
+    id: ${id_prefix}_lock_remotes
+    ratgdo_id: ${id_prefix}
     name: "Lock remotes"
+
+switch:
   - platform: gpio
     id: "${id_prefix}_status_door"
     internal: true
-    pin: 
+    pin:
       number: ${status_door_pin}  # D0 output door status, HIGH for open, LOW for closed
       mode:
         output: true
@@ -53,7 +66,7 @@ switch:
   - platform: gpio
     id: "${id_prefix}_status_obstruction"
     internal: true
-    pin: 
+    pin:
       number: ${status_obstruction_pin}  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
       mode:
         output: true
@@ -82,7 +95,7 @@ binary_sensor:
     id: ${id_prefix}_button
     ratgdo_id: ${id_prefix}
     name: "Button"
-    entity_category: diagnostic      
+    entity_category: diagnostic
   - platform: ratgdo
     type: motor
     id: ${id_prefix}_motor
@@ -92,7 +105,7 @@ binary_sensor:
     entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
-    pin: 
+    pin:
       number: ${dry_contact_open_pin}  # D5 dry contact for opening door
       inverted: true
       mode:
@@ -100,6 +113,8 @@ binary_sensor:
         pullup: true
     name: "Dry contact open"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - if:
           condition:
@@ -108,14 +123,16 @@ binary_sensor:
             - cover.open: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
-    pin: 
+    pin:
       number: ${dry_contact_close_pin}  # D6 dry contact for closing door
       inverted: true
       mode:
         input: true
-        pullup: true    
+        pullup: true
     name: "Dry contact close"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - if:
           condition:
@@ -124,14 +141,16 @@ binary_sensor:
             - cover.close: ${id_prefix}_garage_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
-    pin: 
+    pin:
       number: ${dry_contact_light_pin}  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
       inverted: true
       mode:
         input: true
-        pullup: true    
+        pullup: true
     name: "Dry contact light"
     entity_category: diagnostic
+    filters:
+      - delayed_on_off: 500ms
     on_press:
       - light.toggle: ${id_prefix}_light
 
@@ -144,7 +163,7 @@ number:
     name: "Rolling code counter"
     mode: box
     unit_of_measurement: "codes"
-  
+
   - platform: ratgdo
     id: ${id_prefix}_opening_duration
     type: opening_duration
@@ -160,6 +179,14 @@ number:
     ratgdo_id: ${id_prefix}
     name: "Closing duration"
     unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_client_id
+    type: client_id
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Client ID"
+    mode: box
 
 cover:
   - platform: ratgdo
@@ -184,30 +211,37 @@ button:
   - platform: safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
-  
+
   - platform: template
     id: ${id_prefix}_query_status
     entity_category: diagnostic
     name: "Query status"
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
-          id($id_prefix).query_status();  
-  
+          id($id_prefix).query_status();
+
   - platform: template
-    id: ${id_prefix}_query_openings
-    name: "Query openings"
-    entity_category: diagnostic
+    id: ${id_prefix}_close_with_alert
+    name: "Close with Alert"
     on_press: 
       then:
         lambda: !lambda |-
-          id($id_prefix).query_openings();
+          id($id_prefix).close_with_alert();
 
   - platform: template
     id: ${id_prefix}_sync
     name: "Sync"
     entity_category: diagnostic
-    on_press: 
+    on_press:
       then:
         lambda: !lambda |-
           id($id_prefix).sync();
+
+  - platform: template
+    id: ${id_prefix}_toggle_door
+    name: "Toggle door"
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).toggle_door();

@@ -19,5 +19,16 @@ namespace ratgdo {
         }
     };
 
-}
-}
+    class TTC_Failed : public Trigger<> {
+    public:
+        explicit TTC_Failed(RATGDOComponent* parent)
+        {
+            parent->subscribe_ttc_failed([this](bool state) {
+                if (state)
+                    this->trigger();
+            });
+        }
+    };    
+
+} // namespace ratgdo
+} // namespace esphome
