@@ -759,11 +759,6 @@ namespace ratgdo {
         set_timeout(500, [=] { this->send_command(Command::GET_STATUS); });
     }
 
-    void RATGDOComponent::toggle_learn()
-    {
-        this->learn_state = learn_state_toggle(*this->learn_state);
-    }
-
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
     {
         // change update to children is defered until after component loop

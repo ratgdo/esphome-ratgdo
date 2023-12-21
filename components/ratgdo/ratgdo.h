@@ -174,7 +174,6 @@ namespace ratgdo {
         void lock();
         void unlock();
 
-        void toggle_learn();
         void activate_learn();
         void inactivate_learn();
 
