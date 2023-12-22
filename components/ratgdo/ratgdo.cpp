@@ -264,8 +264,21 @@ namespace ratgdo {
             ESP_LOGD(TAG, "Time to close (TTC): %ds", seconds);
         }
         if (cmd == Command::LEARN) {
-            if (nibble == 1) { // LEARN sent from wall control, it will poll status every second
+            if (nibble == 1) { // LEARN sent from wall control, it will poll status every second.
+                // otherwise if ratgdo or gdo initiated ratgdo needs to poll
                 learn_poll_status_ = false;
+            }
+        } else if (cmd == Command::PAIRED_DEVICES) {
+            if (nibble == 0x0) {
+                this->paired_total = byte2;
+            } else if (nibble == 0x1) {
+                this->paired_remotes = byte2;
+            } else if (nibble == 0x2) {
+                this->paired_keypads = byte2;
+            } else if (nibble == 0x3) {
+                this->paired_wall_controls = byte2;
+            } else if (nibble == 0x4) {
+                this->paired_accessories = byte2;
             }
         }
 
@@ -471,6 +484,36 @@ namespace ratgdo {
         send_command(Command::GET_OPENINGS);
     }
 
+    void RATGDOComponent::query_paired_devices()
+    {
+        ESP_LOGD(TAG, "start query_paired_devices");
+        set_timeout(200, [=] { this->send_command(Command::GET_PAIRED_DEVICES, 0); }); // total
+        set_timeout(400, [=] { this->send_command(Command::GET_PAIRED_DEVICES, 1); }); // wireless
+        set_timeout(600, [=] { this->send_command(Command::GET_PAIRED_DEVICES, 2); }); // keypads
+        set_timeout(800, [=] { this->send_command(Command::GET_PAIRED_DEVICES, 3); }); // wall controls
+        set_timeout(1000, [=] { this->send_command(Command::GET_PAIRED_DEVICES, 4); }); // accessories
+    }
+
+    // wipe devices from memory based on get paired devices nibble values
+    void RATGDOComponent::clear_paired_devices(uint16_t wipe)
+    {
+        if (wipe < 5) {
+            ESP_LOGW(TAG, "clear_paired_devices: %d", wipe);
+            if (wipe == 0) {
+                set_timeout(200, [=] { this->send_command(Command::CLEAR_PAIRED_DEVICES, 0); }); // wireless
+                set_timeout(400, [=] { this->send_command(Command::CLEAR_PAIRED_DEVICES, 1); }); // keypads
+                set_timeout(600, [=] { this->send_command(Command::CLEAR_PAIRED_DEVICES, 2); }); // wall controls
+                set_timeout(800, [=] { this->send_command(Command::CLEAR_PAIRED_DEVICES, 3); }); // accessories
+                set_timeout(1000, [=] { this->query_status(); });
+                set_timeout(1200, [=] { this->query_paired_devices(); });
+            } else {
+                this->send_command(Command::CLEAR_PAIRED_DEVICES, wipe - 1); // just requested device
+                set_timeout(200, [=] { this->query_status(); });
+                set_timeout(400, [=] { this->query_paired_devices(); });
+            }
+        }
+    }
+
     void RATGDOComponent::send_command(Command command, uint32_t data, bool increment)
     {
         ESP_LOG1(TAG, "Send command: %s, data: %08" PRIx32, Command_to_string(command), data);
@@ -545,6 +588,7 @@ namespace ratgdo {
                 this->send_command(Command::GET_OPENINGS);
                 return RetryResult::RETRY;
             }
+            query_paired_devices();
             return RetryResult::DONE;
         };
 
@@ -776,6 +820,26 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_openings(std::function<void(uint16_t)>&& f)
     {
         this->openings.subscribe([=](uint16_t state) { defer("openings", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint16_t)>&& f)
+    {
+        this->paired_total.subscribe([=](uint16_t state) { defer("paired_total", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint16_t)>&& f)
+    {
+        this->paired_remotes.subscribe([=](uint16_t state) { defer("paired_remotes", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint16_t)>&& f)
+    {
+        this->paired_keypads.subscribe([=](uint16_t state) { defer("paired_keypads", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f)
+    {
+        this->paired_wall_controls.subscribe([=](uint16_t state) { defer("paired_wall_controls", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint16_t)>&& f)
+    {
+        this->paired_accessories.subscribe([=](uint16_t state) { defer("paired_accessories", [=] { f(state); }); });
     }
     void RATGDOComponent::subscribe_door_state(std::function<void(DoorState, float)>&& f)
     {

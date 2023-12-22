@@ -71,6 +71,10 @@ namespace ratgdo {
         (MOTOR_ON, 0x284),
         (MOTION, 0x285),
 
+        (GET_PAIRED_DEVICES, 0x307), // nibble 0 for total, 1 wireless, 2 keypads, 3 wall, 4 accessories.
+        (PAIRED_DEVICES, 0x308), // byte2 holds number of paired devices
+        (CLEAR_PAIRED_DEVICES, 0x30D), // nibble 0 to clear remotes, 1 keypads, 2 wall, 3 accessories (offset from above)
+
         (LEARN_1, 0x391),
         (PING, 0x392),
         (PING_RESP, 0x393),
@@ -110,6 +114,11 @@ namespace ratgdo {
         observable<float> closing_duration { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
+        observable<uint16_t> paired_total { 0xFF };
+        observable<uint16_t> paired_remotes { 0xFF };
+        observable<uint16_t> paired_keypads { 0xFF };
+        observable<uint16_t> paired_wall_controls { 0xFF };
+        observable<uint16_t> paired_accessories { 0xFF };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
@@ -174,8 +183,11 @@ namespace ratgdo {
         void lock();
         void unlock();
 
+        // Learn & Paired
         void activate_learn();
         void inactivate_learn();
+        void query_paired_devices();
+        void clear_paired_devices(uint16_t wipe);
 
         // button functionality
         void query_status();
@@ -187,6 +199,11 @@ namespace ratgdo {
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
         void subscribe_openings(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_devices_total(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_remotes(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_keypads(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_accessories(std::function<void(uint16_t)>&& f);
         void subscribe_door_state(std::function<void(DoorState, float)>&& f);
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);

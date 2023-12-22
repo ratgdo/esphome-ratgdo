@@ -29,6 +29,9 @@ namespace ratgdo {
         bool value = state == LearnState::ACTIVE;
         this->state = value;
         this->publish_state(value);
+        if (value == false) {
+            this->parent_->query_paired_devices();
+        }
     }
 
     void RATGDOSwitch::write_state(bool state)

@@ -22,6 +22,24 @@ ratgdo:
             title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup; Check the ${friendly_name} Rolling code counter number entity history and set the entity to one number larger than the largest value in history. [ESPHome devices](/config/devices/dashboard?domain=esphome)"
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
+api:
+  services:
+  - service: wipe_devices_from_gdo_memory
+    variables:
+      devices_to_wipe: string 
+    then:
+      - lambda: !lambda |-
+          if(devices_to_wipe.compare("all") == 0) {
+            id($id_prefix).clear_paired_devices(0);
+          } else if (devices_to_wipe.compare("remote") == 0) {
+            id($id_prefix).clear_paired_devices(1);
+          } else if (devices_to_wipe.compare("keypad") == 0) {
+            id($id_prefix).clear_paired_devices(2);
+          } else if (devices_to_wipe.compare("wall") == 0)  {
+            id($id_prefix).clear_paired_devices(3);
+          } else if (devices_to_wipe.compare("accessory")  == 0) {      
+            id($id_prefix).clear_paired_devices(4);
+          }  
 
 sensor:
   - platform: ratgdo
@@ -32,6 +50,45 @@ sensor:
     name: "Openings"
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_total
+    type: paired_devices_total
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Devices"
+    icon: mdi:remote   
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_remotes
+    type: paired_devices_remotes
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Remotes"
+    disabled_by_default: true
+    icon: mdi:remote  
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_keypads
+    type: paired_devices_keypads
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Keypads"
+    disabled_by_default: true
+    icon: mdi:dialpad  
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_wall_controls
+    type: paired_devices_wall_controls
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Wall Controls"
+    disabled_by_default: true
+    icon: mdi:pan-vertical
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_accessories
+    type: paired_devices_accessories
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Accessories"
+    disabled_by_default: true
+    icon: mdi:cloud-cancel-outline  
 
 lock:
   - platform: ratgdo
