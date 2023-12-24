@@ -22,7 +22,7 @@ esphome:
     version: "2.5i"
 
 esp8266:
-  board: d1_mini_lite
+  board: d1_mini
   restore_from_flash: true
 
 dashboard_import:
