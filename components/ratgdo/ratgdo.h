@@ -38,6 +38,7 @@ namespace ratgdo {
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
     const float DOOR_DELTA_UNKNOWN = -2.0;
+    const uint16_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
     namespace data {
         const uint32_t LIGHT_OFF = 0;
@@ -114,11 +115,11 @@ namespace ratgdo {
         observable<float> closing_duration { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
-        observable<uint16_t> paired_total { 0xFF };
-        observable<uint16_t> paired_remotes { 0xFF };
-        observable<uint16_t> paired_keypads { 0xFF };
-        observable<uint16_t> paired_wall_controls { 0xFF };
-        observable<uint16_t> paired_accessories { 0xFF };
+        observable<uint16_t> paired_total { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
@@ -187,7 +188,8 @@ namespace ratgdo {
         void activate_learn();
         void inactivate_learn();
         void query_paired_devices();
-        void clear_paired_devices(uint16_t wipe);
+        void query_paired_devices(PairedDevice kind);
+        void clear_paired_devices(PairedDevice kind);
 
         // button functionality
         void query_status();

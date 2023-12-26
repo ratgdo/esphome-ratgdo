@@ -18,7 +18,6 @@ namespace ratgdo {
         void setup() override;
         void set_switch_type(SwitchType switch_type_) { this->switch_type_ = switch_type_; }
 
-        void on_learn_state(LearnState state);
         void write_state(bool state) override;
 
     protected:
