@@ -19,6 +19,7 @@ The ESPHome firmware will allow you to open the door to any position after calib
 
 ## ESPHome config
 
+- [ESPHome config for v2.0 board with ESP8266 D1 Mini](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v2board_esp8266_d1_mini.yaml)
 - [ESPHome config for v2.0 board with ESP8266 D1 Mini lite](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v2board_esp8266_d1_mini_lite.yaml)
 - [ESPHome config for v2.0 board with ESP32 D1 Mini](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v2board_esp32_d1_mini.yaml)
 - [ESPHome config for v2.0 board with ESP32 Lolin D2 Mini](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v2board_esp32_lolin_s2_mini.yaml)
