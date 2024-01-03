@@ -19,6 +19,9 @@ jobs:
           - file: v2board_esp8266_d1_mini_lite.yaml
             name: V2.0 Board ESP8266 D1 Mini Lite
             manifest_filename: v2board_esp8266_d1_mini_lite-manifest.json
+          - file: v2board_esp8266_d1_mini.yaml
+            name: V2.0 Board ESP8266 D1 Mini
+            manifest_filename: v2board_esp8266_d1_mini-manifest.json
           - file: v2board_esp32_d1_mini.yaml
             name: V2.0 Board ESP32 D1 Mini
             manifest_filename: v2board_esp32_d1_mini-manifest.json
