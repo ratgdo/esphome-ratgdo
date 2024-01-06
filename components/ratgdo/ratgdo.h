@@ -33,7 +33,14 @@ namespace ratgdo {
     class RATGDOComponent;
     typedef Parented<RATGDOComponent> RATGDOClient;
 
+#ifdef PROTOCOL_SECPLUSV2
     static const uint8_t PACKET_LENGTH = 19;
+#endif
+
+#ifdef PROTOCOL_SECPLUSV1
+    // TODO: these are wrong and copied from secplusv2
+    static const uint8_t PACKET_LENGTH = 19;
+#endif
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
