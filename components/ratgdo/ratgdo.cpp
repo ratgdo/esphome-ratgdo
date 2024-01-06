@@ -578,6 +578,7 @@ namespace ratgdo {
         ESP_LOG2(TAG, "Sending packet");
         this->print_packet(this->tx_packet_);
 
+#ifdef PROTOCOL_SECPLUSV2
         // indicate the start of a frame by pulling the 12V line low for at leat 1 byte followed by
         // one STOP bit, which indicates to the receiving end that the start of the message follows
         // The output pin is controlling a transistor, so the logic is inverted
@@ -587,6 +588,11 @@ namespace ratgdo {
         delayMicroseconds(130);
 
         this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
+#endif
+#ifdef PROTOCOL_SECPLUSV1
+        // TODO: implement
+#endif
+
         this->transmit_pending_ = false;
         this->transmit_pending_start_ = 0;
         this->command_sent();
@@ -741,6 +747,7 @@ namespace ratgdo {
 
     void RATGDOComponent::door_command(uint32_t data)
     {
+#ifdef PROTOCOL_SECPLUSV2
         data |= (1 << 16); // button 1 ?
         data |= (1 << 8); // button press
         this->send_command(Command::DOOR_ACTION, data, false, [=]() {
@@ -749,6 +756,10 @@ namespace ratgdo {
                 this->send_command(Command::DOOR_ACTION, data2);
             });
         });
+#endif
+#ifdef PROTOCOL_SECPLUSV1
+        // TODO: implement
+#endif
     }
 
     void RATGDOComponent::ensure_door_command(uint32_t data, uint32_t delay)
