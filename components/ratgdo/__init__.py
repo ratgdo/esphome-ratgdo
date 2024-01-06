@@ -2,6 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import automation, pins
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
+import voluptuous as vol
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -28,6 +29,11 @@ CONF_RATGDO_ID = "ratgdo_id"
 
 CONF_ON_SYNC_FAILED = "on_sync_failed"
 
+CONF_PROTOCOL = "protocol"
+
+PROTOCOL_SECPLUSV1 = "secplusv1"
+PROTOCOL_SECPLUSV2 = "secplusv2"
+SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2]
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -46,6 +52,9 @@ CONFIG_SCHEMA = cv.Schema(
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
             }
         ),
+        cv.Optional(
+            CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2
+        ): vol.In(SUPPORTED_PROTOCOLS)
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -85,3 +94,8 @@ async def to_code(config):
         repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
         version=None,
     )
+
+    if config[CONF_PROTOCOL] ==  PROTOCOL_SECPLUSV1:
+        cg.add_define("PROTOCOL_SECPLUSV1")
+    elif config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV2:
+        cg.add_define("PROTOCOL_SECPLUSV2")
