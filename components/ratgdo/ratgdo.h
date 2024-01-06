@@ -40,6 +40,7 @@ namespace ratgdo {
     const float DOOR_DELTA_UNKNOWN = -2.0;
     const uint16_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
+#ifdef PROTOCOL_SECPLUSV2
     namespace data {
         const uint32_t LIGHT_OFF = 0;
         const uint32_t LIGHT_ON = 1;
@@ -89,6 +90,57 @@ namespace ratgdo {
         (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
     )
 
+#endif
+
+#ifdef PROTOCOL_SECPLUSV1
+
+    // TODO: these are wrong and copied from secplusv2
+    namespace data {
+        const uint32_t LIGHT_OFF = 0;
+        const uint32_t LIGHT_ON = 1;
+        const uint32_t LIGHT_TOGGLE = 2;
+        const uint32_t LIGHT_TOGGLE2 = 3;
+
+        const uint32_t LOCK_OFF = 0;
+        const uint32_t LOCK_ON = 1;
+        const uint32_t LOCK_TOGGLE = 2;
+
+        const uint32_t DOOR_CLOSE = 0;
+        const uint32_t DOOR_OPEN = 1;
+        const uint32_t DOOR_TOGGLE = 2;
+        const uint32_t DOOR_STOP = 3;
+    }
+
+    ENUM(Command, uint16_t,
+        (UNKNOWN, 0x000),
+        (GET_STATUS, 0x080),
+        (STATUS, 0x081),
+        (OBST_1, 0x084), // sent when an obstruction happens?
+        (OBST_2, 0x085), // sent when an obstruction happens?
+        (PAIR_3, 0x0a0),
+        (PAIR_3_RESP, 0x0a1),
+
+        (LEARN_2, 0x181),
+        (LOCK, 0x18c),
+        (DOOR_ACTION, 0x280),
+        (LIGHT, 0x281),
+        (MOTOR_ON, 0x284),
+        (MOTION, 0x285),
+
+        (LEARN_1, 0x391),
+        (PING, 0x392),
+        (PING_RESP, 0x393),
+
+        (PAIR_2, 0x400),
+        (PAIR_2_RESP, 0x401),
+        (SET_TTC, 0x402), // ttc_in_seconds = (byte1<<8)+byte2
+        (CANCEL_TTC, 0x408), // ?
+        (TTC, 0x40a), // Time to close
+        (GET_OPENINGS, 0x48b),
+        (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
+    )
+
+#endif
     inline bool operator==(const uint16_t cmd_i, const Command& cmd_e) { return cmd_i == static_cast<uint16_t>(cmd_e); }
     inline bool operator==(const Command& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
 
