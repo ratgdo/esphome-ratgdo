@@ -153,7 +153,7 @@ namespace ratgdo {
         void send_command(Command command, uint32_t data, bool increment, std::function<void()>&& on_sent);
         bool transmit_packet();
         void encode_packet(Command command, uint32_t data, bool increment, WirePacket& packet);
-        void print_packet(const WirePacket& packet) const;
+        void print_packet(const char* prefix, const WirePacket& packet) const;
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t code);

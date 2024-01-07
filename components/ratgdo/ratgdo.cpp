@@ -16,8 +16,8 @@
 
 #include "esphome/core/log.h"
 
-#define ESP_LOG1 ESP_LOGV
-#define ESP_LOG2 ESP_LOGV
+#define ESP_LOG1 ESP_LOGD
+#define ESP_LOG2 ESP_LOGD
 
 namespace esphome {
 namespace ratgdo {
@@ -350,9 +350,10 @@ namespace ratgdo {
         this->rolling_code_counter = (*this->rolling_code_counter + delta) & 0xfffffff;
     }
 
-    void RATGDOComponent::print_packet(const WirePacket& packet) const
+    void RATGDOComponent::print_packet(const char* prefix, const WirePacket& packet) const
     {
-        ESP_LOG2(TAG, "Packet: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+        ESP_LOG2(TAG, "%s packet: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+            prefix,
             packet[0],
             packet[1],
             packet[2],
@@ -461,7 +462,7 @@ namespace ratgdo {
                 if (byte_count == PACKET_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
-                    this->print_packet(rx_packet);
+                    this->print_packet("Received", rx_packet);
                     this->decode_packet(rx_packet);
                     return;
                 }
@@ -576,8 +577,7 @@ namespace ratgdo {
             delayMicroseconds(100);
         }
 
-        ESP_LOG2(TAG, "Sending packet");
-        this->print_packet(this->tx_packet_);
+        this->print_packet("Sending", this->tx_packet_);
 
         // indicate the start of a frame by pulling the 12V line low for at leat 1 byte followed by
         // one STOP bit, which indicates to the receiving end that the start of the message follows
