@@ -19,18 +19,8 @@ namespace ratgdo {
     {
         if (this->switch_type_ == SwitchType::RATGDO_LEARN) {
             this->parent_->subscribe_learn_state([=](LearnState state) {
-                this->on_learn_state(state);
+                this->publish_state(state==LearnState::ACTIVE);
             });
-        }
-    }
-
-    void RATGDOSwitch::on_learn_state(LearnState state)
-    {
-        bool value = state == LearnState::ACTIVE;
-        this->state = value;
-        this->publish_state(value);
-        if (value == false) {
-            this->parent_->query_paired_devices();
         }
     }
 

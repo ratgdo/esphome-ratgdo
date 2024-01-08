@@ -30,15 +30,15 @@ api:
     then:
       - lambda: !lambda |-
           if(devices_to_wipe.compare("all") == 0) {
-            id($id_prefix).clear_paired_devices(0);
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ALL);
           } else if (devices_to_wipe.compare("remote") == 0) {
-            id($id_prefix).clear_paired_devices(1);
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::REMOTE);
           } else if (devices_to_wipe.compare("keypad") == 0) {
-            id($id_prefix).clear_paired_devices(2);
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::KEYPAD);
           } else if (devices_to_wipe.compare("wall") == 0)  {
-            id($id_prefix).clear_paired_devices(3);
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::WALL_CONTROL);
           } else if (devices_to_wipe.compare("accessory")  == 0) {      
-            id($id_prefix).clear_paired_devices(4);
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
           }  
 
 sensor:
@@ -121,7 +121,7 @@ switch:
     ratgdo_id: ${id_prefix}    
     name: "Learn"
     icon: mdi:plus-box
-    entity_category: diagnostic    
+    entity_category: config
 
 binary_sensor:
   - platform: ratgdo
