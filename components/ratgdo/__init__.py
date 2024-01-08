@@ -95,7 +95,8 @@ async def to_code(config):
         version=None,
     )
 
-    if config[CONF_PROTOCOL] ==  PROTOCOL_SECPLUSV1:
+    if config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV1:
         cg.add_define("PROTOCOL_SECPLUSV1")
     elif config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV2:
-        cg.add_define("PROTOCOL_SECPLUSV2")
+        cg.add_define("PROTOCOL_SECPLUSV2")        
+    cg.add(var.init_protocol())

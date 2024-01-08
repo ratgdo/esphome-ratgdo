@@ -79,5 +79,44 @@ namespace ratgdo {
         (ACCESSORY, 4),
         (UNKNOWN, 0xff))
 
+    // actions
+    ENUM(LightAction, uint8_t,
+        (OFF, 0),
+        (ON, 1),
+        (TOGGLE, 2),
+        (UNKNOWN, 3))
+
+    ENUM(LockAction, uint8_t,
+        (UNLOCK, 0),
+        (LOCK, 1),
+        (TOGGLE, 2),
+        (UNKNOWN, 3))
+
+    ENUM(DoorAction, uint8_t,
+        (CLOSE, 0),
+        (OPEN, 1),
+        (TOGGLE, 2),
+        (STOP, 3),
+        (UNKNOWN, 4))
+
+    ENUM(QueryAction, uint8_t,
+        (STATUS, 0),
+        (OPENINGS, 1),
+        (UNKNOWN, 2))
+
+    struct Openings {
+        uint16_t count;
+        uint8_t flag;
+    };
+
+    struct PairedDeviceCount {
+        PairedDevice kind;
+        uint16_t count;
+    };
+
+    struct TimeToClose {
+        uint16_t seconds;
+    };
+
 } // namespace ratgdo
 } // namespace esphome
