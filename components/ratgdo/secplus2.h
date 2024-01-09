@@ -75,6 +75,8 @@ namespace secplus2 {
         void loop();
         void dump_config();
 
+        void sync();
+
         void light_action(LightAction action);
         void lock_action(LockAction action);
         void door_action(DoorAction action);

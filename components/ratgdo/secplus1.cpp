@@ -38,6 +38,44 @@ namespace secplus1 {
         ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v1");
     }
 
+
+    void Secplus1::sync()
+    {
+        this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
+        wall_panel_emulation_start_ = millis();
+        this->wall_panel_emulation(0);
+    }
+
+    void Secplus1::wall_panel_emulation(size_t index)
+    {
+        if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
+            ESP_LOG1(TAG, "Looking for security+ 1.0 wall panel...");
+
+            if (this->door_state != DoorState::UNKNOWN || this->light_state != LightState::UNKNOWN) {
+                ESP_LOG1(TAG, "Wall panel detected");
+                return;
+            }
+            if (millis() - wall_panel_emulation_start_ > 35000 && !this->wall_panel_starting_) {
+                ESP_LOG1(TAG, "No wall panel detected. Switching to emulation mode.");
+                this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
+            }
+            this->scheduler_->set_timeout(this->ratgdo_, "", 2000, [=] {
+                this->wall_panel_emulation(index);
+            });
+            return;
+        } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
+            ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
+            this->sw_serial_.write(&secplus1_states[index], 1);
+            index += 1;
+            if (index == 18) {
+                index = 15;
+            }
+            this->scheduler_->set_timeout(this->ratgdo_, "", 250, [=] {
+                this->wall_panel_emulation(index);
+            });
+        }
+    }
+
     void Secplus1::light_action(LightAction action)
     {
         if (action == LightAction::UNKNOWN) {
@@ -98,8 +136,14 @@ namespace secplus1 {
 
     void Secplus1::query_action(QueryAction action)
     {
+        bool sync = false;
         ESP_LOG2(TAG, "Query action: %s", QueryAction_to_string(action));
         if (action == QueryAction::STATUS) {
+            if (!sync) {
+                this->transmit_packet_delayed(secplus1_states, 19, 250);
+                // // sync = true;
+                // this->sw_serial_.write(secplus1_states, 19);                
+            }
         }
     }
 
@@ -225,6 +269,11 @@ namespace secplus1 {
                 this->ratgdo_->received(lock_state);
             }
         }
+        else if (cmd.type == CommandType::WALL_PANEL_SYNC) {
+            if (cmd.value == 0x31) {
+                this->wall_panel_starting_ = true;
+            }
+        }
     }
 
     void Secplus1::transmit_packet(const uint8_t packet[], uint32_t len)
@@ -254,6 +303,7 @@ namespace secplus1 {
         }
 
         this->scheduler_->set_timeout(this->ratgdo_, "", delay, [=] {
+            ESP_LOG2(TAG, "Sending byte: [%02X]", packet[0]);
             this->sw_serial_.write(packet[0]);
             this->transmit_packet_delayed(packet+1, len-1, delay);
         });

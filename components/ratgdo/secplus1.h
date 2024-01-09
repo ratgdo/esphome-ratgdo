@@ -29,6 +29,7 @@ namespace secplus1 {
     static const uint8_t secplus1_states[] = {0x35,0x35,0x35,0x35,0x33,0x33,0x53,0x53,0x38,0x3A,0x3A,0x3A,0x39,0x38,0x3A, 0x38,0x3A,0x39,0x3A};
 
     ENUM(CommandType, uint16_t,
+        (WALL_PANEL_SYNC, 0x31),
         (DOOR_STATUS, 0x38),
         (OBSTRUCTION, 0x39), //
         (OTHER_STATUS, 0x3A),
@@ -43,12 +44,18 @@ namespace secplus1 {
         Command(CommandType type_, uint8_t value_ = 0) : type(type_), value(value_) {}
     };
 
+    enum class WallPanelEmulationState {
+        WAITING,
+        RUNNING,
+    };
 
     class Secplus1 : public Protocol {
     public:
         void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         void loop();
         void dump_config();
+
+        void sync();
 
         void light_action(LightAction action);
         void lock_action(LockAction action);
@@ -58,7 +65,7 @@ namespace secplus1 {
         ProtocolArgs call(ProtocolArgs args);
 
     protected:
-        friend class RATGDOComponent;
+        void wall_panel_emulation(size_t index);
 
         optional<Command> read_command();
         void handle_command(const Command& cmd);
@@ -76,8 +83,12 @@ namespace secplus1 {
         DoorState door_state { DoorState::UNKNOWN };
         DoorState prev_door_state { DoorState::UNKNOWN };
 
-        bool transmit_pending_ { false };
-        uint32_t transmit_pending_start_ { 0 };
+        bool wall_panel_starting_ { false };
+        uint32_t wall_panel_emulation_start_ { 0 };
+        WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
+
+        // bool transmit_pending_ { false };
+        // uint32_t transmit_pending_start_ { 0 };
         TxPacket tx_packet_;
 
         uint32_t last_rx_ { 0 };

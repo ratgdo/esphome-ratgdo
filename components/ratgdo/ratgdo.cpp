@@ -36,8 +36,7 @@ namespace ratgdo {
     // that did not save the counter to flash in time which
     // results in the rolling counter being behind what the GDO
     // expects.
-    //
-    static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
+
 
     void RATGDOComponent::setup()
     {
@@ -391,56 +390,7 @@ namespace ratgdo {
 
     void RATGDOComponent::sync()
     {
-        auto sync_step = [=]() {
-            if (*this->door_state == DoorState::UNKNOWN) {
-                this->query_status();
-                return RetryResult::RETRY;
-            }
-            if (*this->openings == 0) {
-                this->query_openings();
-                return RetryResult::RETRY;
-            }
-            if (*this->paired_total == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::ALL);
-                return RetryResult::RETRY;
-            }
-            if (*this->paired_remotes == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::REMOTE);
-                return RetryResult::RETRY;
-            }
-            if (*this->paired_keypads == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::KEYPAD);
-                return RetryResult::RETRY;
-            }
-            if (*this->paired_wall_controls == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::WALL_CONTROL);
-                return RetryResult::RETRY;
-            }
-            if (*this->paired_accessories == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::ACCESSORY);
-                return RetryResult::RETRY;
-            }
-            return RetryResult::DONE;
-        };
-
-        const uint8_t MAX_ATTEMPTS = 10;
-        set_retry(
-            500, MAX_ATTEMPTS, [=](uint8_t r) {
-                auto result = sync_step();
-                if (result == RetryResult::RETRY) {
-                    if (r == MAX_ATTEMPTS - 2 && *this->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
-                        // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
-                        this->protocol_->call(IncrementRollingCodeCounter{MAX_CODES_WITHOUT_FLASH_WRITE});
-                    }
-                    if (r == 0) {
-                        // this was last attempt, notify of sync failure
-                        ESP_LOGD(TAG, "Triggering sync failed actions.");
-                        this->sync_failed = true;
-                    }
-                }
-                return result;
-            },
-            1.5f);
+        this->protocol_->sync();
     }
 
     void RATGDOComponent::open_door()
