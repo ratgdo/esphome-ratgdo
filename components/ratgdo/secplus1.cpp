@@ -43,6 +43,7 @@ namespace secplus1 {
     {
         this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
         wall_panel_emulation_start_ = millis();
+        this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
         this->wall_panel_emulation(0);
     }
 
@@ -59,7 +60,7 @@ namespace secplus1 {
                 ESP_LOG1(TAG, "No wall panel detected. Switching to emulation mode.");
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "", 2000, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [=] {
                 this->wall_panel_emulation(index);
             });
             return;
@@ -70,7 +71,7 @@ namespace secplus1 {
             if (index == 18) {
                 index = 15;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "", 250, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [=] {
                 this->wall_panel_emulation(index);
             });
         }
