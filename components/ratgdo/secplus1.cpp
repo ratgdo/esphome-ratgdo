@@ -136,15 +136,6 @@ namespace secplus1 {
 
     void Secplus1::query_action(QueryAction action)
     {
-        bool sync = false;
-        ESP_LOG2(TAG, "Query action: %s", QueryAction_to_string(action));
-        if (action == QueryAction::STATUS) {
-            if (!sync) {
-                this->transmit_packet_delayed(secplus1_states, 19, 250);
-                // // sync = true;
-                // this->sw_serial_.write(secplus1_states, 19);                
-            }
-        }
     }
 
 
@@ -269,7 +260,7 @@ namespace secplus1 {
                 this->ratgdo_->received(lock_state);
             }
         }
-        else if (cmd.type == CommandType::WALL_PANEL_SYNC) {
+        else if (cmd.type == CommandType::WALL_PANEL_STARTING) {
             if (cmd.value == 0x31) {
                 this->wall_panel_starting_ = true;
             }
