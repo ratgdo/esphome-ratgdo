@@ -14,6 +14,14 @@ namespace esphome {
 namespace ratgdo {
 namespace secplus2 {
 
+    // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
+    // since we write the flash at most every every 5s
+    //
+    // We want the rolling counter to be high enough that the
+    // GDO will accept the command after an unexpected reboot
+    // that did not save the counter to flash in time which
+    // results in the rolling counter being behind what the GDO
+    // expects.
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
 
     static const char* const TAG = "ratgdo_secplus2";
@@ -132,22 +140,16 @@ namespace secplus2 {
         this->door_command(action);
     }
 
-    void Secplus2::query_action(QueryAction action)
+
+    Result Secplus2::call(Args args)
     {
-        if (action == QueryAction::STATUS) {
+        using Tag = Args::Tag;
+        if (args.tag == Tag::query_status) {
             this->send_command(CommandType::GET_STATUS);
-        } else if (action == QueryAction::OPENINGS) {
+        } else if (args.tag == Tag::query_openings) {
             this->send_command(CommandType::GET_OPENINGS);
-        }
-    }
-
-
-    ProtocolArgs Secplus2::call(ProtocolArgs args)
-    {
-        using Tag = ProtocolArgs::Tag;
-
-        if (args.tag == Tag::get_rolling_code_counter) {
-            return ProtocolArgs(RollingCodeCounter{std::addressof(this->rolling_code_counter_)});
+        } else if (args.tag == Tag::get_rolling_code_counter) {
+            return Result(RollingCodeCounter{std::addressof(this->rolling_code_counter_)});
         } else if (args.tag == Tag::set_rolling_code_counter) {
             this->set_rolling_code_counter(args.value.set_rolling_code_counter.counter);
         } else if (args.tag == Tag::set_client_id) {

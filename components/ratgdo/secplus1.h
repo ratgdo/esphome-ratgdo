@@ -16,6 +16,8 @@ namespace esphome {
 namespace ratgdo {
 namespace secplus1 {
 
+    using namespace esphome::ratgdo::protocol;
+
     static const uint8_t RX_LENGTH = 2;
     typedef uint8_t RxPacket[RX_LENGTH];
 
@@ -60,9 +62,8 @@ namespace secplus1 {
         void light_action(LightAction action);
         void lock_action(LockAction action);
         void door_action(DoorAction action);
-        void query_action(QueryAction action);
 
-        ProtocolArgs call(ProtocolArgs args);
+        Result call(Args args);
 
     protected:
         void wall_panel_emulation(size_t index);

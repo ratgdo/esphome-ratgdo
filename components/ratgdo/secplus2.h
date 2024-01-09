@@ -19,6 +19,8 @@ namespace ratgdo {
 
 namespace secplus2 {
 
+    using namespace esphome::ratgdo::protocol;
+
     static const uint8_t PACKET_LENGTH = 19;
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
@@ -80,9 +82,8 @@ namespace secplus2 {
         void light_action(LightAction action);
         void lock_action(LockAction action);
         void door_action(DoorAction action);
-        void query_action(QueryAction action);
 
-        ProtocolArgs call(ProtocolArgs args);
+        Result call(Args args);
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t counter);

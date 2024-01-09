@@ -23,9 +23,8 @@ namespace ratgdo {
         virtual void light_action(LightAction action);
         virtual void lock_action(LockAction action);
         virtual void door_action(DoorAction action);
-        virtual void query_action(QueryAction action);
 
-        virtual ProtocolArgs call(ProtocolArgs args);
+        virtual protocol::Result call(protocol::Args args);
     };
     
 } // namespace ratgdo

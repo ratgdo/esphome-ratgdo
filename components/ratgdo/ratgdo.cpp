@@ -25,18 +25,10 @@
 namespace esphome {
 namespace ratgdo {
 
+    using namespace protocol;
+
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
-    //
-    // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
-    // since we write the flash at most every every 5s
-    //
-    // We want the rolling counter to be high enough that the
-    // GDO will accept the command after an unexpected reboot
-    // that did not save the counter to flash in time which
-    // results in the rolling counter being behind what the GDO
-    // expects.
-
 
     void RATGDOComponent::setup()
     {
@@ -64,8 +56,7 @@ namespace ratgdo {
 
 
     // initializing protocol, this gets called before setup() because 
-    // the protocol_ member must be initialized before setup() because it children
-    // components might require that
+    // its children components might require that
     void RATGDOComponent::init_protocol()
     {
 #ifdef PROTOCOL_SECPLUSV2
@@ -380,12 +371,12 @@ namespace ratgdo {
     void RATGDOComponent::query_status()
     {
         ESP_LOG2(TAG, "Query status action");
-        this->protocol_->query_action(QueryAction::STATUS);
+        this->protocol_->call(QueryStatus{});
     }
 
     void RATGDOComponent::query_openings()
     {
-        this->protocol_->query_action(QueryAction::OPENINGS);
+        this->protocol_->call(QueryOpenings{});
     }
 
     void RATGDOComponent::sync()
@@ -570,8 +561,8 @@ namespace ratgdo {
         // change update to children is defered until after component loop
         // if multiple changes occur during component loop, only the last one is notified
         auto counter = this->protocol_->call(GetRollingCodeCounter{});
-        if (counter.tag==ProtocolArgs::Tag::rolling_code_counter) {
-            counter.value.rolling_code_counter.counter->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
+        if (counter.tag==Result::Tag::rolling_code_counter) {
+            counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
         }
     }
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)

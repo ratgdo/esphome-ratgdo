@@ -99,11 +99,6 @@ namespace ratgdo {
         (STOP, 3),
         (UNKNOWN, 4))
 
-    ENUM(QueryAction, uint8_t,
-        (STATUS, 0),
-        (OPENINGS, 1),
-        (UNKNOWN, 2))
-
     struct Openings {
         uint16_t count;
         uint8_t flag;

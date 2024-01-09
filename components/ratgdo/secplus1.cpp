@@ -134,12 +134,8 @@ namespace secplus1 {
         // }
     }
 
-    void Secplus1::query_action(QueryAction action)
-    {
-    }
 
-
-    ProtocolArgs Secplus1::call(ProtocolArgs args) 
+    Result Secplus1::call(Args args) 
     {
         return {};
     }
