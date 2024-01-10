@@ -312,16 +312,9 @@ namespace ratgdo {
         this->closing_duration = duration;
     }
 
-    void RATGDOComponent::set_rolling_code_counter(uint32_t counter)
+    Result RATGDOComponent::call_protocol(Args args)
     {
-
-        ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
-        this->protocol_->call(SetRollingCodeCounter{counter});
-    }
-
-    void RATGDOComponent::set_client_id(uint64_t client_id)
-    {
-        this->protocol_->call(SetClientID{client_id});
+        return this->protocol_->call(args);
     }
 
     /*************************** OBSTRUCTION DETECTION ***************************/

@@ -43,8 +43,12 @@ namespace ratgdo {
         }
     };
 
+    using protocol::Args;
+    using protocol::Result;
+    
     class RATGDOComponent : public Component {
     public:
+
         void setup() override;
         void loop() override;
         void dump_config() override;
@@ -88,9 +92,7 @@ namespace ratgdo {
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
         
-        // security+2.0 specific
-        void set_rolling_code_counter(uint32_t code);
-        void set_client_id(uint64_t client_id);
+        Result call_protocol(Args args);
 
         void received(const DoorState door_state);
         void received(const LightState light_state);
