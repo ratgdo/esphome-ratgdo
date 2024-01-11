@@ -152,6 +152,7 @@ namespace ratgdo {
                 this->door_position = 0.5; // best guess
             }
             this->cancel_position_sync_callbacks();
+            cancel_timeout("door_query_state");
         } else if (door_state == DoorState::OPEN) {
             this->door_position = 1.0;
             this->cancel_position_sync_callbacks();
@@ -377,16 +378,23 @@ namespace ratgdo {
         this->protocol_->sync();
     }
 
-    void RATGDOComponent::open_door()
+    void RATGDOComponent::door_open()
     {
         if (*this->door_state == DoorState::OPENING) {
             return; // gets ignored by opener
         }
 
-        this->protocol_->door_action(DoorAction::OPEN);
+        this->door_action(DoorAction::OPEN);
+
+        // query state in case we don't get a status message
+        set_timeout("door_query_state", (*this->opening_duration + 2)*1000, [=]() {
+            if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
+                this->query_status();
+            }
+        });
     }
 
-    void RATGDOComponent::close_door()
+    void RATGDOComponent::door_close()
     {
         if (*this->door_state == DoorState::CLOSING) {
             return; // gets ignored by opener
@@ -394,10 +402,10 @@ namespace ratgdo {
 
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
-            this->protocol_->door_action(DoorAction::STOP);
+            this->door_action(DoorAction::STOP);
             this->door_state_received.then([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
-                    this->protocol_->door_action(DoorAction::CLOSE);
+                    this->door_action(DoorAction::CLOSE);
                 } else {
                     ESP_LOGW(TAG, "Door did not stop, ignoring close command");
                 }
@@ -405,27 +413,66 @@ namespace ratgdo {
             return;
         }
 
-        this->protocol_->door_action(DoorAction::CLOSE);
+        this->door_action(DoorAction::CLOSE);
+
+        // query state in case we don't get a status message
+        set_timeout("door_query_state", (*this->closing_duration + 2)*1000, [=]() {
+            if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
+                this->query_status();
+            }
+        });
     }
 
-    void RATGDOComponent::stop_door()
+    void RATGDOComponent::door_stop()
     {
         if (*this->door_state != DoorState::OPENING && *this->door_state != DoorState::CLOSING) {
             ESP_LOGW(TAG, "The door is not moving.");
             return;
         }
-        this->protocol_->door_action(DoorAction::STOP);
+        this->door_action(DoorAction::STOP);
     }
 
-    void RATGDOComponent::toggle_door()
+    void RATGDOComponent::door_toggle()
     {
-        this->protocol_->door_action(DoorAction::TOGGLE);
+        this->door_action(DoorAction::TOGGLE);
+    }
+
+    void RATGDOComponent::door_action(DoorAction action)
+    {
+        this->protocol_->door_action(action);
+    }
+
+    void RATGDOComponent::ensure_door_action(DoorAction action, uint32_t delay)
+    {
+        if (action == DoorAction::TOGGLE) {
+            ESP_LOGW(TAG, "It's not recommended to use ensure_door_action with non-idempotent commands such as DOOR_TOGGLE");
+        }
+        auto prev_door_state = *this->door_state;
+        this->door_state_received.then([=](DoorState s) {
+            if ((action == DoorAction::STOP) && (s != DoorState::STOPPED) && !(prev_door_state == DoorState::OPENING && s == DoorState::OPEN) && !(prev_door_state == DoorState::CLOSING && s == DoorState::CLOSED)) {
+                return;
+            }
+            if (action == DoorAction::OPEN && !(s == DoorState::OPENING || s == DoorState::OPEN)) {
+                return;
+            }
+            if (action == DoorAction::CLOSE && !(s == DoorState::CLOSED || s == DoorState::CLOSING)) {
+                return;
+            }
+
+            ESP_LOG1(TAG, "Received door status, cancel door command retry");
+            cancel_timeout("door_command_retry");
+        });
+        this->door_action(action);
+        ESP_LOG1(TAG, "Ensure door command, setup door command retry");
+        set_timeout("door_command_retry", delay, [=]() {
+            this->ensure_door_action(action);
+        });
     }
 
     void RATGDOComponent::door_move_to_position(float position)
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
-            this->protocol_->door_action(DoorAction::STOP);
+            this->door_action(DoorAction::STOP);
             this->door_state_received.then([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
@@ -450,7 +497,7 @@ namespace ratgdo {
         this->door_move_delta = delta;
         ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0);
 
-        this->protocol_->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
+        this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
         set_timeout("move_to_position", operation_time, [=] {
             this->ensure_door_action(DoorAction::STOP);
         });
@@ -469,32 +516,6 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::ensure_door_action(DoorAction action, uint32_t delay)
-    {
-        if (action == DoorAction::TOGGLE) {
-            ESP_LOGW(TAG, "It's not recommended to use ensure_door_action with non-idempotent commands such as DOOR_TOGGLE");
-        }
-        auto prev_door_state = *this->door_state;
-        this->door_state_received.then([=](DoorState s) {
-            if ((action == DoorAction::STOP) && (s != DoorState::STOPPED) && !(prev_door_state == DoorState::OPENING && s == DoorState::OPEN) && !(prev_door_state == DoorState::CLOSING && s == DoorState::CLOSED)) {
-                return;
-            }
-            if (action == DoorAction::OPEN && !(s == DoorState::OPENING || s == DoorState::OPEN)) {
-                return;
-            }
-            if (action == DoorAction::CLOSE && !(s == DoorState::CLOSED || s == DoorState::CLOSING)) {
-                return;
-            }
-
-            ESP_LOG1(TAG, "Received door status, cancel door command retry");
-            cancel_timeout("door_command_retry");
-        });
-        this->protocol_->door_action(action);
-        ESP_LOG1(TAG, "Ensure door command, setup door command retry");
-        set_timeout("door_command_retry", delay, [=]() {
-            this->ensure_door_action(action);
-        });
-    }
 
     void RATGDOComponent::light_on()
     {
@@ -508,10 +529,15 @@ namespace ratgdo {
         this->protocol_->light_action(LightAction::OFF);
     }
 
-    void RATGDOComponent::toggle_light()
+    void RATGDOComponent::light_toggle()
     {
         this->light_state = light_state_toggle(*this->light_state);
         this->protocol_->light_action(LightAction::TOGGLE);
+    }
+
+    LightState RATGDOComponent::get_light_state() const
+    {
+        return *this->light_state;
     }
 
     // Lock functions
@@ -527,15 +553,10 @@ namespace ratgdo {
         this->protocol_->lock_action(LockAction::UNLOCK);
     }
 
-    void RATGDOComponent::toggle_lock()
+    void RATGDOComponent::lock_toggle()
     {
         this->lock_state = lock_state_toggle(*this->lock_state);
         this->protocol_->lock_action(LockAction::TOGGLE);
-    }
-
-    LightState RATGDOComponent::get_light_state() const
-    {
-        return *this->light_state;
     }
 
     // Learn functions

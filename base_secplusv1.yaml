@@ -233,4 +233,4 @@ button:
     on_press:
       then:
         lambda: !lambda |-
-          id($id_prefix).toggle_door();
+          id($id_prefix).door_toggle();

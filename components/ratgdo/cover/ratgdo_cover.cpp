@@ -70,17 +70,17 @@ namespace ratgdo {
     void RATGDOCover::control(const CoverCall& call)
     {
         if (call.get_stop()) {
-            this->parent_->stop_door();
+            this->parent_->door_stop();
         }
         if (call.get_toggle()) {
-            this->parent_->toggle_door();
+            this->parent_->door_toggle();
         }
         if (call.get_position().has_value()) {
             auto pos = *call.get_position();
             if (pos == COVER_OPEN) {
-                this->parent_->open_door();
+                this->parent_->door_open();
             } else if (pos == COVER_CLOSED) {
-                this->parent_->close_door();
+                this->parent_->door_close();
             } else {
                 this->parent_->door_move_to_position(pos);
             }

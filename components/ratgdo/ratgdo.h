@@ -108,11 +108,13 @@ namespace ratgdo {
         void received(const PairedDeviceCount pdc);
 
         // door
+        void door_toggle();
+        void door_open();
+        void door_close();
+        void door_stop();
+
+        void door_action(DoorAction action);
         void ensure_door_action(DoorAction action, uint32_t delay = 1500);
-        void toggle_door();
-        void open_door();
-        void close_door();
-        void stop_door();
         void door_move_to_position(float position);
         void set_door_position(float door_position) { this->door_position = door_position; }
         void set_opening_duration(float duration);
@@ -121,14 +123,15 @@ namespace ratgdo {
         void door_position_update();
         void cancel_position_sync_callbacks();
 
+
         // light
-        void toggle_light();
+        void light_toggle();
         void light_on();
         void light_off();
         LightState get_light_state() const;
 
         // lock
-        void toggle_lock();
+        void lock_toggle();
         void lock();
         void unlock();
 
