@@ -44,7 +44,7 @@ namespace secplus1 {
         this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
         wall_panel_emulation_start_ = millis();
         this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
-        this->wall_panel_emulation(0);
+        this->wall_panel_emulation();
     }
 
     void Secplus1::wall_panel_emulation(size_t index)
@@ -61,7 +61,7 @@ namespace secplus1 {
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
             this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [=] {
-                this->wall_panel_emulation(index);
+                this->wall_panel_emulation();
             });
             return;
         } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
@@ -264,39 +264,33 @@ namespace secplus1 {
         }
     }
 
-    void Secplus1::transmit_packet(const uint8_t packet[], uint32_t len)
-    {
-        this->transmit_packet_delayed(packet, len, 25);
-    }
-
     void Secplus1::transmit_packet(const TxPacket& packet)
     {
         this->print_tx_packet(packet);
 
-        auto delay = this->last_rx_ + 250 - millis();
+        auto tx_delay = this->last_rx_ + 125 - millis();
         if (delay > 0) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", delay, [=] {
-                this->transmit_packet_delayed(packet, TX_LENGTH, 25);
+            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
+                this->sw_serial_.enableIntTx(false);
+                this->sw_serial_.write(packet[0]);
+                this->sw_serial_.enableIntTx(true);
             });
         } else {
-            this->transmit_packet_delayed(packet, TX_LENGTH, 25);
-        }
-
-    }
-
-    void Secplus1::transmit_packet_delayed(const uint8_t* packet, uint32_t len, uint32_t delay)
-    {
-        if (len == 0) {
-            return;
-        }
-
-        this->scheduler_->set_timeout(this->ratgdo_, "", delay, [=] {
-            ESP_LOG2(TAG, "Sending byte: [%02X]", packet[0]);
+            tx_delay = 0;
+            this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[0]);
-            this->transmit_packet_delayed(packet+1, len-1, delay);
+            this->sw_serial_.enableIntTx(true);
+        }
+        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
+            this->sw_serial_.enableIntTx(false);
+            this->sw_serial_.write(packet[1]);
+            delay(40);
+            this->sw_serial_.write(packet[1]);
+            this->sw_serial_.enableIntTx(true);
         });
-    }
 
+
+    }
 
 } // namespace secplus1
 } // namespace ratgdo

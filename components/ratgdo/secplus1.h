@@ -21,12 +21,12 @@ namespace secplus1 {
     static const uint8_t RX_LENGTH = 2;
     typedef uint8_t RxPacket[RX_LENGTH];
 
-    static const uint8_t TX_LENGTH = 4;
+    static const uint8_t TX_LENGTH = 2;
     typedef uint8_t TxPacket[TX_LENGTH];
 
-    static const TxPacket toggle_door = {0x30, 0x31, 0x31, 0xFE};
-    static const TxPacket toggle_light = {0x32, 0x33, 0x33, 0xFE};
-    static const TxPacket toggle_lock = {0x34, 0x35, 0x35, 0xFE};
+    static const TxPacket toggle_door = {0x30, 0x31};
+    static const TxPacket toggle_light = {0x32, 0x33};
+    static const TxPacket toggle_lock = {0x34, 0x35};
 
     static const uint8_t secplus1_states[] = {0x35,0x35,0x35,0x35,0x33,0x33,0x53,0x53,0x38,0x3A,0x3A,0x3A,0x39,0x38,0x3A, 0x38,0x3A,0x39,0x3A};
 
@@ -66,7 +66,7 @@ namespace secplus1 {
         Result call(Args args);
 
     protected:
-        void wall_panel_emulation(size_t index);
+        void wall_panel_emulation(size_t index = 0);
 
         optional<Command> read_command();
         void handle_command(const Command& cmd);
@@ -75,9 +75,7 @@ namespace secplus1 {
         void print_tx_packet(const TxPacket& packet) const;
         optional<Command> decode_packet(const RxPacket& packet) const;
 
-        void transmit_packet(const uint8_t packet[], uint32_t len);
         void transmit_packet(const TxPacket& packet);
-        void transmit_packet_delayed(const uint8_t* packet, uint32_t len, uint32_t delay);
 
         LightState light_state { LightState::UNKNOWN };
         LockState lock_state { LockState::UNKNOWN };
