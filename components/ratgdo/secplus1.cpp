@@ -87,8 +87,8 @@ namespace secplus1 {
             // TODO: request state?
         }
         if (action == LightAction::TOGGLE || 
-            (this->light_state == LightState::OFF && action == LightAction::ON) || 
-            (this->light_state == LightState::ON && action == LightAction::OFF)) {
+            (action == LightAction::ON && this->light_state == LightState::OFF) || 
+            (action == LightAction::OFF && this->light_state == LightState::ON)) {
             this->transmit_packet(toggle_light);
         }
     }
@@ -103,36 +103,50 @@ namespace secplus1 {
             // TODO: request state?
         }
         if (action == LockAction::TOGGLE || 
-            (this->lock_state == LockState::UNLOCKED && action == LockAction::LOCK) || 
-            (this->lock_state == LockState::LOCKED && action == LockAction::UNLOCK)) {
+            (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
+            (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
             this->transmit_packet(toggle_lock);
         }
     }
 
     void Secplus1::door_action(DoorAction action)
     {
-        if (action == DoorAction::UNKNOWN) {
-            return;
-        }
         if (this->door_state == DoorState::UNKNOWN) {
             ESP_LOG1(TAG, "Unknown current door state, ignoring command: %s", DoorAction_to_string(action));
             // TODO: request state?
         }
 
-        if (action == DoorAction::TOGGLE ||
-            (this->door_state == DoorState::CLOSED && action == DoorAction::OPEN) || 
-            (this->door_state == DoorState::CLOSING && action == DoorAction::OPEN) ||
-            (this->door_state == DoorState::OPEN && action != DoorAction::CLOSE) ||
-            (this->door_state == DoorState::OPENING && action == DoorAction::STOP)) {
+        if (action == DoorAction::UNKNOWN) {
+            return;
+        } else if (action == DoorAction::TOGGLE) {
             this->transmit_packet(toggle_door);
+        } else if (action == DoorAction::OPEN) {
+            if (this->door_state == DoorState::CLOSED || this->door_state == DoorState::CLOSING) {
+                this->transmit_packet(toggle_door);
+            }
+        } else if (action == DoorAction::CLOSE) {
+            if (this->door_state == DoorState::OPEN) {
+                this->transmit_packet(toggle_door);
+            }
+            if (this->door_state == DoorState::OPENING) {
+                this->transmit_packet(toggle_door); // this switches to stopped
+                // another toggle needed to close
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                    this->transmit_packet(toggle_door);
+                });
+            } 
+        } else if (action == DoorAction::STOP) {
+            if (this->door_state == DoorState::OPENING) {
+                this->transmit_packet(toggle_door);
+            }
+            if (this->door_state == DoorState::CLOSING) {
+                this->transmit_packet(toggle_door); // this switches to opening
+                // another toggle needed to stop
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                    this->transmit_packet(toggle_door);
+                });
+            }
         }
-        // if ((this->door_state == DoorState::CLOSING && action == DoorAction::STOP) ||
-        //     (this->door_state == DoorState::OPENING && action == DoorAction::CLOSE)) {
-        //     this->transmit_packet(toggle_door);
-        //     this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] {
-        //         this->transmit_packet(toggle_door);
-        //     });
-        // }
     }
 
 
@@ -250,7 +264,7 @@ namespace secplus1 {
                 this->ratgdo_->received(light_state);
             }
 
-            LockState lock_state = to_LockState((cmd.value >> 3) & 1, LockState::UNKNOWN);
+            LockState lock_state = to_LockState((~cmd.value >> 3) & 1, LockState::UNKNOWN);
             if (this->lock_state != lock_state) {
                 this->lock_state = lock_state;
             } else {
