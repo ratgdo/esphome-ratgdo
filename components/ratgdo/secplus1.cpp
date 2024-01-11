@@ -269,7 +269,7 @@ namespace secplus1 {
         this->print_tx_packet(packet);
 
         auto tx_delay = this->last_rx_ + 125 - millis();
-        if (delay > 0) {
+        if (tx_delay > 0) {
             this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
                 this->sw_serial_.enableIntTx(false);
                 this->sw_serial_.write(packet[0]);
