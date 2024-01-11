@@ -273,18 +273,18 @@ namespace secplus1 {
             tx_delay += 250;
         }
 
-        // ESP_LOG2(TAG, "Sending byte in: %d", tx_delay);
         this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
             this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[0]);
             this->sw_serial_.enableIntTx(true);
         });
-
-        // ESP_LOG2(TAG, "Sending bytes in: %d", tx_delay+250);
         this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
             this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[1]);
-            delay(40);
+            this->sw_serial_.enableIntTx(true);
+        });
+        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+290, [=] {
+            this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[1]);
             this->sw_serial_.enableIntTx(true);
         });
