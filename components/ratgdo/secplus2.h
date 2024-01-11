@@ -87,7 +87,6 @@ namespace secplus2 {
 
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t counter);
-        observable<uint32_t>& get_rolling_code_counter();
         void set_client_id(uint64_t client_id);
 
     protected:

@@ -45,6 +45,13 @@ namespace secplus1 {
         wall_panel_emulation_start_ = millis();
         this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
         this->wall_panel_emulation();
+
+        this->scheduler_->set_timeout(this->ratgdo_, "", 40000, [=] {
+            if (this->door_state == DoorState::UNKNOWN) {
+                ESP_LOGW(TAG, "Triggering sync failed actions.");
+                this->ratgdo_->sync_failed = true;
+            }
+        });
     }
 
     void Secplus1::wall_panel_emulation(size_t index)
@@ -79,11 +86,12 @@ namespace secplus1 {
 
     void Secplus1::light_action(LightAction action)
     {
+        ESP_LOG1(TAG, "Light action: %s", LightAction_to_string(action));
         if (action == LightAction::UNKNOWN) {
             return;
         }
         if (this->light_state == LightState::UNKNOWN) {
-            ESP_LOG1(TAG, "Unknown current light state, ignoring command: %s", LightAction_to_string(action));
+            ESP_LOGW(TAG, "Unknown current light state, ignoring command: %s", LightAction_to_string(action));
             // TODO: request state?
         }
         if (action == LightAction::TOGGLE || 
@@ -95,11 +103,12 @@ namespace secplus1 {
 
     void Secplus1::lock_action(LockAction action)
     {
+        ESP_LOG1(TAG, "Lock action: %s", LockAction_to_string(action));
         if (action == LockAction::UNKNOWN) {
             return;
         }
         if (this->lock_state == LockState::UNKNOWN) {
-            ESP_LOG1(TAG, "Unknown current lock state, ignoring command: %s", LockAction_to_string(action));
+            ESP_LOGW(TAG, "Unknown current lock state, ignoring command: %s", LockAction_to_string(action));
             // TODO: request state?
         }
         if (action == LockAction::TOGGLE || 
@@ -111,10 +120,13 @@ namespace secplus1 {
 
     void Secplus1::door_action(DoorAction action)
     {
+        ESP_LOG1(TAG, "Door action: %s, door state: %s", DoorAction_to_string(action), DoorState_to_string(this->door_state));
         if (this->door_state == DoorState::UNKNOWN) {
-            ESP_LOG1(TAG, "Unknown current door state, ignoring command: %s", DoorAction_to_string(action));
+            ESP_LOGW(TAG, "Unknown current door state, ignoring command: %s", DoorAction_to_string(action));
             // TODO: request state?
         }
+
+        const uint32_t double_toggle_delay = 1000;
 
         if (action == DoorAction::UNKNOWN) {
             return;
@@ -123,26 +135,32 @@ namespace secplus1 {
         } else if (action == DoorAction::OPEN) {
             if (this->door_state == DoorState::CLOSED || this->door_state == DoorState::CLOSING) {
                 this->transmit_packet(toggle_door);
+            } else if (this->door_state == DoorState::STOPPED) {
+                this->transmit_packet(toggle_door); // this starts closing door
+                // this changes direction of door
+                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
+                    this->transmit_packet(toggle_door);
+                });
             }
         } else if (action == DoorAction::CLOSE) {
             if (this->door_state == DoorState::OPEN) {
                 this->transmit_packet(toggle_door);
-            }
-            if (this->door_state == DoorState::OPENING) {
+            } else if (this->door_state == DoorState::OPENING) {
                 this->transmit_packet(toggle_door); // this switches to stopped
                 // another toggle needed to close
-                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
                     this->transmit_packet(toggle_door);
                 });
-            } 
+            } else if (this->door_state == DoorState::STOPPED) {
+                this->transmit_packet(toggle_door);
+            }
         } else if (action == DoorAction::STOP) {
             if (this->door_state == DoorState::OPENING) {
                 this->transmit_packet(toggle_door);
-            }
-            if (this->door_state == DoorState::CLOSING) {
+            } else if (this->door_state == DoorState::CLOSING) {
                 this->transmit_packet(toggle_door); // this switches to opening
                 // another toggle needed to stop
-                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
                     this->transmit_packet(toggle_door);
                 });
             }

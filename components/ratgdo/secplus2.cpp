@@ -106,7 +106,7 @@ namespace secplus2 {
                     }
                     if (r == 0) {
                         // this was last attempt, notify of sync failure
-                        ESP_LOGD(TAG, "Triggering sync failed actions.");
+                        ESP_LOGW(TAG, "Triggering sync failed actions.");
                         this->ratgdo_->sync_failed = true;
                     }
                 }
@@ -513,11 +513,6 @@ namespace secplus2 {
     {
         ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
         this->rolling_code_counter_ = counter;
-    }
-
-    observable<uint32_t>& Secplus2::get_rolling_code_counter()
-    {
-        return this->rolling_code_counter_;
     }
 
     void Secplus2::set_client_id(uint64_t client_id)
