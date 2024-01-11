@@ -65,7 +65,7 @@ namespace secplus1 {
             });
             return;
         } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
-            ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
+            // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
             this->sw_serial_.write(&secplus1_states[index], 1);
             index += 1;
             if (index == 18) {
@@ -197,7 +197,7 @@ namespace secplus1 {
 
     void Secplus1::print_tx_packet(const TxPacket& packet) const
     {
-        ESP_LOG2(TAG, "Sending packet: [%02X %02X %02X %02X]", packet[0], packet[1], packet[2], packet[3]);
+        ESP_LOG2(TAG, "Sending packet: [%02X %02X]", packet[0], packet[1]);
     }
 
 
@@ -268,19 +268,19 @@ namespace secplus1 {
     {
         this->print_tx_packet(packet);
 
-        auto tx_delay = this->last_rx_ + 125 - millis();
-        if (tx_delay > 0) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
-                this->sw_serial_.enableIntTx(false);
-                this->sw_serial_.write(packet[0]);
-                this->sw_serial_.enableIntTx(true);
-            });
-        } else {
-            tx_delay = 0;
+        int32_t tx_delay = static_cast<int32_t>(this->last_rx_ + 125) - millis();
+        while (tx_delay<0) {
+            tx_delay += 250;
+        }
+
+        // ESP_LOG2(TAG, "Sending byte in: %d", tx_delay);
+        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
             this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[0]);
             this->sw_serial_.enableIntTx(true);
-        }
+        });
+
+        // ESP_LOG2(TAG, "Sending bytes in: %d", tx_delay+250);
         this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
             this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[1]);
