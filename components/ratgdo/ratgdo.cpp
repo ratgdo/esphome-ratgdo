@@ -16,6 +16,7 @@
 #include "common.h"
 #include "secplus1.h"
 #include "secplus2.h"
+#include "dry_contact.h"
 
 #include "esphome/core/log.h"
 #include "esphome/core/gpio.h"
@@ -64,6 +65,9 @@ namespace ratgdo {
 #endif        
 #ifdef PROTOCOL_SECPLUSV1
         this->protocol_ = new secplus1::Secplus1();
+#endif        
+#ifdef PROTOCOL_DRYCONTACT
+        this->protocol_ = new dry_contact::DryContact();
 #endif        
     }
 

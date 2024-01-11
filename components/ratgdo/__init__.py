@@ -33,7 +33,8 @@ CONF_PROTOCOL = "protocol"
 
 PROTOCOL_SECPLUSV1 = "secplusv1"
 PROTOCOL_SECPLUSV2 = "secplusv2"
-SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2]
+PROTOCOL_DRYCONTACT = "drycontact"
+SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -99,4 +100,6 @@ async def to_code(config):
         cg.add_define("PROTOCOL_SECPLUSV1")
     elif config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV2:
         cg.add_define("PROTOCOL_SECPLUSV2")        
+    elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
+        cg.add_define("PROTOCOL_DRYCONTACT")        
     cg.add(var.init_protocol())
