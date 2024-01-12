@@ -26,7 +26,7 @@ esp8266:
   restore_from_flash: true
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_secplusv1.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_secplusv1.yaml@sec_plus_v1
 
 packages:
   remote_package:
