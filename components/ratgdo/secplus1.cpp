@@ -46,7 +46,7 @@ namespace secplus1 {
         this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
         this->wall_panel_emulation();
 
-        this->scheduler_->set_timeout(this->ratgdo_, "", 40000, [=] {
+        this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [=] {
             if (this->door_state == DoorState::UNKNOWN) {
                 ESP_LOGW(TAG, "Triggering sync failed actions.");
                 this->ratgdo_->sync_failed = true;
@@ -90,10 +90,6 @@ namespace secplus1 {
         if (action == LightAction::UNKNOWN) {
             return;
         }
-        if (this->light_state == LightState::UNKNOWN) {
-            ESP_LOGW(TAG, "Unknown current light state, ignoring command: %s", LightAction_to_string(action));
-            // TODO: request state?
-        }
         if (action == LightAction::TOGGLE || 
             (action == LightAction::ON && this->light_state == LightState::OFF) || 
             (action == LightAction::OFF && this->light_state == LightState::ON)) {
@@ -107,10 +103,6 @@ namespace secplus1 {
         if (action == LockAction::UNKNOWN) {
             return;
         }
-        if (this->lock_state == LockState::UNKNOWN) {
-            ESP_LOGW(TAG, "Unknown current lock state, ignoring command: %s", LockAction_to_string(action));
-            // TODO: request state?
-        }
         if (action == LockAction::TOGGLE || 
             (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
             (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
@@ -121,16 +113,12 @@ namespace secplus1 {
     void Secplus1::door_action(DoorAction action)
     {
         ESP_LOG1(TAG, "Door action: %s, door state: %s", DoorAction_to_string(action), DoorState_to_string(this->door_state));
-        if (this->door_state == DoorState::UNKNOWN) {
-            ESP_LOGW(TAG, "Unknown current door state, ignoring command: %s", DoorAction_to_string(action));
-            // TODO: request state?
+        if (action == DoorAction::UNKNOWN) {
+            return;
         }
 
         const uint32_t double_toggle_delay = 1000;
-
-        if (action == DoorAction::UNKNOWN) {
-            return;
-        } else if (action == DoorAction::TOGGLE) {
+        if (action == DoorAction::TOGGLE) {
             this->transmit_packet(toggle_door);
         } else if (action == DoorAction::OPEN) {
             if (this->door_state == DoorState::CLOSED || this->door_state == DoorState::CLOSING) {
@@ -186,7 +174,7 @@ namespace secplus1 {
                 this->last_rx_ = millis();
 
                 if(ser_byte < 0x30 || ser_byte > 0x3A){
-                    ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
+                    ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
                     byte_count = 0;
                     continue;
                 }
@@ -213,7 +201,7 @@ namespace secplus1 {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
+                ESP_LOGW(TAG, "[%d] Discard incomplete packet, [%02X ...]", millis(), rx_packet[0]);
                 reading_msg = false;
                 byte_count = 0;
             }
@@ -224,12 +212,12 @@ namespace secplus1 {
 
     void Secplus1::print_rx_packet(const RxPacket& packet) const
     {
-        ESP_LOG2(TAG, "Received packet: [%02X %02X]", packet[0], packet[1]);
+        ESP_LOG2(TAG, "[%d] Received packet: [%02X %02X]", millis(), packet[0], packet[1]);
     }
 
     void Secplus1::print_tx_packet(const TxPacket& packet) const
     {
-        ESP_LOG2(TAG, "Sending packet: [%02X %02X]", packet[0], packet[1]);
+        ESP_LOG2(TAG, "[%d] Sending packet: [%02X %02X]", millis(), packet[0], packet[1]);
     }
 
 
@@ -288,6 +276,10 @@ namespace secplus1 {
             } else {
                 this->ratgdo_->received(lock_state);
             }
+        }
+        else if (cmd.type == CommandType::OBSTRUCTION) {
+            ObstructionState obstruction_state = cmd.value == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
+            this->ratgdo_->received(obstruction_state);
         }
         else if (cmd.type == CommandType::WALL_PANEL_STARTING) {
             if (cmd.value == 0x31) {
