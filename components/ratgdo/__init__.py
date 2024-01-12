@@ -39,23 +39,18 @@ SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTA
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
-        cv.Optional(
-            CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO
-        ): pins.gpio_output_pin_schema,
-        cv.Optional(
-            CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
-        ): pins.gpio_input_pin_schema,
-        cv.Optional(
-            CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
-        ): pins.gpio_input_pin_schema,
+        cv.Optional(CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO): pins.gpio_input_pin_schema,
+        cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
+            cv.none,
+            pins.gpio_input_pin_schema
+        ),
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
             }
         ),
-        cv.Optional(
-            CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2
-        ): vol.In(SUPPORTED_PROTOCOLS)
+        cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): vol.In(SUPPORTED_PROTOCOLS)
     }
 ).extend(cv.COMPONENT_SCHEMA)
 
@@ -78,8 +73,9 @@ async def to_code(config):
     cg.add(var.set_output_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_GDO])
     cg.add(var.set_input_gdo_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
-    cg.add(var.set_input_obst_pin(pin))
+    if CONF_INPUT_OBST in config and config[CONF_INPUT_OBST]:
+        pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
+        cg.add(var.set_input_obst_pin(pin))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)

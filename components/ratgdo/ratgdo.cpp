@@ -39,7 +39,7 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
-        if (this->input_obst_pin_ == nullptr || this->input_obst_pin_->get_pin() == 0) {
+        if (this->input_obst_pin_ == nullptr) {
             // Our base.yaml is always going to set this so we check for 0
             // as well to avoid a breaking change.
             this->obstruction_from_status_ = true;
