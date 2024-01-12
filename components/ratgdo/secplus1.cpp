@@ -179,6 +179,7 @@ namespace secplus1 {
                     continue;
                 }
                 rx_packet[byte_count++] = ser_byte;
+                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
                 reading_msg = true;
 
                 if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
@@ -197,6 +198,7 @@ namespace secplus1 {
                 uint8_t ser_byte = this->sw_serial_.read();
                 this->last_rx_ = millis();
                 rx_packet[byte_count++] = ser_byte;
+                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
 
                 if (byte_count == RX_LENGTH) {
                     reading_msg = false;
@@ -319,6 +321,7 @@ namespace secplus1 {
             this->sw_serial_.enableIntTx(false);
             this->sw_serial_.write(packet[0]);
             this->sw_serial_.enableIntTx(true);
+            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[0]);
         });
 
         if (!first_byte) {
@@ -326,11 +329,13 @@ namespace secplus1 {
                 this->sw_serial_.enableIntTx(false);
                 this->sw_serial_.write(packet[1]);
                 this->sw_serial_.enableIntTx(true);
+                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[1]);
             });
             this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+290, [=] {
                 this->sw_serial_.enableIntTx(false);
                 this->sw_serial_.write(packet[1]);
                 this->sw_serial_.enableIntTx(true);
+                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[1]);
             });
         }
     }
