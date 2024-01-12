@@ -180,6 +180,15 @@ namespace secplus1 {
                 }
                 rx_packet[byte_count++] = ser_byte;
                 reading_msg = true;
+
+                if (ser_byte == 0x37) {
+                    rx_packet[byte_count++] = 0;
+                    reading_msg = false;
+                    byte_count = 0;
+                    ESP_LOG2(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
+                    return this->decode_packet(rx_packet);
+                }
+
                 break;
             }
         }
@@ -262,7 +271,10 @@ namespace secplus1 {
                 this->ratgdo_->received(door_state);
             }
         }
-        else if (cmd.type == CommandType::OTHER_STATUS) {
+        else if (cmd.type == CommandType::DOOR_STATUS_37) {
+            // inject door status request
+            this->sw_serial_.write(0x38);
+        } else if (cmd.type == CommandType::OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.value >> 2) & 1, LightState::UNKNOWN);
             if (this->light_state != light_state) {
                 this->light_state = light_state;
@@ -281,7 +293,7 @@ namespace secplus1 {
             ObstructionState obstruction_state = cmd.value == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
             this->ratgdo_->received(obstruction_state);
         }
-        else if (cmd.type == CommandType::WALL_PANEL_STARTING) {
+        else if (cmd.type == CommandType::TOGGLE_DOOR_COMMIT) {
             if (cmd.value == 0x31) {
                 this->wall_panel_starting_ = true;
             }
