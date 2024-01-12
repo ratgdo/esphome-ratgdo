@@ -210,7 +210,7 @@ namespace secplus1 {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "[%d] Discard incomplete packet, [%02X ...]", millis(), rx_packet[0]);
+                ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%02X ...]", millis(), rx_packet[0]);
                 reading_msg = false;
                 byte_count = 0;
             }
@@ -264,30 +264,20 @@ namespace secplus1 {
                 door_state = DoorState::UNKNOWN;
             }
 
-            if (this->door_state != door_state) {
-                this->prev_door_state = this->door_state;
-                this->door_state = door_state;
-            } else {
-                this->ratgdo_->received(door_state);
-            }
+            this->door_state = door_state;
+            this->ratgdo_->received(door_state);
         }
         else if (cmd.type == CommandType::DOOR_STATUS_37) {
             // inject door status request
             this->sw_serial_.write(0x38);
         } else if (cmd.type == CommandType::OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.value >> 2) & 1, LightState::UNKNOWN);
-            if (this->light_state != light_state) {
-                this->light_state = light_state;
-            } else {
-                this->ratgdo_->received(light_state);
-            }
+            this->light_state = light_state;
+            this->ratgdo_->received(light_state);
 
             LockState lock_state = to_LockState((~cmd.value >> 3) & 1, LockState::UNKNOWN);
-            if (this->lock_state != lock_state) {
-                this->lock_state = lock_state;
-            } else {
-                this->ratgdo_->received(lock_state);
-            }
+            this->lock_state = lock_state;
+            this->ratgdo_->received(lock_state);
         }
         else if (cmd.type == CommandType::OBSTRUCTION) {
             ObstructionState obstruction_state = cmd.value == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
