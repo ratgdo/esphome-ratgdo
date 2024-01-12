@@ -136,7 +136,9 @@ namespace ratgdo {
             if (this->door_move_delta == DOOR_DELTA_UNKNOWN) {
                 this->door_move_delta = 1.0 - this->door_start_position;
             }
-            this->schedule_door_position_sync();
+            if (*this->opening_duration != 0) {
+                this->schedule_door_position_sync();
+            }
         } else if (door_state == DoorState::CLOSING) {
             // door started closing
             if (prev_door_state == DoorState::OPENING) {
@@ -149,7 +151,9 @@ namespace ratgdo {
             if (this->door_move_delta == DOOR_DELTA_UNKNOWN) {
                 this->door_move_delta = 0.0 - this->door_start_position;
             }
-            this->schedule_door_position_sync();
+            if (*this->closing_duration != 0) {
+                this->schedule_door_position_sync();
+            }
         } else if (door_state == DoorState::STOPPED) {
             this->door_position_update();
             if (*this->door_position == DOOR_POSITION_UNKNOWN) {
@@ -285,6 +289,9 @@ namespace ratgdo {
         ESP_LOG1(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
             this->door_move_delta, this->door_start_position, this->door_start_moving);
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : *this->closing_duration;
+        if (duration == 0) {
+            return;
+        }
         auto count = int(1000 * duration / update_period);
         set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
             this->door_position_update();
@@ -299,6 +306,9 @@ namespace ratgdo {
         }
         auto now = millis();
         auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
+        if (duration == 0) {
+            return;
+        }
         auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
         ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
