@@ -272,6 +272,7 @@ namespace secplus1 {
 
             this->door_state = door_state;
             this->ratgdo_->received(door_state);
+            this->ratgdo_->received(ButtonState::RELEASED);
         }
         else if (cmd.type == CommandType::DOOR_STATUS_37) {
             this->is_0x37_panel_ = true;
@@ -300,6 +301,8 @@ namespace secplus1 {
             if (this->light_state == LightState::OFF) {
                 this->ratgdo_->received(MotionState::DETECTED);
             }
+        } else if (cmd.type == CommandType::TOGGLE_DOOR_REQ) {
+            this->ratgdo_->received(ButtonState::PRESSED);
         }
     }
 
