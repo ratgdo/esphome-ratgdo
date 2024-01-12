@@ -181,7 +181,7 @@ namespace secplus1 {
                 rx_packet[byte_count++] = ser_byte;
                 reading_msg = true;
 
-                if (ser_byte == 0x37) {
+                if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
                     rx_packet[byte_count++] = 0;
                     reading_msg = false;
                     byte_count = 0;
@@ -296,6 +296,12 @@ namespace secplus1 {
         else if (cmd.type == CommandType::TOGGLE_DOOR_COMMIT) {
             if (cmd.value == 0x31) {
                 this->wall_panel_starting_ = true;
+            }
+        } else if (cmd.type == CommandType::TOGGLE_LIGHT_REQ) {
+            // motion was detected, or the light toggle button was pressed
+            // either way it's ok to trigger motion detection
+            if (this->light_state == LightState::OFF) {
+                this->ratgdo_->received(MotionState::DETECTED);
             }
         }
     }
