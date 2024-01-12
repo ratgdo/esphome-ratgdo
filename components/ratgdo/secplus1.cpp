@@ -106,7 +106,7 @@ namespace secplus1 {
         if (action == LockAction::TOGGLE || 
             (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
             (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
-            this->transmit_packet(toggle_lock);
+            this->transmit_packet(toggle_lock, this->is_0x37_panel_);
         }
     }
 
@@ -236,6 +236,12 @@ namespace secplus1 {
         return Command{cmd_type, packet[1]};
     }
 
+    // unknown meaning of observed command-responses: 
+    // 40 00 and 40 80
+    // 53 01
+    // C0 3F
+    // F8 3F
+    // FE 3F
 
     void Secplus1::handle_command(const Command& cmd)
     {
@@ -268,6 +274,7 @@ namespace secplus1 {
             this->ratgdo_->received(door_state);
         }
         else if (cmd.type == CommandType::DOOR_STATUS_37) {
+            this->is_0x37_panel_ = true;
             // inject door status request
             this->sw_serial_.write(0x38);
         } else if (cmd.type == CommandType::OTHER_STATUS) {
@@ -296,7 +303,7 @@ namespace secplus1 {
         }
     }
 
-    void Secplus1::transmit_packet(const TxPacket& packet)
+    void Secplus1::transmit_packet(const TxPacket& packet, bool first_byte)
     {
         this->print_tx_packet(packet);
 
@@ -310,18 +317,19 @@ namespace secplus1 {
             this->sw_serial_.write(packet[0]);
             this->sw_serial_.enableIntTx(true);
         });
-        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
-            this->sw_serial_.enableIntTx(false);
-            this->sw_serial_.write(packet[1]);
-            this->sw_serial_.enableIntTx(true);
-        });
-        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+290, [=] {
-            this->sw_serial_.enableIntTx(false);
-            this->sw_serial_.write(packet[1]);
-            this->sw_serial_.enableIntTx(true);
-        });
 
-
+        if (!first_byte) {
+            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
+                this->sw_serial_.enableIntTx(false);
+                this->sw_serial_.write(packet[1]);
+                this->sw_serial_.enableIntTx(true);
+            });
+            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+290, [=] {
+                this->sw_serial_.enableIntTx(false);
+                this->sw_serial_.write(packet[1]);
+                this->sw_serial_.enableIntTx(true);
+            });
+        }
     }
 
 } // namespace secplus1

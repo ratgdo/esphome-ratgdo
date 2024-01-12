@@ -81,7 +81,7 @@ namespace secplus1 {
         void print_tx_packet(const TxPacket& packet) const;
         optional<Command> decode_packet(const RxPacket& packet) const;
 
-        void transmit_packet(const TxPacket& packet);
+        void transmit_packet(const TxPacket& packet, bool first_byte = false);
 
         LightState light_state { LightState::UNKNOWN };
         LockState lock_state { LockState::UNKNOWN };
@@ -91,6 +91,8 @@ namespace secplus1 {
         bool wall_panel_starting_ { false };
         uint32_t wall_panel_emulation_start_ { 0 };
         WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
+
+        bool is_0x37_panel_ { false };
 
         // bool transmit_pending_ { false };
         // uint32_t transmit_pending_start_ { 0 };
