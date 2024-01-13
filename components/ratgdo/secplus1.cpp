@@ -47,7 +47,9 @@ namespace secplus1 {
     void Secplus1::sync()
     {
         this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
-        wall_panel_emulation_start_ = millis();
+        this->wall_panel_emulation_start_ = millis();
+        this->door_state = DoorState::UNKNOWN;
+        this->light_state = LightState::UNKNOWN;
         this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
         this->wall_panel_emulation();
 
@@ -68,7 +70,7 @@ namespace secplus1 {
                 ESP_LOG1(TAG, "Wall panel detected");
                 return;
             }
-            if (millis() - wall_panel_emulation_start_ > 35000 && !this->wall_panel_starting_) {
+            if (millis() - this->wall_panel_emulation_start_ > 35000 && !this->wall_panel_starting_) {
                 ESP_LOG1(TAG, "No wall panel detected. Switching to emulation mode.");
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
@@ -293,21 +295,26 @@ namespace secplus1 {
             // 101 0x5 closed
             // 110 0x6 stopped
 
-            if (val == 0x2){
+            if (val == 0x2) {
 			    door_state = DoorState::OPEN;
-            } else if (val == 0x5){
+            } else if (val == 0x5) {
                 door_state = DoorState::CLOSED;
-            } else if (val == 0x0 || val == 0x6){
+            } else if (val == 0x0 || val == 0x6) {
                 door_state = DoorState::STOPPED;
-            } else if (val == 0x1){
+            } else if (val == 0x1) {
                 door_state = DoorState::OPENING;
-            } else if(val == 0x4){
+            } else if(val == 0x4) {
                 door_state = DoorState::CLOSING;
-            } else{
+            } else {
                 door_state = DoorState::UNKNOWN;
             }
-            this->door_state = door_state;
-            this->ratgdo_->received(door_state);
+
+            if (!this->is_0x37_panel_ && door_state != this->maybe_door_state) {
+                this->maybe_door_state = door_state;
+            } else {
+                this->door_state = door_state;
+                this->ratgdo_->received(door_state);
+            }
         }
         else if (cmd.req == CommandType::DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
@@ -320,12 +327,21 @@ namespace secplus1 {
             }
         } else if (cmd.req == CommandType::OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
-            this->light_state = light_state;
-            this->ratgdo_->received(light_state);
+
+            if (!this->is_0x37_panel_ && light_state != this->maybe_light_state) {
+                this->maybe_light_state = light_state;
+            } else {
+                this->light_state = light_state;
+                this->ratgdo_->received(light_state);
+            }
 
             LockState lock_state = to_LockState((~cmd.resp >> 3) & 1, LockState::UNKNOWN);
-            this->lock_state = lock_state;
-            this->ratgdo_->received(lock_state);
+            if (!this->is_0x37_panel_ && lock_state != this->maybe_lock_state) {
+                this->maybe_lock_state = lock_state;
+            } else {
+                this->lock_state = lock_state;
+                this->ratgdo_->received(lock_state);
+            }
         }
         else if (cmd.req == CommandType::OBSTRUCTION) {
             ObstructionState obstruction_state = cmd.resp == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;

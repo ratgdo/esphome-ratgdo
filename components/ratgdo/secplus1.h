@@ -108,6 +108,10 @@ namespace secplus1 {
         LockState lock_state { LockState::UNKNOWN };
         DoorState door_state { DoorState::UNKNOWN };
 
+        LightState maybe_light_state { LightState::UNKNOWN };
+        LockState maybe_lock_state { LockState::UNKNOWN };
+        DoorState maybe_door_state { DoorState::UNKNOWN };
+
         bool wall_panel_starting_ { false };
         uint32_t wall_panel_emulation_start_ { 0 };
         WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
