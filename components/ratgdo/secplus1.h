@@ -81,7 +81,8 @@ namespace secplus1 {
         void print_tx_packet(const TxPacket& packet) const;
         optional<Command> decode_packet(const RxPacket& packet) const;
 
-        void transmit_packet(const TxPacket& packet, bool first_byte = false);
+        void transmit_packet(const TxPacket& packet);
+        void transmit_byte(uint32_t value, bool twice = false);
 
         LightState light_state { LightState::UNKNOWN };
         LockState lock_state { LockState::UNKNOWN };

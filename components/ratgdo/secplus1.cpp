@@ -106,7 +106,7 @@ namespace secplus1 {
         if (action == LockAction::TOGGLE || 
             (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
             (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
-            this->transmit_packet(toggle_lock, this->is_0x37_panel_);
+            this->transmit_packet(toggle_lock);
         }
     }
 
@@ -308,34 +308,35 @@ namespace secplus1 {
         }
     }
 
-    void Secplus1::transmit_packet(const TxPacket& packet, bool first_byte)
+    void Secplus1::transmit_packet(const TxPacket& packet)
     {
         this->print_tx_packet(packet);
 
-        int32_t tx_delay = static_cast<int32_t>(this->last_rx_ + 125) - millis();
+        transmit_byte(packet[0]);
+        this->scheduler_->set_timeout(this->ratgdo_, "", 1500, [=] {
+            transmit_byte(packet[1], true);
+        });
+    }
+
+    void Secplus1::transmit_byte(uint32_t value, bool twice)
+    {
+        int32_t tx_delay = static_cast<int32_t>(this->last_rx_ + 100) - millis();
         while (tx_delay<0) {
             tx_delay += 250;
         }
 
         this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
             this->sw_serial_.enableIntTx(false);
-            this->sw_serial_.write(packet[0]);
+            this->sw_serial_.write(value);
             this->sw_serial_.enableIntTx(true);
-            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[0]);
+            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
         });
-
-        if (!first_byte) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+250, [=] {
+        if (twice) {
+            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+40, [=] {
                 this->sw_serial_.enableIntTx(false);
-                this->sw_serial_.write(packet[1]);
+                this->sw_serial_.write(value);
                 this->sw_serial_.enableIntTx(true);
-                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[1]);
-            });
-            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+290, [=] {
-                this->sw_serial_.enableIntTx(false);
-                this->sw_serial_.write(packet[1]);
-                this->sw_serial_.enableIntTx(true);
-                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), packet[1]);
+                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
             });
         }
     }
