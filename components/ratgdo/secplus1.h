@@ -31,12 +31,12 @@ namespace secplus1 {
     static const uint8_t secplus1_states[] = {0x35,0x35,0x35,0x35,0x33,0x33,0x53,0x53,0x38,0x3A,0x3A,0x3A,0x39,0x38,0x3A, 0x38,0x3A,0x39,0x3A};
 
     ENUM(CommandType, uint16_t,
-        (TOGGLE_DOOR_REQ, 0x30),
-        (TOGGLE_DOOR_COMMIT, 0x31),
-        (TOGGLE_LIGHT_REQ, 0x32),
-        (TOGGLE_LIGHT_COMMIT, 0x33),
-        (TOGGLE_LOCK_REQ, 0x34),
-        (TOGGLE_LOCK_COMMIT, 0x35),
+        (TOGGLE_DOOR_PRESS, 0x30),
+        (TOGGLE_DOOR_RELEASE, 0x31),
+        (TOGGLE_LIGHT_PRESS, 0x32),
+        (TOGGLE_LIGHT_RELEASE, 0x33),
+        (TOGGLE_LOCK_PRESS, 0x34),
+        (TOGGLE_LOCK_RELEASE, 0x35),
         (DOOR_STATUS_0x37, 0x37),
         (DOOR_STATUS, 0x38),
         (OBSTRUCTION, 0x39),

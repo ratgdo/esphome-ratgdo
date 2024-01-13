@@ -278,7 +278,6 @@ namespace secplus1 {
 
             this->door_state = door_state;
             this->ratgdo_->received(door_state);
-            this->ratgdo_->received(ButtonState::RELEASED);
         }
         else if (cmd.type == CommandType::DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
@@ -308,18 +307,20 @@ namespace secplus1 {
             ObstructionState obstruction_state = cmd.value == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
             this->ratgdo_->received(obstruction_state);
         }
-        else if (cmd.type == CommandType::TOGGLE_DOOR_COMMIT) {
+        else if (cmd.type == CommandType::TOGGLE_DOOR_RELEASE) {
             if (cmd.value == 0x31) {
                 this->wall_panel_starting_ = true;
             }
-        } else if (cmd.type == CommandType::TOGGLE_LIGHT_REQ) {
+        } else if (cmd.type == CommandType::TOGGLE_LIGHT_PRESS) {
             // motion was detected, or the light toggle button was pressed
             // either way it's ok to trigger motion detection
             if (this->light_state == LightState::OFF) {
                 this->ratgdo_->received(MotionState::DETECTED);
             }
-        } else if (cmd.type == CommandType::TOGGLE_DOOR_REQ) {
+        } else if (cmd.type == CommandType::TOGGLE_DOOR_PRESS) {
             this->ratgdo_->received(ButtonState::PRESSED);
+        } else if (cmd.type == CommandType::TOGGLE_DOOR_RELEASE) {
+            this->ratgdo_->received(ButtonState::RELEASED);
         }
     }
 
