@@ -37,7 +37,7 @@ namespace secplus1 {
         (TOGGLE_LIGHT_COMMIT, 0x33),
         (TOGGLE_LOCK_REQ, 0x34),
         (TOGGLE_LOCK_COMMIT, 0x35),
-        (DOOR_STATUS_37, 0x37),
+        (DOOR_STATUS_0x37, 0x37),
         (DOOR_STATUS, 0x38),
         (OBSTRUCTION, 0x39),
         (OTHER_STATUS, 0x3A),
@@ -81,7 +81,7 @@ namespace secplus1 {
         void print_tx_packet(const TxPacket& packet) const;
         optional<Command> decode_packet(const RxPacket& packet) const;
 
-        void transmit_packet(const TxPacket& packet);
+        void transmit_packet(const TxPacket& packet, bool twice = true, uint32_t delay = 500);
         void transmit_byte(uint32_t value, bool twice = false);
 
         LightState light_state { LightState::UNKNOWN };
@@ -94,6 +94,7 @@ namespace secplus1 {
         WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
 
         bool is_0x37_panel_ { false };
+        bool request_lock_toggle_ { false };
 
         // bool transmit_pending_ { false };
         // uint32_t transmit_pending_start_ { 0 };

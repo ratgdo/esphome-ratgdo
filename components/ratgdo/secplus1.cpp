@@ -106,7 +106,11 @@ namespace secplus1 {
         if (action == LockAction::TOGGLE || 
             (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
             (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
-            this->transmit_packet(toggle_lock);
+            if (this->is_0x37_panel_) {
+                this->request_lock_toggle_ = true;
+            } else {
+                this->transmit_packet(toggle_lock);
+            }
         }
     }
 
@@ -276,10 +280,21 @@ namespace secplus1 {
             this->ratgdo_->received(door_state);
             this->ratgdo_->received(ButtonState::RELEASED);
         }
-        else if (cmd.type == CommandType::DOOR_STATUS_37) {
+        else if (cmd.type == CommandType::DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
-            // inject door status request
-            this->sw_serial_.write(0x38);
+            if (this->request_lock_toggle_) {
+                this->request_lock_toggle_ = false;
+                this->sw_serial_.enableIntTx(false);
+                this->sw_serial_.write(toggle_lock[0]);
+                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), toggle_lock[0]);
+                this->sw_serial_.enableIntTx(true);
+                this->scheduler_->set_timeout(this->ratgdo_, "", 3500, [=] {
+                    transmit_byte(toggle_lock[1], false);
+                });
+            } else {
+                // inject door status request
+                this->sw_serial_.write(0x38);
+            }
         } else if (cmd.type == CommandType::OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.value >> 2) & 1, LightState::UNKNOWN);
             this->light_state = light_state;
@@ -308,13 +323,13 @@ namespace secplus1 {
         }
     }
 
-    void Secplus1::transmit_packet(const TxPacket& packet)
+    void Secplus1::transmit_packet(const TxPacket& packet, bool twice, uint32_t delay)
     {
         this->print_tx_packet(packet);
 
         transmit_byte(packet[0]);
-        this->scheduler_->set_timeout(this->ratgdo_, "", 1500, [=] {
-            transmit_byte(packet[1], true);
+        this->scheduler_->set_timeout(this->ratgdo_, "", delay, [=] {
+            transmit_byte(packet[1], twice);
         });
     }
 
