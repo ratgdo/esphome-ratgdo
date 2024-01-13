@@ -25,16 +25,6 @@ ratgdo:
             message: "Failed to communicate with garage opener on startup."
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
 
-sensor:
-  - platform: ratgdo
-    id: ${id_prefix}_openings
-    type: openings
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Openings"
-    unit_of_measurement: "openings"
-    icon: mdi:open-in-app
-
 lock:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
@@ -83,13 +73,6 @@ binary_sensor:
     id: ${id_prefix}_button
     ratgdo_id: ${id_prefix}
     name: "Button"
-    entity_category: diagnostic
-  - platform: ratgdo
-    type: motor
-    id: ${id_prefix}_motor
-    ratgdo_id: ${id_prefix}
-    name: "Motor"
-    device_class: running
     entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
@@ -208,15 +191,6 @@ button:
       then:
         lambda: !lambda |-
           id($id_prefix).query_status();
-
-  - platform: template
-    id: ${id_prefix}_query_openings
-    name: "Query openings"
-    entity_category: diagnostic
-    on_press:
-      then:
-        lambda: !lambda |-
-          id($id_prefix).query_openings();
 
   - platform: template
     id: ${id_prefix}_sync
