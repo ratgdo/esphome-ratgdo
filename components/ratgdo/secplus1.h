@@ -114,12 +114,8 @@ namespace secplus1 {
 
         bool is_0x37_panel_ { false };
         std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
-
-        // bool transmit_pending_ { false };
-        // uint32_t transmit_pending_start_ { 0 };
-        TxPacket tx_packet_;
-
         uint32_t last_rx_ { 0 };
+        uint32_t last_status_query_ { 0 };
 
         SoftwareSerial sw_serial_;
 

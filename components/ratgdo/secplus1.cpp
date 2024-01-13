@@ -313,7 +313,10 @@ namespace secplus1 {
             this->is_0x37_panel_ = true;
             if (!this->do_transmit_if_pending()) {
                 // inject door status request
-                this->transmit_byte(static_cast<uint8_t>(CommandType::DOOR_STATUS), true);
+                if (millis() - this->last_status_query_ > 10000) {
+                    this->transmit_byte(static_cast<uint8_t>(CommandType::DOOR_STATUS), true);
+                    this->last_status_query_ = millis();
+                }
             }
         } else if (cmd.req == CommandType::OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
