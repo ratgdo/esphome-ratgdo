@@ -1,5 +1,7 @@
 #pragma once
 
+#include <queue>
+
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/optional.h"
 
@@ -44,12 +46,22 @@ namespace secplus1 {
         (UNKNOWN, 0xFF),
     )
 
-    struct Command {
-        CommandType type;
-        uint8_t value;
+    struct RxCommand {
+        CommandType req;
+        uint8_t resp;
 
-        Command(): type(CommandType::UNKNOWN) {}
-        Command(CommandType type_, uint8_t value_ = 0) : type(type_), value(value_) {}
+        RxCommand(): req(CommandType::UNKNOWN), resp(0) {}
+        RxCommand(CommandType req_): req(req_), resp(0) {}
+        RxCommand(CommandType req_, uint8_t resp_ = 0) : req(req_), resp(resp_) {}
+    };
+
+    struct TxCommand {
+        CommandType request;
+        uint32_t time;
+    };
+
+    struct FirstToSend {
+        bool operator()(const TxCommand l, const TxCommand r) const { return l.time > r.time; }
     };
 
     enum class WallPanelEmulationState {
@@ -74,27 +86,34 @@ namespace secplus1 {
     protected:
         void wall_panel_emulation(size_t index = 0);
 
-        optional<Command> read_command();
-        void handle_command(const Command& cmd);
+        optional<RxCommand> read_command();
+        void handle_command(const RxCommand& cmd);
 
         void print_rx_packet(const RxPacket& packet) const;
         void print_tx_packet(const TxPacket& packet) const;
-        optional<Command> decode_packet(const RxPacket& packet) const;
+        optional<RxCommand> decode_packet(const RxPacket& packet) const;
 
-        void transmit_packet(const TxPacket& packet, bool twice = true, uint32_t delay = 500);
-        void transmit_byte(uint32_t value, bool twice = false);
+        void enqueue_transmit(CommandType cmd, uint32_t time = 0);
+        optional<CommandType> pending_tx();
+        bool do_transmit_if_pending();
+        void enqueue_command_pair(CommandType cmd);
+        void transmit_byte(uint32_t value, bool enable_rx = false);
+
+        void toggle_light();
+        void toggle_lock();
+        void toggle_door();
+        void query_status();
 
         LightState light_state { LightState::UNKNOWN };
         LockState lock_state { LockState::UNKNOWN };
         DoorState door_state { DoorState::UNKNOWN };
-        DoorState prev_door_state { DoorState::UNKNOWN };
 
         bool wall_panel_starting_ { false };
         uint32_t wall_panel_emulation_start_ { 0 };
         WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
 
         bool is_0x37_panel_ { false };
-        bool request_lock_toggle_ { false };
+        std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
 
         // bool transmit_pending_ { false };
         // uint32_t transmit_pending_start_ { 0 };

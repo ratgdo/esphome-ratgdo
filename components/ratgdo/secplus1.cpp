@@ -20,8 +20,6 @@ namespace secplus1 {
         this->rx_pin_ = rx_pin;
 
         this->sw_serial_.begin(1200, SWSERIAL_8E1, rx_pin->get_pin(), tx_pin->get_pin(), true);
-        // this->sw_serial_.enableIntTx(false);
-        // this->sw_serial_.enableAutoBaud(true);
     }
 
 
@@ -30,6 +28,13 @@ namespace secplus1 {
         auto cmd = this->read_command();
         if (cmd) {
             this->handle_command(cmd.value());
+        }
+        if (
+            !this->is_0x37_panel_ && 
+            this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING &&
+            (millis() - this->last_rx_) > 50
+        ) {
+            this->do_transmit_if_pending();
         }
     }
 
@@ -73,10 +78,21 @@ namespace secplus1 {
             return;
         } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
             // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
-            this->sw_serial_.write(&secplus1_states[index], 1);
-            index += 1;
-            if (index == 18) {
-                index = 15;
+
+            if (index < 15 || !this->do_transmit_if_pending()) {
+                this->transmit_byte(secplus1_states[index], true);
+                // gdo response simulation for testing
+                // auto resp = secplus1_states[index] == 0x39 ? 0x00 :
+                //             secplus1_states[index] == 0x3A ? 0x5C :
+                //             secplus1_states[index] == 0x38 ? 0x52 : 0xFF;
+                // if (resp != 0xFF) {
+                //     this->transmit_byte(resp, true);
+                // }
+                
+                index += 1;
+                if (index == 18) {
+                    index = 15;
+                }
             }
             this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [=] {
                 this->wall_panel_emulation(index);
@@ -90,10 +106,12 @@ namespace secplus1 {
         if (action == LightAction::UNKNOWN) {
             return;
         }
-        if (action == LightAction::TOGGLE || 
+        if (
+            action == LightAction::TOGGLE || 
             (action == LightAction::ON && this->light_state == LightState::OFF) || 
-            (action == LightAction::OFF && this->light_state == LightState::ON)) {
-            this->transmit_packet(toggle_light);
+            (action == LightAction::OFF && this->light_state == LightState::ON)
+        ) {
+            this->toggle_light();
         }
     }
 
@@ -103,14 +121,12 @@ namespace secplus1 {
         if (action == LockAction::UNKNOWN) {
             return;
         }
-        if (action == LockAction::TOGGLE || 
+        if (
+            action == LockAction::TOGGLE || 
             (action == LockAction::LOCK && this->lock_state == LockState::UNLOCKED) || 
-            (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)) {
-            if (this->is_0x37_panel_) {
-                this->request_lock_toggle_ = true;
-            } else {
-                this->transmit_packet(toggle_lock);
-            }
+            (action == LockAction::UNLOCK && this->lock_state == LockState::LOCKED)
+        ) {
+            this->toggle_lock();
         }
     }
 
@@ -123,49 +139,63 @@ namespace secplus1 {
 
         const uint32_t double_toggle_delay = 1000;
         if (action == DoorAction::TOGGLE) {
-            this->transmit_packet(toggle_door);
+            this->toggle_door();
         } else if (action == DoorAction::OPEN) {
             if (this->door_state == DoorState::CLOSED || this->door_state == DoorState::CLOSING) {
-                this->transmit_packet(toggle_door);
+                this->toggle_door();
             } else if (this->door_state == DoorState::STOPPED) {
-                this->transmit_packet(toggle_door); // this starts closing door
+                this->toggle_door(); // this starts closing door
                 // this changes direction of door
                 this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->transmit_packet(toggle_door);
+                    this->toggle_door();
                 });
             }
         } else if (action == DoorAction::CLOSE) {
             if (this->door_state == DoorState::OPEN) {
-                this->transmit_packet(toggle_door);
+                this->toggle_door();
             } else if (this->door_state == DoorState::OPENING) {
-                this->transmit_packet(toggle_door); // this switches to stopped
+                this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
                 this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->transmit_packet(toggle_door);
+                    this->toggle_door();
                 });
             } else if (this->door_state == DoorState::STOPPED) {
-                this->transmit_packet(toggle_door);
+                this->toggle_door();
             }
         } else if (action == DoorAction::STOP) {
             if (this->door_state == DoorState::OPENING) {
-                this->transmit_packet(toggle_door);
+                this->toggle_door();
             } else if (this->door_state == DoorState::CLOSING) {
-                this->transmit_packet(toggle_door); // this switches to opening
+                this->toggle_door(); // this switches to opening
                 // another toggle needed to stop
                 this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->transmit_packet(toggle_door);
+                    this->toggle_door();
                 });
             }
         }
     }
 
+    void Secplus1::toggle_light()
+    {
+        this->enqueue_transmit(CommandType::TOGGLE_LIGHT_PRESS);
+    }
+
+    void Secplus1::toggle_lock()
+    {
+        this->enqueue_transmit(CommandType::TOGGLE_LOCK_PRESS);
+    }
+
+    void Secplus1::toggle_door()
+    {
+        this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
+    }
 
     Result Secplus1::call(Args args) 
     {
         return {};
     }
 
-    optional<Command> Secplus1::read_command() 
+    optional<RxCommand> Secplus1::read_command() 
     {
         static bool reading_msg = false;
         static uint32_t msg_start = 0;
@@ -236,11 +266,12 @@ namespace secplus1 {
     }
 
 
-    optional<Command> Secplus1::decode_packet(const RxPacket& packet) const
+    optional<RxCommand> Secplus1::decode_packet(const RxPacket& packet) const
     {
         CommandType cmd_type = to_CommandType(packet[0], CommandType::UNKNOWN);
-        return Command{cmd_type, packet[1]};
+        return RxCommand{cmd_type, packet[1]};
     }
+
 
     // unknown meaning of observed command-responses: 
     // 40 00 and 40 80
@@ -249,12 +280,12 @@ namespace secplus1 {
     // F8 3F
     // FE 3F
 
-    void Secplus1::handle_command(const Command& cmd)
+    void Secplus1::handle_command(const RxCommand& cmd)
     {
-        if (cmd.type == CommandType::DOOR_STATUS) {
+        if (cmd.req == CommandType::DOOR_STATUS) {
 
             DoorState door_state;
-            auto val = cmd.value & 0x7;
+            auto val = cmd.resp & 0x7;
             // 000 0x0 stopped
             // 001 0x1 opening
             // 010 0x2 open
@@ -275,86 +306,99 @@ namespace secplus1 {
             } else{
                 door_state = DoorState::UNKNOWN;
             }
-
             this->door_state = door_state;
             this->ratgdo_->received(door_state);
         }
-        else if (cmd.type == CommandType::DOOR_STATUS_0x37) {
+        else if (cmd.req == CommandType::DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
-            if (this->request_lock_toggle_) {
-                this->request_lock_toggle_ = false;
-                this->sw_serial_.enableIntTx(false);
-                this->sw_serial_.write(toggle_lock[0]);
-                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), toggle_lock[0]);
-                this->sw_serial_.enableIntTx(true);
-                this->scheduler_->set_timeout(this->ratgdo_, "", 3500, [=] {
-                    transmit_byte(toggle_lock[1], false);
-                });
-            } else {
+            if (!this->do_transmit_if_pending()) {
                 // inject door status request
-                this->sw_serial_.write(0x38);
+                this->transmit_byte(static_cast<uint8_t>(CommandType::DOOR_STATUS), true);
             }
-        } else if (cmd.type == CommandType::OTHER_STATUS) {
-            LightState light_state = to_LightState((cmd.value >> 2) & 1, LightState::UNKNOWN);
+        } else if (cmd.req == CommandType::OTHER_STATUS) {
+            LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
             this->light_state = light_state;
             this->ratgdo_->received(light_state);
 
-            LockState lock_state = to_LockState((~cmd.value >> 3) & 1, LockState::UNKNOWN);
+            LockState lock_state = to_LockState((~cmd.resp >> 3) & 1, LockState::UNKNOWN);
             this->lock_state = lock_state;
             this->ratgdo_->received(lock_state);
         }
-        else if (cmd.type == CommandType::OBSTRUCTION) {
-            ObstructionState obstruction_state = cmd.value == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
+        else if (cmd.req == CommandType::OBSTRUCTION) {
+            ObstructionState obstruction_state = cmd.resp == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
             this->ratgdo_->received(obstruction_state);
         }
-        else if (cmd.type == CommandType::TOGGLE_DOOR_RELEASE) {
-            if (cmd.value == 0x31) {
+        else if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
+            if (cmd.resp == 0x31) {
                 this->wall_panel_starting_ = true;
             }
-        } else if (cmd.type == CommandType::TOGGLE_LIGHT_PRESS) {
+        } else if (cmd.req == CommandType::TOGGLE_LIGHT_PRESS) {
             // motion was detected, or the light toggle button was pressed
             // either way it's ok to trigger motion detection
             if (this->light_state == LightState::OFF) {
                 this->ratgdo_->received(MotionState::DETECTED);
             }
-        } else if (cmd.type == CommandType::TOGGLE_DOOR_PRESS) {
+        } else if (cmd.req == CommandType::TOGGLE_DOOR_PRESS) {
             this->ratgdo_->received(ButtonState::PRESSED);
-        } else if (cmd.type == CommandType::TOGGLE_DOOR_RELEASE) {
+        } else if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
             this->ratgdo_->received(ButtonState::RELEASED);
         }
     }
 
-    void Secplus1::transmit_packet(const TxPacket& packet, bool twice, uint32_t delay)
-    {
-        this->print_tx_packet(packet);
 
-        transmit_byte(packet[0]);
-        this->scheduler_->set_timeout(this->ratgdo_, "", delay, [=] {
-            transmit_byte(packet[1], twice);
-        });
+    bool Secplus1::do_transmit_if_pending()
+    {
+        auto cmd = this->pending_tx();
+        if (cmd) {
+            this->enqueue_command_pair(cmd.value());
+            this->transmit_byte(static_cast<uint32_t>(cmd.value()));
+        }
+        return cmd;
     }
 
-    void Secplus1::transmit_byte(uint32_t value, bool twice)
+    void Secplus1::enqueue_command_pair(CommandType cmd)
     {
-        int32_t tx_delay = static_cast<int32_t>(this->last_rx_ + 100) - millis();
-        while (tx_delay<0) {
-            tx_delay += 250;
-        }
+        auto now = millis();
+        if (cmd == CommandType::TOGGLE_DOOR_PRESS) {
+            this->enqueue_transmit(CommandType::TOGGLE_DOOR_RELEASE, now + 500);
+        } else if (cmd == CommandType::TOGGLE_LIGHT_PRESS) {
+            this->enqueue_transmit(CommandType::TOGGLE_LIGHT_RELEASE, now + 500);
+        } else if (cmd == CommandType::TOGGLE_LOCK_PRESS) {
+            this->enqueue_transmit(CommandType::TOGGLE_LOCK_RELEASE, now + 3500);
+        };
+    }
 
-        this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay, [=] {
-            this->sw_serial_.enableIntTx(false);
-            this->sw_serial_.write(value);
-            this->sw_serial_.enableIntTx(true);
-            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
-        });
-        if (twice) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", tx_delay+40, [=] {
-                this->sw_serial_.enableIntTx(false);
-                this->sw_serial_.write(value);
-                this->sw_serial_.enableIntTx(true);
-                ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
-            });
+    void Secplus1::enqueue_transmit(CommandType cmd, uint32_t time)
+    {
+        if (time == 0) {
+            time = millis();
         }
+        this->pending_tx_.push(TxCommand{cmd, time});
+    }
+
+    optional<CommandType> Secplus1::pending_tx()
+    {
+        if (this->pending_tx_.empty()) {
+            return {};
+        }
+        auto cmd = this->pending_tx_.top();
+        if (cmd.time < millis()) {
+            this->pending_tx_.pop();
+            return cmd.request;
+        }
+        return {};
+    }
+
+    void Secplus1::transmit_byte(uint32_t value, bool enable_rx)
+    {
+        if (!enable_rx) {
+            this->sw_serial_.enableIntTx(false);
+        }
+        this->sw_serial_.write(value);
+        if (!enable_rx) {
+            this->sw_serial_.enableIntTx(true);
+        }
+        ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
     }
 
 } // namespace secplus1
