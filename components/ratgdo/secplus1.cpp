@@ -25,14 +25,17 @@ namespace secplus1 {
 
     void Secplus1::loop() 
     {
-        auto cmd = this->read_command();
-        if (cmd) {
-            this->handle_command(cmd.value());
+        auto rx_cmd = this->read_command();
+        if (rx_cmd) {
+            this->handle_command(rx_cmd.value());
         }
+        auto tx_cmd = this->pending_tx();
         if (
-            !this->is_0x37_panel_ && 
-            this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING &&
-            (millis() - this->last_rx_) > 50
+            (millis() - this->last_tx_) > 200 && // don't send twice in a period
+            (millis() - this->last_rx_) > 50 && // time to send it 
+            tx_cmd &&  // have pending command
+            !(this->is_0x37_panel_ && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) &&
+            this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING            
         ) {
             this->do_transmit_if_pending();
         }
@@ -190,6 +193,10 @@ namespace secplus1 {
     void Secplus1::toggle_door()
     {
         this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
+        this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
+        if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
+            this->door_moving_ = true;
+        }
     }
 
     Result Secplus1::call(Args args) 
@@ -284,7 +291,7 @@ namespace secplus1 {
 
     void Secplus1::handle_command(const RxCommand& cmd)
     {
-        if (cmd.req == CommandType::DOOR_STATUS) {
+        if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
 
             DoorState door_state;
             auto val = cmd.resp & 0x7;
@@ -313,19 +320,25 @@ namespace secplus1 {
                 this->maybe_door_state = door_state;
             } else {
                 this->door_state = door_state;
+                if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
+                    this->door_moving_ = false;
+                }
                 this->ratgdo_->received(door_state);
             }
         }
-        else if (cmd.req == CommandType::DOOR_STATUS_0x37) {
+        else if (cmd.req == CommandType::QUERY_DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
-            if (!this->do_transmit_if_pending()) {
+            auto cmd = this->pending_tx();
+            if (cmd && cmd.value() == CommandType::TOGGLE_LOCK_PRESS) {
+                this->do_transmit_if_pending();
+            } else {
                 // inject door status request
-                if (millis() - this->last_status_query_ > 10000) {
-                    this->transmit_byte(static_cast<uint8_t>(CommandType::DOOR_STATUS), true);
+                if (door_moving_ || (millis() - this->last_status_query_ > 10000)) {
+                    this->transmit_byte(static_cast<uint8_t>(CommandType::QUERY_DOOR_STATUS), true);
                     this->last_status_query_ = millis();
                 }
             }
-        } else if (cmd.req == CommandType::OTHER_STATUS) {
+        } else if (cmd.req == CommandType::QUERY_OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
 
             if (!this->is_0x37_panel_ && light_state != this->maybe_light_state) {
@@ -367,7 +380,7 @@ namespace secplus1 {
 
     bool Secplus1::do_transmit_if_pending()
     {
-        auto cmd = this->pending_tx();
+        auto cmd = this->pop_pending_tx();
         if (cmd) {
             this->enqueue_command_pair(cmd.value());
             this->transmit_byte(static_cast<uint32_t>(cmd.value()));
@@ -401,11 +414,20 @@ namespace secplus1 {
             return {};
         }
         auto cmd = this->pending_tx_.top();
-        if (cmd.time < millis()) {
-            this->pending_tx_.pop();
-            return cmd.request;
+        if (cmd.time > millis()) {
+            return {};
         }
-        return {};
+        return cmd.request;
+    }
+
+
+    optional<CommandType> Secplus1::pop_pending_tx()
+    {
+        auto cmd = this->pending_tx();
+        if (cmd) {
+            this->pending_tx_.pop();
+        }
+        return cmd;
     }
 
     void Secplus1::transmit_byte(uint32_t value, bool enable_rx)
@@ -414,6 +436,7 @@ namespace secplus1 {
             this->sw_serial_.enableIntTx(false);
         }
         this->sw_serial_.write(value);
+        this->last_tx_ = millis();
         if (!enable_rx) {
             this->sw_serial_.enableIntTx(true);
         }

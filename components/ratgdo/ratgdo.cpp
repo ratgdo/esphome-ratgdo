@@ -97,6 +97,10 @@ namespace ratgdo {
     {
         auto prev_door_state = *this->door_state;
 
+        if (prev_door_state == door_state) {
+            return;
+        }
+
         // opening duration calibration
         if (*this->opening_duration == 0) {
             if (door_state == DoorState::OPENING && prev_door_state == DoorState::CLOSED) {

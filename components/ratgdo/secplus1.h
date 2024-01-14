@@ -39,10 +39,10 @@ namespace secplus1 {
         (TOGGLE_LIGHT_RELEASE, 0x33),
         (TOGGLE_LOCK_PRESS, 0x34),
         (TOGGLE_LOCK_RELEASE, 0x35),
-        (DOOR_STATUS_0x37, 0x37),
-        (DOOR_STATUS, 0x38),
+        (QUERY_DOOR_STATUS_0x37, 0x37),
+        (QUERY_DOOR_STATUS, 0x38),
         (OBSTRUCTION, 0x39),
-        (OTHER_STATUS, 0x3A),
+        (QUERY_OTHER_STATUS, 0x3A),
         (UNKNOWN, 0xFF),
     )
 
@@ -95,6 +95,7 @@ namespace secplus1 {
 
         void enqueue_transmit(CommandType cmd, uint32_t time = 0);
         optional<CommandType> pending_tx();
+        optional<CommandType> pop_pending_tx();
         bool do_transmit_if_pending();
         void enqueue_command_pair(CommandType cmd);
         void transmit_byte(uint32_t value, bool enable_rx = false);
@@ -112,6 +113,8 @@ namespace secplus1 {
         LockState maybe_lock_state { LockState::UNKNOWN };
         DoorState maybe_door_state { DoorState::UNKNOWN };
 
+        bool door_moving_ { false };
+
         bool wall_panel_starting_ { false };
         uint32_t wall_panel_emulation_start_ { 0 };
         WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
@@ -119,6 +122,7 @@ namespace secplus1 {
         bool is_0x37_panel_ { false };
         std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
         uint32_t last_rx_ { 0 };
+        uint32_t last_tx_ { 0 };
         uint32_t last_status_query_ { 0 };
 
         SoftwareSerial sw_serial_;
