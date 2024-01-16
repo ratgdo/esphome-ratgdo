@@ -129,7 +129,7 @@ namespace secplus2 {
         if (action == LockAction::UNKNOWN) {
             return;
         }
-        this->send_command(Command(CommandType::LOCK, static_cast<uint8_t>(action)));
+        // this->send_command(Command(CommandType::LOCK, static_cast<uint8_t>(action)));
     }
 
     void Secplus2::door_action(DoorAction action)
@@ -145,9 +145,9 @@ namespace secplus2 {
     {
         using Tag = Args::Tag;
         if (args.tag == Tag::query_status) {
-            this->send_command(CommandType::GET_STATUS);
+            this->send_command(Command{CommandType::GET_STATUS});
         } else if (args.tag == Tag::query_openings) {
-            this->send_command(CommandType::GET_OPENINGS);
+            this->send_command(Command{CommandType::GET_OPENINGS});
         } else if (args.tag == Tag::get_rolling_code_counter) {
             return Result(RollingCodeCounter{std::addressof(this->rolling_code_counter_)});
         } else if (args.tag == Tag::set_rolling_code_counter) {
@@ -359,7 +359,10 @@ namespace secplus2 {
 
     void Secplus2::handle_command(const Command& cmd)
     {
+        ESP_LOG1(TAG, "Handle command: %s", CommandType_to_string(cmd.type));
+
         if (cmd.type == CommandType::STATUS) {
+            
             this->ratgdo_->received(to_DoorState(cmd.nibble, DoorState::UNKNOWN));
             this->ratgdo_->received(to_LightState((cmd.byte2 >> 1) & 1, LightState::UNKNOWN));
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));
@@ -425,6 +428,7 @@ namespace secplus2 {
             }
         }
 
+        ESP_LOG1(TAG, "Done handle command: %s", CommandType_to_string(cmd.type));
     }
 
     void Secplus2::send_command(Command command, bool increment)

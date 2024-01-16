@@ -32,10 +32,10 @@ namespace secplus1 {
         auto tx_cmd = this->pending_tx();
         if (
             (millis() - this->last_tx_) > 200 && // don't send twice in a period
-            (millis() - this->last_rx_) > 50 && // time to send it 
+            (millis() - this->last_rx_) > 50 && // time to send it
             tx_cmd &&  // have pending command
             !(this->is_0x37_panel_ && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) &&
-            this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING            
+            this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING
         ) {
             this->do_transmit_if_pending();
         }
@@ -325,8 +325,7 @@ namespace secplus1 {
                 }
                 this->ratgdo_->received(door_state);
             }
-        }
-        else if (cmd.req == CommandType::QUERY_DOOR_STATUS_0x37) {
+        } else if (cmd.req == CommandType::QUERY_DOOR_STATUS_0x37) {
             this->is_0x37_panel_ = true;
             auto cmd = this->pending_tx();
             if (cmd && cmd.value() == CommandType::TOGGLE_LOCK_PRESS) {
@@ -355,12 +354,10 @@ namespace secplus1 {
                 this->lock_state = lock_state;
                 this->ratgdo_->received(lock_state);
             }
-        }
-        else if (cmd.req == CommandType::OBSTRUCTION) {
+        } else if (cmd.req == CommandType::OBSTRUCTION) {
             ObstructionState obstruction_state = cmd.resp == 0 ? ObstructionState::CLEAR : ObstructionState::OBSTRUCTED;
             this->ratgdo_->received(obstruction_state);
-        }
-        else if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
+        } else if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
             if (cmd.resp == 0x31) {
                 this->wall_panel_starting_ = true;
             }
@@ -376,7 +373,6 @@ namespace secplus1 {
             this->ratgdo_->received(ButtonState::RELEASED);
         }
     }
-
 
     bool Secplus1::do_transmit_if_pending()
     {
@@ -419,7 +415,6 @@ namespace secplus1 {
         }
         return cmd.request;
     }
-
 
     optional<CommandType> Secplus1::pop_pending_tx()
     {
