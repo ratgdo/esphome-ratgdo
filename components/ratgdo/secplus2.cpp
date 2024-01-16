@@ -129,7 +129,7 @@ namespace secplus2 {
         if (action == LockAction::UNKNOWN) {
             return;
         }
-        // this->send_command(Command(CommandType::LOCK, static_cast<uint8_t>(action)));
+        this->send_command(Command(CommandType::LOCK, static_cast<uint8_t>(action)));
     }
 
     void Secplus2::door_action(DoorAction action)
