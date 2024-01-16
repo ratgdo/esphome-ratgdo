@@ -106,6 +106,7 @@ namespace ratgdo {
         void received(const Openings openings);
         void received(const TimeToClose ttc);
         void received(const PairedDeviceCount pdc);
+        void received(const BatteryState pdc);
 
         // door
         void door_toggle();

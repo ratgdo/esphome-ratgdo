@@ -145,22 +145,32 @@ namespace secplus2 {
     {
         using Tag = Args::Tag;
         if (args.tag == Tag::query_status) {
-            this->send_command(Command{CommandType::GET_STATUS});
+            this->send_command(CommandType::GET_STATUS);
         } else if (args.tag == Tag::query_openings) {
-            this->send_command(Command{CommandType::GET_OPENINGS});
+            this->send_command(CommandType::GET_OPENINGS);
         } else if (args.tag == Tag::get_rolling_code_counter) {
             return Result(RollingCodeCounter{std::addressof(this->rolling_code_counter_)});
         } else if (args.tag == Tag::set_rolling_code_counter) {
             this->set_rolling_code_counter(args.value.set_rolling_code_counter.counter);
         } else if (args.tag == Tag::set_client_id) {
             this->set_client_id(args.value.set_client_id.client_id);
+        } else if (args.tag == Tag::query_paired_devices) {
+            this->query_paired_devices(args.value.query_paired_devices.kind);
+        } else if (args.tag == Tag::query_paired_devices_all) {
+            this->query_paired_devices();
+        } else if (args.tag == Tag::clear_paired_devices) {
+            this->clear_paired_devices(args.value.clear_paired_devices.kind);
+        } else if (args.tag == Tag::activate_learn) {
+            this->activate_learn();
+        } else if (args.tag == Tag::inactivate_learn) {
+            this->inactivate_learn();
         }
         return {};
     }
 
     void Secplus2::door_command(DoorAction action)
     {
-        this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), false, [=]() {
+        this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [=]() {
             this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] {
                 this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 0, 1));
             });
@@ -197,7 +207,7 @@ namespace secplus2 {
     void Secplus2::query_paired_devices(PairedDevice kind)
     {
         ESP_LOGD(TAG, "Query paired devices of type: %s", PairedDevice_to_string(kind));
-        this->send_command(CommandType::GET_PAIRED_DEVICES, static_cast<uint8_t>(kind));
+        this->send_command(Command{CommandType::GET_PAIRED_DEVICES, static_cast<uint8_t>(kind)});
     }
 
     // wipe devices from memory based on get paired devices nibble values
@@ -208,14 +218,15 @@ namespace secplus2 {
         }
         ESP_LOGW(TAG, "Clear paired devices of type: %s", PairedDevice_to_string(kind));
         if (kind == PairedDevice::ALL) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] { this->send_command(CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE)-1); }); // wireless
-            this->scheduler_->set_timeout(this->ratgdo_, "", 400, [=] { this->send_command(CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD)-1); }); // keypads
-            this->scheduler_->set_timeout(this->ratgdo_, "", 600, [=] { this->send_command(CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL)-1); }); // wall controls
-            this->scheduler_->set_timeout(this->ratgdo_, "", 800, [=] { this->send_command(CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY)-1); }); // accessories
+            this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] { this->send_command(Command{CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE)-1}); }); // wireless
+            this->scheduler_->set_timeout(this->ratgdo_, "", 400, [=] { this->send_command(Command{CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD)-1}); }); // keypads
+            this->scheduler_->set_timeout(this->ratgdo_, "", 600, [=] { this->send_command(Command{CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL)-1}); }); // wall controls
+            this->scheduler_->set_timeout(this->ratgdo_, "", 800, [=] { this->send_command(Command{CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY)-1}); }); // accessories
             this->scheduler_->set_timeout(this->ratgdo_, "", 1000, [=] { this->query_status(); });
             this->scheduler_->set_timeout(this->ratgdo_, "", 1200, [=] { this->query_paired_devices(); });
         } else {
-            this->send_command(CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(kind) - 1); // just requested device
+            uint8_t dev_kind = static_cast<uint8_t>(kind)-1;
+            this->send_command(Command{CommandType::CLEAR_PAIRED_DEVICES, dev_kind}); // just requested device
             this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] { this->query_status(); });
             this->scheduler_->set_timeout(this->ratgdo_, "", 400, [=] { this->query_paired_devices(kind); });
         }
@@ -371,20 +382,21 @@ namespace secplus2 {
 
             auto learn_state = to_LearnState((cmd.byte2 >> 5) & 1, LearnState::UNKNOWN);
             if (this->learn_state_ != learn_state) {
+                ESP_LOG1(TAG, "Learn state handle: %d", (int)this->learn_poll_status_);
                 if (learn_state == LearnState::ACTIVE && this->learn_poll_status_) {
-                    this->scheduler_->set_timeout(this->ratgdo_, "learn_poll", 1000, [=] { 
+                    this->scheduler_->set_interval(this->ratgdo_, "learn_poll", 1000, [=] { 
                         this->query_status();
                     });
                 } else {
-                    this->scheduler_->cancel_timeout(this->ratgdo_, "learn_poll");
+                    this->scheduler_->cancel_interval(this->ratgdo_, "learn_poll");
                     this->learn_poll_status_ = true;
                 }
                 if (learn_state == LearnState::INACTIVE) {
                     this->query_paired_devices();
                 }
                 this->learn_state_ = learn_state;
-                this->ratgdo_->received(learn_state);
             }
+            this->ratgdo_->received(learn_state);
         }
         else if (cmd.type == CommandType::LIGHT) {
             this->ratgdo_->received(to_LightAction(cmd.nibble, LightAction::UNKNOWN));
@@ -427,16 +439,19 @@ namespace secplus2 {
                 this->learn_poll_status_ = false;
             }
         }
+        else if (cmd.type == CommandType::BATTERY_STATUS) {
+            this->ratgdo_->received(to_BatteryState(cmd.byte1, BatteryState::UNKNOWN));
+        }
 
         ESP_LOG1(TAG, "Done handle command: %s", CommandType_to_string(cmd.type));
     }
 
-    void Secplus2::send_command(Command command, bool increment)
+    void Secplus2::send_command(Command command, IncrementRollingCode increment)
     {
         ESP_LOG1(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
         if (!this->transmit_pending_) { // have an untransmitted packet
             this->encode_packet(command, this->tx_packet_);
-            if (increment) {
+            if (increment == IncrementRollingCode::YES) {
                 this->increment_rolling_code_counter();
             }
         } else {
@@ -452,7 +467,7 @@ namespace secplus2 {
     }
 
 
-    void Secplus2::send_command(Command command, bool increment, std::function<void()>&& on_sent)
+    void Secplus2::send_command(Command command, IncrementRollingCode increment, std::function<void()>&& on_sent)
     {
         this->command_sent_.then(on_sent);
         this->send_command(command, increment);

@@ -288,6 +288,11 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Time to close (TTC): %ds", ttc.seconds);
     }
 
+    void RATGDOComponent::received(const BatteryState battery_state)
+    {
+        ESP_LOGD(TAG, "Battery state=%s", BatteryState_to_string(battery_state));
+    }
+
     void RATGDOComponent::schedule_door_position_sync(float update_period)
     {
         ESP_LOG1(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
@@ -379,16 +384,29 @@ namespace ratgdo {
         }
     }
 
-
     void RATGDOComponent::query_status()
     {
-        ESP_LOG2(TAG, "Query status action");
         this->protocol_->call(QueryStatus{});
     }
 
     void RATGDOComponent::query_openings()
     {
         this->protocol_->call(QueryOpenings{});
+    }
+
+    void RATGDOComponent::query_paired_devices()
+    {
+        this->protocol_->call(QueryPairedDevicesAll{});
+    }
+
+    void RATGDOComponent::query_paired_devices(PairedDevice kind)
+    {
+        this->protocol_->call(QueryPairedDevices{kind});
+    }
+
+    void RATGDOComponent::clear_paired_devices(PairedDevice kind)
+    {
+        this->protocol_->call(ClearPairedDevices{kind});
     }
 
     void RATGDOComponent::sync()

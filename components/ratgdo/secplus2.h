@@ -30,6 +30,7 @@ namespace secplus2 {
         (STATUS, 0x081),
         (OBST_1, 0x084), // sent when an obstruction happens?
         (OBST_2, 0x085), // sent when an obstruction happens?
+        (BATTERY_STATUS, 0x9d),
         (PAIR_3, 0x0a0),
         (PAIR_3_RESP, 0x0a1),
 
@@ -60,6 +61,11 @@ namespace secplus2 {
     inline bool operator==(const uint16_t cmd_i, const CommandType& cmd_e) { return cmd_i == static_cast<uint16_t>(cmd_e); }
     inline bool operator==(const CommandType& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
 
+
+    enum class IncrementRollingCode {
+        NO,
+        YES,
+    };
 
     struct Command {
         CommandType type;
@@ -93,8 +99,8 @@ namespace secplus2 {
         optional<Command> read_command();
         void handle_command(const Command& cmd);
 
-        void send_command(Command cmd, bool increment = true);
-        void send_command(Command cmd, bool increment, std::function<void()>&& on_sent);
+        void send_command(Command cmd, IncrementRollingCode increment = IncrementRollingCode::YES);
+        void send_command(Command cmd, IncrementRollingCode increment, std::function<void()>&& on_sent);
         void encode_packet(Command cmd, WirePacket& packet);
         bool transmit_packet();
 

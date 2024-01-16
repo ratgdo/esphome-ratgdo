@@ -19,6 +19,9 @@ struct QueryStatus{};
 struct QueryOpenings{};
 struct ActivateLearn {};
 struct InactivateLearn {};
+struct QueryPairedDevices { PairedDevice kind; };
+struct QueryPairedDevicesAll {};
+struct ClearPairedDevices { PairedDevice kind; };
 
 
 // a poor man's sum-type, because C++
@@ -32,6 +35,9 @@ public:
        QueryOpenings query_openings;
        ActivateLearn activate_learn;
        InactivateLearn inactivate_learn;
+       QueryPairedDevices query_paired_devices;
+       QueryPairedDevicesAll query_paired_devices_all;
+       ClearPairedDevices clear_paired_devices;
     } value;
 
     enum class Tag {
@@ -42,6 +48,9 @@ public:
         query_openings,
         activate_learn,
         inactivate_learn,
+        query_paired_devices,
+        query_paired_devices_all,
+        clear_paired_devices,
     } tag;
 
     Args(GetRollingCodeCounter&& arg): tag(Tag::get_rolling_code_counter) {
@@ -64,6 +73,15 @@ public:
     }
     Args(InactivateLearn&& arg): tag(Tag::inactivate_learn) {
         value.inactivate_learn = std::move(arg);
+    }
+    Args(QueryPairedDevices&& arg): tag(Tag::query_paired_devices) {
+        value.query_paired_devices = std::move(arg);
+    }
+    Args(QueryPairedDevicesAll&& arg): tag(Tag::query_paired_devices_all) {
+        value.query_paired_devices_all = std::move(arg);
+    }
+    Args(ClearPairedDevices&& arg): tag(Tag::clear_paired_devices) {
+        value.clear_paired_devices = std::move(arg);
     }
 };
 
