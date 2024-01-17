@@ -97,7 +97,7 @@ namespace ratgdo {
     {
 
         ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
-        
+
         auto prev_door_state = *this->door_state;
 
         ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
@@ -538,7 +538,12 @@ namespace ratgdo {
 
         this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
         set_timeout("move_to_position", operation_time, [=] {
+#ifdef PROTOCOL_SECPLUSV2
             this->ensure_door_action(DoorAction::STOP);
+#else
+// STOP command is idempotent only on sec+2, don't use ensure_door_action otherwise
+            this->door_action(DoorAction::STOP);
+#endif            
         });
     }
 
