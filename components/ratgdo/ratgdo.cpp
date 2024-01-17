@@ -95,6 +95,9 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const DoorState door_state) 
     {
+
+        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
+        
         auto prev_door_state = *this->door_state;
 
         ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
