@@ -196,12 +196,6 @@ namespace ratgdo {
 
             auto learn_state = static_cast<LearnState>((byte2 >> 5) & 1);
             if (*this->learn_state != learn_state) {
-                if (learn_state == LearnState::ACTIVE && this->learn_poll_status_) {
-                    set_interval("learn_poll", 1000, [=] { this->send_command(Command::GET_STATUS); });
-                } else {
-                    cancel_interval("learn_poll");
-                    this->learn_poll_status_ = true;
-                }
                 if (learn_state == LearnState::INACTIVE) {
                     this->query_paired_devices();
                 }
@@ -266,12 +260,6 @@ namespace ratgdo {
         } else if (cmd == Command::SET_TTC) {
             auto seconds = (byte1 << 8) | byte2;
             ESP_LOGD(TAG, "Time to close (TTC): %ds", seconds);
-        }
-        if (cmd == Command::LEARN) {
-            if (nibble == 1) { // LEARN sent from wall control, it will poll status every second.
-                // otherwise if ratgdo or gdo initiated ratgdo needs to poll
-                learn_poll_status_ = false;
-            }
         } else if (cmd == Command::PAIRED_DEVICES) {
             if (nibble == static_cast<uint8_t>(PairedDevice::ALL)) {
                 this->paired_total = byte2;
@@ -825,7 +813,6 @@ namespace ratgdo {
     void RATGDOComponent::activate_learn()
     {
         // Send LEARN with nibble = 0 then nibble = 1 to mimic wall control learn button
-        this->learn_poll_status_ = true;
         this->send_command(Command::LEARN, 0);
         set_timeout(150, [=] { this->send_command(Command::LEARN, 1); });
         set_timeout(500, [=] { this->send_command(Command::GET_STATUS); });

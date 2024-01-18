@@ -227,8 +227,6 @@ namespace ratgdo {
 
         bool obstruction_from_status_ { false };
 
-        bool learn_poll_status_ { true };
-
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
