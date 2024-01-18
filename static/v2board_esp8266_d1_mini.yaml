@@ -1,8 +1,8 @@
 ---
 substitutions:
-  id_prefix: ratgdov25i
-  friendly_name: "ratgdov2.5i"
-  uart_tx_pin: D1
+  id_prefix: ratgdov2
+  friendly_name: "ratgdov2"
+  uart_tx_pin: D4
   uart_rx_pin: D2
   input_obst_pin: D7
   status_door_pin: D0
@@ -19,14 +19,14 @@ esphome:
   name_add_mac_suffix: true
   project:
     name: ratgdo.esphome
-    version: "2.5i"
+    version: "2.0"
 
 esp8266:
   board: d1_mini
   restore_from_flash: true
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp8266_d1_mini.yaml@main
 
 packages:
   remote_package:
