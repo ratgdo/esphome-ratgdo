@@ -152,11 +152,16 @@ namespace secplus1 {
             if (this->door_state == DoorState::CLOSED || this->door_state == DoorState::CLOSING) {
                 this->toggle_door();
             } else if (this->door_state == DoorState::STOPPED) {
-                this->toggle_door(); // this starts closing door
-                // this changes direction of door
+                this->toggle_door(); // this starts closing door            
                 this->on_door_state_([=](DoorState s) {
                     if (s==DoorState::CLOSING) {
+                        // this changes direction of the door on some openers, on others it stops it
                         this->toggle_door();
+                        this->on_door_state_([=](DoorState s) {
+                            if (s==DoorState::STOPPED) {
+                                this->toggle_door();
+                            }
+                        });
                     }
                 });
             }
