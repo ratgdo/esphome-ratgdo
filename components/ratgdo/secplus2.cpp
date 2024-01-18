@@ -471,7 +471,7 @@ namespace secplus2 {
 
     void Secplus2::send_command(Command command, IncrementRollingCode increment, std::function<void()>&& on_sent)
     {
-        this->command_sent_.then(on_sent);
+        this->on_command_sent_(on_sent);
         this->send_command(command, increment);
     }
 
@@ -521,7 +521,7 @@ namespace secplus2 {
 
         this->transmit_pending_ = false;
         this->transmit_pending_start_ = 0;
-        this->command_sent_();
+        this->on_command_sent_.trigger();
         return true;
     }
 

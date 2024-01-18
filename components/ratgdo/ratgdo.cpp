@@ -187,7 +187,7 @@ namespace ratgdo {
         }
 
         this->door_state = door_state;
-        this->door_state_received(door_state);
+        this->on_door_state_.trigger(door_state);
     }
 
     void RATGDOComponent::received(const LearnState learn_state)
@@ -442,7 +442,7 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
             this->door_action(DoorAction::STOP);
-            this->door_state_received.then([=](DoorState s) {
+            this->on_door_state_([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_action(DoorAction::CLOSE);
                 } else {
@@ -487,7 +487,7 @@ namespace ratgdo {
             ESP_LOGW(TAG, "It's not recommended to use ensure_door_action with non-idempotent commands such as DOOR_TOGGLE");
         }
         auto prev_door_state = *this->door_state;
-        this->door_state_received.then([=](DoorState s) {
+        this->on_door_state_([=](DoorState s) {
             if ((action == DoorAction::STOP) && (s != DoorState::STOPPED) && !(prev_door_state == DoorState::OPENING && s == DoorState::OPEN) && !(prev_door_state == DoorState::CLOSING && s == DoorState::CLOSED)) {
                 return;
             }
@@ -512,7 +512,7 @@ namespace ratgdo {
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
             this->door_action(DoorAction::STOP);
-            this->door_state_received.then([=](DoorState s) {
+            this->on_door_state_([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
                 }

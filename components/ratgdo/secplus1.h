@@ -115,6 +115,8 @@ namespace secplus1 {
         LockState maybe_lock_state { LockState::UNKNOWN };
         DoorState maybe_door_state { DoorState::UNKNOWN };
 
+        OnceCallbacks<void(DoorState)> on_door_state_;
+
         bool door_moving_ { false };
 
         bool wall_panel_starting_ { false };

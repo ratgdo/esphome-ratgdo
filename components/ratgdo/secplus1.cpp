@@ -154,8 +154,10 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
                 // this changes direction of door
-                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->toggle_door();
+                this->on_door_state_([=](DoorState s) {
+                    if (s==DoorState::CLOSING) {
+                        this->toggle_door();
+                    }
                 });
             }
         } else if (action == DoorAction::CLOSE) {
@@ -164,8 +166,10 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::OPENING) {
                 this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
-                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->toggle_door();
+                this->on_door_state_([=](DoorState s) {
+                    if (s==DoorState::STOPPED) {
+                        this->toggle_door();
+                    }
                 });
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door();
@@ -175,9 +179,12 @@ namespace secplus1 {
                 this->toggle_door();
             } else if (this->door_state == DoorState::CLOSING) {
                 this->toggle_door(); // this switches to opening
+
                 // another toggle needed to stop
-                this->scheduler_->set_timeout(this->ratgdo_, "", double_toggle_delay, [=] {
-                    this->toggle_door();
+                this->on_door_state_([=](DoorState s) {
+                    if (s==DoorState::OPENING) {
+                        this->toggle_door();
+                    }
                 });
             }
         }
@@ -196,7 +203,7 @@ namespace secplus1 {
     void Secplus1::toggle_door()
     {
         this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
-        this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
+        // this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
         if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
             this->door_moving_ = true;
         }
@@ -319,9 +326,14 @@ namespace secplus1 {
                 door_state = DoorState::UNKNOWN;
             }
 
+            if (this->maybe_door_state != door_state) {
+                this->on_door_state_.trigger(door_state);
+            }
+
             if (!this->is_0x37_panel_ && door_state != this->maybe_door_state) {
                 this->maybe_door_state = door_state;
             } else {
+                this->maybe_door_state = door_state;
                 this->door_state = door_state;
                 if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
                     this->door_moving_ = false;

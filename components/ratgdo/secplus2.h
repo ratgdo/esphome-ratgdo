@@ -128,7 +128,7 @@ namespace secplus2 {
         bool transmit_pending_ { false };
         uint32_t transmit_pending_start_ { 0 };
         WirePacket tx_packet_;
-        OnceCallbacks<void()> command_sent_;
+        OnceCallbacks<void()> on_command_sent_;
 
         ProtocolTraits traits_;
 
