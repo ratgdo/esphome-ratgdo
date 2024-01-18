@@ -57,38 +57,6 @@ sensor:
     ratgdo_id: ${id_prefix}
     name: "Paired Devices"
     icon: mdi:remote   
-  - platform: ratgdo
-    id: ${id_prefix}_paired_devices_remotes
-    type: paired_devices_remotes
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Paired Remotes"
-    disabled_by_default: true
-    icon: mdi:remote  
-  - platform: ratgdo
-    id: ${id_prefix}_paired_devices_keypads
-    type: paired_devices_keypads
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Paired Keypads"
-    disabled_by_default: true
-    icon: mdi:dialpad  
-  - platform: ratgdo
-    id: ${id_prefix}_paired_devices_wall_controls
-    type: paired_devices_wall_controls
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Paired Wall Controls"
-    disabled_by_default: true
-    icon: mdi:pan-vertical
-  - platform: ratgdo
-    id: ${id_prefix}_paired_devices_accessories
-    type: paired_devices_accessories
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Paired Accessories"
-    disabled_by_default: true
-    icon: mdi:cloud-cancel-outline  
 
 lock:
   - platform: ratgdo
