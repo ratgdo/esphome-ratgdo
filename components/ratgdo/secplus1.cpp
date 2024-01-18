@@ -88,7 +88,7 @@ namespace secplus1 {
             // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
 
             if (index < 15 || !this->do_transmit_if_pending()) {
-                this->transmit_byte(secplus1_states[index], true);
+                this->transmit_byte(secplus1_states[index]);
                 // gdo response simulation for testing
                 // auto resp = secplus1_states[index] == 0x39 ? 0x00 :
                 //             secplus1_states[index] == 0x3A ? 0x5C :
@@ -203,7 +203,7 @@ namespace secplus1 {
     void Secplus1::toggle_door()
     {
         this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
-        // this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
+        this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
         if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
             this->door_moving_ = true;
         }
@@ -332,6 +332,7 @@ namespace secplus1 {
 
             if (!this->is_0x37_panel_ && door_state != this->maybe_door_state) {
                 this->maybe_door_state = door_state;
+                ESP_LOG1(TAG, "Door maybe %s, waiting for 2nd status message to confirm", DoorState_to_string(door_state));
             } else {
                 this->maybe_door_state = door_state;
                 this->door_state = door_state;
@@ -348,7 +349,7 @@ namespace secplus1 {
             } else {
                 // inject door status request
                 if (door_moving_ || (millis() - this->last_status_query_ > 10000)) {
-                    this->transmit_byte(static_cast<uint8_t>(CommandType::QUERY_DOOR_STATUS), true);
+                    this->transmit_byte(static_cast<uint8_t>(CommandType::QUERY_DOOR_STATUS));
                     this->last_status_query_ = millis();
                 }
             }
@@ -440,8 +441,9 @@ namespace secplus1 {
         return cmd;
     }
 
-    void Secplus1::transmit_byte(uint32_t value, bool enable_rx)
+    void Secplus1::transmit_byte(uint32_t value)
     {
+        bool enable_rx = (value == 0x38) || (value == 0x39) || (value==0x3A);
         if (!enable_rx) {
             this->sw_serial_.enableIntTx(false);
         }

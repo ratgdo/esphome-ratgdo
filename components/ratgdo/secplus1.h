@@ -100,7 +100,7 @@ namespace secplus1 {
         optional<CommandType> pop_pending_tx();
         bool do_transmit_if_pending();
         void enqueue_command_pair(CommandType cmd);
-        void transmit_byte(uint32_t value, bool enable_rx = false);
+        void transmit_byte(uint32_t value);
 
         void toggle_light();
         void toggle_lock();
