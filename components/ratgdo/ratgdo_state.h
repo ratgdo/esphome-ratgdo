@@ -12,7 +12,7 @@
  ************************************/
 
 #pragma once
-#include "enum.h"
+#include "macros.h"
 #include <cstdint>
 
 namespace esphome {

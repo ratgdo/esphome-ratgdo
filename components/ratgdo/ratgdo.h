@@ -19,7 +19,7 @@
 
 #include "observable.h"
 #include "callbacks.h"
-#include "enum.h"
+#include "macros.h"
 #include "ratgdo_state.h"
 #include "protocol.h"
 

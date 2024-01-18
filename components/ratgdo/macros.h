@@ -55,3 +55,35 @@
             return _unknown;                            \
         }                                               \
     }
+
+#define SUM_TYPE_UNION_MEMBER0(type, var) type var;
+#define SUM_TYPE_UNION_MEMBER(name, tuple) SUM_TYPE_UNION_MEMBER0 tuple
+
+#define SUM_TYPE_ENUM_MEMBER0(type, var) var,
+#define SUM_TYPE_ENUM_MEMBER(name, tuple) SUM_TYPE_ENUM_MEMBER0 tuple
+
+#define SUM_TYPE_CONSTRUCTOR0(name, type, val) \
+    name(type&& arg)                           \
+        : tag(Tag::val)                        \
+    {                                          \
+        value.val = std::move(arg);            \
+    }
+#define SUM_TYPE_CONSTRUCTOR(name, tuple) SUM_TYPE_CONSTRUCTOR0 LPAREN name, TUPLE tuple)
+
+#define SUM_TYPE(name, ...)                          \
+    class name {                                               \
+    public:                                                    \
+        union {                                                \
+            FOR_EACH(SUM_TYPE_UNION_MEMBER, name, __VA_ARGS__) \
+        } value;                                               \
+        enum class Tag {                                       \
+            void_,                                             \
+            FOR_EACH(SUM_TYPE_ENUM_MEMBER, name, __VA_ARGS__)  \
+        } tag;                                                 \
+                                                               \
+        name()                                                 \
+            : tag(Tag::void_)                                  \
+        {                                                      \
+        }                                                      \
+        FOR_EACH(SUM_TYPE_CONSTRUCTOR, name, __VA_ARGS__)      \
+    };
