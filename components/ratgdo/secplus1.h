@@ -83,6 +83,8 @@ namespace secplus1 {
 
         Result call(Args args);
 
+        const ProtocolTraits& traits() const { return this->traits_; }
+
     protected:
         void wall_panel_emulation(size_t index = 0);
 
@@ -124,6 +126,8 @@ namespace secplus1 {
         uint32_t last_rx_ { 0 };
         uint32_t last_tx_ { 0 };
         uint32_t last_status_query_ { 0 };
+
+        ProtocolTraits traits_;
 
         SoftwareSerial sw_serial_;
 

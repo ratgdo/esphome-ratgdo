@@ -91,11 +91,13 @@ namespace secplus2 {
 
         Result call(Args args);
 
+        const ProtocolTraits& traits() const { return this->traits_; }
+
+    protected:
         void increment_rolling_code_counter(int delta = 1);
         void set_rolling_code_counter(uint32_t counter);
         void set_client_id(uint64_t client_id);
 
-    protected:
         optional<Command> read_command();
         void handle_command(const Command& cmd);
 
@@ -127,6 +129,8 @@ namespace secplus2 {
         uint32_t transmit_pending_start_ { 0 };
         WirePacket tx_packet_;
         OnceCallbacks<void()> command_sent_;
+
+        ProtocolTraits traits_;
 
         SoftwareSerial sw_serial_;
 

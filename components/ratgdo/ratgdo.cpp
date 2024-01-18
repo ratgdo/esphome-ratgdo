@@ -538,12 +538,11 @@ namespace ratgdo {
 
         this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
         set_timeout("move_to_position", operation_time, [=] {
-#ifdef PROTOCOL_SECPLUSV2
-            this->ensure_door_action(DoorAction::STOP);
-#else
-// STOP command is idempotent only on sec+2, don't use ensure_door_action otherwise
-            this->door_action(DoorAction::STOP);
-#endif            
+            if (this->protocol_->traits().has_door_stop()) {
+                this->ensure_door_action(DoorAction::STOP);
+            } else {
+                this->door_action(DoorAction::STOP);
+            }
         });
     }
 
