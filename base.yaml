@@ -22,6 +22,24 @@ ratgdo:
             title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup; Check the ${friendly_name} Rolling code counter number entity history and set the entity to one number larger than the largest value in history. [ESPHome devices](/config/devices/dashboard?domain=esphome)"
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
+api:
+  services:
+  - service: wipe_devices_from_gdo_memory
+    variables:
+      devices_to_wipe: string 
+    then:
+      - lambda: !lambda |-
+          if(devices_to_wipe.compare("all") == 0) {
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ALL);
+          } else if (devices_to_wipe.compare("remote") == 0) {
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::REMOTE);
+          } else if (devices_to_wipe.compare("keypad") == 0) {
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::KEYPAD);
+          } else if (devices_to_wipe.compare("wall") == 0)  {
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::WALL_CONTROL);
+          } else if (devices_to_wipe.compare("accessory")  == 0) {      
+            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
+          }  
 
 sensor:
   - platform: ratgdo
@@ -32,6 +50,13 @@ sensor:
     name: "Openings"
     unit_of_measurement: "openings"
     icon: mdi:open-in-app
+  - platform: ratgdo
+    id: ${id_prefix}_paired_devices_total
+    type: paired_devices_total
+    entity_category: diagnostic
+    ratgdo_id: ${id_prefix}
+    name: "Paired Devices"
+    icon: mdi:remote   
 
 lock:
   - platform: ratgdo
@@ -58,6 +83,13 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
+  - platform: ratgdo
+    id: "${id_prefix}_learn"
+    type: learn
+    ratgdo_id: ${id_prefix}    
+    name: "Learn"
+    icon: mdi:plus-box
+    entity_category: config
 
 binary_sensor:
   - platform: ratgdo

@@ -64,5 +64,20 @@ namespace ratgdo {
         (RELEASED, 1),
         (UNKNOWN, 2))
 
+    /// Enum for learn states.
+    ENUM(LearnState, uint8_t,
+        (INACTIVE, 0),
+        (ACTIVE, 1),
+        (UNKNOWN, 2))
+    LearnState learn_state_toggle(LearnState state);
+
+    ENUM(PairedDevice, uint8_t,
+        (ALL, 0),
+        (REMOTE, 1),
+        (KEYPAD, 2),
+        (WALL_CONTROL, 3),
+        (ACCESSORY, 4),
+        (UNKNOWN, 0xff))
+
 } // namespace ratgdo
 } // namespace esphome

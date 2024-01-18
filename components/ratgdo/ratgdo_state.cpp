@@ -31,5 +31,19 @@ namespace ratgdo {
         }
     }
 
+    LearnState learn_state_toggle(LearnState state)
+    {
+        switch (state) {
+        case LearnState::ACTIVE:
+            return LearnState::INACTIVE;
+        case LearnState::INACTIVE:
+            return LearnState::ACTIVE;
+            // 2 and 3 appears sometimes
+        case LearnState::UNKNOWN:
+        default:
+            return LearnState::UNKNOWN;
+        }
+    }
+
 } // namespace ratgdo
 } // namespace esphome

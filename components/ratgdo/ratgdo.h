@@ -38,6 +38,7 @@ namespace ratgdo {
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
     const float DOOR_DELTA_UNKNOWN = -2.0;
+    const uint16_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
     namespace data {
         const uint32_t LIGHT_OFF = 0;
@@ -64,12 +65,16 @@ namespace ratgdo {
         (PAIR_3, 0x0a0),
         (PAIR_3_RESP, 0x0a1),
 
-        (LEARN_2, 0x181),
+        (LEARN, 0x181),
         (LOCK, 0x18c),
         (DOOR_ACTION, 0x280),
         (LIGHT, 0x281),
         (MOTOR_ON, 0x284),
         (MOTION, 0x285),
+
+        (GET_PAIRED_DEVICES, 0x307), // nibble 0 for total, 1 wireless, 2 keypads, 3 wall, 4 accessories.
+        (PAIRED_DEVICES, 0x308), // byte2 holds number of paired devices
+        (CLEAR_PAIRED_DEVICES, 0x30D), // nibble 0 to clear remotes, 1 keypads, 2 wall, 3 accessories (offset from above)
 
         (LEARN_1, 0x391),
         (PING, 0x392),
@@ -110,6 +115,11 @@ namespace ratgdo {
         observable<float> closing_duration { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
+        observable<uint16_t> paired_total { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+        observable<uint16_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
@@ -124,6 +134,7 @@ namespace ratgdo {
         observable<MotorState> motor_state { MotorState::UNKNOWN };
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
+        observable<LearnState> learn_state { LearnState::UNKNOWN };
 
         OnceCallbacks<void(DoorState)> door_state_received;
         OnceCallbacks<void()> command_sent;
@@ -173,6 +184,13 @@ namespace ratgdo {
         void lock();
         void unlock();
 
+        // Learn & Paired
+        void activate_learn();
+        void inactivate_learn();
+        void query_paired_devices();
+        void query_paired_devices(PairedDevice kind);
+        void clear_paired_devices(PairedDevice kind);
+
         // button functionality
         void query_status();
         void query_openings();
@@ -183,6 +201,11 @@ namespace ratgdo {
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
         void subscribe_openings(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_devices_total(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_remotes(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_keypads(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_accessories(std::function<void(uint16_t)>&& f);
         void subscribe_door_state(std::function<void(DoorState, float)>&& f);
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);
@@ -191,6 +214,7 @@ namespace ratgdo {
         void subscribe_button_state(std::function<void(ButtonState)>&& f);
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
         void subscribe_sync_failed(std::function<void(bool)>&& f);
+        void subscribe_learn_state(std::function<void(LearnState)>&& f);
 
     protected:
         // tx data
