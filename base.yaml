@@ -4,7 +4,6 @@ external_components:
   - source:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
-      ref: sec_plus_v1
     refresh: 1s
 
 preferences:
@@ -27,7 +26,7 @@ api:
   services:
   - service: wipe_devices_from_gdo_memory
     variables:
-      devices_to_wipe: string 
+      devices_to_wipe: string
     then:
       - lambda: !lambda |-
           if(devices_to_wipe.compare("all") == 0) {
@@ -38,9 +37,9 @@ api:
             id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::KEYPAD);
           } else if (devices_to_wipe.compare("wall") == 0)  {
             id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::WALL_CONTROL);
-          } else if (devices_to_wipe.compare("accessory")  == 0) {      
+          } else if (devices_to_wipe.compare("accessory")  == 0) {
             id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
-          }  
+          }
 
 sensor:
   - platform: ratgdo
@@ -57,7 +56,7 @@ sensor:
     entity_category: diagnostic
     ratgdo_id: ${id_prefix}
     name: "Paired Devices"
-    icon: mdi:remote   
+    icon: mdi:remote
 
 lock:
   - platform: ratgdo
@@ -87,7 +86,7 @@ switch:
   - platform: ratgdo
     id: "${id_prefix}_learn"
     type: learn
-    ratgdo_id: ${id_prefix}    
+    ratgdo_id: ${id_prefix}
     name: "Learn"
     icon: mdi:plus-box
     entity_category: config
