@@ -354,7 +354,7 @@ namespace secplus1 {
             } else {
                 // inject door status request
                 if (door_moving_ || (millis() - this->last_status_query_ > 10000)) {
-                    this->transmit_byte(static_cast<uint8_t>(CommandType::QUERY_DOOR_STATUS));
+                    this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
                     this->last_status_query_ = millis();
                 }
             }
