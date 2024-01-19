@@ -31,7 +31,6 @@ namespace ratgdo {
 
     void RATGDOLightOutput::set_state(esphome::ratgdo::LightState state)
     {
-
         bool is_on = state == LightState::ON;
         this->light_state_->current_values.set_state(is_on);
         this->light_state_->remote_values.set_state(is_on);

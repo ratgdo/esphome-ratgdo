@@ -13,9 +13,9 @@ namespace ratgdo {
     class OnceCallbacks<void(Ts...)> {
     public:
         template <typename Callback>
-        void then(Callback&& callback) { this->callbacks_.push_back(std::forward<Callback>(callback)); }
+        void operator()(Callback&& callback) { this->callbacks_.push_back(std::forward<Callback>(callback)); }
 
-        void operator()(Ts... args)
+        void trigger(Ts... args)
         {
             for (auto& cb : this->callbacks_)
                 cb(args...);

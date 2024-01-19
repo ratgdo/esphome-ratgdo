@@ -1,5 +1,6 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import voluptuous as vol
 from esphome import automation, pins
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
@@ -28,6 +29,12 @@ CONF_RATGDO_ID = "ratgdo_id"
 
 CONF_ON_SYNC_FAILED = "on_sync_failed"
 
+CONF_PROTOCOL = "protocol"
+
+PROTOCOL_SECPLUSV1 = "secplusv1"
+PROTOCOL_SECPLUSV2 = "secplusv2"
+PROTOCOL_DRYCONTACT = "drycontact"
+SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -38,13 +45,16 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(
             CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
         ): pins.gpio_input_pin_schema,
-        cv.Optional(
-            CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST
-        ): pins.gpio_input_pin_schema,
+        cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
+            cv.none, pins.gpio_input_pin_schema
+        ),
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
             }
+        ),
+        cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): vol.In(
+            SUPPORTED_PROTOCOLS
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -68,8 +78,9 @@ async def to_code(config):
     cg.add(var.set_output_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_GDO])
     cg.add(var.set_input_gdo_pin(pin))
-    pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
-    cg.add(var.set_input_obst_pin(pin))
+    if CONF_INPUT_OBST in config and config[CONF_INPUT_OBST]:
+        pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
+        cg.add(var.set_input_obst_pin(pin))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
@@ -85,3 +96,11 @@ async def to_code(config):
         repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
         version=None,
     )
+
+    if config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV1:
+        cg.add_define("PROTOCOL_SECPLUSV1")
+    elif config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV2:
+        cg.add_define("PROTOCOL_SECPLUSV2")
+    elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
+        cg.add_define("PROTOCOL_DRYCONTACT")
+    cg.add(var.init_protocol())

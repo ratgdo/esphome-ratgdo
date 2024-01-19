@@ -14,6 +14,7 @@ ratgdo:
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
+  protocol: secplusv1
   on_sync_failed:
     then:
       - homeassistant.service:
@@ -22,41 +23,6 @@ ratgdo:
             title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup."
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
-api:
-  services:
-  - service: wipe_devices_from_gdo_memory
-    variables:
-      devices_to_wipe: string
-    then:
-      - lambda: !lambda |-
-          if(devices_to_wipe.compare("all") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ALL);
-          } else if (devices_to_wipe.compare("remote") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::REMOTE);
-          } else if (devices_to_wipe.compare("keypad") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::KEYPAD);
-          } else if (devices_to_wipe.compare("wall") == 0)  {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::WALL_CONTROL);
-          } else if (devices_to_wipe.compare("accessory")  == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
-          }
-
-sensor:
-  - platform: ratgdo
-    id: ${id_prefix}_openings
-    type: openings
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Openings"
-    unit_of_measurement: "openings"
-    icon: mdi:open-in-app
-  - platform: ratgdo
-    id: ${id_prefix}_paired_devices_total
-    type: paired_devices_total
-    entity_category: diagnostic
-    ratgdo_id: ${id_prefix}
-    name: "Paired Devices"
-    icon: mdi:remote
 
 lock:
   - platform: ratgdo
@@ -83,13 +49,6 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
-  - platform: ratgdo
-    id: "${id_prefix}_learn"
-    type: learn
-    ratgdo_id: ${id_prefix}
-    name: "Learn"
-    icon: mdi:plus-box
-    entity_category: config
 
 binary_sensor:
   - platform: ratgdo
@@ -113,13 +72,6 @@ binary_sensor:
     id: ${id_prefix}_button
     ratgdo_id: ${id_prefix}
     name: "Button"
-    entity_category: diagnostic
-  - platform: ratgdo
-    type: motor
-    id: ${id_prefix}_motor
-    ratgdo_id: ${id_prefix}
-    name: "Motor"
-    device_class: running
     entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
@@ -238,15 +190,6 @@ button:
       then:
         lambda: !lambda |-
           id($id_prefix).query_status();
-
-  - platform: template
-    id: ${id_prefix}_query_openings
-    name: "Query openings"
-    entity_category: diagnostic
-    on_press:
-      then:
-        lambda: !lambda |-
-          id($id_prefix).query_openings();
 
   - platform: template
     id: ${id_prefix}_sync

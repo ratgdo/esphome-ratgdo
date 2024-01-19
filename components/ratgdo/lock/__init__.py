@@ -9,15 +9,12 @@ DEPENDENCIES = ["ratgdo"]
 
 RATGDOLock = ratgdo_ns.class_("RATGDOLock", lock.Lock, cg.Component)
 
-CONFIG_SCHEMA = (
-    lock.LOCK_SCHEMA
-    .extend(
-        {
-            cv.GenerateID(): cv.declare_id(RATGDOLock),
-        }
-    )
-    .extend(RATGDO_CLIENT_SCHMEA)
-)
+CONFIG_SCHEMA = lock.LOCK_SCHEMA.extend(
+    {
+        cv.GenerateID(): cv.declare_id(RATGDOLock),
+    }
+).extend(RATGDO_CLIENT_SCHMEA)
+
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])

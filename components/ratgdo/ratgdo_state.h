@@ -12,7 +12,7 @@
  ************************************/
 
 #pragma once
-#include "enum.h"
+#include "macros.h"
 #include <cstdint>
 
 namespace esphome {
@@ -64,6 +64,11 @@ namespace ratgdo {
         (RELEASED, 1),
         (UNKNOWN, 2))
 
+    ENUM(BatteryState, uint8_t,
+        (UNKNOWN, 0),
+        (CHARGING, 0x6),
+        (FULL, 0x8))
+
     /// Enum for learn states.
     ENUM(LearnState, uint8_t,
         (INACTIVE, 0),
@@ -78,6 +83,40 @@ namespace ratgdo {
         (WALL_CONTROL, 3),
         (ACCESSORY, 4),
         (UNKNOWN, 0xff))
+
+    // actions
+    ENUM(LightAction, uint8_t,
+        (OFF, 0),
+        (ON, 1),
+        (TOGGLE, 2),
+        (UNKNOWN, 3))
+
+    ENUM(LockAction, uint8_t,
+        (UNLOCK, 0),
+        (LOCK, 1),
+        (TOGGLE, 2),
+        (UNKNOWN, 3))
+
+    ENUM(DoorAction, uint8_t,
+        (CLOSE, 0),
+        (OPEN, 1),
+        (TOGGLE, 2),
+        (STOP, 3),
+        (UNKNOWN, 4))
+
+    struct Openings {
+        uint16_t count;
+        uint8_t flag;
+    };
+
+    struct PairedDeviceCount {
+        PairedDevice kind;
+        uint16_t count;
+    };
+
+    struct TimeToClose {
+        uint16_t seconds;
+    };
 
 } // namespace ratgdo
 } // namespace esphome

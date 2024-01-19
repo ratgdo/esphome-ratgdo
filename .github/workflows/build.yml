@@ -17,26 +17,29 @@ jobs:
       matrix:
         firmware:
           - file: v2board_esp8266_d1_mini_lite.yaml
-            name: V2.0 Board ESP8266 D1 Mini Lite
+            name: V2.0 Board ESP8266 D1 Mini Lite Security+ 2.0
             manifest_filename: v2board_esp8266_d1_mini_lite-manifest.json
           - file: v2board_esp8266_d1_mini.yaml
-            name: V2.0 Board ESP8266 D1 Mini
+            name: V2.0 Board ESP8266 D1 Mini Security+ 2.0
             manifest_filename: v2board_esp8266_d1_mini-manifest.json
           - file: v2board_esp32_d1_mini.yaml
-            name: V2.0 Board ESP32 D1 Mini
+            name: V2.0 Board ESP32 D1 Mini Security+ 2.0
             manifest_filename: v2board_esp32_d1_mini-manifest.json
           - file: v2board_esp32_lolin_s2_mini.yaml
-            name: V2.0 Board ESP32 lolin S2 mini
+            name: V2.0 Board ESP32 lolin S2 mini Security+ 2.0
             manifest_filename: v2board_esp32_lolin_s2_mini-manifest.json
           - file: v25board_esp8266_d1_mini_lite.yaml
-            name: V2.5 Board ESP8266 D1 Mini Lite
+            name: V2.5 Board ESP8266 D1 Mini Lite Security+ 2.0
             manifest_filename: v25board_esp8266_d1_mini_lite-manifest.json
           - file: v25board_esp32_d1_mini.yaml
-            name: V2.5 Board ESP32 D1 Mini
+            name: V2.5 Board ESP32 D1 Mini Security+ 2.0
             manifest_filename: v25board_esp32_d1_mini-manifest.json
           - file: v25iboard.yaml
-            name: V2.5i Board
+            name: V2.5i Board Security+ 2.0
             manifest_filename: v25iboard-manifest.json
+          - file: v25iboard_secplusv1.yaml
+            name: V2.5i Board Security+ 1.0
+            manifest_filename: v25iboard-manifest_secplusv1.json
       fail-fast: false
     steps:
       - name: Checkout source code
