@@ -432,7 +432,7 @@ namespace ratgdo {
         set_timeout("door_query_state", (*this->opening_duration + 1) * 1000, [=]() {
             if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
                 this->door_state = DoorState::OPEN; // probably missed a status mesage, assume it's open
-                this->query_status();  // query in case we're wrong and it's stopped
+                this->query_status(); // query in case we're wrong and it's stopped
             }
         });
     }
