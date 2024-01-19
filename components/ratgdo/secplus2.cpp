@@ -62,59 +62,65 @@ namespace secplus2 {
         ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v2");
     }
 
+    void Secplus2::sync_helper(uint32_t start, uint32_t delay, uint8_t tries)
+    {
+        bool synced = true;
+        if (*this->ratgdo_->door_state == DoorState::UNKNOWN) {
+            this->query_status();
+            synced = false;
+        }
+        if (*this->ratgdo_->openings == 0) {
+            this->query_openings();
+            synced = false;
+        }
+        if (*this->ratgdo_->paired_total == PAIRED_DEVICES_UNKNOWN) {
+            this->query_paired_devices(PairedDevice::ALL);
+            synced = false;
+        }
+        if (*this->ratgdo_->paired_remotes == PAIRED_DEVICES_UNKNOWN) {
+            this->query_paired_devices(PairedDevice::REMOTE);
+            synced = false;
+        }
+        if (*this->ratgdo_->paired_keypads == PAIRED_DEVICES_UNKNOWN) {
+            this->query_paired_devices(PairedDevice::KEYPAD);
+            synced = false;
+        }
+        if (*this->ratgdo_->paired_wall_controls == PAIRED_DEVICES_UNKNOWN) {
+            this->query_paired_devices(PairedDevice::WALL_CONTROL);
+            synced = false;
+        }
+        if (*this->ratgdo_->paired_accessories == PAIRED_DEVICES_UNKNOWN) {
+            this->query_paired_devices(PairedDevice::ACCESSORY);
+            synced = false;
+        }
+
+        if (synced) {
+            return;
+        }
+
+        if (tries == 2 && *this->ratgdo_->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
+            // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
+            this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
+        }
+
+        // not sync-ed after 30s, notify failure
+        if (millis()-start > 30000) {
+                ESP_LOGW(TAG, "Triggering sync failed actions.");
+                this->ratgdo_->sync_failed = true;
+        } else {
+            if (tries % 3 == 0) {
+                delay *= 1.5;
+            }
+            this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [=]() {
+                this->sync_helper(start, delay, tries + 1);
+            });
+        };
+    }
 
     void Secplus2::sync()
     {
-        auto sync_step = [=]() {
-            if (*this->ratgdo_->door_state == DoorState::UNKNOWN) {
-                this->query_status();
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->openings == 0) {
-                this->query_openings();
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->paired_total == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::ALL);
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->paired_remotes == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::REMOTE);
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->paired_keypads == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::KEYPAD);
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->paired_wall_controls == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::WALL_CONTROL);
-                return RetryResult::RETRY;
-            }
-            if (*this->ratgdo_->paired_accessories == PAIRED_DEVICES_UNKNOWN) {
-                this->query_paired_devices(PairedDevice::ACCESSORY);
-                return RetryResult::RETRY;
-            }
-            return RetryResult::DONE;
-        };
-
-        const uint8_t MAX_ATTEMPTS = 10;
-        this->scheduler_->set_retry(this->ratgdo_, "",
-            500, MAX_ATTEMPTS, [=](uint8_t r) {
-                auto result = sync_step();
-                if (result == RetryResult::RETRY) {
-                    if (r == MAX_ATTEMPTS - 2 && *this->ratgdo_->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
-                        // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
-                        this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
-                    }
-                    if (r == 0) {
-                        // this was last attempt, notify of sync failure
-                        ESP_LOGW(TAG, "Triggering sync failed actions.");
-                        this->ratgdo_->sync_failed = true;
-                    }
-                }
-                return result;
-            },
-            1.5f);
+       this->scheduler_->cancel_timeout(this->ratgdo_, "sync");
+       this->sync_helper(millis(), 500, 0);
     }
 
 

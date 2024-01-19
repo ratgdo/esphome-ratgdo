@@ -119,6 +119,8 @@ namespace secplus2 {
         void print_packet(const char* prefix, const WirePacket& packet) const;
         optional<Command> decode_packet(const WirePacket& packet) const;
 
+        void sync_helper(uint32_t start, uint32_t delay, uint8_t tries);
+
         LearnState learn_state_ { LearnState::UNKNOWN };
 
         observable<uint32_t> rolling_code_counter_ { 0 };
