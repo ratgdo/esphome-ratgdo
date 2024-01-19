@@ -238,7 +238,6 @@ namespace secplus2 {
     void Secplus2::activate_learn()
     {
         // Send LEARN with nibble = 0 then nibble = 1 to mimic wall control learn button
-        this->learn_poll_status_ = true;
         this->send_command(Command{CommandType::LEARN, 0});
         this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] { this->send_command(Command{CommandType::LEARN, 1}); });
         this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] { this->query_status(); });
@@ -381,24 +380,7 @@ namespace secplus2 {
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));
             // ESP_LOGD(TAG, "Obstruction: reading from byte2, bit2, status=%d", ((byte2 >> 2) & 1) == 1);
             this->ratgdo_->received(to_ObstructionState((cmd.byte1 >> 6) & 1, ObstructionState::UNKNOWN));
-
-            auto learn_state = to_LearnState((cmd.byte2 >> 5) & 1, LearnState::UNKNOWN);
-            if (this->learn_state_ != learn_state) {
-                ESP_LOG1(TAG, "Learn state handle: %d", (int)this->learn_poll_status_);
-                if (learn_state == LearnState::ACTIVE && this->learn_poll_status_) {
-                    this->scheduler_->set_interval(this->ratgdo_, "learn_poll", 1000, [=] { 
-                        this->query_status();
-                    });
-                } else {
-                    this->scheduler_->cancel_interval(this->ratgdo_, "learn_poll");
-                    this->learn_poll_status_ = true;
-                }
-                if (learn_state == LearnState::INACTIVE) {
-                    this->query_paired_devices();
-                }
-                this->learn_state_ = learn_state;
-            }
-            this->ratgdo_->received(learn_state);
+            this->ratgdo_->received(to_LearnState((cmd.byte2 >> 5) & 1, LearnState::UNKNOWN));
         }
         else if (cmd.type == CommandType::LIGHT) {
             this->ratgdo_->received(to_LightAction(cmd.nibble, LightAction::UNKNOWN));
@@ -434,12 +416,6 @@ namespace secplus2 {
                 pdc.count = cmd.byte2;
             }
             this->ratgdo_->received(pdc);
-        }
-        else if (cmd.type == CommandType::LEARN) {
-            if (cmd.nibble == 1) { // LEARN sent from wall control, it will poll status every second.
-                // otherwise if ratgdo or gdo initiated ratgdo needs to poll
-                this->learn_poll_status_ = false;
-            }
         }
         else if (cmd.type == CommandType::BATTERY_STATUS) {
             this->ratgdo_->received(to_BatteryState(cmd.byte1, BatteryState::UNKNOWN));

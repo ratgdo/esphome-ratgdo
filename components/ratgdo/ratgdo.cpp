@@ -190,6 +190,15 @@ namespace ratgdo {
     void RATGDOComponent::received(const LearnState learn_state)
     {
         ESP_LOGD(TAG, "Learn state=%s", LearnState_to_string(learn_state));
+
+        if (*this->learn_state == learn_state) {
+            return;
+        }
+
+        if (learn_state == LearnState::INACTIVE) {
+            this->query_paired_devices();
+        }
+
         this->learn_state = learn_state;
     }
 

@@ -120,7 +120,6 @@ namespace secplus2 {
         optional<Command> decode_packet(const WirePacket& packet) const;
 
         LearnState learn_state_ { LearnState::UNKNOWN };
-        bool learn_poll_status_;
 
         observable<uint32_t> rolling_code_counter_ { 0 };
         uint64_t client_id_ { 0x539 };
