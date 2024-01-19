@@ -38,4 +38,3 @@ async def to_code(config):
     await cg.register_component(var, config)
     cg.add(var.set_ratgdo_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
-
