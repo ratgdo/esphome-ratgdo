@@ -27,6 +27,7 @@ namespace ratgdo {
 
     void RATGDOCover::on_door_state(DoorState state, float position)
     {
+        bool save_to_flash = true;
         switch (state) {
         case DoorState::OPEN:
             this->position = COVER_OPEN;
@@ -39,10 +40,12 @@ namespace ratgdo {
         case DoorState::OPENING:
             this->current_operation = COVER_OPERATION_OPENING;
             this->position = position;
+            save_to_flash = false;
             break;
         case DoorState::CLOSING:
             this->current_operation = COVER_OPERATION_CLOSING;
             this->position = position;
+            save_to_flash = false;
             break;
         case DoorState::STOPPED:
             this->current_operation = COVER_OPERATION_IDLE;
@@ -55,7 +58,7 @@ namespace ratgdo {
             break;
         }
 
-        this->publish_state();
+        this->publish_state(save_to_flash);
     }
 
     CoverTraits RATGDOCover::get_traits()
