@@ -19,7 +19,7 @@ namespace ratgdo {
     {
         if (this->switch_type_ == SwitchType::RATGDO_LEARN) {
             this->parent_->subscribe_learn_state([=](LearnState state) {
-                this->publish_state(state==LearnState::ACTIVE);
+                this->publish_state(state == LearnState::ACTIVE);
             });
         }
     }

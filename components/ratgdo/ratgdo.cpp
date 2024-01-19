@@ -12,16 +12,15 @@
  ************************************/
 
 #include "ratgdo.h"
-#include "ratgdo_state.h"
 #include "common.h"
+#include "dry_contact.h"
+#include "ratgdo_state.h"
 #include "secplus1.h"
 #include "secplus2.h"
-#include "dry_contact.h"
 
-#include "esphome/core/log.h"
-#include "esphome/core/gpio.h"
 #include "esphome/core/application.h"
-
+#include "esphome/core/gpio.h"
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -55,20 +54,19 @@ namespace ratgdo {
         set_timeout(SYNC_DELAY, [=] { this->sync(); });
     }
 
-
-    // initializing protocol, this gets called before setup() because 
+    // initializing protocol, this gets called before setup() because
     // its children components might require that
     void RATGDOComponent::init_protocol()
     {
 #ifdef PROTOCOL_SECPLUSV2
         this->protocol_ = new secplus2::Secplus2();
-#endif        
+#endif
 #ifdef PROTOCOL_SECPLUSV1
         this->protocol_ = new secplus1::Secplus1();
-#endif        
+#endif
 #ifdef PROTOCOL_DRYCONTACT
         this->protocol_ = new dry_contact::DryContact();
-#endif        
+#endif
     }
 
     void RATGDOComponent::loop()
@@ -92,8 +90,7 @@ namespace ratgdo {
         this->protocol_->dump_config();
     }
 
-
-    void RATGDOComponent::received(const DoorState door_state) 
+    void RATGDOComponent::received(const DoorState door_state)
     {
         ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
 
@@ -202,13 +199,13 @@ namespace ratgdo {
         this->learn_state = learn_state;
     }
 
-    void RATGDOComponent::received(const LightState light_state) 
+    void RATGDOComponent::received(const LightState light_state)
     {
         ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));
         this->light_state = light_state;
     }
 
-    void RATGDOComponent::received(const LockState lock_state) 
+    void RATGDOComponent::received(const LockState lock_state)
     {
         ESP_LOGD(TAG, "Lock state=%s", LockState_to_string(lock_state));
         this->lock_state = lock_state;
@@ -226,7 +223,6 @@ namespace ratgdo {
         }
     }
 
-
     void RATGDOComponent::received(const MotorState motor_state)
     {
         ESP_LOGD(TAG, "Motor: state=%s", MotorState_to_string(*this->motor_state));
@@ -238,7 +234,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Button state=%s", ButtonState_to_string(*this->button_state));
         this->button_state = button_state;
     }
-    
+
     void RATGDOComponent::received(const MotionState motion_state)
     {
         ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
@@ -253,12 +249,11 @@ namespace ratgdo {
         }
     }
 
-    void RATGDOComponent::received(const LightAction light_action) 
+    void RATGDOComponent::received(const LightAction light_action)
     {
         ESP_LOGD(TAG, "Light cmd=%s state=%s",
             LightAction_to_string(light_action),
-            LightState_to_string(*this->light_state)
-        );
+            LightState_to_string(*this->light_state));
         if (light_action == LightAction::OFF) {
             this->light_state = LightState::OFF;
         } else if (light_action == LightAction::ON) {
@@ -335,7 +330,6 @@ namespace ratgdo {
         this->door_position = clamp(position, 0.0f, 1.0f);
     }
 
-
     void RATGDOComponent::set_opening_duration(float duration)
     {
         ESP_LOGD(TAG, "Set opening duration: %.1fs", duration);
@@ -398,27 +392,27 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        this->protocol_->call(QueryStatus{});
+        this->protocol_->call(QueryStatus {});
     }
 
     void RATGDOComponent::query_openings()
     {
-        this->protocol_->call(QueryOpenings{});
+        this->protocol_->call(QueryOpenings {});
     }
 
     void RATGDOComponent::query_paired_devices()
     {
-        this->protocol_->call(QueryPairedDevicesAll{});
+        this->protocol_->call(QueryPairedDevicesAll {});
     }
 
     void RATGDOComponent::query_paired_devices(PairedDevice kind)
     {
-        this->protocol_->call(QueryPairedDevices{kind});
+        this->protocol_->call(QueryPairedDevices { kind });
     }
 
     void RATGDOComponent::clear_paired_devices(PairedDevice kind)
     {
-        this->protocol_->call(ClearPairedDevices{kind});
+        this->protocol_->call(ClearPairedDevices { kind });
     }
 
     void RATGDOComponent::sync()
@@ -435,7 +429,7 @@ namespace ratgdo {
         this->door_action(DoorAction::OPEN);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->opening_duration + 2)*1000, [=]() {
+        set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
                 this->query_status();
             }
@@ -464,7 +458,7 @@ namespace ratgdo {
         this->door_action(DoorAction::CLOSE);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->closing_duration + 2)*1000, [=]() {
+        set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
                 this->query_status();
             }
@@ -568,7 +562,6 @@ namespace ratgdo {
         }
     }
 
-
     void RATGDOComponent::light_on()
     {
         this->light_state = LightState::ON;
@@ -614,20 +607,20 @@ namespace ratgdo {
     // Learn functions
     void RATGDOComponent::activate_learn()
     {
-        this->protocol_->call(ActivateLearn{});
+        this->protocol_->call(ActivateLearn {});
     }
 
     void RATGDOComponent::inactivate_learn()
     {
-        this->protocol_->call(InactivateLearn{});
+        this->protocol_->call(InactivateLearn {});
     }
 
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
     {
         // change update to children is defered until after component loop
         // if multiple changes occur during component loop, only the last one is notified
-        auto counter = this->protocol_->call(GetRollingCodeCounter{});
-        if (counter.tag==Result::Tag::rolling_code_counter) {
+        auto counter = this->protocol_->call(GetRollingCodeCounter {});
+        if (counter.tag == Result::Tag::rolling_code_counter) {
             counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
         }
     }

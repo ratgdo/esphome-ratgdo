@@ -22,8 +22,6 @@ namespace ratgdo {
             this->callbacks_.clear();
         }
 
-        
-
     protected:
         std::vector<std::function<void(Ts...)>> callbacks_;
     };

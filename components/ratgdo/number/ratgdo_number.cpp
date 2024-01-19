@@ -5,8 +5,8 @@
 namespace esphome {
 namespace ratgdo {
 
-    using protocol::SetRollingCodeCounter;
     using protocol::SetClientID;
+    using protocol::SetRollingCodeCounter;
 
     float normalize_client_id(float client_id)
     {
@@ -97,14 +97,14 @@ namespace ratgdo {
     void RATGDONumber::control(float value)
     {
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
-            this->parent_->call_protocol(SetRollingCodeCounter{static_cast<uint32_t>(value)});
+            this->parent_->call_protocol(SetRollingCodeCounter { static_cast<uint32_t>(value) });
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             this->parent_->set_opening_duration(value);
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->set_closing_duration(value);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
             value = normalize_client_id(value);
-            this->parent_->call_protocol(SetClientID{static_cast<uint32_t>(value)});
+            this->parent_->call_protocol(SetClientID { static_cast<uint32_t>(value) });
         }
         this->update_state(value);
     }

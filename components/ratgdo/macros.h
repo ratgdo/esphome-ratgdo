@@ -70,7 +70,7 @@
     }
 #define SUM_TYPE_CONSTRUCTOR(name, tuple) SUM_TYPE_CONSTRUCTOR0 LPAREN name, TUPLE tuple)
 
-#define SUM_TYPE(name, ...)                          \
+#define SUM_TYPE(name, ...)                                    \
     class name {                                               \
     public:                                                    \
         union {                                                \

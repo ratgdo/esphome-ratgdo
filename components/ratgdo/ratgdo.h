@@ -17,14 +17,14 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
 
-#include "observable.h"
 #include "callbacks.h"
 #include "macros.h"
-#include "ratgdo_state.h"
+#include "observable.h"
 #include "protocol.h"
+#include "ratgdo_state.h"
 
 namespace esphome {
-    class InternalGPIOPin;
+class InternalGPIOPin;
 namespace ratgdo {
 
     class RATGDOComponent;
@@ -45,10 +45,9 @@ namespace ratgdo {
 
     using protocol::Args;
     using protocol::Result;
-    
+
     class RATGDOComponent : public Component {
     public:
-
         void setup() override;
         void loop() override;
         void dump_config() override;
@@ -91,7 +90,7 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
-        
+
         Result call_protocol(Args args);
 
         void received(const DoorState door_state);
@@ -123,7 +122,6 @@ namespace ratgdo {
         void schedule_door_position_sync(float update_period = 500);
         void door_position_update();
         void cancel_position_sync_callbacks();
-
 
         // light
         void light_toggle();
@@ -169,7 +167,6 @@ namespace ratgdo {
         void subscribe_learn_state(std::function<void(LearnState)>&& f);
 
     protected:
-
         RATGDOStore isr_store_ {};
         protocol::Protocol* protocol_;
         bool obstruction_from_status_ { false };
