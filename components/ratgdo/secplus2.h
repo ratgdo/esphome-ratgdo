@@ -30,7 +30,7 @@ namespace secplus2 {
         (STATUS, 0x081),
         (OBST_1, 0x084), // sent when an obstruction happens?
         (OBST_2, 0x085), // sent when an obstruction happens?
-        (BATTERY_STATUS, 0x9d),
+        (BATTERY_STATUS, 0x09d),
         (PAIR_3, 0x0a0),
         (PAIR_3_RESP, 0x0a1),
 
@@ -91,7 +91,7 @@ namespace secplus2 {
 
         Result call(Args args);
 
-        const ProtocolTraits& traits() const { return this->traits_; }
+        const Traits& traits() const { return this->traits_; }
 
     protected:
         void increment_rolling_code_counter(int delta = 1);
@@ -129,7 +129,7 @@ namespace secplus2 {
         WirePacket tx_packet_;
         OnceCallbacks<void()> on_command_sent_;
 
-        ProtocolTraits traits_;
+        Traits traits_;
 
         SoftwareSerial sw_serial_;
 

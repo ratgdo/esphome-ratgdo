@@ -32,7 +32,11 @@ namespace dry_contact {
 
         Result call(Args args);
 
+        const Traits& traits() const { return this->traits_; }
+
     protected:
+        Traits traits_;
+
         InternalGPIOPin* tx_pin_;
         InternalGPIOPin* rx_pin_;
 

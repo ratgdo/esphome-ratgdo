@@ -12,6 +12,8 @@ namespace ratgdo {
 
     class RATGDOComponent;
 
+namespace protocol {
+
     const uint32_t HAS_DOOR_OPEN = 1 << 0; // has idempotent open door command
     const uint32_t HAS_DOOR_CLOSE = 1 << 1; // has idempotent close door command
     const uint32_t HAS_DOOR_STOP = 1 << 2; // has idempotent stop door command
@@ -21,11 +23,11 @@ namespace ratgdo {
 
     const uint32_t HAS_LOCK_TOGGLE = 1 << 20;
 
-    class ProtocolTraits {
+    class Traits {
         uint32_t value;
 
     public:
-        ProtocolTraits()
+        Traits()
             : value(0)
         {
         }
@@ -48,6 +50,43 @@ namespace ratgdo {
         }
     };
 
+
+
+    struct SetRollingCodeCounter { uint32_t counter; };
+    struct GetRollingCodeCounter {};
+    struct SetClientID { uint64_t client_id; };
+    struct QueryStatus{};
+    struct QueryOpenings{};
+    struct ActivateLearn {};
+    struct InactivateLearn {};
+    struct QueryPairedDevices { PairedDevice kind; };
+    struct QueryPairedDevicesAll {};
+    struct ClearPairedDevices { PairedDevice kind; };
+
+
+    // a poor man's sum-type, because C++
+    SUM_TYPE(Args,
+        (SetRollingCodeCounter, set_rolling_code_counter),
+        (GetRollingCodeCounter, get_rolling_code_counter),
+        (SetClientID, set_client_id),
+        (QueryStatus, query_status),
+        (QueryOpenings, query_openings),
+        (ActivateLearn, activate_learn),
+        (InactivateLearn, inactivate_learn),
+        (QueryPairedDevices, query_paired_devices),
+        (QueryPairedDevicesAll, query_paired_devices_all),
+        (ClearPairedDevices, clear_paired_devices),
+    )
+
+
+    struct RollingCodeCounter { observable<uint32_t>* value; };
+
+    SUM_TYPE(Result,
+        (RollingCodeCounter, rolling_code_counter),
+    )
+
+
+
     class Protocol {
     public:
         virtual void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
@@ -56,7 +95,7 @@ namespace ratgdo {
 
         virtual void sync();
 
-        virtual const ProtocolTraits& traits() const;
+        virtual const Traits& traits() const;
 
         virtual void light_action(LightAction action);
         virtual void lock_action(LockAction action);
@@ -65,5 +104,6 @@ namespace ratgdo {
         virtual protocol::Result call(protocol::Args args);
     };
 
+}
 } // namespace ratgdo
 } // namespace esphome

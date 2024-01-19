@@ -37,7 +37,7 @@ namespace secplus2 {
         this->sw_serial_.enableIntTx(false);
         this->sw_serial_.enableAutoBaud(true);
 
-        this->traits_.set_features(ProtocolTraits::all());
+        this->traits_.set_features(Traits::all());
     }
 
 

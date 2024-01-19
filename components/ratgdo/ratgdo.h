@@ -171,7 +171,7 @@ namespace ratgdo {
     protected:
 
         RATGDOStore isr_store_ {};
-        Protocol* protocol_;
+        protocol::Protocol* protocol_;
         bool obstruction_from_status_ { false };
 
         InternalGPIOPin* output_gdo_pin_;
