@@ -27,8 +27,8 @@ The ESPHome firmware will allow you to open the door to any position after calib
 - [Security+ 1.0 for v2.5 board with ESP8266 D1 Mini lite](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25board_esp8266_d1_mini_lite_secplusv1.yaml)
 - [Security+ 2.0 for v2.5 board with ESP32 D1 Mini](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25board_esp32_d1_mini.yaml)
 - [Security+ 1.0 for v2.5 board with ESP32 D1 Mini](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25board_esp32_d1_mini_secplusv1.yaml)
-- [Security+ 2.0 for v2.5i board](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25iboard.yaml)
-- [Security+ 1.0 for v2.5i board](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25iboard_secplusv1.yaml)
+- [Security+ 2.0 for v2.5i/2.52i/2.53i board](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25iboard.yaml)
+- [Security+ 1.0 for v2.5i/2.52i/2.53i board](https://github.com/RATGDO/esphome-ratgdo/blob/main/static/v25iboard_secplusv1.yaml)
 
 - [Web Installer](https://ratgdo.github.io/esphome-ratgdo/)
 
