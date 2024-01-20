@@ -134,7 +134,7 @@ namespace ratgdo {
                 return;
             }
 
-            const uint32_t double_toggle_delay = 1000;
+            const uint32_t STATE_UPDATE_DELAY = 2000;
             if (action == DoorAction::TOGGLE) {
                 this->toggle_door();
             } else if (action == DoorAction::OPEN) {
@@ -142,11 +142,11 @@ namespace ratgdo {
                     this->toggle_door();
                 } else if (this->door_state == DoorState::STOPPED) {
                     this->toggle_door(); // this starts closing door
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_(millis() + STATE_UPDATE_DELAY, [=](DoorState s) {
                         if (s == DoorState::CLOSING) {
                             // this changes direction of the door on some openers, on others it stops it
                             this->toggle_door();
-                            this->on_door_state_([=](DoorState s) {
+                            this->on_door_state_(millis() + STATE_UPDATE_DELAY, [=](DoorState s) {
                                 if (s == DoorState::STOPPED) {
                                     this->toggle_door();
                                 }
@@ -160,7 +160,7 @@ namespace ratgdo {
                 } else if (this->door_state == DoorState::OPENING) {
                     this->toggle_door(); // this switches to stopped
                     // another toggle needed to close
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_(millis() + STATE_UPDATE_DELAY, [=](DoorState s) {
                         if (s == DoorState::STOPPED) {
                             this->toggle_door();
                         }
@@ -175,7 +175,7 @@ namespace ratgdo {
                     this->toggle_door(); // this switches to opening
 
                     // another toggle needed to stop
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_(millis() + STATE_UPDATE_DELAY, [=](DoorState s) {
                         if (s == DoorState::OPENING) {
                             this->toggle_door();
                         }
@@ -319,7 +319,7 @@ namespace ratgdo {
                 }
 
                 if (this->maybe_door_state != door_state) {
-                    this->on_door_state_.trigger(door_state);
+                    this->on_door_state_.trigger(millis(), door_state);
                 }
 
                 if (!this->is_0x37_panel_ && door_state != this->maybe_door_state) {

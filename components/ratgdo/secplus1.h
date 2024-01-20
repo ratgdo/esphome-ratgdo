@@ -126,7 +126,7 @@ namespace ratgdo {
             LockState maybe_lock_state { LockState::UNKNOWN };
             DoorState maybe_door_state { DoorState::UNKNOWN };
 
-            OnceCallbacks<void(DoorState)> on_door_state_;
+            ExpiringCallbacks<void(DoorState)> on_door_state_;
 
             bool door_moving_ { false };
 
