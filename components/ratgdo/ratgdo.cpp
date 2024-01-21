@@ -177,13 +177,13 @@ namespace ratgdo {
         }
 
         if (door_state == DoorState::CLOSED) {
-            defer([=]() { this->query_openings(); });
+            this->query_openings();
         }
 
         this->door_state = door_state;
         auto now = millis();
         if (!this->on_door_state_.is_expired(now)) {
-            defer([=]() { this->on_door_state_.trigger(now, door_state); });
+            this->on_door_state_.trigger(now, door_state);
         } else {
             this->on_door_state_.clear();
         }
@@ -198,7 +198,7 @@ namespace ratgdo {
         }
 
         if (learn_state == LearnState::INACTIVE) {
-            defer([=]() { this->query_paired_devices(); });
+            this->query_paired_devices();
         }
 
         this->learn_state = learn_state;
@@ -249,7 +249,7 @@ namespace ratgdo {
                 this->motion_state = MotionState::CLEAR;
             });
             if (*this->light_state == LightState::OFF) {
-                defer([=]() { this->query_status(); });
+                this->query_status();
             }
         }
     }
