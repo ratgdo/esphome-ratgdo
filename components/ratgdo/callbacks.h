@@ -52,7 +52,7 @@ namespace ratgdo {
         bool is_expired(uint32_t now) const
         {
             bool expired = true;
-            for (auto& cb : this->callbacks_) {
+            for (const auto& cb : this->callbacks_) {
                 if (cb.first >= now) {
                     expired = false;
                 }

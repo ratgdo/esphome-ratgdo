@@ -434,7 +434,7 @@ namespace ratgdo {
         this->door_action(DoorAction::OPEN);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->opening_duration + 1) * 1000, [=]() {
+        set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
                 this->received(DoorState::OPEN); // probably missed a status mesage, assume it's open
                 this->query_status(); // query in case we're wrong and it's stopped
@@ -464,7 +464,7 @@ namespace ratgdo {
         this->door_action(DoorAction::CLOSE);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->closing_duration + 1) * 1000, [=]() {
+        set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
                 this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
                 this->query_status(); // query in case we're wrong and it's stopped
