@@ -198,7 +198,7 @@ namespace ratgdo {
         }
 
         if (learn_state == LearnState::INACTIVE) {
-            defer([=](){ this->query_paired_devices(); });
+            defer([=]() { this->query_paired_devices(); });
         }
 
         this->learn_state = learn_state;
@@ -249,7 +249,7 @@ namespace ratgdo {
                 this->motion_state = MotionState::CLEAR;
             });
             if (*this->light_state == LightState::OFF) {
-                defer([=]() {this->query_status(); });
+                defer([=]() { this->query_status(); });
             }
         }
     }
