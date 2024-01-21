@@ -33,7 +33,7 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
-    ref: expiring_callbacks
+    ref: expiring_callbacks_1
 
 # Sync time with Home Assistant.
 time:

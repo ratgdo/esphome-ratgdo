@@ -4,7 +4,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
-      ref: expiring_callbacks
+      ref: expiring_callbacks_1_1
     refresh: 1s
 
 preferences:
