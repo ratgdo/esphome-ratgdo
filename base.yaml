@@ -8,7 +8,7 @@ external_components:
     refresh: 1s
 
 preferences:
-  flash_write_interval: 5s
+  flash_write_interval: 1min
 
 ratgdo:
   id: ${id_prefix}

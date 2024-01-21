@@ -15,14 +15,14 @@ namespace ratgdo {
     namespace secplus2 {
 
         // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
-        // since we write the flash at most every every 5s
+        // since we write the flash at most every every 1min
         //
         // We want the rolling counter to be high enough that the
         // GDO will accept the command after an unexpected reboot
         // that did not save the counter to flash in time which
         // results in the rolling counter being behind what the GDO
         // expects.
-        static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 10;
+        static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 60;
 
         static const char* const TAG = "ratgdo_secplus2";
 
