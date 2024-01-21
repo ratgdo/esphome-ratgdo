@@ -33,6 +33,7 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
+    ref: reduce_flash_writes
 
 # Sync time with Home Assistant.
 time:
