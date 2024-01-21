@@ -181,12 +181,7 @@ namespace ratgdo {
         }
 
         this->door_state = door_state;
-        auto now = millis();
-        if (!this->on_door_state_.is_expired(now)) {
-            defer([=]() { this->on_door_state_.trigger(now, door_state); });
-        } else {
-            this->on_door_state_.clear();
-        }
+        defer([=]() { this->on_door_state_.trigger(door_state); });
     }
 
     void RATGDOComponent::received(const LearnState learn_state)
@@ -451,7 +446,7 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
             this->door_action(DoorAction::STOP);
-            this->on_door_state_(millis() + 2000, [=](DoorState s) {
+            this->on_door_state_([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_action(DoorAction::CLOSE);
                 } else {
@@ -495,7 +490,7 @@ namespace ratgdo {
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
             this->door_action(DoorAction::STOP);
-            this->on_door_state_(millis() + 2000, [=](DoorState s) {
+            this->on_door_state_([=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
                 } else {

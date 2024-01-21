@@ -83,7 +83,7 @@ namespace ratgdo {
         observable<MotionState> motion_state { MotionState::UNKNOWN };
         observable<LearnState> learn_state { LearnState::UNKNOWN };
 
-        ExpiringCallbacks<void(DoorState)> on_door_state_;
+        OnceCallbacks<void(DoorState)> on_door_state_;
 
         observable<bool> sync_failed { false };
 
