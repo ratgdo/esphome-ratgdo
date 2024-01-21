@@ -326,8 +326,8 @@ namespace ratgdo {
             return;
         }
         auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
-        ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
+        ESP_LOG2(TAG, "[%d] Position update: %f", now, *this->door_position);
     }
 
     void RATGDOComponent::set_opening_duration(float duration)
