@@ -276,7 +276,7 @@ namespace ratgdo {
 
                     // if we are at the start of a message, capture the next 16 bytes
                     if (msg_start == 0x550100) {
-                        ESP_LOG1(TAG, "Baud: %d", this->sw_serial_.baudRate());
+                        ESP_LOGV(TAG, "Baud: %d", this->sw_serial_.baudRate());
                         rx_packet[0] = 0x55;
                         rx_packet[1] = 0x01;
                         rx_packet[2] = 0x00;
@@ -317,7 +317,7 @@ namespace ratgdo {
 
         void Secplus2::print_packet(const char* prefix, const WirePacket& packet) const
         {
-            ESP_LOG2(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+            ESP_LOGV(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
                 prefix,
                 packet[0],
                 packet[1],

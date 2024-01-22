@@ -214,7 +214,7 @@ namespace ratgdo {
     void RATGDOComponent::received(const ObstructionState obstruction_state)
     {
         if (this->obstruction_from_status_) {
-            ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
+            ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(obstruction_state));
 
             this->obstruction_state = obstruction_state;
             // This isn't very fast to update, but its still better
@@ -225,19 +225,19 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const MotorState motor_state)
     {
-        ESP_LOGD(TAG, "Motor: state=%s", MotorState_to_string(*this->motor_state));
+        ESP_LOGD(TAG, "Motor: state=%s", MotorState_to_string(motor_state));
         this->motor_state = motor_state;
     }
 
     void RATGDOComponent::received(const ButtonState button_state)
     {
-        ESP_LOGD(TAG, "Button state=%s", ButtonState_to_string(*this->button_state));
+        ESP_LOGD(TAG, "Button state=%s", ButtonState_to_string(button_state));
         this->button_state = button_state;
     }
 
     void RATGDOComponent::received(const MotionState motion_state)
     {
-        ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
+        ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(motion_state));
         this->motion_state = motion_state;
         if (motion_state == MotionState::DETECTED) {
             this->set_timeout("clear_motion", 3000, [=] {
