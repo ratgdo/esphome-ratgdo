@@ -3,6 +3,7 @@ import esphome.config_validation as cv
 import voluptuous as vol
 from esphome import automation, pins
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
+from esphome.components import binary_sensor
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -36,6 +37,9 @@ PROTOCOL_SECPLUSV2 = "secplusv2"
 PROTOCOL_DRYCONTACT = "drycontact"
 SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
+DOOR_CLOSED = "door_closed"
+DOOR_OPEN = "door_open"
+
 CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(): cv.declare_id(RATGDO),
@@ -55,6 +59,12 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): vol.In(
             SUPPORTED_PROTOCOLS
+        ),
+        cv.Optional(DOOR_CLOSED): cv.Any(
+            cv.none, cv.use_id(binary_sensor.BinarySensor)
+        ),
+        cv.Optional(DOOR_OPEN): cv.Any(
+            cv.none, cv.use_id(binary_sensor.BinarySensor)
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
@@ -104,3 +114,10 @@ async def to_code(config):
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
         cg.add_define("PROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
+    if DOOR_CLOSED in config and config[DOOR_CLOSED] is not None:
+        door_closed = await cg.get_variable(config[DOOR_CLOSED])
+        cg.add(var.set_door_closed_sensor(door_closed))
+    if DOOR_OPEN in config and config[DOOR_OPEN] is not None:
+        door_open = await cg.get_variable(config[DOOR_OPEN])
+        cg.add(var.set_door_open_sensor(door_open))
+    

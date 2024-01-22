@@ -21,6 +21,7 @@
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -46,6 +47,43 @@ namespace ratgdo {
             this->input_obst_pin_->setup();
             this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
             this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
+        }
+
+        if (this->door_open_sensor_ != nullptr) {
+            this->door_open_sensor_->add_on_state_callback([=](bool state) {
+                ESP_LOGD(TAG, "Door open sensor: %d", state);
+                if (state) {
+                    // this->sensor_door_state_ = DoorState::OPEN;
+                    this->received(DoorState::OPEN);
+                } else {
+                    this->received(DoorState::CLOSING);
+                    if (*this->closing_duration != 0 && this->door_closed_sensor_ != nullptr) {
+                        this->set_timeout((*this->closing_duration +1)*1000, [=] {
+                            if (!this->door_closed_sensor_->state) {
+                                this->received(DoorState::STOPPED);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        if (this->door_closed_sensor_ != nullptr) {
+            this->door_closed_sensor_->add_on_state_callback([=](bool state) {
+                ESP_LOGD(TAG, "Door closed sensor: %d", state);
+                if (state) {
+                    // this->sensor_door_state_ = DoorState::OPEN;
+                    this->received(DoorState::CLOSED);
+                } else {
+                    this->received(DoorState::OPENING);
+                    if (*this->opening_duration != 0 && this->door_open_sensor_ != nullptr) {
+                        this->set_timeout((*this->opening_duration + 1)*1000, [=] {
+                            if (!this->door_open_sensor_->state) {
+                                this->received(DoorState::STOPPED);
+                            }
+                        });
+                    }
+                }
+            });
         }
 
         this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_, this->output_gdo_pin_);
@@ -304,7 +342,7 @@ namespace ratgdo {
     {
         ESP_LOG1(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
             this->door_move_delta, this->door_start_position, this->door_start_moving);
-        auto duration = this->door_move_delta > 0 ? *this->opening_duration : *this->closing_duration;
+        auto duration = this->door_move_delta * (this->door_move_delta > 0 ? *this->opening_duration : *this->closing_duration);
         if (duration == 0) {
             return;
         }

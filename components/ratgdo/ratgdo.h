@@ -25,6 +25,9 @@
 
 namespace esphome {
 class InternalGPIOPin;
+namespace binary_sensor {
+class BinarySensor;
+}
 namespace ratgdo {
 
     class RATGDOComponent;
@@ -90,6 +93,9 @@ namespace ratgdo {
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
+
+        void set_door_open_sensor(binary_sensor::BinarySensor* sensor) { this->door_open_sensor_ = sensor; }
+        void set_door_closed_sensor(binary_sensor::BinarySensor* sensor) { this->door_closed_sensor_ = sensor; }
 
         Result call_protocol(Args args);
 
@@ -170,6 +176,10 @@ namespace ratgdo {
         RATGDOStore isr_store_ {};
         protocol::Protocol* protocol_;
         bool obstruction_from_status_ { false };
+
+        DoorState sensor_door_state_ { DoorState::UNKNOWN };
+        binary_sensor::BinarySensor* door_open_sensor_;
+        binary_sensor::BinarySensor* door_closed_sensor_;
 
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
