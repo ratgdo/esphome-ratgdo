@@ -151,7 +151,7 @@
         width: 150px;
         border-radius: 10px;
       }
-    
+
     div.radios .note{
     font-size: 80%;
     color: #DDD;
@@ -190,7 +190,7 @@
       round yellow learn button<br/>
       <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
         </label>
-    
+
         <label>
           <img src="./purple_learn_button.jpg" alt="Security + 1.0, purple, orange, or red learn button." />
           <input type="radio" name="protocol" value="secplusv1" />
@@ -199,14 +199,14 @@
       <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br/>
       <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
         </label>
-        
+
         <label>
           <img src="./dry_contact.jpg" alt="Dry contact control." />
           <input type="radio" name="protocol" value="dry_contact" />
           Dry Contact control<br/> (coming soon)
         </label>
       </div>
-      
+
     <h2>Choose your ratgdo control board:</h2>
     <div class="hardware radios">
       <label>
@@ -214,21 +214,28 @@
         <input type="radio" name="hardware" value="v25iboard" checked />
         ratgdo v2.5x<br/>
       v2.5, v2.5i, v2.52i, v2.53i (black PCB)
-        </label>
-      
-        <label>
+      </label>
+
+      <label>
         <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
         <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
         ratgdo v2.0<br/>
       ESP8266 / D1 Mini (white PCB)
-        </label>
+      </label>
 
       <label>
-        <img style="background-color: #555;" alt="v2.5 esp32" />
+        <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
         <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
         ratgdo v2.5<br/>
       ESP32 (black PCB)
-        </label>
+      </label>
+
+      <label>
+        <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
+        <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
+        ratgdo v2.0<br/>
+      ESP32 (white PCB)
+      </label>
     </div>
 
     <p>
@@ -265,7 +272,7 @@
           >
         </li>
         <li>
-          The YAML configuration is on
+          The YAML configuration for additional boards and chips is available on
           <a href="https://github.com/RATGDO/esphome-ratgdo/tree/main/static">GitHub</a>
         </li>
       </ul>
@@ -277,7 +284,7 @@
       </div>
     </div>
     <script>
-      document.querySelectorAll('div.radios input').forEach((radio) =>  
+      document.querySelectorAll('div.radios input').forEach((radio) =>
       radio.addEventListener("change", () => {
       const button = document.querySelector("esp-web-install-button");
       var protocol = document.querySelector('input[name="protocol"]:checked').value;
