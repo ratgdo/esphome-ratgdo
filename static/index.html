@@ -102,8 +102,8 @@
         aspect-ratio: 1;
       }
       input:checked ~ img,
-	  img:has(+ input:checked){
-		border-color: #58a6ff;
+    img:has(+ input:checked){
+    border-color: #58a6ff;
       }
       @media (prefers-color-scheme: dark) {
         body {
@@ -140,7 +140,7 @@
 
       div.radios{
         display: flex;
-		align-items: start;
+    align-items: start;
         font-size: 75%;
       }
       div.radios label{
@@ -151,17 +151,17 @@
         width: 150px;
         border-radius: 10px;
       }
-	  
-	  div.radios .note{
-		font-size: 80%;
-		color: #DDD;
-		font-style:italic;
-	  }
+    
+    div.radios .note{
+    font-size: 80%;
+    color: #DDD;
+    font-style:italic;
+    }
 
-	  #wiring_diagram{
-		width: 600px;
-		border-radius: 15px;
-	  }
+    #wiring_diagram{
+    width: 600px;
+    border-radius: 15px;
+    }
     </style>
     <script
       type="module"
@@ -187,17 +187,17 @@
           <img src="./yellow_learn_button.jpg" alt="Security + 2.0, round yellow learn button." />
           <input type="radio" name="protocol" value="secplusv2" checked />
           Security + 2.0<br/>
-		  round yellow learn button<br/>
-		  <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
+      round yellow learn button<br/>
+      <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
         </label>
     
         <label>
           <img src="./purple_learn_button.jpg" alt="Security + 1.0, purple, orange, or red learn button." />
           <input type="radio" name="protocol" value="secplusv1" />
           Security + 1.0<br/>
-		  purple, brown, orange or red learn button<br/>
-		  <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br/>
-		  <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
+      purple, brown, orange or red learn button<br/>
+      <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br/>
+      <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
         </label>
         
         <label>
@@ -207,45 +207,45 @@
         </label>
       </div>
       
-	  <h2>Choose your ratgdo control board:</h2>
-	  <div class="hardware radios">
-	  	<label>
-	  		<img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
-	  		<input type="radio" name="hardware" value="v25iboard" checked />
-	  		ratgdo v2.5x<br/>
-			v2.5, v2.5i, v2.52i, v2.53i (black PCB)
-	  	  </label>
-	    
-	  	  <label>
-	  		<img src="./ratgdo_v2.0.jpg" alt="v2.0" />
-	  		<input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
-	  		ratgdo v2.0<br/>
-			ESP8266 / D1 Mini (white PCB)
-	  	  </label>
+    <h2>Choose your ratgdo control board:</h2>
+    <div class="hardware radios">
+      <label>
+        <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
+        <input type="radio" name="hardware" value="v25iboard" checked />
+        ratgdo v2.5x<br/>
+      v2.5, v2.5i, v2.52i, v2.53i (black PCB)
+        </label>
+      
+        <label>
+        <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
+        <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
+        ratgdo v2.0<br/>
+      ESP8266 / D1 Mini (white PCB)
+        </label>
 
-		  <label>
-	  		<img style="background-color: #555;" alt="v2.5 esp32" />
-	  		<input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
-	  		ratgdo v2.5<br/>
-			ESP32 (black PCB)
-	  	  </label>
-	  </div>
+      <label>
+        <img style="background-color: #555;" alt="v2.5 esp32" />
+        <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
+        ratgdo v2.5<br/>
+      ESP32 (black PCB)
+        </label>
+    </div>
 
-	  <p>
-	  	<esp-web-install-button></esp-web-install-button>
-	  </p>
+    <p>
+      <esp-web-install-button></esp-web-install-button>
+    </p>
 
-	  <h2>Wiring Diagram</h2>
-	  <img id="wiring_diagram" src="wiring_diagrams/secplus_diagram.png" alt="Security + 1 and 2 wiring diagram" />
+    <h2>Wiring Diagram</h2>
+    <img id="wiring_diagram" src="wiring_diagrams/secplus_diagram.png" alt="Security + 1 and 2 wiring diagram" />
 
       <h3>Drivers</h3>
       <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
-	  <ul>
+    <ul>
         <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
         <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
       </ul>
-	  <p>Watch the driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
-	  <!-- <iframe width="640" height="360" src="https://youtube.com/embed/9WecAUTC9iI"></iframe> -->
+    <p>Watch the driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
+    <!-- <iframe width="640" height="360" src="https://youtube.com/embed/9WecAUTC9iI"></iframe> -->
 
 
       <h3>Advanced Users</h3>
@@ -270,37 +270,37 @@
       </div>
     </div>
     <script>
-      document.querySelectorAll('div.radios input').forEach((radio) =>	
-	    radio.addEventListener("change", () => {
-			const button = document.querySelector("esp-web-install-button");
-			var protocol = document.querySelector('input[name="protocol"]:checked').value;
-			var hardware = document.querySelector('input[name="hardware"]:checked').value;
+      document.querySelectorAll('div.radios input').forEach((radio) =>  
+      radio.addEventListener("change", () => {
+      const button = document.querySelector("esp-web-install-button");
+      var protocol = document.querySelector('input[name="protocol"]:checked').value;
+      var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
-			if(protocol === "dry_contact"){
-				alert("Dry contact support is coming soon.");
-				document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
-				return;
-				document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
-			}else{
-				document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
-			}
+      if(protocol === "dry_contact"){
+        alert("Dry contact support is coming soon.");
+        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
+        return;
+        document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
+      }else{
+        document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
+      }
 
-			if(protocol !== "sec2" && hardware === "v2.0"){
-				alert("ratgdo version 2.0 only works with Security + 2.0");
-				document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
-				return;
-			}
+      if(protocol !== "sec2" && hardware === "v2.0"){
+        alert("ratgdo version 2.0 only works with Security + 2.0");
+        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
+        return;
+      }
 
-			if(protocol === "secplusv2"){
-				protocol = "";
-			}else{
-				protocol = `_${protocol}`;
-			}
+      if(protocol === "secplusv2"){
+        protocol = "";
+      }else{
+        protocol = `_${protocol}`;
+      }
 
-			button.manifest = `${hardware}${protocol}-manifest.json`;
-			console.log(button.manifest);
-		})
-	  );
+      button.manifest = `${hardware}${protocol}-manifest.json`;
+      console.log(button.manifest);
+    })
+    );
 
       document
         .querySelector('input[name="type"]:checked')
