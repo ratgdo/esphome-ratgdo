@@ -166,6 +166,9 @@ namespace ratgdo {
         void subscribe_sync_failed(std::function<void(bool)>&& f);
         void subscribe_learn_state(std::function<void(LearnState)>&& f);
 
+
+        void defer(std::function<void()> &&f);
+        void defer(const std::string &name, std::function<void()> &&f);
     protected:
         RATGDOStore isr_store_ {};
         protocol::Protocol* protocol_;

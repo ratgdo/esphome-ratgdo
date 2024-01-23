@@ -602,6 +602,16 @@ namespace ratgdo {
             counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
         }
     }
+
+
+    void RATGDOComponent::defer(std::function<void()> &&f) {
+        App.scheduler.set_timeout(this, "", 0, [=](){ f(); App.feed_wdt();});
+    }
+
+    void RATGDOComponent::defer(const std::string &name, std::function<void()> &&f) {
+        App.scheduler.set_timeout(this, name, 0, [=](){ f(); App.feed_wdt();});
+    }
+
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)
     {
         this->opening_duration.subscribe([=](float state) { defer("opening_duration", [=] { f(state); }); });
