@@ -267,7 +267,7 @@ namespace ratgdo {
                     last_read = millis();
 
                     if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
-                        ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
+                        ESP_LOG1(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->sw_serial_.baudRate());
                         byte_count = 0;
                         continue;
                     }
@@ -276,7 +276,7 @@ namespace ratgdo {
 
                     // if we are at the start of a message, capture the next 16 bytes
                     if (msg_start == 0x550100) {
-                        ESP_LOG1(TAG, "Baud: %d", this->sw_serial_.baudRate());
+                        ESP_LOG2(TAG, "Baud: %d", this->sw_serial_.baudRate());
                         rx_packet[0] = 0x55;
                         rx_packet[1] = 0x01;
                         rx_packet[2] = 0x00;
@@ -370,7 +370,7 @@ namespace ratgdo {
 
         void Secplus2::handle_command(const Command& cmd)
         {
-            ESP_LOG1(TAG, "Handle command: %s", CommandType_to_string(cmd.type));
+            ESP_LOG2(TAG, "[%d] Handle command: %s", millis(), CommandType_to_string(cmd.type));
 
             if (cmd.type == CommandType::STATUS) {
 
@@ -412,7 +412,7 @@ namespace ratgdo {
                 this->ratgdo_->received(to_BatteryState(cmd.byte1, BatteryState::UNKNOWN));
             }
 
-            ESP_LOG1(TAG, "Done handle command: %s", CommandType_to_string(cmd.type));
+            ESP_LOG2(TAG, "[%d] Done handle command: %s", millis(), CommandType_to_string(cmd.type));
         }
 
         void Secplus2::send_command(Command command, IncrementRollingCode increment)

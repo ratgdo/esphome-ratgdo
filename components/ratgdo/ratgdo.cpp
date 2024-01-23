@@ -176,12 +176,17 @@ namespace ratgdo {
             this->motor_state = MotorState::OFF;
         }
 
-        if (door_state == DoorState::CLOSED && door_state != prev_door_state) {
-            this->query_openings();
+        if (door_state == DoorState::CLOSED) {
+            defer([=]() { this->query_openings(); });
         }
 
         this->door_state = door_state;
-        this->on_door_state_.trigger(door_state);
+        auto now = millis();
+        if (!this->on_door_state_.is_expired(now)) {
+            defer([=]() { this->on_door_state_.trigger(now, door_state); });
+        } else {
+            this->on_door_state_.clear();
+        }
     }
 
     void RATGDOComponent::received(const LearnState learn_state)
@@ -193,7 +198,7 @@ namespace ratgdo {
         }
 
         if (learn_state == LearnState::INACTIVE) {
-            this->query_paired_devices();
+            defer([=]() { this->query_paired_devices(); });
         }
 
         this->learn_state = learn_state;
@@ -244,7 +249,7 @@ namespace ratgdo {
                 this->motion_state = MotionState::CLEAR;
             });
             if (*this->light_state == LightState::OFF) {
-                this->query_status();
+                defer([=]() { this->query_status(); });
             }
         }
     }
@@ -326,8 +331,8 @@ namespace ratgdo {
             return;
         }
         auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
-        ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
         this->door_position = clamp(position, 0.0f, 1.0f);
+        ESP_LOG2(TAG, "[%d] Position update: %f", now, *this->door_position);
     }
 
     void RATGDOComponent::set_opening_duration(float duration)
@@ -429,9 +434,9 @@ namespace ratgdo {
         this->door_action(DoorAction::OPEN);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->opening_duration + 1) * 1000, [=]() {
+        set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
-                this->door_state = DoorState::OPEN; // probably missed a status mesage, assume it's open
+                this->received(DoorState::OPEN); // probably missed a status mesage, assume it's open
                 this->query_status(); // query in case we're wrong and it's stopped
             }
         });
@@ -446,7 +451,7 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
             this->door_action(DoorAction::STOP);
-            this->on_door_state_([=](DoorState s) {
+            this->on_door_state_(millis() + 2000, [=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_action(DoorAction::CLOSE);
                 } else {
@@ -459,9 +464,9 @@ namespace ratgdo {
         this->door_action(DoorAction::CLOSE);
 
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->closing_duration + 1) * 1000, [=]() {
+        set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [=]() {
             if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
-                this->door_state = DoorState::CLOSED; // probably missed a status mesage, assume it's closed
+                this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
                 this->query_status(); // query in case we're wrong and it's stopped
             }
         });
@@ -490,9 +495,11 @@ namespace ratgdo {
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
             this->door_action(DoorAction::STOP);
-            this->on_door_state_([=](DoorState s) {
+            this->on_door_state_(millis() + 2000, [=](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
+                } else {
+                    ESP_LOGW(TAG, "Door did not stop, ignoring move to position command");
                 }
             });
             return;
@@ -595,6 +602,16 @@ namespace ratgdo {
             counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
         }
     }
+
+
+    void RATGDOComponent::defer(std::function<void()> &&f) {
+        App.scheduler.set_timeout(this, "", 0, [=](){ f(); App.feed_wdt(); delay(1); yield(); });
+    }
+
+    void RATGDOComponent::defer(const std::string &name, std::function<void()> &&f) {
+        App.scheduler.set_timeout(this, name, 0, [=](){ f(); App.feed_wdt(); delay(1); yield(); });
+    }
+
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)
     {
         this->opening_duration.subscribe([=](float state) { defer("opening_duration", [=] { f(state); }); });
