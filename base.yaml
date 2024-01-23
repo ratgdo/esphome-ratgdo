@@ -23,8 +23,10 @@ ratgdo:
             message: "Failed to communicate with garage opener on startup."
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
 api:
+  id: ${id_prefix}_api
   services:
   - service: wipe_devices_from_gdo_memory
+    id: ${id_prefix}_api_wipe_devices
     variables:
       devices_to_wipe: string
     then:
@@ -225,8 +227,10 @@ light:
 
 button:
   - platform: restart
+    id: ${id_prefix}_restart
     name: "Restart"
   - platform: safe_mode
+    id: ${id_prefix}_safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
 
