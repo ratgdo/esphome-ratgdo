@@ -101,8 +101,9 @@
         border: 4px solid rgba(0, 0, 0, 0);
         aspect-ratio: 1;
       }
-      input:checked + img {
-        border-color: #58a6ff;
+      input:checked ~ img,
+    img:has(+ input:checked){
+    border-color: #58a6ff;
       }
       @media (prefers-color-scheme: dark) {
         body {
@@ -136,6 +137,31 @@
       body.show-diy .diy {
         display: initial;
       }
+
+      div.radios{
+        display: flex;
+    align-items: start;
+        font-size: 75%;
+      }
+      div.radios label{
+        /* padding: 10px; */
+        width: 32%;
+      }
+      div.radios img{
+        width: 150px;
+        border-radius: 10px;
+      }
+    
+    div.radios .note{
+    font-size: 80%;
+    color: #DDD;
+    font-style:italic;
+    }
+
+    #wiring_diagram{
+    width: 600px;
+    border-radius: 15px;
+    }
     </style>
     <script
       type="module"
@@ -150,145 +176,84 @@
         alt="ESPHome ratgdo"
       />
       <h1>ESPHome ratgdo</h1>
-      <p></p>
       <p>
-        Pick your board to flash your ratgdo board with ESPhome for <a href="https://paulwieland.github.io/ratgdo/">ratgdo</a>.
+        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://paulwieland.github.io/ratgdo/">ratgdo control board</a> version.
         No programming or other software required.
-
-        <ul>
-          <li>Residential overhead mounted openers
-            <ul>
-              <li>with a yellow learn button are Security + 2.0</li>
-              <li>with a red, purple or orange learn button are Security + “1.0”</li>
-            </ul>
-          </li>
-          <li>Residential wall mounted jackshaft openers
-            <ul>
-              <li>With model 8500<strong>W</strong> or RJ070 are Security + 2.0</li>
-              <li>All others are Security + 1.0</li>
-            </ul>
-          </li>
-          <li>Security + 2.0 door openers require ratgdo v2.0 control board or later</li>
-          <li>Security + 1.0 &amp; Dry Contact door openers require v2.5 control board or later</li>
-        </ul>
-
       </p>
 
-      <p>
-        <em>
-          Security + 1.0 support is experimental and may not work for all openers. Dry contact support is coming soon.
-        </em>
-      </p>
-
-      <h3>v2.5i/2.52i/2.53i Board Security+ 2.0</h3>
-      <div class="radios">
+      <h2>Choose your GDO Control Protocol:</h2>
+      <div class="protocol radios">
         <label>
-          <input type="radio" name="type" value="v25iboard" checked />
-          <img src="./v25iboard.png" alt="ratgdo v2.5i/2.52i board with Security+ 2.0" />
+          <img src="./yellow_learn_button.jpg" alt="Security + 2.0, round yellow learn button." />
+          <input type="radio" name="protocol" value="secplusv2" checked />
+          Security + 2.0<br/>
+      round yellow learn button<br/>
+      <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
+        </label>
+    
+        <label>
+          <img src="./purple_learn_button.jpg" alt="Security + 1.0, purple, orange, or red learn button." />
+          <input type="radio" name="protocol" value="secplusv1" />
+          Security + 1.0<br/>
+      purple, brown, orange or red learn button<br/>
+      <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br/>
+      <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
+        </label>
+        
+        <label>
+          <img src="./dry_contact.jpg" alt="Dry contact control." />
+          <input type="radio" name="protocol" value="dry_contact" />
+          Dry Contact control<br/> (coming soon)
         </label>
       </div>
-      <p>
-        <ul>
-          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5i Security + 1/2 Wiring Diagram</a></li>
-          <li><a href="https://user-images.githubusercontent.com/4663918/288449523-9ddf3da2-9eac-4be0-beed-11867dc8d446.png">Version 2.53i Security + 1/2 Wiring Diagram</a></li>
-          <!-- <li><a href="https://user-images.githubusercontent.com/4663918/277838851-e338c3bf-4eda-447a-9e79-737aa1a622a0.png">Version 2.5i Dry Contact Wiring Diagram</a></li> -->
-        </ul>
-      </p>
+      
+    <h2>Choose your ratgdo control board:</h2>
+    <div class="hardware radios">
+      <label>
+        <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
+        <input type="radio" name="hardware" value="v25iboard" checked />
+        ratgdo v2.5x<br/>
+      v2.5, v2.5i, v2.52i, v2.53i (black PCB)
+        </label>
+      
+        <label>
+        <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
+        <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
+        ratgdo v2.0<br/>
+      ESP8266 / D1 Mini (white PCB)
+        </label>
 
-      <h3>v2.5i/2.52i/2.53i Board Security+ 1.0</h3>
-      <div class="radios">
-        <label>
-          <input type="radio" name="type" value="v25iboard_secplusv1" />
-          <img src="./v25iboard_secplusv1.png" alt="ratgdo v2.5i/2.52i board with Security+ 1.0" />
+      <label>
+        <img style="background-color: #555;" alt="v2.5 esp32" />
+        <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
+        ratgdo v2.5<br/>
+      ESP32 (black PCB)
         </label>
-      </div>
-      <p>
-        <ul>
-          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5i Security + 1/2 Wiring Diagram</a></li>
-          <li><a href="https://user-images.githubusercontent.com/4663918/288449523-9ddf3da2-9eac-4be0-beed-11867dc8d446.png">Version 2.53i Security + 1/2 Wiring Diagram</a></li>
-          <!-- <li><a href="https://user-images.githubusercontent.com/4663918/277838851-e338c3bf-4eda-447a-9e79-737aa1a622a0.png">Version 2.5i Dry Contact Wiring Diagram</a></li> -->
-        </ul>
-      </p>
+    </div>
 
-      <h3>v2.5 Board Security+ 2.0</h3>
-      <div class="radios">
-        <label>
-          <input type="radio" name="type" value="v25board_esp8266_d1_mini_lite" />
-          <img src="./v25board_esp8266_d1_mini_lite.png" alt="ratgdo v2.5 board with ESP8266 D1 Mini Lite with Security+ 2.0" />
-        </label>
-        <label>
-          <input type="radio" name="type" value="v25board_esp32_d1_mini" />
-          <img src="./v25board_esp32_d1_mini.png" alt="ratgdo v2.5 board with ESP32 D1 Mini with Security+ 2.0" />
-        </label>
-      </div>
-      <p>
-        <ul>
-          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5 Security + 1/2 Wiring Diagram</a></li>
-        </ul>
-      </p>
+    <p>
+      <esp-web-install-button></esp-web-install-button>
+    </p>
 
-      <h3>v2.5 Board Security+ 1.0</h3>
-      <div class="radios">
-        <label>
-          <input type="radio" name="type" value="v25board_esp8266_d1_mini_lite_secplusv1" />
-          <img src="./v25board_esp8266_d1_mini_lite_secplusv1.png" alt="ratgdo v2.5 board with ESP8266 D1 Mini Lite with Security+ 1.0" />
-        </label>
-        <label>
-          <input type="radio" name="type" value="v25board_esp32_d1_mini_secplusv1" />
-          <img src="./v25board_esp32_d1_mini_secplusv1.png" alt="ratgdo v2.5 board with ESP32 D1 Mini with Security+ 1.0" />
-        </label>
-      </div>
-      <p>
-        <ul>
-          <li><a href="https://user-images.githubusercontent.com/4663918/276749741-fe82ea10-e8f4-41d6-872f-55eec88d2aab.png">Version 2.5 Security + 1/2 Wiring Diagram</a></li>
-        </ul>
-      </p>
 
-      <h3>v2.0 Board Security+ 2.0</h3>
-      <div class="radios">
-        <label>
-          <input type="radio" name="type" value="v2board_esp8266_d1_mini_lite" />
-          <img src="./v2board_esp8266_d1_mini_lite.png" alt="ratgdo v2.0 board with ESP8266 D1 Mini Lite with Security+ 2.0" />
-        </label>
-        <label>
-          <input type="radio" name="type" value="v2board_esp8266_d1_mini" />
-          <img src="./v2board_esp8266_d1_mini.png" alt="ratgdo v2.0 board with ESP8266 D1 Mini with Security+ 2.0" />
-        </label>
-        <label>
-          <input type="radio" name="type" value="v2board_esp32_d1_mini" />
-          <img src="./v2board_esp32_d1_mini.png" alt="ratgdo v2.0 board with ESP32 D1 Mini with Security+ 2.0" />
-        </label>
-        <label>
-          <input type="radio" name="type" value="v2board_esp32_lolin_s2_mini" />
-          <img src="./v2board_esp32_lolin_s2_mini.png" alt="ratgdo v2.0 board with ESP32 lolin s2 mini with Security+ 2.0" />
-        </label>
-      </div>
-      <p>
-        <ul>
-          <li><a href="https://user-images.githubusercontent.com/4663918/235453980-04a642fa-a181-4297-b4f3-06e1315e02fa.png">Version 2.0 Wiring Diagram</a></li>
-        </ul>
-      </p>
+    <h2>Wiring Diagram</h2>
+    <img id="wiring_diagram" src="wiring_diagrams/secplus_diagram.png" alt="Security + 1 and 2 wiring diagram" />
 
-      <h3>v1.0 Board</h3>
-      <div>
-        Not supported
-      </div>
+    <h3>Documentation</h3>
+    <ul>
+      <li><a href="webui_documentation.html">Web User Interface Documentation</a></li>
+    </ul>
 
-      <p class="button-row" align="center">
-        <esp-web-install-button></esp-web-install-button>
-      </p>
 
-      <h3>Documentation</h3>
-      <ul>
-        <li><a href="webui_documentation.html">Web User Interface Documentation</a></li>
-	</ul>
+    <h3>Drivers</h3>
+    <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
+    <ul>
+      <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
+      <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
+    </ul>
+    <p>Watch the driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
+    <!-- <iframe width="640" height="360" src="https://youtube.com/embed/9WecAUTC9iI"></iframe> -->
 
-      <h3>Drivers</h3>
-      <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
-      <ul>
-        <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
-        <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
-      </ul>
 
       <h3>Advanced Users</h3>
       <ul>
@@ -312,19 +277,37 @@
       </div>
     </div>
     <script>
-      document.querySelectorAll('input[name="type"]').forEach((radio) =>
-        radio.addEventListener("change", () => {
-          const button = document.querySelector("esp-web-install-button");
-          button.manifest = `./${radio.value}-manifest.json`;
+      document.querySelectorAll('div.radios input').forEach((radio) =>  
+      radio.addEventListener("change", () => {
+      const button = document.querySelector("esp-web-install-button");
+      var protocol = document.querySelector('input[name="protocol"]:checked').value;
+      var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
-          document.querySelectorAll(".info").forEach((info) => {
-            info.classList.add("hidden");
-          });
-          document
-            .querySelector(`.info.${radio.value}`)
-            .classList.remove("hidden");
-        })
-      );
+      if(protocol === "dry_contact"){
+        alert("Dry contact support is coming soon.");
+        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
+        return;
+        document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
+      }else{
+        document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
+      }
+
+      if(protocol !== "sec2" && hardware === "v2.0"){
+        alert("ratgdo version 2.0 only works with Security + 2.0");
+        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
+        return;
+      }
+
+      if(protocol === "secplusv2"){
+        protocol = "";
+      }else{
+        protocol = `_${protocol}`;
+      }
+
+      button.manifest = `${hardware}${protocol}-manifest.json`;
+    })
+    );
+
       document
         .querySelector('input[name="type"]:checked')
         .dispatchEvent(new Event("change"));
