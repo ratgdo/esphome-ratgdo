@@ -605,11 +605,11 @@ namespace ratgdo {
 
 
     void RATGDOComponent::defer(std::function<void()> &&f) {
-        App.scheduler.set_timeout(this, "", 0, [=](){ f(); App.feed_wdt();});
+        App.scheduler.set_timeout(this, "", 0, [=](){ f(); App.feed_wdt(); delay(1); yield(); });
     }
 
     void RATGDOComponent::defer(const std::string &name, std::function<void()> &&f) {
-        App.scheduler.set_timeout(this, name, 0, [=](){ f(); App.feed_wdt();});
+        App.scheduler.set_timeout(this, name, 0, [=](){ f(); App.feed_wdt(); delay(1); yield(); });
     }
 
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)
