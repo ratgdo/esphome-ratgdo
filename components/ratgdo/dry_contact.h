@@ -29,12 +29,15 @@ namespace ratgdo {
             void light_action(LightAction action);
             void lock_action(LockAction action);
             void door_action(DoorAction action);
-
+            
             Result call(Args args);
 
             const Traits& traits() const { return this->traits_; }
 
         protected:
+
+            void toggle_door();
+
             Traits traits_;
 
             InternalGPIOPin* tx_pin_;

@@ -47,12 +47,64 @@ namespace ratgdo {
 
         void DryContact::door_action(DoorAction action)
         {
-            if (action != DoorAction::TOGGLE) {
-                ESP_LOG1(TAG, "Ignoring door action: %s", DoorAction_to_string(action));
+           ESP_LOG1(TAG, "Door action: %s, door state: %s", DoorAction_to_string(action), DoorState_to_string(*this->ratgdo_->door_state));
+            if (action == DoorAction::UNKNOWN) {
                 return;
             }
-            ESP_LOG1(TAG, "Door action: %s", DoorAction_to_string(action));
 
+            const uint32_t double_toggle_delay = 1000;
+            if (action == DoorAction::TOGGLE) {
+                this->toggle_door();
+            } else if (action == DoorAction::OPEN) {
+                if (*this->ratgdo_->door_state == DoorState::CLOSED || *this->ratgdo_->door_state == DoorState::CLOSING) {
+                    this->toggle_door();
+                } else if (*this->ratgdo_->door_state == DoorState::STOPPED) {
+                    this->toggle_door(); // this starts closing door
+                    this->ratgdo_->on_door_state_([=](DoorState s) {
+                        if (s == DoorState::CLOSING) {
+                            // this changes direction of the door on some openers, on others it stops it
+                            this->toggle_door();
+                            this->ratgdo_->on_door_state_([=](DoorState s) {
+                                if (s == DoorState::STOPPED) {
+                                    this->toggle_door();
+                                }
+                            });
+                        }
+                    });
+                }
+            } else if (action == DoorAction::CLOSE) {
+                if (*this->ratgdo_->door_state == DoorState::OPEN) {
+                    this->toggle_door();
+                } else if (*this->ratgdo_->door_state == DoorState::OPENING) {
+                    this->toggle_door(); // this switches to stopped
+                    // another toggle needed to close
+                    this->ratgdo_->on_door_state_([=](DoorState s) {
+                        if (s == DoorState::STOPPED) {
+                            this->toggle_door();
+                        }
+                    });
+                } else if (*this->ratgdo_->door_state == DoorState::STOPPED) {
+                    this->toggle_door();
+                }
+            } else if (action == DoorAction::STOP) {
+                if (*this->ratgdo_->door_state == DoorState::OPENING) {
+                    this->toggle_door();
+                } else if (*this->ratgdo_->door_state == DoorState::CLOSING) {
+                    this->toggle_door(); // this switches to opening
+
+                    // another toggle needed to stop
+                    this->ratgdo_->on_door_state_([=](DoorState s) {
+                        if (s == DoorState::OPENING) {
+                            this->toggle_door();
+                        }
+                    });
+                }
+            }
+
+        }
+
+        void DryContact::toggle_door()
+        {
             this->tx_pin_->digital_write(1);
             this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] {
                 this->tx_pin_->digital_write(0);
