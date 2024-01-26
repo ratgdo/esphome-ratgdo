@@ -14,7 +14,7 @@ substitutions:
 web_server:
 
 esphome:
-  name: ${id_prefix}_esp32_d1_mini_secplusv1
+  name: ${id_prefix}-e32-d1m-v1
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:

@@ -14,7 +14,7 @@ substitutions:
 web_server:
 
 esphome:
-  name: ${id_prefix}_esp32_lolin_s2_mini
+  name: ${id_prefix}-e32-ls2m
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:

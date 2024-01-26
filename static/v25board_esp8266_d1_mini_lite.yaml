@@ -14,7 +14,7 @@ substitutions:
 web_server:
 
 esphome:
-  name: ${id_prefix}_esp8266_d1_mini_lite
+  name: ${id_prefix}-e8-d1ml
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
