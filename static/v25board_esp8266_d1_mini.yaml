@@ -14,7 +14,7 @@ substitutions:
 web_server:
 
 esphome:
-  name: ${id_prefix}-e8-d1m
+  name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
