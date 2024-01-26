@@ -34,6 +34,12 @@ jobs:
           - file: v25board_esp8266_d1_mini_lite_secplusv1.yaml
             name: V2.5 Board ESP8266 D1 Mini Lite Security+ 1.0
             manifest_filename: v25board_esp8266_d1_mini_lite_secplusv1-manifest.json
+          - file: v25board_esp8266_d1_mini.yaml
+            name: V2.5 Board ESP8266 D1 Mini Security+ 2.0
+            manifest_filename: v25board_esp8266_d1_mini-manifest.json
+          - file: v25board_esp8266_d1_mini_secplusv1.yaml
+            name: V2.5 Board ESP8266 D1 Mini Security+ 1.0
+            manifest_filename: v25board_esp8266_d1_mini_secplusv1-manifest.json
           - file: v25board_esp32_d1_mini.yaml
             name: V2.5 Board ESP32 D1 Mini Security+ 2.0
             manifest_filename: v25board_esp32_d1_mini-manifest.json
