@@ -299,7 +299,7 @@
           document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
         }
         
-        if(protocol !== "sec2" && hardware === "v2.0"){
+        if(protocol !== "sec2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
           alert("ratgdo version 2.0 only works with Security + 2.0");
           document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
           return;
