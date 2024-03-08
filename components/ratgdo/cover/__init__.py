@@ -18,9 +18,13 @@ CoverOpeningTrigger = ratgdo_ns.class_(
 CoverClosingTrigger = ratgdo_ns.class_(
     "CoverClosingTrigger", automation.Trigger.template()
 )
+CoverStateTrigger = ratgdo_ns.class_(
+    "CoverStateTrigger", automation.Trigger.template()
+)
 
 CONF_ON_OPENING = "on_opening"
 CONF_ON_CLOSING = "on_closing"
+CONF_ON_STATE_CHANGE = "on_state_change"
 
 CONFIG_SCHEMA = cover.COVER_SCHEMA.extend(
     {
@@ -30,6 +34,9 @@ CONFIG_SCHEMA = cover.COVER_SCHEMA.extend(
         ),
         cv.Optional(CONF_ON_CLOSING): automation.validate_automation(
             {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(CoverClosingTrigger)}
+        ),
+        cv.Optional(CONF_ON_STATE_CHANGE): automation.validate_automation(
+            {cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(CoverStateTrigger)}
         ),
     }
 ).extend(RATGDO_CLIENT_SCHMEA)
@@ -44,6 +51,9 @@ async def to_code(config):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
         await automation.build_automation(trigger, [], conf)
     for conf in config.get(CONF_ON_CLOSING, []):
+        trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
+        await automation.build_automation(trigger, [], conf)
+    for conf in config.get(CONF_ON_STATE_CHANGE, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
         await automation.build_automation(trigger, [], conf)
 
