@@ -142,7 +142,7 @@ binary_sensor:
           condition:
             binary_sensor.is_off: ${id_prefix}_dry_contact_close
           then:
-            - cover.open: ${id_prefix}_garage_door
+            - cover.open: ${id_prefix}_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin:
@@ -160,7 +160,7 @@ binary_sensor:
           condition:
             binary_sensor.is_off: ${id_prefix}_dry_contact_open
           then:
-            - cover.close: ${id_prefix}_garage_door
+            - cover.close: ${id_prefix}_door
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
     pin:
@@ -212,7 +212,7 @@ number:
 
 cover:
   - platform: ratgdo
-    id: ${id_prefix}_garage_door
+    id: ${id_prefix}_door
     device_class: garage
     name: "Door"
     ratgdo_id: ${id_prefix}
