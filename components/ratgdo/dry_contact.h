@@ -29,6 +29,9 @@ namespace ratgdo {
             void light_action(LightAction action);
             void lock_action(LockAction action);
             void door_action(DoorAction action);
+            void set_open_limit(bool val);
+            void set_close_limit(bool val);
+            void send_door_state();
 
             Result call(Args args);
 
@@ -42,6 +45,11 @@ namespace ratgdo {
 
             RATGDOComponent* ratgdo_;
             Scheduler* scheduler_;
+
+            bool open_limit_reached_;
+            bool last_open_limit_;
+            bool close_limit_reached_;
+            bool last_close_limit_;
         };
 
     } // namespace secplus1

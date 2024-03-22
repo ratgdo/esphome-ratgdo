@@ -18,6 +18,11 @@ namespace ratgdo {
             this->scheduler_ = scheduler;
             this->tx_pin_ = tx_pin;
             this->rx_pin_ = rx_pin;
+            
+            this->open_limit_reached_ = 0;
+            this->last_open_limit_ = 0;
+            this->close_limit_reached_ = 0;
+            this->last_close_limit_ = 0;
         }
 
         void DryContact::loop()
@@ -31,6 +36,42 @@ namespace ratgdo {
 
         void DryContact::sync()
         {
+        }
+
+        void DryContact::set_open_limit(bool val)
+        {
+            ESP_LOGD(TAG, "Set open_limit_reached to %d", val);
+            this->last_open_limit_ = this->open_limit_reached_;
+            this->open_limit_reached_ = val;
+            this->send_door_state();
+        }
+
+        void DryContact::set_close_limit(bool val)
+        {
+            ESP_LOGD(TAG, "Set close_limit_reached to %d", val);
+            this->last_close_limit_ = this->close_limit_reached_;
+            this->close_limit_reached_ = val;
+            this->send_door_state();
+        }
+        
+        void DryContact::send_door_state(){
+            DoorState door_state;
+
+            if(this->open_limit_reached_){
+                door_state = DoorState::OPEN;
+            }else if(this->close_limit_reached_){
+                door_state = DoorState::CLOSED;
+            }else if(!this->close_limit_reached_ && !this->open_limit_reached_){
+                if(this->last_close_limit_){
+                    door_state = DoorState::OPENING;
+                }
+
+                if(this->last_open_limit_){
+                    door_state = DoorState::CLOSING;
+                }
+            }
+
+            this->ratgdo_->received(door_state);
         }
 
         void DryContact::light_action(LightAction action)
