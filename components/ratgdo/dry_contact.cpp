@@ -36,21 +36,24 @@ namespace ratgdo {
 
         void DryContact::sync()
         {
+            ESP_LOG1(TAG, "Ignoring sync action");
         }
 
-        void DryContact::set_open_limit(bool val)
+        void DryContact::set_open_limit(bool state)
         {
-            ESP_LOGD(TAG, "Set open_limit_reached to %d", val);
+            ESP_LOGD(TAG, "Set open_limit_reached to %d", state);
             this->last_open_limit_ = this->open_limit_reached_;
-            this->open_limit_reached_ = val;
+            this->last_close_limit_ = false;
+            this->open_limit_reached_ = state;
             this->send_door_state();
         }
 
-        void DryContact::set_close_limit(bool val)
+        void DryContact::set_close_limit(bool state)
         {
-            ESP_LOGD(TAG, "Set close_limit_reached to %d", val);
+            ESP_LOGD(TAG, "Set close_limit_reached to %d", state);
             this->last_close_limit_ = this->close_limit_reached_;
-            this->close_limit_reached_ = val;
+            this->last_open_limit_ = false;
+            this->close_limit_reached_ = state;
             this->send_door_state();
         }
         

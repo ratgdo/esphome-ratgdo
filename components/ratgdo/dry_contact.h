@@ -29,8 +29,8 @@ namespace ratgdo {
             void light_action(LightAction action);
             void lock_action(LockAction action);
             void door_action(DoorAction action);
-            void set_open_limit(bool val);
-            void set_close_limit(bool val);
+            void set_open_limit(bool state);
+            void set_close_limit(bool state);
             void send_door_state();
 
             Result call(Args args);

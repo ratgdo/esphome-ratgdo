@@ -420,6 +420,16 @@ namespace ratgdo {
         this->protocol_->sync();
     }
 
+    void RATGDOComponent::set_open_limit(bool state)
+    {
+        this->protocol_->set_open_limit(state);
+    }
+
+    void RATGDOComponent::set_close_limit(bool state)
+    {
+        this->protocol_->set_close_limit(state);
+    }
+
     void RATGDOComponent::door_open()
     {
         if (*this->door_state == DoorState::OPENING) {

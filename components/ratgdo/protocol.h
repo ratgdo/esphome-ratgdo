@@ -102,6 +102,8 @@ namespace ratgdo {
             virtual void dump_config();
 
             virtual void sync();
+            virtual void set_open_limit(bool);
+            virtual void set_close_limit(bool);
 
             virtual const Traits& traits() const;
 

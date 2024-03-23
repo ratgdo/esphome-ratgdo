@@ -87,11 +87,10 @@ binary_sensor:
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-    # on_state:
-    #   then:
-    #     lambda: |-
-    #       id($id_prefix)->call_protocol(set_open_limit { static_cast<bool>(true) });
-
+    on_state:
+      then:
+        lambda: |-
+          id($id_prefix)->set_open_limit(x);
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin:
@@ -104,12 +103,10 @@ binary_sensor:
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-    # on_press:
-    #   - if:
-    #       condition:
-    #         binary_sensor.is_off: ${id_prefix}_dry_contact_open
-    #       then:
-    #         - cover.close: ${id_prefix}_garage_door
+    on_state:
+      then:
+        lambda: |-
+          id($id_prefix)->set_close_limit(x);
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
     pin:

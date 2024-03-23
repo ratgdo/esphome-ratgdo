@@ -145,6 +145,8 @@ namespace ratgdo {
         void query_status();
         void query_openings();
         void sync();
+        void set_open_limit(bool);
+        void set_close_limit(bool);
 
         // children subscriptions
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
