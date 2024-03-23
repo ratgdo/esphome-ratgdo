@@ -46,6 +46,7 @@ namespace ratgdo {
             RATGDOComponent* ratgdo_;
             Scheduler* scheduler_;
 
+            DoorState door_state_;
             bool open_limit_reached_;
             bool last_open_limit_;
             bool close_limit_reached_;

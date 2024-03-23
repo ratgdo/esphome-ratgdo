@@ -23,6 +23,7 @@ namespace ratgdo {
             this->last_open_limit_ = 0;
             this->close_limit_reached_ = 0;
             this->last_close_limit_ = 0;
+            this->door_state_ = DoorState::UNKNOWN;
         }
 
         void DryContact::loop()
@@ -58,23 +59,21 @@ namespace ratgdo {
         }
         
         void DryContact::send_door_state(){
-            DoorState door_state;
-
             if(this->open_limit_reached_){
-                door_state = DoorState::OPEN;
+                this->door_state_ = DoorState::OPEN;
             }else if(this->close_limit_reached_){
-                door_state = DoorState::CLOSED;
+                this->door_state_ = DoorState::CLOSED;
             }else if(!this->close_limit_reached_ && !this->open_limit_reached_){
                 if(this->last_close_limit_){
-                    door_state = DoorState::OPENING;
+                    this->door_state_ = DoorState::OPENING;
                 }
 
                 if(this->last_open_limit_){
-                    door_state = DoorState::CLOSING;
+                    this->door_state_ = DoorState::CLOSING;
                 }
             }
 
-            this->ratgdo_->received(door_state);
+            this->ratgdo_->received(this->door_state_);
         }
 
         void DryContact::light_action(LightAction action)
@@ -91,14 +90,19 @@ namespace ratgdo {
 
         void DryContact::door_action(DoorAction action)
         {
-            if (action != DoorAction::TOGGLE) {
-                ESP_LOG1(TAG, "Ignoring door action: %s", DoorAction_to_string(action));
+            if (action == DoorAction::OPEN && this->door_state_ != DoorState::CLOSED) {
+                ESP_LOGW(TAG, "The door is not closed. Ignoring door action: %s", DoorAction_to_string(action));
                 return;
             }
+            if (action == DoorAction::CLOSE && this->door_state_ != DoorState::OPEN) {
+                ESP_LOGW(TAG, "The door is not open. Ignoring door action: %s", DoorAction_to_string(action));
+                return;
+            }
+
             ESP_LOG1(TAG, "Door action: %s", DoorAction_to_string(action));
 
             this->tx_pin_->digital_write(1);
-            this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
                 this->tx_pin_->digital_write(0);
             });
         }

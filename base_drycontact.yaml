@@ -202,7 +202,7 @@ button:
 
   - platform: template
     id: ${id_prefix}_toggle_door
-    name: "Toggle door!"
+    name: "Toggle door"
     on_press:
       then:
         lambda: !lambda |-
