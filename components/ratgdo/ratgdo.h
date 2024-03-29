@@ -16,6 +16,7 @@
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
+#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 
 #include "callbacks.h"
 #include "macros.h"
@@ -168,6 +169,9 @@ namespace ratgdo {
         void subscribe_sync_failed(std::function<void(bool)>&& f);
         void subscribe_learn_state(std::function<void(LearnState)>&& f);
 
+        void set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor_);
+        void set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor_);
+
     protected:
         RATGDOStore isr_store_ {};
         protocol::Protocol* protocol_;
@@ -176,6 +180,8 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
+        esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor_;
+        esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor_;
     }; // RATGDOComponent
 
 } // namespace ratgdo

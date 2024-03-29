@@ -5,6 +5,7 @@
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
+#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 
 namespace esphome {
 namespace ratgdo {
