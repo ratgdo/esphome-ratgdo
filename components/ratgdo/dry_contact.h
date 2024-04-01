@@ -2,6 +2,8 @@
 
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/optional.h"
+#include "esphome/core/gpio.h"
+#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 
 #include "callbacks.h"
 #include "observable.h"
@@ -17,6 +19,7 @@ namespace ratgdo {
     namespace dry_contact {
 
         using namespace esphome::ratgdo::protocol;
+        using namespace esphome::gpio;
 
         class DryContact : public Protocol {
         public:
@@ -51,6 +54,7 @@ namespace ratgdo {
             bool last_open_limit_;
             bool close_limit_reached_;
             bool last_close_limit_;
+
         };
 
     } // namespace secplus1

@@ -683,5 +683,30 @@ namespace ratgdo {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
     }
 
+    void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
+    {
+        dry_contact_open_sensor_ = dry_contact_open_sensor;
+        dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value)
+        {
+            if (sensor_value) {
+                ESP_LOGD(TAG,"Dry Contact Open Sensor Triggered");
+                this->set_open_limit(true);
+            }            
+        }
+        );
+    }
+    void RATGDOComponent::set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor)
+    {
+        dry_contact_close_sensor_ = dry_contact_close_sensor;
+        dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value)
+        {
+            if (sensor_value) {
+                ESP_LOGD(TAG,"Dry Contact Close Sensor Triggered");
+                set_close_limit(true);
+            }            
+        }
+        );
+    }
+
 } // namespace ratgdo
 } // namespace esphome
