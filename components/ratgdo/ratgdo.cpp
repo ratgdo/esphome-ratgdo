@@ -688,10 +688,7 @@ namespace ratgdo {
         dry_contact_open_sensor_ = dry_contact_open_sensor;
         dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value)
         {
-            if (sensor_value) {
-                ESP_LOGD(TAG,"Dry Contact Open Sensor Triggered");
-                this->set_open_limit(true);
-            }            
+            this->set_open_limit(sensor_value);      
         }
         );
     }
@@ -700,10 +697,7 @@ namespace ratgdo {
         dry_contact_close_sensor_ = dry_contact_close_sensor;
         dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value)
         {
-            if (sensor_value) {
-                ESP_LOGD(TAG,"Dry Contact Close Sensor Triggered");
-                set_close_limit(true);
-            }            
+            this->set_close_limit(sensor_value);
         }
         );
     }

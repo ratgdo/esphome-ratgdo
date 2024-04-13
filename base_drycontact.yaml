@@ -16,6 +16,8 @@ ratgdo:
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
+  dry_contact_open_sensor: ${id_prefix}_dry_contact_open
+  dry_contact_close_sensor: ${id_prefix}_dry_contact_close
   protocol: drycontact
   on_sync_failed:
     then:
@@ -37,7 +39,7 @@ switch:
     id: "${id_prefix}_status_door"
     internal: true
     pin:
-      number: ${status_door_pin}  # D0 output door status, HIGH for open, LOW for closed
+      number: ${status_door_pin}
       mode:
         output: true
     name: "Status door"
@@ -46,7 +48,7 @@ switch:
     id: "${id_prefix}_status_obstruction"
     internal: true
     pin:
-      number: ${status_obstruction_pin}  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
+      number: ${status_obstruction_pin}
       mode:
         output: true
     name: "Status obstruction"
@@ -78,7 +80,7 @@ binary_sensor:
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
     pin:
-      number: ${dry_contact_open_pin}  # D5 dry contact for opening door
+      number: ${dry_contact_open_pin}
       inverted: true
       mode:
         input: true
@@ -87,14 +89,10 @@ binary_sensor:
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-    on_state:
-      then:
-        lambda: |-
-          id($id_prefix)->set_open_limit(x);
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin:
-      number: ${dry_contact_close_pin}  # D6 dry contact for closing door
+      number: ${dry_contact_close_pin}
       inverted: true
       mode:
         input: true
@@ -103,14 +101,10 @@ binary_sensor:
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-    on_state:
-      then:
-        lambda: |-
-          id($id_prefix)->set_close_limit(x);
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
     pin:
-      number: ${dry_contact_light_pin}  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
+      number: ${dry_contact_light_pin}
       inverted: true
       mode:
         input: true
