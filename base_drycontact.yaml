@@ -13,70 +13,55 @@ preferences:
 
 ratgdo:
   id: ${id_prefix}
-  input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
   dry_contact_open_sensor: ${id_prefix}_dry_contact_open
   dry_contact_close_sensor: ${id_prefix}_dry_contact_close
   protocol: drycontact
-  on_sync_failed:
-    then:
-      - homeassistant.service:
-          service: persistent_notification.create
-          data:
-            title: "${friendly_name} sync failed"
-            message: "Failed to communicate with garage opener on startup."
-            notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
-
-lock:
-  - platform: ratgdo
-    id: ${id_prefix}_lock_remotes
-    ratgdo_id: ${id_prefix}
-    name: "Lock remotes"
 
 switch:
-  - platform: gpio
-    id: "${id_prefix}_status_door"
-    internal: true
-    pin:
-      number: ${status_door_pin}
-      mode:
-        output: true
-    name: "Status door"
-    entity_category: diagnostic
-  - platform: gpio
-    id: "${id_prefix}_status_obstruction"
-    internal: true
-    pin:
-      number: ${status_obstruction_pin}
-      mode:
-        output: true
-    name: "Status obstruction"
-    entity_category: diagnostic
+  # - platform: gpio
+  #   id: "${id_prefix}_status_door"
+  #   internal: true
+  #   pin:
+  #     number: ${status_door_pin}
+  #     mode:
+  #       output: true
+  #   name: "Status door"
+  #   entity_category: diagnostic
+  # - platform: gpio
+  #   id: "${id_prefix}_status_obstruction"
+  #   internal: true
+  #   pin:
+  #     number: ${status_obstruction_pin}
+  #     mode:
+  #       output: true
+  #   name: "Status obstruction"
+  #   entity_category: diagnostic
 
 binary_sensor:
-  - platform: ratgdo
-    type: motion
-    id: ${id_prefix}_motion
-    ratgdo_id: ${id_prefix}
-    name: "Motion"
-    device_class: motion
+  # - platform: ratgdo
+  #   type: motion
+  #   id: ${id_prefix}_motion
+  #   ratgdo_id: ${id_prefix}
+  #   name: "Motion"
+  #   device_class: motion
   - platform: ratgdo
     type: obstruction
     id: ${id_prefix}_obstruction
     ratgdo_id: ${id_prefix}
     name: "Obstruction"
     device_class: problem
-    on_press:
-      - switch.turn_on: ${id_prefix}_status_obstruction
-    on_release:
-      - switch.turn_off: ${id_prefix}_status_obstruction
-  - platform: ratgdo
-    type: button
-    id: ${id_prefix}_button
-    ratgdo_id: ${id_prefix}
-    name: "Button"
-    entity_category: diagnostic
+    # on_press:
+    #   - switch.turn_on: ${id_prefix}_status_obstruction
+    # on_release:
+    #   - switch.turn_off: ${id_prefix}_status_obstruction
+  # - platform: ratgdo
+  #   type: button
+  #   id: ${id_prefix}_button
+  #   ratgdo_id: ${id_prefix}
+  #   name: "Button"
+  #   entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
     pin:
@@ -85,7 +70,7 @@ binary_sensor:
       mode:
         input: true
         pullup: true
-    name: "Dry contact open"
+    name: "Open limit switch"
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
@@ -97,35 +82,26 @@ binary_sensor:
       mode:
         input: true
         pullup: true
-    name: "Dry contact close"
+    name: "Close limit switch"
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-  - platform: gpio
-    id: "${id_prefix}_dry_contact_light"
-    pin:
-      number: ${dry_contact_light_pin}
-      inverted: true
-      mode:
-        input: true
-        pullup: true
-    name: "Dry contact light"
-    entity_category: diagnostic
-    filters:
-      - delayed_on_off: 500ms
-    on_press:
-      - light.toggle: ${id_prefix}_light
+  # - platform: gpio
+  #   id: "${id_prefix}_dry_contact_light"
+  #   pin:
+  #     number: ${dry_contact_light_pin}
+  #     inverted: true
+  #     mode:
+  #       input: true
+  #       pullup: true
+  #   name: "Dry contact light"
+  #   entity_category: diagnostic
+  #   filters:
+  #     - delayed_on_off: 500ms
+  #   on_press:
+  #     - light.toggle: ${id_prefix}_light
 
 number:
-  - platform: ratgdo
-    id: ${id_prefix}_rolling_code_counter
-    type: rolling_code_counter
-    entity_category: config
-    ratgdo_id: ${id_prefix}
-    name: "Rolling code counter"
-    mode: box
-    unit_of_measurement: "codes"
-
   - platform: ratgdo
     id: ${id_prefix}_opening_duration
     type: opening_duration
@@ -142,30 +118,16 @@ number:
     name: "Closing duration"
     unit_of_measurement: "s"
 
-  - platform: ratgdo
-    id: ${id_prefix}_client_id
-    type: client_id
-    entity_category: config
-    ratgdo_id: ${id_prefix}
-    name: "Client ID"
-    mode: box
-
 cover:
   - platform: ratgdo
     id: ${id_prefix}_garage_door
     device_class: garage
     name: "Door"
     ratgdo_id: ${id_prefix}
-    on_closed:
-      - switch.turn_off: ${id_prefix}_status_door
-    on_open:
-      - switch.turn_on: ${id_prefix}_status_door
-
-light:
-  - platform: ratgdo
-    id: ${id_prefix}_light
-    name: "Light"
-    ratgdo_id: ${id_prefix}
+    # on_closed:
+    #   - switch.turn_off: ${id_prefix}_status_door
+    # on_open:
+    #   - switch.turn_on: ${id_prefix}_status_door
 
 button:
   - platform: restart
@@ -175,24 +137,6 @@ button:
     id: ${id_prefix}_safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
-
-  - platform: template
-    id: ${id_prefix}_query_status
-    entity_category: diagnostic
-    name: "Query status"
-    on_press:
-      then:
-        lambda: !lambda |-
-          id($id_prefix).query_status();
-
-  - platform: template
-    id: ${id_prefix}_sync
-    name: "Sync"
-    entity_category: diagnostic
-    on_press:
-      then:
-        lambda: !lambda |-
-          id($id_prefix).sync();
 
   - platform: template
     id: ${id_prefix}_toggle_door
