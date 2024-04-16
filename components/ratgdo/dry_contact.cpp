@@ -102,7 +102,21 @@ namespace ratgdo {
 
             ESP_LOG1(TAG, "Door action: %s", DoorAction_to_string(action));
 
-            this->tx_pin_->digital_write(1);
+            if (action == DoorAction::OPEN){
+                this->discrete_open_pin_->digital_write(1);
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                    this->discrete_open_pin_->digital_write(0);
+                });
+            }
+
+            if (action == DoorAction::CLOSE){
+                this->discrete_close_pin_->digital_write(1);
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                    this->discrete_close_pin_->digital_write(0);
+                });
+            }
+
+            this->tx_pin_->digital_write(1); // Single button control
             this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
                 this->tx_pin_->digital_write(0);
             });

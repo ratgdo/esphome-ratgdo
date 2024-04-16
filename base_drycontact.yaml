@@ -17,51 +17,17 @@ ratgdo:
   input_obst_pin: ${input_obst_pin}
   dry_contact_open_sensor: ${id_prefix}_dry_contact_open
   dry_contact_close_sensor: ${id_prefix}_dry_contact_close
+  discrete_open_pin: ${discrete_open_pin}
+  discrete_close_pin: ${discrete_close_pin}
   protocol: drycontact
 
-switch:
-  # - platform: gpio
-  #   id: "${id_prefix}_status_door"
-  #   internal: true
-  #   pin:
-  #     number: ${status_door_pin}
-  #     mode:
-  #       output: true
-  #   name: "Status door"
-  #   entity_category: diagnostic
-  # - platform: gpio
-  #   id: "${id_prefix}_status_obstruction"
-  #   internal: true
-  #   pin:
-  #     number: ${status_obstruction_pin}
-  #     mode:
-  #       output: true
-  #   name: "Status obstruction"
-  #   entity_category: diagnostic
-
 binary_sensor:
-  # - platform: ratgdo
-  #   type: motion
-  #   id: ${id_prefix}_motion
-  #   ratgdo_id: ${id_prefix}
-  #   name: "Motion"
-  #   device_class: motion
   - platform: ratgdo
     type: obstruction
     id: ${id_prefix}_obstruction
     ratgdo_id: ${id_prefix}
     name: "Obstruction"
     device_class: problem
-    # on_press:
-    #   - switch.turn_on: ${id_prefix}_status_obstruction
-    # on_release:
-    #   - switch.turn_off: ${id_prefix}_status_obstruction
-  # - platform: ratgdo
-  #   type: button
-  #   id: ${id_prefix}_button
-  #   ratgdo_id: ${id_prefix}
-  #   name: "Button"
-  #   entity_category: diagnostic
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
     pin:
@@ -86,20 +52,6 @@ binary_sensor:
     entity_category: diagnostic
     filters:
       - delayed_on_off: 500ms
-  # - platform: gpio
-  #   id: "${id_prefix}_dry_contact_light"
-  #   pin:
-  #     number: ${dry_contact_light_pin}
-  #     inverted: true
-  #     mode:
-  #       input: true
-  #       pullup: true
-  #   name: "Dry contact light"
-  #   entity_category: diagnostic
-  #   filters:
-  #     - delayed_on_off: 500ms
-  #   on_press:
-  #     - light.toggle: ${id_prefix}_light
 
 number:
   - platform: ratgdo
@@ -124,10 +76,6 @@ cover:
     device_class: garage
     name: "Door"
     ratgdo_id: ${id_prefix}
-    # on_closed:
-    #   - switch.turn_off: ${id_prefix}_status_door
-    # on_open:
-    #   - switch.turn_on: ${id_prefix}_status_door
 
 button:
   - platform: restart

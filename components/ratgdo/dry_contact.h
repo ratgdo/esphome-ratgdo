@@ -36,6 +36,18 @@ namespace ratgdo {
             void set_close_limit(bool state);
             void send_door_state();
 
+            void set_discrete_open_pin(InternalGPIOPin* pin) { 
+                this->discrete_open_pin_ = pin;
+                this->discrete_open_pin_->setup();
+                this->discrete_open_pin_->pin_mode(gpio::FLAG_OUTPUT);
+            }
+
+            void set_discrete_close_pin(InternalGPIOPin* pin) {
+                this->discrete_close_pin_ = pin;
+                this->discrete_close_pin_->setup();
+                this->discrete_close_pin_->pin_mode(gpio::FLAG_OUTPUT);
+            }
+
             Result call(Args args);
 
             const Traits& traits() const { return this->traits_; }
@@ -45,6 +57,8 @@ namespace ratgdo {
 
             InternalGPIOPin* tx_pin_;
             InternalGPIOPin* rx_pin_;
+            InternalGPIOPin* discrete_open_pin_;
+            InternalGPIOPin* discrete_close_pin_;
 
             RATGDOComponent* ratgdo_;
             Scheduler* scheduler_;

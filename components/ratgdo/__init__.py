@@ -26,6 +26,9 @@ DEFAULT_INPUT_GDO = (
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
+CONF_DISCRETE_OPEN_PIN = "discrete_open_pin"
+CONF_DISCRETE_CLOSE_PIN = "discrete_close_pin"
+
 CONF_RATGDO_ID = "ratgdo_id"
 
 CONF_ON_SYNC_FAILED = "on_sync_failed"
@@ -64,6 +67,8 @@ CONFIG_SCHEMA = cv.All(
         cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
             cv.none, pins.gpio_input_pin_schema
         ),
+        cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
+        cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
         cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
             {
                 cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
@@ -134,3 +139,10 @@ async def to_code(config):
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
         cg.add_define("PROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
+
+    if CONF_DISCRETE_OPEN_PIN in config and config[CONF_DISCRETE_OPEN_PIN]:
+        pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_OPEN_PIN])
+        cg.add(var.set_discrete_open_pin(pin))
+    if CONF_DISCRETE_CLOSE_PIN in config and config[CONF_DISCRETE_CLOSE_PIN]:
+        pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_CLOSE_PIN])
+        cg.add(var.set_discrete_close_pin(pin))        
