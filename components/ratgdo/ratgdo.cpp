@@ -52,6 +52,11 @@ namespace ratgdo {
 
         // many things happening at startup, use some delay for sync
         set_timeout(SYNC_DELAY, [=] { this->sync(); });
+        ESP_LOGD(TAG, " _____ _____ _____ _____ ____  _____ ");
+        ESP_LOGD(TAG, "| __  |  _  |_   _|   __|    \\|     |");
+        ESP_LOGD(TAG, "|    -|     | | | |  |  |  |  |  |  |");
+        ESP_LOGD(TAG, "|__|__|__|__| |_| |_____|____/|_____|");
+        ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
     }
 
     // initializing protocol, this gets called before setup() because
