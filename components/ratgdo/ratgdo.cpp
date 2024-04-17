@@ -427,9 +427,10 @@ namespace ratgdo {
         // dry contact protocol:
         // needed to trigger the intial state of the limit switch sensors
         // ideally this would be in drycontact::sync
-        // this->dry_contact_open_sensor_->state;
+#ifdef PROTOCOL_DRYCONTACT
         this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
         this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+#endif
     }
 
     void RATGDOComponent::door_open()
