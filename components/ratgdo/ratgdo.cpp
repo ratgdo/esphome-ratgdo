@@ -420,16 +420,6 @@ namespace ratgdo {
         this->protocol_->sync();
     }
 
-    void RATGDOComponent::set_open_limit(bool state)
-    {
-        this->protocol_->set_open_limit(state);
-    }
-
-    void RATGDOComponent::set_close_limit(bool state)
-    {
-        this->protocol_->set_close_limit(state);
-    }
-
     void RATGDOComponent::door_open()
     {
         if (*this->door_state == DoorState::OPENING) {
@@ -681,25 +671,6 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
     {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
-    }
-
-    void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
-    {
-        dry_contact_open_sensor_ = dry_contact_open_sensor;
-        dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value)
-        {
-            this->set_open_limit(sensor_value);      
-        }
-        );
-    }
-    void RATGDOComponent::set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor)
-    {
-        dry_contact_close_sensor_ = dry_contact_close_sensor;
-        dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value)
-        {
-            this->set_close_limit(sensor_value);
-        }
-        );
     }
 
 } // namespace ratgdo
