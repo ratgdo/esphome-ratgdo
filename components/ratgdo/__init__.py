@@ -45,7 +45,6 @@ CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
 
 def validate_protocol(config):
-    print("Validation")
     if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR not in config or CONF_DRY_CONTACT_OPEN_SENSOR not in config):
         raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact")
     if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR in config or CONF_DRY_CONTACT_OPEN_SENSOR in config):
