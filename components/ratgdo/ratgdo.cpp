@@ -56,7 +56,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "| __  |  _  |_   _|   __|    \\|     |");
         ESP_LOGD(TAG, "|    -|     | | | |  |  |  |  |  |  |");
         ESP_LOGD(TAG, "|__|__|__|__| |_| |_____|____/|_____|");
-		ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
+        ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
     }
 
     // initializing protocol, this gets called before setup() because
