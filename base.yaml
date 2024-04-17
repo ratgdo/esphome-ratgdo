@@ -73,7 +73,7 @@ switch:
     id: "${id_prefix}_status_door"
     internal: true
     pin:
-      number: ${status_door_pin}  # output door status, HIGH for open, LOW for closed
+      number: ${status_door_pin}  # D0 output door status, HIGH for open, LOW for closed
       mode:
         output: true
     name: "Status door"
@@ -82,7 +82,7 @@ switch:
     id: "${id_prefix}_status_obstruction"
     internal: true
     pin:
-      number: ${status_obstruction_pin}  # output for obstruction status, HIGH for obstructed, LOW for clear
+      number: ${status_obstruction_pin}  # D8 output for obstruction status, HIGH for obstructed, LOW for clear
       mode:
         output: true
     name: "Status obstruction"
@@ -128,7 +128,7 @@ binary_sensor:
   - platform: gpio
     id: "${id_prefix}_dry_contact_open"
     pin:
-      number: ${dry_contact_open_pin}  # dry contact for opening door
+      number: ${dry_contact_open_pin}  # D5 dry contact for opening door
       inverted: true
       mode:
         input: true
@@ -146,7 +146,7 @@ binary_sensor:
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin:
-      number: ${dry_contact_close_pin}  # dry contact for closing door
+      number: ${dry_contact_close_pin}  # D6 dry contact for closing door
       inverted: true
       mode:
         input: true
@@ -164,7 +164,7 @@ binary_sensor:
   - platform: gpio
     id: "${id_prefix}_dry_contact_light"
     pin:
-      number: ${dry_contact_light_pin}  # dry contact for triggering light (no discrete light commands, so toggle only)
+      number: ${dry_contact_light_pin}  # D3 dry contact for triggering light (no discrete light commands, so toggle only)
       inverted: true
       mode:
         input: true
