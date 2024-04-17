@@ -52,6 +52,9 @@ jobs:
           - file: v25iboard_secplusv1.yaml
             name: V2.5i Board Security+ 1.0
             manifest_filename: v25iboard_secplusv1-manifest.json
+          - file: v25iboard_drycontact.yaml
+            name: V2.5i Board Dry Contact
+            manifest_filename: v25iboard_drycontact-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
