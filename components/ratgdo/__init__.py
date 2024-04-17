@@ -145,4 +145,4 @@ async def to_code(config):
         cg.add(var.set_discrete_open_pin(pin))
     if CONF_DISCRETE_CLOSE_PIN in config and config[CONF_DISCRETE_CLOSE_PIN]:
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_CLOSE_PIN])
-        cg.add(var.set_discrete_close_pin(pin))        
+        cg.add(var.set_discrete_close_pin(pin))
