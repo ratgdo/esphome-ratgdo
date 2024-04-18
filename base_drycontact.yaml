@@ -11,6 +11,10 @@ external_components:
 preferences:
   flash_write_interval: 1min
 
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+
 ratgdo:
   id: ${id_prefix}
   output_gdo_pin: ${uart_tx_pin}
