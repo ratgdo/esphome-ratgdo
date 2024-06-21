@@ -25,6 +25,9 @@ ratgdo:
   discrete_close_pin: ${discrete_close_pin}
   protocol: drycontact
 
+ota:
+  - platform: esphome
+
 binary_sensor:
   - platform: ratgdo
     type: obstruction

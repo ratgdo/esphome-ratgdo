@@ -28,6 +28,9 @@ ratgdo:
             message: "Failed to communicate with garage opener on startup."
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
 
+ota:
+  - platform: esphome
+
 lock:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes

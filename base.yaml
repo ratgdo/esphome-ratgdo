@@ -45,6 +45,9 @@ api:
             id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
           }
 
+ota:
+  - platform: esphome
+
 sensor:
   - platform: ratgdo
     id: ${id_prefix}_openings
