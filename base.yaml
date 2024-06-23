@@ -6,6 +6,8 @@ external_components:
       url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
 
+safe_mode:
+
 preferences:
   flash_write_interval: 1min
 
