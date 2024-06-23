@@ -41,8 +41,6 @@ time:
 api:
   id: api_server
 
-ota:
-
 improv_serial:
 
 wifi:
