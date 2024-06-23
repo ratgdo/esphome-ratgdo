@@ -26,12 +26,13 @@ esp8266:
   restore_from_flash: true
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard.yaml@issue-289-esphome-platform
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
+    ref: issue-289-esphome-platform
     refresh: 1s
 
 # Sync time with Home Assistant.
