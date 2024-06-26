@@ -49,6 +49,7 @@ api:
 
 ota:
   - platform: esphome
+    id: ratgdo_ota
 
 sensor:
   - platform: ratgdo
