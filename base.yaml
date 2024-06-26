@@ -52,6 +52,8 @@ ota:
     id: ratgdo_ota
 
 sensor:
+  - platform: uptime
+    name: Uptime Sensor
   - platform: ratgdo
     id: ${id_prefix}_openings
     type: openings
