@@ -31,5 +31,15 @@ namespace ratgdo {
         }
     };
 
+    class CoverStateTrigger : public Trigger<> {
+    public:
+        CoverStateTrigger(cover::Cover* a_cover)
+        {
+            a_cover->add_on_state_callback([this, a_cover]() {
+                this->trigger();
+            });
+        }
+    };
+
 } // namespace ratgdo
 } // namespace esphome
