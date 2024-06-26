@@ -29,6 +29,7 @@ ratgdo:
 
 ota:
   - platform: esphome
+    id: ratgdo_ota
 
 binary_sensor:
   - platform: ratgdo
