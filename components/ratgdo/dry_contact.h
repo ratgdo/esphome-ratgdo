@@ -1,9 +1,12 @@
 #pragma once
 
+#include "esphome/core/defines.h"
+
+#ifdef PROTOCOL_DRYCONTACT
+
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/optional.h"
 #include "esphome/core/gpio.h"
-#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 
 #include "callbacks.h"
 #include "observable.h"
@@ -71,6 +74,8 @@ namespace ratgdo {
 
         };
 
-    } // namespace secplus1
+    } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
+
+#endif
