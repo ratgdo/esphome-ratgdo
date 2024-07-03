@@ -1,9 +1,9 @@
 #pragma once
 
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
-#include "esphome/core/optional.h"
-#include "esphome/core/gpio.h"
 #include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
+#include "esphome/core/gpio.h"
+#include "esphome/core/optional.h"
 
 #include "callbacks.h"
 #include "observable.h"
@@ -36,13 +36,15 @@ namespace ratgdo {
             void set_close_limit(bool state);
             void send_door_state();
 
-            void set_discrete_open_pin(InternalGPIOPin* pin) { 
+            void set_discrete_open_pin(InternalGPIOPin* pin)
+            {
                 this->discrete_open_pin_ = pin;
                 this->discrete_open_pin_->setup();
                 this->discrete_open_pin_->pin_mode(gpio::FLAG_OUTPUT);
             }
 
-            void set_discrete_close_pin(InternalGPIOPin* pin) {
+            void set_discrete_close_pin(InternalGPIOPin* pin)
+            {
                 this->discrete_close_pin_ = pin;
                 this->discrete_close_pin_->setup();
                 this->discrete_close_pin_->pin_mode(gpio::FLAG_OUTPUT);
@@ -68,7 +70,6 @@ namespace ratgdo {
             bool last_open_limit_;
             bool close_limit_reached_;
             bool last_close_limit_;
-
         };
 
     } // namespace secplus1
