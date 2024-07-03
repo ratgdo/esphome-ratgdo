@@ -6,6 +6,8 @@ external_components:
       url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
 
+safe_mode:
+
 preferences:
   flash_write_interval: 1min
 
@@ -44,6 +46,10 @@ api:
           } else if (devices_to_wipe.compare("accessory")  == 0) {
             id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
           }
+
+ota:
+  - platform: esphome
+    id: ratgdo_ota
 
 sensor:
   - platform: ratgdo
