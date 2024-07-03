@@ -38,15 +38,9 @@ namespace ratgdo {
         this->input_gdo_pin_->setup();
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
-        if (this->input_obst_pin_ == nullptr) {
-            // Our base.yaml is always going to set this so we check for 0
-            // as well to avoid a breaking change.
-            this->obstruction_from_status_ = true;
-        } else {
-            this->input_obst_pin_->setup();
-            this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
-            this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
-        }
+        this->input_obst_pin_->setup();
+        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
+        this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
 
         this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_, this->output_gdo_pin_);
 
@@ -76,9 +70,7 @@ namespace ratgdo {
 
     void RATGDOComponent::loop()
     {
-        if (!this->obstruction_from_status_) {
-            this->obstruction_loop();
-        }
+        this->obstruction_loop();
         this->protocol_->loop();
     }
 
@@ -87,11 +79,7 @@ namespace ratgdo {
         ESP_LOGCONFIG(TAG, "Setting up RATGDO...");
         LOG_PIN("  Output GDO Pin: ", this->output_gdo_pin_);
         LOG_PIN("  Input GDO Pin: ", this->input_gdo_pin_);
-        if (this->obstruction_from_status_) {
-            ESP_LOGCONFIG(TAG, "  Input Obstruction Pin: not used, will detect from GDO status");
-        } else {
-            LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
-        }
+        LOG_PIN("  Input Obstruction Pin: ", this->input_obst_pin_);
         this->protocol_->dump_config();
     }
 
@@ -218,7 +206,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const ObstructionState obstruction_state)
     {
-        if (this->obstruction_from_status_) {
+        if (!this->obstruction_sensor_detected_) {
             ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
 
             this->obstruction_state = obstruction_state;
@@ -378,6 +366,7 @@ namespace ratgdo {
             // check to see if we got more then PULSES_LOWER_LIMIT pulses
             if (this->isr_store_.obstruction_low_count > PULSES_LOWER_LIMIT) {
                 this->obstruction_state = ObstructionState::CLEAR;
+                this->obstruction_sensor_detected_ = true;
             } else if (this->isr_store_.obstruction_low_count == 0) {
                 // if there have been no pulses the line is steady high or low
                 if (!this->input_obst_pin_->digital_read()) {
@@ -471,7 +460,12 @@ namespace ratgdo {
             return;
         }
 
-        this->door_action(DoorAction::CLOSE);
+        if (this->obstruction_sensor_detected_) {
+            this->door_action(DoorAction::CLOSE);
+        } else if (*this->door_state == DoorState::OPEN) {
+            ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
+            this->door_action(DoorAction::TOGGLE);
+        }
 
         if (*this->closing_duration > 0) {
             // query state in case we don't get a status message
