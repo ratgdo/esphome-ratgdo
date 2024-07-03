@@ -103,6 +103,12 @@ namespace ratgdo {
 
             virtual void sync();
 
+            // dry contact methods
+            virtual void set_open_limit(bool);
+            virtual void set_close_limit(bool);
+            virtual void set_discrete_open_pin(InternalGPIOPin* pin);
+            virtual void set_discrete_close_pin(InternalGPIOPin* pin);
+
             virtual const Traits& traits() const;
 
             virtual void light_action(LightAction action);

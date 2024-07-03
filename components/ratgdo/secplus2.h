@@ -101,6 +101,12 @@ namespace ratgdo {
 
             const Traits& traits() const { return this->traits_; }
 
+            // methods not used by secplus2
+            void set_open_limit(bool state) { }
+            void set_close_limit(bool state) { }
+            void set_discrete_open_pin(InternalGPIOPin* pin) { }
+            void set_discrete_close_pin(InternalGPIOPin* pin) { }
+
         protected:
             void increment_rolling_code_counter(int delta = 1);
             void set_rolling_code_counter(uint32_t counter);

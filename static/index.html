@@ -202,8 +202,8 @@
 
         <label>
           <img src="./dry_contact.jpg" alt="Dry contact control." />
-          <input type="radio" name="protocol" value="dry_contact" />
-          Dry Contact control<br/> (coming soon)
+          <input type="radio" name="protocol" value="drycontact" />
+          Dry Contact control<br/>Requires open &amp; close limit switches
         </label>
       </div>
 
@@ -285,34 +285,31 @@
     </div>
     <script>
       document.querySelectorAll('div.radios input').forEach((radio) =>
-      radio.addEventListener("change", () => {
-      const button = document.querySelector("esp-web-install-button");
-      var protocol = document.querySelector('input[name="protocol"]:checked').value;
-      var hardware = document.querySelector('input[name="hardware"]:checked').value;
+        radio.addEventListener("change", () => {
+        const button = document.querySelector("esp-web-install-button");
+        var protocol = document.querySelector('input[name="protocol"]:checked').value;
+        var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
-      if(protocol === "dry_contact"){
-        alert("Dry contact support is coming soon.");
-        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
-        return;
-        document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
-      }else{
-        document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
-      }
+        if(protocol === "drycontact"){
+          document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
+        }else{
+          document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
+        }
 
-      if(protocol !== "sec2" && hardware === "v2.0"){
-        alert("ratgdo version 2.0 only works with Security + 2.0");
-        document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
-        return;
-      }
+        if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
+          alert("ratgdo version 2.0 only works with Security + 2.0");
+          document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
+          return;
+        }
 
-      if(protocol === "secplusv2"){
-        protocol = "";
-      }else{
-        protocol = `_${protocol}`;
-      }
+        if(protocol === "secplusv2"){
+          protocol = "";
+        }else{
+          protocol = `_${protocol}`;
+        }
 
-      button.manifest = `${hardware}${protocol}-manifest.json`;
-    })
+        button.manifest = `${hardware}${protocol}-manifest.json`;
+      })
     );
 
       document

@@ -52,6 +52,11 @@ namespace ratgdo {
 
         // many things happening at startup, use some delay for sync
         set_timeout(SYNC_DELAY, [=] { this->sync(); });
+        ESP_LOGD(TAG, " _____ _____ _____ _____ ____  _____ ");
+        ESP_LOGD(TAG, "| __  |  _  |_   _|   __|    \\|     |");
+        ESP_LOGD(TAG, "|    -|     | | | |  |  |  |  |  |  |");
+        ESP_LOGD(TAG, "|__|__|__|__| |_| |_____|____/|_____|");
+        ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
     }
 
     // initializing protocol, this gets called before setup() because
@@ -418,6 +423,14 @@ namespace ratgdo {
     void RATGDOComponent::sync()
     {
         this->protocol_->sync();
+
+        // dry contact protocol:
+        // needed to trigger the intial state of the limit switch sensors
+        // ideally this would be in drycontact::sync
+#ifdef PROTOCOL_DRYCONTACT
+        this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
+        this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+#endif
     }
 
     void RATGDOComponent::door_open()
@@ -671,6 +684,23 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
     {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
+    }
+
+    // dry contact methods
+    void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
+    {
+        dry_contact_open_sensor_ = dry_contact_open_sensor;
+        dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value) {
+            this->protocol_->set_open_limit(sensor_value);
+        });
+    }
+
+    void RATGDOComponent::set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor)
+    {
+        dry_contact_close_sensor_ = dry_contact_close_sensor;
+        dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {
+            this->protocol_->set_close_limit(sensor_value);
+        });
     }
 
 } // namespace ratgdo

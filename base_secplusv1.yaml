@@ -6,8 +6,14 @@ external_components:
       url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
 
+safe_mode:
+
 preferences:
   flash_write_interval: 1min
+
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
 
 ratgdo:
   id: ${id_prefix}
@@ -23,6 +29,10 @@ ratgdo:
             title: "${friendly_name} sync failed"
             message: "Failed to communicate with garage opener on startup."
             notification_id: "esphome_ratgdo_${id_prefix}_sync_failed"
+
+ota:
+  - platform: esphome
+    id: ratgdo_ota
 
 lock:
   - platform: ratgdo
@@ -177,8 +187,10 @@ light:
 
 button:
   - platform: restart
+    id: ${id_prefix}_restart
     name: "Restart"
   - platform: safe_mode
+    id: ${id_prefix}_safe_mode
     name: "Safe mode boot"
     entity_category: diagnostic
 
