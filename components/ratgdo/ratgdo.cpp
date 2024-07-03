@@ -690,21 +690,17 @@ namespace ratgdo {
     void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
     {
         dry_contact_open_sensor_ = dry_contact_open_sensor;
-        dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value)
-        {
+        dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value) {
             this->protocol_->set_open_limit(sensor_value);
-        }
-        );
+        });
     }
 
     void RATGDOComponent::set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor)
     {
         dry_contact_close_sensor_ = dry_contact_close_sensor;
-        dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value)
-        {
+        dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {
             this->protocol_->set_close_limit(sensor_value);
-        }
-        );
+        });
     }
 
 } // namespace ratgdo

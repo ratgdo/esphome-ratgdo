@@ -51,7 +51,7 @@ def validate_protocol(config):
         raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact")
 #    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
 #        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
-    return config    
+    return config
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(

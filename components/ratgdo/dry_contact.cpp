@@ -2,10 +2,10 @@
 #include "dry_contact.h"
 #include "ratgdo.h"
 
+#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
-#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -19,7 +19,7 @@ namespace ratgdo {
             this->scheduler_ = scheduler;
             this->tx_pin_ = tx_pin;
             this->rx_pin_ = rx_pin;
-            
+
             this->open_limit_reached_ = 0;
             this->last_open_limit_ = 0;
             this->close_limit_reached_ = 0;
@@ -58,18 +58,19 @@ namespace ratgdo {
             this->close_limit_reached_ = state;
             this->send_door_state();
         }
-        
-        void DryContact::send_door_state(){
-            if(this->open_limit_reached_){
+
+        void DryContact::send_door_state()
+        {
+            if (this->open_limit_reached_) {
                 this->door_state_ = DoorState::OPEN;
-            }else if(this->close_limit_reached_){
+            } else if (this->close_limit_reached_) {
                 this->door_state_ = DoorState::CLOSED;
-            }else if(!this->close_limit_reached_ && !this->open_limit_reached_){
-                if(this->last_close_limit_){
+            } else if (!this->close_limit_reached_ && !this->open_limit_reached_) {
+                if (this->last_close_limit_) {
                     this->door_state_ = DoorState::OPENING;
                 }
 
-                if(this->last_open_limit_){
+                if (this->last_open_limit_) {
                     this->door_state_ = DoorState::CLOSING;
                 }
             }
@@ -102,14 +103,14 @@ namespace ratgdo {
 
             ESP_LOG1(TAG, "Door action: %s", DoorAction_to_string(action));
 
-            if (action == DoorAction::OPEN){
+            if (action == DoorAction::OPEN) {
                 this->discrete_open_pin_->digital_write(1);
                 this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
                     this->discrete_open_pin_->digital_write(0);
                 });
             }
 
-            if (action == DoorAction::CLOSE){
+            if (action == DoorAction::CLOSE) {
                 this->discrete_close_pin_->digital_write(1);
                 this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
                     this->discrete_close_pin_->digital_write(0);
