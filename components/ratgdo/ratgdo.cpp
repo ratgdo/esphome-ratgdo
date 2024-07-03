@@ -680,7 +680,6 @@ namespace ratgdo {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
     }
 
-#ifdef PROTOCOL_DRYCONTACT
     // dry contact methods
     void RATGDOComponent::set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor)
     {
@@ -697,7 +696,6 @@ namespace ratgdo {
             this->protocol_->set_close_limit(sensor_value);
         });
     }
-#endif
 
 } // namespace ratgdo
 } // namespace esphome

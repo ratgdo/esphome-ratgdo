@@ -2,8 +2,6 @@
 
 #include "esphome/core/defines.h"
 
-#ifdef PROTOCOL_DRYCONTACT
-
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/gpio.h"
 #include "esphome/core/optional.h"
@@ -78,5 +76,3 @@ namespace ratgdo {
     } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
-
-#endif
