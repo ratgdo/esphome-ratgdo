@@ -1,12 +1,9 @@
 
-#include "ratgdo.h"
-
-#ifdef PROTOCOL_DRYCONTACT
-
 #include "dry_contact.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
+#include "ratgdo.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -132,5 +129,3 @@ namespace ratgdo {
     } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
-
-#endif

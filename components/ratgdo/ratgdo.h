@@ -13,13 +13,11 @@
 
 #pragma once
 
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
-#ifdef PROTOCOL_DRYCONTACT
-#include "esphome/components/binary_sensor/binary_sensor.h"
-#endif
 
 #include "callbacks.h"
 #include "macros.h"
@@ -95,13 +93,11 @@ namespace ratgdo {
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
 
-#ifdef PROTOCOL_DRYCONTACT
         // dry contact methods
         void set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_);
         void set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_);
         void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
         void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
-#endif
 
         Result call_protocol(Args args);
 
@@ -186,10 +182,8 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-#ifdef PROTOCOL_DRYCONTACT
         esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_;
         esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_;
-#endif
     }; // RATGDOComponent
 
 } // namespace ratgdo
