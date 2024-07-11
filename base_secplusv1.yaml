@@ -59,6 +59,12 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
+  - platform: ratgdo
+    type: emulation
+    id: "${id_prefix}_emulation_enabled"
+    ratgdo_id: ${id_prefix}
+    name: "Emulation Mode"
+    entity_category: config
 
 binary_sensor:
   - platform: ratgdo

@@ -13,6 +13,7 @@ SwitchType = ratgdo_ns.enum("SwitchType")
 CONF_TYPE = "type"
 TYPES = {
     "learn": SwitchType.RATGDO_LEARN,
+    "emulation": SwitchType.RATGDO_EMULATION
 }
 
 

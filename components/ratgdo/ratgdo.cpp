@@ -679,6 +679,10 @@ namespace ratgdo {
     {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
     }
+    void RATGDOComponent::subscribe_emulation_state(std::function<void(EmulationState)>&& f)
+    {
+        this->emulation_state.subscribe([=](EmulationState state) { defer("emulation_state", [=] { f(state); }); });
+    }
 
     // dry contact methods
     void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
