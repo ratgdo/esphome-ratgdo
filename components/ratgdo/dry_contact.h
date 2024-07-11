@@ -1,7 +1,8 @@
 #pragma once
 
+#include "esphome/core/defines.h"
+
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
-#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/optional.h"
 
@@ -72,6 +73,6 @@ namespace ratgdo {
             bool last_close_limit_;
         };
 
-    } // namespace secplus1
+    } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome

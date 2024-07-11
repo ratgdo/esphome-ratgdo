@@ -699,7 +699,7 @@ namespace ratgdo {
     }
 
     // dry contact methods
-    void RATGDOComponent::set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor)
+    void RATGDOComponent::set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor)
     {
         dry_contact_open_sensor_ = dry_contact_open_sensor;
         dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value) {
@@ -707,7 +707,7 @@ namespace ratgdo {
         });
     }
 
-    void RATGDOComponent::set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor)
+    void RATGDOComponent::set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor)
     {
         dry_contact_close_sensor_ = dry_contact_close_sensor;
         dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {

@@ -13,8 +13,9 @@
 
 #pragma once
 
-#include "esphome/components/gpio/binary_sensor/gpio_binary_sensor.h"
+#include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
 
@@ -94,8 +95,8 @@ namespace ratgdo {
         void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
 
         // dry contact methods
-        void set_dry_contact_open_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor_);
-        void set_dry_contact_close_sensor(esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor_);
+        void set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_);
+        void set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_);
         void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
         void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
 
@@ -183,8 +184,8 @@ namespace ratgdo {
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
-        esphome::gpio::GPIOBinarySensor* dry_contact_open_sensor_;
-        esphome::gpio::GPIOBinarySensor* dry_contact_close_sensor_;
+        esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_;
+        esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_;
     }; // RATGDOComponent
 
 } // namespace ratgdo
