@@ -293,6 +293,7 @@ namespace ratgdo {
 
         void Secplus1::handle_command(const RxCommand& cmd)
         {
+			ESP_LOGD("xxx","handle rx command fired");
             if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
 
                 DoorState door_state;
