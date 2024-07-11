@@ -9,7 +9,8 @@ namespace esphome {
 namespace ratgdo {
 
     enum SwitchType {
-        RATGDO_LEARN
+        RATGDO_LEARN,
+        RATGDO_EMULATION
     };
 
     class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
@@ -22,6 +23,7 @@ namespace ratgdo {
 
     protected:
         SwitchType switch_type_;
+        ESPPreferenceObject pref_;
     };
 
 } // namespace ratgdo

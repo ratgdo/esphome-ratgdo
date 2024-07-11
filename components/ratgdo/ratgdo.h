@@ -84,6 +84,7 @@ namespace ratgdo {
         observable<ButtonState> button_state { ButtonState::UNKNOWN };
         observable<MotionState> motion_state { MotionState::UNKNOWN };
         observable<LearnState> learn_state { LearnState::UNKNOWN };
+        observable<EmulationState> emulation_state { EmulationState::INACTIVE };
 
         OnceCallbacks<void(DoorState)> on_door_state_;
 
@@ -173,6 +174,7 @@ namespace ratgdo {
         void subscribe_motion_state(std::function<void(MotionState)>&& f);
         void subscribe_sync_failed(std::function<void(bool)>&& f);
         void subscribe_learn_state(std::function<void(LearnState)>&& f);
+        void subscribe_emulation_state(std::function<void(EmulationState)>&& f);
 
     protected:
         RATGDOStore isr_store_ {};

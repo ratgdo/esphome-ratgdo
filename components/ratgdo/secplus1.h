@@ -76,8 +76,8 @@ namespace ratgdo {
         };
 
         enum class WallPanelEmulationState {
-            WAITING,
-            RUNNING,
+            DISABLED,
+            ENABLED,
         };
 
         class Secplus1 : public Protocol {
@@ -104,6 +104,7 @@ namespace ratgdo {
 
         protected:
             void wall_panel_emulation(size_t index = 0);
+            void set_enable_emulation_mode(bool state);
 
             optional<RxCommand> read_command();
             void handle_command(const RxCommand& cmd);
@@ -138,7 +139,7 @@ namespace ratgdo {
 
             bool wall_panel_starting_ { false };
             uint32_t wall_panel_emulation_start_ { 0 };
-            WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
+            WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::DISABLED };
 
             bool is_0x37_panel_ { false };
             std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;

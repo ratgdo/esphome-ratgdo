@@ -76,6 +76,10 @@ namespace ratgdo {
         (UNKNOWN, 2))
     LearnState learn_state_toggle(LearnState state);
 
+    ENUM(EmulationState, uint8_t,
+        (INACTIVE, 0),
+        (ACTIVE, 1))
+
     ENUM(PairedDevice, uint8_t,
         (ALL, 0),
         (REMOTE, 1),

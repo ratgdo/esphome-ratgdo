@@ -85,13 +85,13 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const DoorState door_state)
     {
-        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
-
         auto prev_door_state = *this->door_state;
 
         if (prev_door_state == door_state) {
             return;
         }
+
+        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
 
         // opening duration calibration
         if (*this->opening_duration == 0) {
@@ -194,20 +194,35 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const LightState light_state)
     {
-        ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));
+        static LightState last_state = LightState::UNKNOWN;
+        if (last_state != light_state) {
+            ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));
+            last_state = light_state;
+        }
+
         this->light_state = light_state;
     }
 
     void RATGDOComponent::received(const LockState lock_state)
     {
-        ESP_LOGD(TAG, "Lock state=%s", LockState_to_string(lock_state));
+        static LockState last_state = LockState::UNKNOWN;
+        if (lock_state != last_state) {
+            ESP_LOGD(TAG, "Lock state=%s", LockState_to_string(lock_state));
+            last_state = lock_state;
+        }
+
         this->lock_state = lock_state;
     }
 
     void RATGDOComponent::received(const ObstructionState obstruction_state)
     {
+        static ObstructionState last_state = ObstructionState::UNKNOWN;
+
         if (!this->obstruction_sensor_detected_) {
-            ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
+            if (obstruction_state != last_state) {
+                ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
+                last_state = obstruction_state;
+            }
 
             this->obstruction_state = obstruction_state;
             // This isn't very fast to update, but its still better
@@ -678,6 +693,10 @@ namespace ratgdo {
     void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
     {
         this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_emulation_state(std::function<void(EmulationState)>&& f)
+    {
+        this->emulation_state.subscribe([=](EmulationState state) { defer("emulation_state", [=] { f(state); }); });
     }
 
     // dry contact methods
