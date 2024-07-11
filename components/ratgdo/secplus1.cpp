@@ -69,9 +69,9 @@ namespace ratgdo {
 
         void Secplus1::wall_panel_emulation(size_t index)
         {
-            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::DISABLED){
+            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::DISABLED) {
                 ESP_LOGD(TAG, "Emulation mode is disabled");
-            }  else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::ENABLED) {
+            } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::ENABLED) {
                 // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
 
                 if (index < 15 || !this->do_transmit_if_pending()) {
