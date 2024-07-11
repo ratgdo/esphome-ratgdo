@@ -194,10 +194,10 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const LightState light_state)
     {
-		static LightState last_state = LightState::UNKNOWN;
-        if(last_state != light_state){
-			ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));        	
-			last_state = light_state;
+        static LightState last_state = LightState::UNKNOWN;
+        if (last_state != light_state) {
+            ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));
+            last_state = light_state;
         }
 
         this->light_state = light_state;
@@ -206,9 +206,9 @@ namespace ratgdo {
     void RATGDOComponent::received(const LockState lock_state)
     {
         static LockState last_state = LockState::UNKNOWN;
-        if(lock_state != last_state){
+        if (lock_state != last_state) {
             ESP_LOGD(TAG, "Lock state=%s", LockState_to_string(lock_state));
-			last_state = lock_state;
+            last_state = lock_state;
         }
 
         this->lock_state = lock_state;
@@ -219,7 +219,7 @@ namespace ratgdo {
         static ObstructionState last_state = ObstructionState::UNKNOWN;
 
         if (!this->obstruction_sensor_detected_) {
-            if(obstruction_state != last_state){
+            if (obstruction_state != last_state) {
                 ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
 				last_state = obstruction_state;
             }
