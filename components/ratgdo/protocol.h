@@ -58,6 +58,9 @@ namespace ratgdo {
         struct SetClientID {
             uint64_t client_id;
         };
+        struct SetEnableEmulationMode {
+            bool enable_emulation_mode;
+        };
         struct QueryStatus {
         };
         struct QueryOpenings {
@@ -80,6 +83,7 @@ namespace ratgdo {
             (SetRollingCodeCounter, set_rolling_code_counter),
             (GetRollingCodeCounter, get_rolling_code_counter),
             (SetClientID, set_client_id),
+            (SetEnableEmulationMode, set_enable_emulation_mode),
             (QueryStatus, query_status),
             (QueryOpenings, query_openings),
             (ActivateLearn, activate_learn),
