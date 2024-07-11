@@ -221,6 +221,7 @@ namespace ratgdo {
         if (!this->obstruction_sensor_detected_) {
             if(obstruction_state != last_state){
                 ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
+				last_state = obstruction_state;
             }
 
             this->obstruction_state = obstruction_state;
