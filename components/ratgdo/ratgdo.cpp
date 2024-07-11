@@ -85,13 +85,13 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const DoorState door_state)
     {
-        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
-
         auto prev_door_state = *this->door_state;
 
         if (prev_door_state == door_state) {
             return;
         }
+
+        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
 
         // opening duration calibration
         if (*this->opening_duration == 0) {
