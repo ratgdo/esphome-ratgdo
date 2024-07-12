@@ -64,7 +64,9 @@ namespace ratgdo {
 
         void Secplus1::wall_panel_emulation(size_t index)
         {
-            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
+            if (this->wall_panel_starting_) {
+                this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
+            } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
                 ESP_LOGD(TAG, "Looking for security+ 1.0 wall panel...");
 
                 if (this->door_state != DoorState::UNKNOWN || this->light_state != LightState::UNKNOWN) {
