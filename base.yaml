@@ -144,7 +144,7 @@ binary_sensor:
     filters:
       - delayed_on_off: 500ms
     on_press:
-      - cover.toggle: ${id_prefix}_garage_door
+      - cover.toggle: ${id_prefix}_garage_door # toggle door
   - platform: gpio
     id: "${id_prefix}_dry_contact_close"
     pin:
