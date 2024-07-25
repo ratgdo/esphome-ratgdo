@@ -33,8 +33,7 @@ output:
     pin: GPIO33
     id: ${id_prefix}_output
 
-rtttl:
-  - platform: ratgdo
+ratgdo_rtttl:
     
 logger:
 
