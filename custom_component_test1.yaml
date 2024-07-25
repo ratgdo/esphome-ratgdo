@@ -1,0 +1,41 @@
+substitutions:
+  id_prefix: ratgdo32
+  friendly_name: "ratgdo"
+  uart_tx_pin: GPIO22
+  uart_rx_pin: GPIO22
+  input_obst_pin: GPIO22
+  status_door_pin: GPIO22
+  status_obstruction_pin: GPIO22
+  dry_contact_open_pin: GPIO22
+  dry_contact_close_pin: GPIO22
+  dry_contact_light_pin: GPIO22
+
+esphome:
+  name: esp32-wroom-test
+
+esp32:
+  board: esp32dev
+
+packages:
+  remote_package: !include
+    file: base.yaml
+
+web_server:
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_pw
+
+output:
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    type: test
+    pin: GPIO33
+    id: ${id_prefix}_output
+
+rtttl:
+  - platform: ratgdo
+    
+logger:
+
+ota:
