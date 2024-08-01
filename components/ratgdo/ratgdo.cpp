@@ -597,7 +597,7 @@ namespace ratgdo {
         this->protocol_->call(InactivateLearn {});
     }
 
-    void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f, const std::string &name = "rolling_code_counter");
+    void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f, const std::string &name = "rolling_code_counter")
     {
         // change update to children is defered until after component loop
         // if multiple changes occur during component loop, only the last one is notified
