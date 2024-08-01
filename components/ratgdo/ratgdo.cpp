@@ -597,13 +597,13 @@ namespace ratgdo {
         this->protocol_->call(InactivateLearn {});
     }
 
-    void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
+    void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f, const std::string &name = "rolling_code_counter");
     {
         // change update to children is defered until after component loop
         // if multiple changes occur during component loop, only the last one is notified
         auto counter = this->protocol_->call(GetRollingCodeCounter {});
         if (counter.tag == Result::Tag::rolling_code_counter) {
-            counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
+            counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer(name, [=] { f(state); }); });
         }
     }
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)

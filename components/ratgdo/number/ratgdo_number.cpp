@@ -60,15 +60,22 @@ namespace ratgdo {
                 this->update_state(value);
             });
 
+			std::string mname = "rolling_code_counter2";
             // A second subscription, which seem to overwrite the first subscription
-            this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
+            this->parent_->subscribe_rolling_code_counter([=](uint32_t value, std::string mname) {
                 ESP_LOGD("XXX","A second rolling code counter subscription");
             });
 
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             this->parent_->subscribe_opening_duration([=](float value) {
+                ESP_LOGD("ZZZ","The first opening duration subscription");
                 this->update_state(value);
             });
+
+            this->parent_->subscribe_opening_duration([=](float value) {
+                ESP_LOGD("ZZZ","The second opening duration subscription");
+            });
+
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->subscribe_closing_duration([=](float value) {
                 this->update_state(value);
