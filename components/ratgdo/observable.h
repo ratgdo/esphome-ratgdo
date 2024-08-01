@@ -2,6 +2,7 @@
 #include <functional>
 #include <utility>
 #include <vector>
+#include "esphome/core/log.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -31,10 +32,13 @@ namespace ratgdo {
         void subscribe(Observer&& observer)
         {
             this->observers_.push_back(std::forward<Observer>(observer));
+            ESP_LOGD("XXX","The observers vector is %d in length",this->observers_->size());
         }
 
         void notify() const
         {
+            ESP_LOGD("YYY","NOTIFY %d subscribers",this->observers_->size());
+
             for (const auto& observer : this->observers_) {
                 observer(this->value_);
             }
