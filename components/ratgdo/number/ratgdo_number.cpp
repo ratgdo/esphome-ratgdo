@@ -56,8 +56,15 @@ namespace ratgdo {
 
         if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
+                ESP_LOGD("XXX","The first rolling code counter subscription");
                 this->update_state(value);
             });
+
+            // A second subscription, which seem to overwrite the first subscription
+            this->parent_->subscribe_rolling_code_counter([=](uint32_t value) {
+                ESP_LOGD("XXX","A second rolling code counter subscription");
+            });
+
         } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
             this->parent_->subscribe_opening_duration([=](float value) {
                 this->update_state(value);
