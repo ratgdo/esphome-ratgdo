@@ -60,9 +60,8 @@ namespace ratgdo {
                 this->update_state(value);
             });
 
-			std::string mname = "rolling_code_counter2";
             // A second subscription, which seem to overwrite the first subscription
-            this->parent_->subscribe_rolling_code_counter([=](uint32_t value, std::string mname) {
+            this->parent_->subscribe_rolling_code_counter([=](uint32_t value, const std::string &name = "rolling_code_counter2") {
                 ESP_LOGD("XXX","A second rolling code counter subscription");
             });
 
