@@ -12,7 +12,10 @@ namespace ratgdo {
         RATGDO_SENSOR_MOTION,
         RATGDO_SENSOR_OBSTRUCTION,
         RATGDO_SENSOR_MOTOR,
-        RATGDO_SENSOR_BUTTON
+        RATGDO_SENSOR_BUTTON,
+        RATGDO_SENSOR_VEHICLE_DETECTED,
+        RATGDO_SENSOR_VEHICLE_ARRIVING,
+        RATGDO_SENSOR_VEHICLE_LEAVING,
     };
 
     class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {

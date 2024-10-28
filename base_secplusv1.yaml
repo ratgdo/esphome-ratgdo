@@ -5,6 +5,9 @@ external_components:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
     refresh: 1s
+  # - source:
+  #     type: local
+  #     path: components
 
 safe_mode:
 

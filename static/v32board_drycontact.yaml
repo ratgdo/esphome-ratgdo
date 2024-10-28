@@ -1,0 +1,64 @@
+---
+substitutions:
+  id_prefix: ratgdo32disco
+  friendly_name: "ratgdo32disco"
+  uart_tx_pin: GPIO17
+  uart_rx_pin: GPIO21
+  input_obst_pin: GPIO4
+  dry_contact_open_pin: GPIO13
+  dry_contact_close_pin: GPIO14
+  discrete_open_pin: GPIO26
+  discrete_close_pin: GPIO25
+
+web_server:
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.esphome
+    version: "32.0"
+
+esp32:
+  board: esp32dev
+
+dashboard_import:
+  package_import_url: github://ratgdo/esphome-ratgdo/v32board_drycontact.yaml@main
+
+packages:
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    files: [base_drycontact.yaml]
+    refresh: 1s
+  # remote_package: !include
+  #   file: base_drycontact.yaml
+
+switch:
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_led
+    type: led
+    pin: GPIO4
+    name: "LED"
+    entity_category: config
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 120s
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+improv_serial:
+
+wifi:
+  ap:
+
+logger:
