@@ -32,6 +32,7 @@ namespace ratgdo {
 
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+    static const int MIN_DISTANCE = 20; // ignore bugs crawling on the distance sensor
 
     void RATGDOComponent::setup()
     {
@@ -366,6 +367,8 @@ namespace ratgdo {
 
     void RATGDOComponent::set_distance_measurement(int16_t distance)
     {
+        if(distance > 0 && distance < MIN_DISTANCE) return;
+
         this->last_distance_measurement = distance;
 
         // current value = [0], last value = [1]
