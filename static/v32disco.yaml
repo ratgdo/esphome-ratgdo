@@ -45,6 +45,13 @@ api:
 
 improv_serial:
 
+wifi:
+  ap:
+
+logger:
+
+ota:
+
 binary_sensor:
   - platform: ratgdo
     ratgdo_id: ${id_prefix}
@@ -143,7 +150,3 @@ sensor:
     #     min_value: 0
     #     max_value: 100
     # unit_of_measurement: "%"
-
-logger:
-
-ota:

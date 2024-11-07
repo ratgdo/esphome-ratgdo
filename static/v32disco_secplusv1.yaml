@@ -45,6 +45,13 @@ api:
 
 improv_serial:
 
+wifi:
+  ap:
+
+logger:
+
+ota:
+
 binary_sensor:
   - platform: ratgdo
     ratgdo_id: ${id_prefix}
@@ -136,7 +143,3 @@ sensor:
     - calibrate_linear:
         - 1.16 -> 5
         - 2.783 -> 12
-
-logger:
-
-ota:
