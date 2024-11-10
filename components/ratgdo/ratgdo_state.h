@@ -25,7 +25,7 @@ namespace ratgdo {
         (STOPPED, 3),
         (OPENING, 4),
         (CLOSING, 5))
-    
+
     ENUM(DoorActionDelayed, uint8_t,
         (NO, 0),
         (YES, 1))

@@ -63,14 +63,14 @@ namespace ratgdo {
         this->subscribe_door_state([=](DoorState state, float position) {
             static DoorState lastState = DoorState::UNKNOWN;
 
-            if(lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->presence_detect_window_active_){
+            if (lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->presence_detect_window_active_) {
                 this->presence_detect_window_active_ = true;
                 set_timeout("presence_detect_window", PRESENCE_DETECT_WINDOW, [=] {
                     this->presence_detect_window_active_ = false;
                 });
             }
 
-            if(state == DoorState::CLOSED){
+            if (state == DoorState::CLOSED) {
                 this->presence_detect_window_active_ = false;
                 cancel_timeout("presence_detect_window");
             }
@@ -361,13 +361,15 @@ namespace ratgdo {
         this->closing_duration = duration;
     }
 
-    void RATGDOComponent::set_target_distance_measurement(int16_t distance){
+    void RATGDOComponent::set_target_distance_measurement(int16_t distance)
+    {
         this->target_distance_measurement = distance;
     }
 
     void RATGDOComponent::set_distance_measurement(int16_t distance)
     {
-        if(distance > 0 && distance < MIN_DISTANCE) return;
+        if (distance > 0 && distance < MIN_DISTANCE)
+            return;
 
         this->last_distance_measurement = distance;
 
@@ -394,9 +396,11 @@ namespace ratgdo {
                 all_out_of_range = false;
             }
         }
-        
-        if(all_in_range) this->vehicle_detected_state = VehicleDetectedState::YES;
-        if(all_out_of_range) this->vehicle_detected_state = VehicleDetectedState::NO;
+
+        if (all_in_range)
+            this->vehicle_detected_state = VehicleDetectedState::YES;
+        if (all_out_of_range)
+            this->vehicle_detected_state = VehicleDetectedState::NO;
 
         // auto k = this->distance_measurement;
         // ESP_LOGD(TAG,"measure: %i,%i,%i,%i,%i,%i,%i,%i,%i,%i; target: %i; all_in: %s; all_out: %s;", k[0],k[1],k[2],k[3],k[4],k[5],k[6],k[7],k[8],k[9], *this->target_distance_measurement, all_in_range ? "y" : "n", all_out_of_range ? "y" : "n");
@@ -404,14 +408,14 @@ namespace ratgdo {
 
     void RATGDOComponent::presence_change(bool sensor_value)
     {
-        if(this->presence_detect_window_active_){
-            if(sensor_value){
+        if (this->presence_detect_window_active_) {
+            if (sensor_value) {
                 this->vehicle_arriving_state = VehicleArrivingState::YES;
                 this->vehicle_leaving_state = VehicleLeavingState::NO;
                 set_timeout(CLEAR_PRESENCE, [=] {
                     this->vehicle_arriving_state = VehicleArrivingState::NO;
                 });
-            }else{
+            } else {
                 this->vehicle_arriving_state = VehicleArrivingState::NO;
                 this->vehicle_leaving_state = VehicleLeavingState::YES;
                 set_timeout(CLEAR_PRESENCE, [=] {
@@ -584,13 +588,13 @@ namespace ratgdo {
 
     void RATGDOComponent::door_action(DoorAction action)
     {
-        if(*this->closing_delay > 0 && action == DoorAction::CLOSE){
+        if (*this->closing_delay > 0 && action == DoorAction::CLOSE) {
             this->door_action_delayed = DoorActionDelayed::YES;
             set_timeout("door_action", *this->closing_delay * 1000, [=] {
                 this->door_action_delayed = DoorActionDelayed::NO;
                 this->protocol_->door_action(DoorAction::CLOSE);
             });
-        }else{
+        } else {
             this->protocol_->door_action(action);
         }
     }

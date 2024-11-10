@@ -6,9 +6,9 @@
 #include "esphome/core/component.h"
 
 #ifdef USE_DISTANCE
-    #include "Wire.h"
-    #include "vl53l4cx_class.h"
-    #define I2C Wire
+#include "Wire.h"
+#include "vl53l4cx_class.h"
+#define I2C Wire
 #endif
 
 namespace esphome {
