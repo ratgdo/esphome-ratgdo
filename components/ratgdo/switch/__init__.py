@@ -39,4 +39,3 @@ async def to_code(config):
     if CONF_PIN in config:
         pin = await cg.gpio_pin_expression(config[CONF_PIN])
         cg.add(var.set_pin(pin))
-

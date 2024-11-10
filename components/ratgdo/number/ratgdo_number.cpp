@@ -74,7 +74,7 @@ namespace ratgdo {
             this->parent_->subscribe_closing_delay([=](uint32_t value) {
                 this->update_state(value);
             });
-        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT){
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
             // this->parent_->subscribe_target_distance_measurement([=](float value) {
             //     this->update_state(value);
             // });
@@ -98,7 +98,7 @@ namespace ratgdo {
             this->traits.set_step(0x1000);
             this->traits.set_min_value(0x539);
             this->traits.set_max_value(0x7ff539);
-        } else if(this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
             this->traits.set_step(1);
             this->traits.set_min_value(5);
             this->traits.set_max_value(3500);

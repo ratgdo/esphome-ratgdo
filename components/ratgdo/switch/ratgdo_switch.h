@@ -20,11 +20,11 @@ namespace ratgdo {
         void set_switch_type(SwitchType switch_type_) { this->switch_type_ = switch_type_; }
 
         void write_state(bool state) override;
-        void set_pin(GPIOPin *pin) { pin_ = pin; }
+        void set_pin(GPIOPin* pin) { pin_ = pin; }
 
     protected:
         SwitchType switch_type_;
-        GPIOPin *pin_;
+        GPIOPin* pin_;
     };
 
 } // namespace ratgdo
