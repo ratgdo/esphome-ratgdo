@@ -41,7 +41,7 @@ switch:
     ratgdo_id: ${id_prefix}
     id: ${id_prefix}_led
     type: led
-    pin: GPIO4
+    pin: GPIO2
     name: "LED"
     entity_category: config
 
