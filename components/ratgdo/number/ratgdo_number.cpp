@@ -91,7 +91,7 @@ namespace ratgdo {
         } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
             this->traits.set_step(1);
             this->traits.set_min_value(0.0);
-            this->traits.set_max_value(180.0);
+            this->traits.set_max_value(60.0);
         } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->traits.set_max_value(0xfffffff);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
