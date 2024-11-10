@@ -177,7 +177,7 @@
       />
       <h1>ESPHome ratgdo</h1>
       <p>
-        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://paulwieland.github.io/ratgdo/">ratgdo control board</a> version.
+        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://ratcloud.llc/">ratgdo control board</a> version.
         No programming or other software required.
       </p>
 
@@ -210,6 +210,12 @@
     <h2>Choose your ratgdo control board:</h2>
     <div class="hardware radios">
       <label>
+        <img src="./ratgdo32_disco.jpg" alt="v32 disco" />
+        <input type="radio" name="hardware" value="v32disco" checked />
+        ratgdo32 disco
+      </label>
+
+      <label>
         <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
         <input type="radio" name="hardware" value="v25iboard" checked />
         ratgdo v2.5x<br/>
@@ -220,21 +226,21 @@
         <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
         <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
         ratgdo v2.0<br/>
-      ESP8266 / D1 Mini (white PCB)
+        ESP8266 / D1 Mini (white PCB)
       </label>
 
       <label>
         <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
         <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
         ratgdo v2.5<br/>
-      ESP32 (black PCB)
+        ESP32 (black PCB)
       </label>
 
       <label>
         <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
         <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
         ratgdo v2.0<br/>
-      ESP32 (white PCB)
+        ESP32 (white PCB)
       </label>
     </div>
 
@@ -255,12 +261,10 @@
     <h3>Drivers</h3>
     <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
     <ul>
+      <li>ratgdo32 disco uses a CH9102 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH343SER_EXE.html" target="_blank">driver download</a>]</li>
       <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
-      <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
     </ul>
-    <p>Watch the driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
-    <!-- <iframe width="640" height="360" src="https://youtube.com/embed/9WecAUTC9iI"></iframe> -->
-
+    <p>Watch the v2.5i driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
 
       <h3>Advanced Users</h3>
       <ul>
