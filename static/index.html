@@ -298,8 +298,10 @@
         var img = new Image();
         img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
         if(img.height !== 0){
+            console.log(`diagram: ${img.src}`);
             document.querySelector("#wiring_diagram").src = img.src;
         }else{
+            console.log(`img not found: ${img.src}`);
             document.querySelector("#wiring_diagram").src = "wiring_diagrams/v25iboard_secplus.png";
         }
 
