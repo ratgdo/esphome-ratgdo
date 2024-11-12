@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - ratgdo32
   pull_request:
   schedule:
     - cron: '0 4 * * 1'
@@ -78,7 +78,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v3.3.0
       - name: Build firmware
-        uses: ratgdo/esphome-build-action@main
+        uses: ratgdo/esphome-build-action@ratgdo32
         id: esphome-build
         with:
           yaml_file: ${{ matrix.firmware.file }}
