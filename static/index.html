@@ -296,11 +296,11 @@
 
         var diagram_protocol = protocol.replace("v1","").replace("v2","");
         var img = new Image();
-        img.src = `wiring_diagrams/${hardware}_${protocol}.png`;
+        img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
         if(img.height !== 0){
             document.querySelector("#wiring_diagram").src = img.src;
         }else{
-            document.querySelector("#wiring_diagram").src = "v25iboard_secplus.png";
+            document.querySelector("#wiring_diagram").src = "wiring_diagrams/v25iboard_secplus.png";
         }
 
         if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
