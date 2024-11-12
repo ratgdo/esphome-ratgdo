@@ -250,7 +250,7 @@
 
 
     <h2>Wiring Diagram</h2>
-    <img id="wiring_diagram" src="wiring_diagrams/secplus_diagram.png" alt="Security + 1 and 2 wiring diagram" />
+    <img id="wiring_diagram" src="wiring_diagrams/v25iboard_secplus.png" alt="Security + 1 and 2 wiring diagram" />
 
     <h3>Documentation</h3>
     <ul>
@@ -294,10 +294,13 @@
         var protocol = document.querySelector('input[name="protocol"]:checked').value;
         var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
-        if(protocol === "drycontact"){
-          document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
+        var diagram_protocol = protocol.replace("v1","").replace("v2","");
+        var img = new Image();
+        img.src = `wiring_diagrams/${hardware}_${protocol}.png`;
+        if(img.height !== 0){
+            document.querySelector("#wiring_diagram").src = img.src;
         }else{
-          document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
+            document.querySelector("#wiring_diagram").src = "v25iboard_secplus.png";
         }
 
         if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
