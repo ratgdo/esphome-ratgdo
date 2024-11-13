@@ -296,14 +296,11 @@
 
         var diagram_protocol = protocol.replace("v1","").replace("v2","");
         var img = new Image();
-        img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
-        if(img.height !== 0){
-            console.log(`diagram: ${img.src}`);
-            document.querySelector("#wiring_diagram").src = img.src;
-        }else{
-            console.log(`img not found: ${img.src}`);
+        img.onerror = function() {
+            console.log(`img not found: ${this.src}`);
             document.querySelector("#wiring_diagram").src = "wiring_diagrams/v25iboard_secplus.png";
         }
+        img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
 
         if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
           alert("ratgdo version 2.0 only works with Security + 2.0");
