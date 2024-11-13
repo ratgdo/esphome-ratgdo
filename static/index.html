@@ -295,10 +295,10 @@
         var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
         var diagram_protocol = protocol.replace("v1","").replace("v2","");
-        var img = new Image();
+        var img = document.querySelector("#wiring_diagram");
         img.onerror = function() {
             console.log(`img not found: ${this.src}`);
-            document.querySelector("#wiring_diagram").src = "wiring_diagrams/v25iboard_secplus.png";
+            this.src = "wiring_diagrams/v25iboard_secplus.png";
         }
         img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
 
