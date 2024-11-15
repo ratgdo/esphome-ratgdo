@@ -216,32 +216,41 @@
       </label>
 
       <label>
+        <img src="./ratgdo32.jpg" alt="v32 board" />
+        <input type="radio" name="hardware" value="v32board" checked />
+        ratgdo32
+      </label>
+
+      <label>
         <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
         <input type="radio" name="hardware" value="v25iboard" checked />
         ratgdo v2.5x<br/>
       v2.5, v2.5i, v2.52i, v2.53i (black PCB)
       </label>
 
-      <label>
-        <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
-        <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
-        ratgdo v2.0<br/>
-        ESP8266 / D1 Mini (white PCB)
-      </label>
+      <a id="show_legacy_hardware" style="text-decoration: underline;" onclick="toggleLegacy()">Show Legacy Hardware &raquo;</a>
+        <div id="legacy_hardware" style="display: none">
+            <label>
+                <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
+                <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
+                ratgdo v2.0<br/>
+                ESP8266 / D1 Mini (white PCB)
+            </label>
 
-      <label>
-        <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
-        <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
-        ratgdo v2.5<br/>
-        ESP32 (black PCB)
-      </label>
+            <label>
+                <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
+                <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
+                ratgdo v2.5<br/>
+                ESP32 (black PCB)
+            </label>
 
-      <label>
-        <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
-        <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
-        ratgdo v2.0<br/>
-        ESP32 (white PCB)
-      </label>
+            <label>
+                <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
+                <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
+                ratgdo v2.0<br/>
+                ESP32 (white PCB)
+            </label>
+        </div>
     </div>
 
     <p>
@@ -288,6 +297,18 @@
       </div>
     </div>
     <script>
+      function toggleLegacy() {
+          var x = document.querySelector("#legacy_hardware");
+          var y = document.querySelector("#show_legacy_hardware");
+          if (x.style.display === "none") {
+              x.style.display = "block";
+              y.innerHTML = "hide legacy hardware &raquo;";
+          } else {
+              x.style.display = "none";
+              y.innerHTML = "show legacy hardware &raquo;";
+          }
+      }
+
       document.querySelectorAll('div.radios input').forEach((radio) =>
         radio.addEventListener("change", () => {
         const button = document.querySelector("esp-web-install-button");
