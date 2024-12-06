@@ -65,7 +65,7 @@ namespace ratgdo {
         observable<uint32_t> closing_delay { 0 };
 
         observable<int16_t> target_distance_measurement { -1 };
-        std::vector<int16_t> distance_measurement { std::vector<int16_t>(10, -1) }; // the length of this vector determines how many in-range readings are required for presence detection to change states
+        std::vector<int16_t> distance_measurement { std::vector<int16_t>(30, -1) }; // the length of this vector determines how many in-range readings are required for presence detection to change states
         observable<int16_t> last_distance_measurement { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
