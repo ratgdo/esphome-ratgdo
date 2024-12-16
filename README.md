@@ -3,7 +3,7 @@
 
 This is a port of the ratgdo software for the v2.0/v2.5 board to ESPHome.
 
-[Visit the github.io page to purchase boards](https://paulwieland.github.io/ratgdo/#order)
+[Visit the the store to purchase boards](https://ratcloud.llc)
 
 ## Installation
 
