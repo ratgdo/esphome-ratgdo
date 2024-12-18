@@ -18,9 +18,7 @@ CoverOpeningTrigger = ratgdo_ns.class_(
 CoverClosingTrigger = ratgdo_ns.class_(
     "CoverClosingTrigger", automation.Trigger.template()
 )
-CoverStateTrigger = ratgdo_ns.class_(
-    "CoverStateTrigger", automation.Trigger.template()
-)
+CoverStateTrigger = ratgdo_ns.class_("CoverStateTrigger", automation.Trigger.template())
 
 CONF_ON_OPENING = "on_opening"
 CONF_ON_CLOSING = "on_closing"
