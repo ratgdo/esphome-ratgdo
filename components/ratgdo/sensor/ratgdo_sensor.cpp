@@ -87,12 +87,19 @@ namespace ratgdo {
                 status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
                 objCount = pDistanceData->NumberOfObjectsFound;
 
-                maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
+                for (int i = 0; i < distanceData.NumberOfObjectsFound; i++) {
+                    VL53L4CX_TargetRangeData_t *d = &pDistanceData->RangeData[i];
+                    if (d->RangeStatus == 0) {
+                        maxDistance = std::max(maxDistance, d->RangeMilliMeter);
+                    }
+                }
+
+                //maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
                 /* 
                  * if the sensor is pointed at glass, there are many error -1 readings which will fill the
                  * vector with out of range data. The sensor should be sensitive enough to detect the floor
                  * in most situations, but daylight and/or really high ceilings can cause long distance 
-				 * measurements to be out of range.
+                 * measurements to be out of range.
                  */
                 this->parent_->set_distance_measurement(maxDistance);
 
