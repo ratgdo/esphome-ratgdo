@@ -80,7 +80,7 @@ namespace ratgdo {
             VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
             uint8_t dataReady = 0;
             int objCount = 0;
-            int16_t maxDistance = 0;
+            int16_t maxDistance = -1;
             int status;
 
             if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) == 0 && dataReady) {
@@ -91,6 +91,7 @@ namespace ratgdo {
                     VL53L4CX_TargetRangeData_t *d = &pDistanceData->RangeData[i];
                     if (d->RangeStatus == 0) {
                         maxDistance = std::max(maxDistance, d->RangeMilliMeter);
+                        maxDistance = maxDistance <= 25 ? -1 : maxDistance; // ignore the dust protection sticker
                     }
                 }
 
