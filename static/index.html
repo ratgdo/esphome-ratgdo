@@ -255,7 +255,10 @@
     </div>
 
     <p>
-      <esp-web-install-button></esp-web-install-button>
+        <form method="get" action="v32board-esp32/v32board-esp32.ota.bin" id="download_ota_form" style="float: right">
+            <button type="submit" style="padding: 8px 28px; font-size: 14px; border-radius: 4px; color: #fff; background-color: #03a9f4; border: none; box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.12), 0 1px 5px 0 rgba(0,0,0,.2);">Download OTA Firmware</button>
+        </form>
+        <esp-web-install-button></esp-web-install-button>
     </p>
 
 
@@ -310,6 +313,19 @@
           }
       }
 
+      function setOTAFirmwarePath(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+            var status = xhr.status;
+            if (status === 200) {
+                document.querySelector("#download_ota_form").action = xhr.response.builds[0].ota.path;
+            }
+        };
+        xhr.send();
+      };
+
       document.querySelectorAll('div.radios input').forEach((radio) =>
         radio.addEventListener("change", () => {
         const button = document.querySelector("esp-web-install-button");
@@ -337,6 +353,7 @@
         }
 
         button.manifest = `${hardware}${protocol}-manifest.json`;
+        setOTAFirmwarePath(button.manifest);
       })
     );
 
