@@ -6,6 +6,7 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo.sensor";
+    static const int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
 
     void RATGDOSensor::setup()
     {
@@ -91,7 +92,7 @@ namespace ratgdo {
                     VL53L4CX_TargetRangeData_t *d = &pDistanceData->RangeData[i];
                     if (d->RangeStatus == 0) {
                         maxDistance = std::max(maxDistance, d->RangeMilliMeter);
-                        maxDistance = maxDistance <= 25 ? -1 : maxDistance; // ignore the dust protection sticker
+                        maxDistance = maxDistance <= MIN_DISTANCE ? -1 : maxDistance;
                     }
                 }
 
