@@ -48,6 +48,9 @@ improv_serial:
 
 wifi:
   ap:
+    ssid: "ratgdo"
+
+captive_portal:
 
 logger:
 
