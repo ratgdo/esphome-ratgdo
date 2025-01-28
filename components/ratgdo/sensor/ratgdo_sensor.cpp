@@ -7,6 +7,7 @@ namespace ratgdo {
 
     static const char* const TAG = "ratgdo.sensor";
     static const int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
+    static const int MAX_DISTANCE = 4500; // default maximum distance
 
     void RATGDOSensor::setup()
     {
@@ -95,6 +96,8 @@ namespace ratgdo {
                         maxDistance = maxDistance <= MIN_DISTANCE ? -1 : maxDistance;
                     }
                 }
+
+                if(maxDistance < 0) maxDistance = MAX_DISTANCE;
 
                 //maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
                 /* 
