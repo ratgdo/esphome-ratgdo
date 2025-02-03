@@ -90,7 +90,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: firmwares
-          merge-multiple: true
       - name: Copy files
         run: |-
           mkdir output
