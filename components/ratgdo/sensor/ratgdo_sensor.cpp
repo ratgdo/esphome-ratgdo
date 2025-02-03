@@ -6,6 +6,8 @@ namespace esphome {
 namespace ratgdo {
 
     static const char* const TAG = "ratgdo.sensor";
+    static const int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
+    static const int MAX_DISTANCE = 4500; // default maximum distance
 
     void RATGDOSensor::setup()
     {
