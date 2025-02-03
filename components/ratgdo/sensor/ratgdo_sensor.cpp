@@ -82,23 +82,32 @@ namespace ratgdo {
             VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
             uint8_t dataReady = 0;
             int objCount = 0;
-            int16_t maxDistance = 0;
+            int16_t maxDistance = -1;
             int status;
 
             if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) == 0 && dataReady) {
                 status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
                 objCount = pDistanceData->NumberOfObjectsFound;
 
-                maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
-                /* if(maxDistance < 0) maxDistance = -1;
-                 * if the sensor is pointed at glass, there are many error readings which will fill the
-                 * vector with out of range data. The sensor should be sensitive enough to detect the floor
-                 * in most situations, unless its mounted really far away.
-                 * If this doesn't work, then the vector size will have to increase substantially
-                 */
-                if (maxDistance > 0) {
-                    this->parent_->set_distance_measurement(maxDistance);
+                for (int i = 0; i < distanceData.NumberOfObjectsFound; i++) {
+                    VL53L4CX_TargetRangeData_t* d = &pDistanceData->RangeData[i];
+                    if (d->RangeStatus == 0) {
+                        maxDistance = std::max(maxDistance, d->RangeMilliMeter);
+                        maxDistance = maxDistance <= MIN_DISTANCE ? -1 : maxDistance;
+                    }
                 }
+
+                if (maxDistance < 0)
+                    maxDistance = MAX_DISTANCE;
+
+                // maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
+                /*
+                 * if the sensor is pointed at glass, there are many error -1 readings which will fill the
+                 * vector with out of range data. The sensor should be sensitive enough to detect the floor
+                 * in most situations, but daylight and/or really high ceilings can cause long distance
+                 * measurements to be out of range.
+                 */
+                this->parent_->set_distance_measurement(maxDistance);
 
                 // ESP_LOGD(TAG,"# obj found %d; distance %d",objCount, maxDistance);
 
