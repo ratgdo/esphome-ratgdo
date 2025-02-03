@@ -16,6 +16,8 @@ TYPES = {
     "rolling_code_counter": NumberType.RATGDO_ROLLING_CODE_COUNTER,
     "opening_duration": NumberType.RATGDO_OPENING_DURATION,
     "closing_duration": NumberType.RATGDO_CLOSING_DURATION,
+    "closing_delay": NumberType.RATGDO_CLOSING_DELAY,
+    "target_distance_measurement": NumberType.RATGDO_TARGET_DISTANCE_MEASUREMENT,
 }
 
 

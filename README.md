@@ -1,15 +1,11 @@
 
 # ratgdo for ESPHome
 
-This is a port of the ratgdo software for the v2.0/v2.5 board to ESPHome.
-
-[Visit the the store to purchase boards](https://ratcloud.llc)
+[Visit the ratcloud.llc to purchase boards](https://ratcloud.llc)
 
 ## Installation
 
 - Flash the ESPHome based firmware using the [Web Installer](https://ratgdo.github.io/esphome-ratgdo/)
-
-It is no longer necessary to save the rolling code counter when switching between firmware.
 
 ## First use after adding to Home Assistant
 

@@ -30,6 +30,10 @@ namespace ratgdo {
             ESP_LOGCONFIG(TAG, "  Type: Opening Duration");
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             ESP_LOGCONFIG(TAG, "  Type: Closing Duration");
+        } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
+            ESP_LOGCONFIG(TAG, "  Type: Closing Delay");
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+            ESP_LOGCONFIG(TAG, " Type: Target Distance Measurement");
         }
     }
 
@@ -66,6 +70,14 @@ namespace ratgdo {
             this->parent_->subscribe_closing_duration([=](float value) {
                 this->update_state(value);
             });
+        } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
+            this->parent_->subscribe_closing_delay([=](uint32_t value) {
+                this->update_state(value);
+            });
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+            // this->parent_->subscribe_target_distance_measurement([=](float value) {
+            //     this->update_state(value);
+            // });
         }
     }
 
@@ -76,12 +88,20 @@ namespace ratgdo {
             this->traits.set_step(0.1);
             this->traits.set_min_value(0.0);
             this->traits.set_max_value(180.0);
+        } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
+            this->traits.set_step(1);
+            this->traits.set_min_value(0.0);
+            this->traits.set_max_value(60.0);
         } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
             this->traits.set_max_value(0xfffffff);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
             this->traits.set_step(0x1000);
             this->traits.set_min_value(0x539);
             this->traits.set_max_value(0x7ff539);
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+            this->traits.set_step(1);
+            this->traits.set_min_value(5);
+            this->traits.set_max_value(3500);
         }
     }
 
@@ -102,9 +122,13 @@ namespace ratgdo {
             this->parent_->set_opening_duration(value);
         } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
             this->parent_->set_closing_duration(value);
+        } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
+            this->parent_->set_closing_delay(value);
         } else if (this->number_type_ == RATGDO_CLIENT_ID) {
             value = normalize_client_id(value);
             this->parent_->call_protocol(SetClientID { static_cast<uint32_t>(value) });
+        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+            this->parent_->set_target_distance_measurement(value);
         }
         this->update_state(value);
     }

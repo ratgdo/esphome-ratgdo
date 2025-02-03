@@ -177,7 +177,7 @@
       />
       <h1>ESPHome ratgdo</h1>
       <p>
-        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://paulwieland.github.io/ratgdo/">ratgdo control board</a> version.
+        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://ratcloud.llc/">ratgdo control board</a> version.
         No programming or other software required.
       </p>
 
@@ -210,41 +210,60 @@
     <h2>Choose your ratgdo control board:</h2>
     <div class="hardware radios">
       <label>
+        <img src="./ratgdo32_disco.jpg" alt="v32 disco" />
+        <input type="radio" name="hardware" value="v32disco" checked />
+        ratgdo32 disco
+      </label>
+
+      <label>
+        <img src="./ratgdo32.jpg" alt="v32 board" />
+        <input type="radio" name="hardware" value="v32board" checked />
+        ratgdo32
+      </label>
+
+      <label>
         <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
         <input type="radio" name="hardware" value="v25iboard" checked />
         ratgdo v2.5x<br/>
       v2.5, v2.5i, v2.52i, v2.53i (black PCB)
       </label>
+    </div>
 
-      <label>
-        <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
-        <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
-        ratgdo v2.0<br/>
-      ESP8266 / D1 Mini (white PCB)
-      </label>
+    <a id="show_legacy_hardware" style="text-decoration: underline;" onclick="toggleLegacy()">Show Legacy Hardware &raquo;</a>
 
-      <label>
-        <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
-        <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
-        ratgdo v2.5<br/>
-      ESP32 (black PCB)
-      </label>
+    <div class="hardware radios" id="legacy_hardware" style="display: none">
+        <label>
+            <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
+            <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
+            ratgdo v2.0<br/>
+            ESP8266 / D1 Mini (white PCB)
+        </label>
 
-      <label>
-        <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
-        <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
-        ratgdo v2.0<br/>
-      ESP32 (white PCB)
-      </label>
+        <label>
+            <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
+            <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
+            ratgdo v2.5<br/>
+            ESP32 (black PCB)
+        </label>
+
+        <label>
+            <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
+            <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
+            ratgdo v2.0<br/>
+            ESP32 (white PCB)
+        </label>
     </div>
 
     <p>
-      <esp-web-install-button></esp-web-install-button>
+        <form method="get" action="v32board-esp32/v32board-esp32.ota.bin" id="download_ota_form" style="float: right">
+            <button type="submit" style="padding: 8px 28px; font-size: 14px; border-radius: 4px; color: #fff; background-color: #03a9f4; border: none; box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.12), 0 1px 5px 0 rgba(0,0,0,.2);">Download OTA Firmware</button>
+        </form>
+        <esp-web-install-button></esp-web-install-button>
     </p>
 
 
     <h2>Wiring Diagram</h2>
-    <img id="wiring_diagram" src="wiring_diagrams/secplus_diagram.png" alt="Security + 1 and 2 wiring diagram" />
+    <img id="wiring_diagram" src="wiring_diagrams/v25iboard_secplus.png" alt="Security + 1 and 2 wiring diagram" />
 
     <h3>Documentation</h3>
     <ul>
@@ -255,12 +274,10 @@
     <h3>Drivers</h3>
     <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
     <ul>
+      <li>ratgdo32 and ratgdo32 disco use a CH9102 USB to Serial chipset. Modern versions of Windows &amp; macOS include the necessary drivers natively. Installing a standalone driver can create a conflict preventing you from connecting to ratgdo32.</li>
       <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
-      <li>Most D1 Minis use an FTDI USB to Serial chipset. [<a href="https://ftdichip.com/drivers/vcp-drivers/" target="_blank">driver download</a>]</li>
     </ul>
-    <p>Watch the driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
-    <!-- <iframe width="640" height="360" src="https://youtube.com/embed/9WecAUTC9iI"></iframe> -->
-
+    <p>Watch the v2.5i driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
 
       <h3>Advanced Users</h3>
       <ul>
@@ -284,17 +301,44 @@
       </div>
     </div>
     <script>
+      function toggleLegacy() {
+          var x = document.querySelector("#legacy_hardware");
+          var y = document.querySelector("#show_legacy_hardware");
+          if (x.style.display === "none") {
+              x.style.display = "flex";
+              y.innerHTML = "hide legacy hardware &raquo;";
+          } else {
+              x.style.display = "none";
+              y.innerHTML = "show legacy hardware &raquo;";
+          }
+      }
+
+      function setOTAFirmwarePath(url) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'json';
+        xhr.onload = function() {
+            var status = xhr.status;
+            if (status === 200) {
+                document.querySelector("#download_ota_form").action = xhr.response.builds[0].ota.path;
+            }
+        };
+        xhr.send();
+      };
+
       document.querySelectorAll('div.radios input').forEach((radio) =>
         radio.addEventListener("change", () => {
         const button = document.querySelector("esp-web-install-button");
         var protocol = document.querySelector('input[name="protocol"]:checked').value;
         var hardware = document.querySelector('input[name="hardware"]:checked').value;
 
-        if(protocol === "drycontact"){
-          document.querySelector("#wiring_diagram").src = "wiring_diagrams/dry_contact_diagram.png";
-        }else{
-          document.querySelector("#wiring_diagram").src = "wiring_diagrams/secplus_diagram.png";
+        var diagram_protocol = protocol.replace("v1","").replace("v2","");
+        var img = document.querySelector("#wiring_diagram");
+        img.onerror = function() {
+            console.log(`img not found: ${this.src}`);
+            this.src = "wiring_diagrams/v25iboard_secplus.png";
         }
+        img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
 
         if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
           alert("ratgdo version 2.0 only works with Security + 2.0");
@@ -309,6 +353,7 @@
         }
 
         button.manifest = `${hardware}${protocol}-manifest.json`;
+        setOTAFirmwarePath(button.manifest);
       })
     );
 

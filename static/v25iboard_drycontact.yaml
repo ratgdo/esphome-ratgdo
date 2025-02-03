@@ -34,6 +34,7 @@ packages:
     refresh: 1s
   # remote_package: !include
   #   file: base_drycontact.yaml
+
 # Sync time with Home Assistant.
 time:
   - platform: homeassistant

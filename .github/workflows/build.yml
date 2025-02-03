@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main
+      - ratgdo32
   pull_request:
   schedule:
     - cron: '0 4 * * 1'
@@ -55,6 +55,24 @@ jobs:
           - file: v25iboard_drycontact.yaml
             name: V2.5i Board Dry Contact
             manifest_filename: v25iboard_drycontact-manifest.json
+          - file: v32board.yaml
+            name: V32 Board Security+ 2.0
+            manifest_filename: v32board-manifest.json
+          - file: v32board_secplusv1.yaml
+            name: V32 Board Security+ 1.0
+            manifest_filename: v32board_secplusv1-manifest.json
+          - file: v32board_drycontact.yaml
+            name: V32 Board Board Dry Contact
+            manifest_filename: v32board_drycontact-manifest.json
+          - file: v32disco.yaml
+            name: V32 Disco Board Security+ 2.0
+            manifest_filename: v32disco-manifest.json
+          - file: v32disco_secplusv1.yaml
+            name: V32 Disco Board Security+ 1.0
+            manifest_filename: v32disco_secplusv1-manifest.json
+          - file: v32disco_drycontact.yaml
+            name: V32 Disco Board Dry Contact
+            manifest_filename: v32disco_drycontact-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
@@ -79,7 +97,7 @@ jobs:
 
 
   consolidate:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/ratgdo32'
     name: Consolidate firmwares
     runs-on: ubuntu-latest
     needs: build
@@ -101,7 +119,7 @@ jobs:
           path: output
 
   deploy:
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/ratgdo32'
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
     needs: consolidate
