@@ -5,8 +5,6 @@ from esphome.const import CONF_ID
 
 CONF_DISTANCE = "distance"
 
-CONF_DISTANCE = "distance"
-
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
