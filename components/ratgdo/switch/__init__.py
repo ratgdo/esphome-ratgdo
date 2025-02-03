@@ -2,7 +2,6 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome import pins
 from esphome.components import switch
-from esphome import pins
 from esphome.const import CONF_ID, CONF_PIN
 
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
@@ -13,10 +12,7 @@ RATGDOSwitch = ratgdo_ns.class_("RATGDOSwitch", switch.Switch, cg.Component)
 SwitchType = ratgdo_ns.enum("SwitchType")
 
 CONF_TYPE = "type"
-TYPES = {
-    "learn": SwitchType.RATGDO_LEARN,
-    "led": SwitchType.RATGDO_LED
-}
+TYPES = {"learn": SwitchType.RATGDO_LEARN, "led": SwitchType.RATGDO_LED}
 
 
 CONFIG_SCHEMA = (
