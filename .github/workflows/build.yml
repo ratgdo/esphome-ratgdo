@@ -76,7 +76,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v4
       - name: Build firmware
         uses: ratgdo/esphome-build-action@main
         id: esphome-build
@@ -90,7 +90,7 @@ jobs:
           jq -s '{"name": "${{ matrix.firmware.name }}", "new_install_improv_wait_time": 15, "new_install_prompt_erase": true, "version": "${{ steps.esphome-build.outputs.esphome-version }}", "home_assistant_domain": "esphome", "new_install_skip_erase": false, "builds":.}' output/${{ steps.esphome-build.outputs.name }}/manifest.json > output/${{ matrix.firmware.manifest_filename }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: ${{ matrix.firmware.name }}
           path: output
@@ -103,9 +103,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download built firmwares
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: firmwares
       - name: Copy files
@@ -114,7 +114,7 @@ jobs:
           cp -R static/* output/
           cp -R firmwares/*/* output/
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v2.0.0
+        uses: actions/upload-pages-artifact@v3.0.1
         with:
           path: output
 
@@ -131,7 +131,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Setup Pages
-        uses: actions/configure-pages@v2
+        uses: actions/configure-pages@v5
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1.2.9
+        uses: actions/deploy-pages@v4.0.5

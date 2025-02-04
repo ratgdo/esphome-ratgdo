@@ -2,8 +2,8 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 import voluptuous as vol
 from esphome import automation, pins
-from esphome.const import CONF_ID, CONF_TRIGGER_ID
 from esphome.components import binary_sensor
+from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -44,43 +44,59 @@ CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
 
+
 def validate_protocol(config):
-    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR not in config or CONF_DRY_CONTACT_OPEN_SENSOR not in config):
-        raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact")
-    if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (CONF_DRY_CONTACT_CLOSE_SENSOR in config or CONF_DRY_CONTACT_OPEN_SENSOR in config):
-        raise cv.Invalid("dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact")
-#    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
-#        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
+    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (
+        CONF_DRY_CONTACT_CLOSE_SENSOR not in config
+        or CONF_DRY_CONTACT_OPEN_SENSOR not in config
+    ):
+        raise cv.Invalid(
+            "dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact"
+        )
+    if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (
+        CONF_DRY_CONTACT_CLOSE_SENSOR in config
+        or CONF_DRY_CONTACT_OPEN_SENSOR in config
+    ):
+        raise cv.Invalid(
+            "dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact"
+        )
+    #    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
+    #        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
     return config
+
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
-    {
-        cv.GenerateID(): cv.declare_id(RATGDO),
-        cv.Optional(
-            CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO
-        ): pins.gpio_output_pin_schema,
-        cv.Optional(
-            CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
-        ): pins.gpio_input_pin_schema,
-        cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
-            cv.none, pins.gpio_input_pin_schema
-        ),
-        cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
-        cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
-        cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
-            {
-                cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
-            }
-        ),
-        cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): cv.All(vol.In(
-            SUPPORTED_PROTOCOLS
-        )),
-        # cv.Inclusive(CONF_DRY_CONTACT_OPEN_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
-        # cv.Inclusive(CONF_DRY_CONTACT_CLOSE_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
-        cv.Optional(CONF_DRY_CONTACT_OPEN_SENSOR): cv.use_id(binary_sensor.BinarySensor),
-        cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(binary_sensor.BinarySensor),
-    }
+        {
+            cv.GenerateID(): cv.declare_id(RATGDO),
+            cv.Optional(
+                CONF_OUTPUT_GDO, default=DEFAULT_OUTPUT_GDO
+            ): pins.gpio_output_pin_schema,
+            cv.Optional(
+                CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
+            ): pins.gpio_input_pin_schema,
+            cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
+                cv.none, pins.gpio_input_pin_schema
+            ),
+            cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
+            cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
+            cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
+                {
+                    cv.GenerateID(CONF_TRIGGER_ID): cv.declare_id(SyncFailed),
+                }
+            ),
+            cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): cv.All(
+                vol.In(SUPPORTED_PROTOCOLS)
+            ),
+            # cv.Inclusive(CONF_DRY_CONTACT_OPEN_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
+            # cv.Inclusive(CONF_DRY_CONTACT_CLOSE_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
+            cv.Optional(CONF_DRY_CONTACT_OPEN_SENSOR): cv.use_id(
+                binary_sensor.BinarySensor
+            ),
+            cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(
+                binary_sensor.BinarySensor
+            ),
+        }
     ).extend(cv.COMPONENT_SCHEMA),
     validate_protocol,
 )
@@ -109,11 +125,18 @@ async def to_code(config):
         cg.add(var.set_input_obst_pin(pin))
 
     if CONF_DRY_CONTACT_OPEN_SENSOR in config and config[CONF_DRY_CONTACT_OPEN_SENSOR]:
-        dry_contact_open_sensor = await cg.get_variable(config[CONF_DRY_CONTACT_OPEN_SENSOR])
+        dry_contact_open_sensor = await cg.get_variable(
+            config[CONF_DRY_CONTACT_OPEN_SENSOR]
+        )
         cg.add(var.set_dry_contact_open_sensor(dry_contact_open_sensor))
 
-    if CONF_DRY_CONTACT_CLOSE_SENSOR in config and config[CONF_DRY_CONTACT_CLOSE_SENSOR]:
-        dry_contact_close_sensor = await cg.get_variable(config[CONF_DRY_CONTACT_CLOSE_SENSOR])
+    if (
+        CONF_DRY_CONTACT_CLOSE_SENSOR in config
+        and config[CONF_DRY_CONTACT_CLOSE_SENSOR]
+    ):
+        dry_contact_close_sensor = await cg.get_variable(
+            config[CONF_DRY_CONTACT_CLOSE_SENSOR]
+        )
         cg.add(var.set_dry_contact_close_sensor(dry_contact_close_sensor))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):

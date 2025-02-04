@@ -4,6 +4,8 @@ from esphome.components import sensor
 from esphome.const import CONF_ID
 CONF_DISTANCE = "distance"
 
+CONF_DISTANCE = "distance"
+
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
@@ -19,7 +21,7 @@ TYPES = {
     "paired_devices_keypads": RATGDOSensorType.RATGDO_PAIRED_KEYPADS,
     "paired_devices_wall_controls": RATGDOSensorType.RATGDO_PAIRED_WALL_CONTROLS,
     "paired_devices_accessories": RATGDOSensorType.RATGDO_PAIRED_ACCESSORIES,
-    "distance": RATGDOSensorType.RATGDO_DISTANCE
+    "distance": RATGDOSensorType.RATGDO_DISTANCE,
 }
 
 
@@ -41,11 +43,8 @@ async def to_code(config):
     cg.add(var.set_ratgdo_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
 
-    if config['type'] == 'distance':
-        cg.add_library(
-            name="Wire",
-            version=None
-        )
+    if config["type"] == "distance":
+        cg.add_library(name="Wire", version=None)
         cg.add_library(
             name="vl53l4cx",
             repository="https://github.com/stm32duino/VL53L4CX",
