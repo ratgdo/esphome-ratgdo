@@ -132,11 +132,7 @@ sensor:
     ratgdo_id: ${id_prefix}
     unit_of_measurement: "mm"
     filters:
-      - min:
-          window_size: 900
-          send_every: 1
-      - heartbeat: 30s
-
+      - throttle_average: 60s
   - platform: adc
     pin: GPIO34
     name: "Voltage"
