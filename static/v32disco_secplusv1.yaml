@@ -129,12 +129,10 @@ sensor:
     ratgdo_id: ${id_prefix}
     unit_of_measurement: "mm"
     filters:
-      - throttle: 10s
-      - filter_out: -1
-      - median:
-          window_size: 20
-          send_every: 5
-          send_first_at: 5
+      - min:
+          window_size: 900
+          send_every: 1
+      - heartbeat: 30s
   - platform: adc
     pin: GPIO34
     name: "Voltage"
