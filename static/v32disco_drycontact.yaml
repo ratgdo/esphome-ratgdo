@@ -11,6 +11,7 @@ substitutions:
   discrete_close_pin: GPIO25
 
 web_server:
+  include_internal: true
 
 esphome:
   name: ${id_prefix}
@@ -49,6 +50,8 @@ wifi:
   ap:
 
 logger:
+  logs:
+    sensor: NONE
 
 ota:
 
@@ -127,6 +130,10 @@ sensor:
     name: "Vehicle distance actual"
     ratgdo_id: ${id_prefix}
     unit_of_measurement: "mm"
+    internal: true
+  - platform: copy
+    source_id: ${id_prefix}_vehicle_distance_actual
+    name: Vehicle distance actual filtered
     filters:
       - min:
           window_size: 900
