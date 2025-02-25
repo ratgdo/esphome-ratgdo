@@ -135,14 +135,16 @@ sensor:
     ratgdo_id: ${id_prefix}
     unit_of_measurement: "mm"
     internal: true
+    filters:
+      - throttle: 1ms
+      - heartbeat: 1ms
   - platform: copy
     source_id: ${id_prefix}_vehicle_distance_actual
     name: Vehicle distance actual filtered
     filters:
       - min:
-          window_size: 900
-          send_every: 1
-      - heartbeat: 30s
+          window_size: 5000
+          send_every: 5000
   - platform: adc
     pin: GPIO34
     name: "Voltage"
