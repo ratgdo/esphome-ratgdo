@@ -113,6 +113,7 @@ jobs:
           mkdir output
           cp -R static/* output/
           cp -R firmwares/*/* output/
+          mv output/*/*.bin output/
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3.0.1
         with:
