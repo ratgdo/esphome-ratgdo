@@ -81,7 +81,7 @@ jobs:
         uses: ratgdo/esphome-build-action@main
         id: esphome-build
         with:
-          yaml_file: ${{ matrix.firmware.file }}
+          yaml-file: ${{ matrix.firmware.file }}
           version: latest
       - name: Copy firmware and manifest
         run: |
