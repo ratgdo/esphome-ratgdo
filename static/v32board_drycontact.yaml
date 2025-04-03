@@ -1,7 +1,7 @@
 ---
 substitutions:
-  id_prefix: ratgdo32disco
-  friendly_name: "ratgdo32disco"
+  id_prefix: ratgdov32
+  friendly_name: "ratgdov32"
   uart_tx_pin: GPIO17
   uart_rx_pin: GPIO21
   input_obst_pin: GPIO4

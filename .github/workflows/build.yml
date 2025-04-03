@@ -62,7 +62,7 @@ jobs:
             name: V32 Board Security+ 1.0
             manifest_filename: v32board_secplusv1-manifest.json
           - file: v32board_drycontact.yaml
-            name: V32 Board Board Dry Contact
+            name: V32 Board Dry Contact
             manifest_filename: v32board_drycontact-manifest.json
           - file: v32disco.yaml
             name: V32 Disco Board Security+ 2.0
