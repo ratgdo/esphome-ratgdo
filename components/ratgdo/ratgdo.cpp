@@ -661,8 +661,11 @@ namespace ratgdo {
             // query state in case we don't get a status message
             set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [this]() {
                 if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
-                    this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
-                    this->query_status(); // query in case we're wrong and it's stopped
+                    // In case the door fully rebounded from an obstruction
+                    if (*this->door_state != DoorState::OPEN) {
+                        this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
+                        this->query_status(); // query in case we're wrong and it's stopped
+                    }
                 }
             });
         }
