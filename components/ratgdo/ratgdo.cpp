@@ -590,9 +590,16 @@ namespace ratgdo {
                 this->door_action_delayed = DoorActionDelayed::NO;
                 this->protocol_->door_action(DoorAction::CLOSE);
             });
-        } else {
-            this->protocol_->door_action(action);
+            return;
         }
+
+        if (action == DoorAction::STOP || action == DoorAction::TOGGLE) {
+            // Door will likely be open partially unless closed
+            if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
+                this->received(DoorState::OPEN);
+            }
+        }
+        this->protocol_->door_action(action);
     }
 
     void RATGDOComponent::door_move_to_position(float position)
@@ -626,8 +633,6 @@ namespace ratgdo {
         this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
         set_timeout("move_to_position", operation_time, [=] {
             this->door_action(DoorAction::STOP);
-            this->received(DoorState::OPEN);
-            this->cancel_position_sync_callbacks();
         });
     }
 
