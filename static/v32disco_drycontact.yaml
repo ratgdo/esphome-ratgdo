@@ -12,6 +12,7 @@ substitutions:
 
 web_server:
   include_internal: true
+  local: true
 
 esphome:
   name: ${id_prefix}

@@ -12,6 +12,7 @@ substitutions:
   dry_contact_light_pin: GPIO27
 
 web_server:
+  local: true
 
 esphome:
   name: ${id_prefix}

@@ -12,6 +12,7 @@ substitutions:
   dry_contact_light_pin: D3
 
 web_server:
+  local: true
 
 esphome:
   name: ${id_prefix}
@@ -46,5 +47,8 @@ improv_serial:
 
 wifi:
   ap:
+    ssid: "ratgdo"
+
+captive_portal:
 
 logger:

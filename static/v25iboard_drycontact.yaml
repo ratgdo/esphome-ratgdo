@@ -11,6 +11,7 @@ substitutions:
   discrete_close_pin: D8
 
 web_server:
+  local: true
 
 esphome:
   name: ${id_prefix}
@@ -47,6 +48,8 @@ improv_serial:
 
 wifi:
   ap:
+    ssid: "ratgdo"
+
+captive_portal:
 
 logger:
-  level: DEBUG
