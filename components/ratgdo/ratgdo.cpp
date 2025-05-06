@@ -584,7 +584,7 @@ namespace ratgdo {
 
     void RATGDOComponent::door_action(DoorAction action)
     {
-        if (*this->closing_delay > 0 && action == DoorAction::CLOSE) {
+        if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
             this->door_action_delayed = DoorActionDelayed::YES;
             set_timeout("door_action", *this->closing_delay * 1000, [=] {
                 this->door_action_delayed = DoorActionDelayed::NO;
