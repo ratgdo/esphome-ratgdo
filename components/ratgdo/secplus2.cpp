@@ -317,7 +317,7 @@ namespace ratgdo {
 
         void Secplus2::print_packet(const char* prefix, const WirePacket& packet) const
         {
-            ESP_LOG2(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+            ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
                 prefix,
                 packet[0],
                 packet[1],
@@ -417,7 +417,7 @@ namespace ratgdo {
 
         void Secplus2::send_command(Command command, IncrementRollingCode increment)
         {
-            ESP_LOG1(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
+            ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
             if (!this->transmit_pending_) { // have an untransmitted packet
                 this->encode_packet(command, this->tx_packet_);
                 if (increment == IncrementRollingCode::YES) {
