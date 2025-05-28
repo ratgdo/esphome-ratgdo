@@ -445,7 +445,7 @@ namespace ratgdo {
             if (!enable_rx) {
                 this->sw_serial_.enableIntTx(true);
             }
-            ESP_LOG2(TAG, "[%d] Sent byte: [%02X]", millis(), value);
+            ESP_LOGD(TAG, "[%d] Sent byte: [%02X]", millis(), value);
         }
 
     } // namespace secplus1

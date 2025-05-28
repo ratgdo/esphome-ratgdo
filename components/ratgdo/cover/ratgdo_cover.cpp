@@ -27,6 +27,7 @@ namespace ratgdo {
 
     void RATGDOCover::on_door_state(DoorState state, float position)
     {
+        // ESP_LOGD("ON_DOOR_STATE", "%s %f", DoorState_to_string(state), position);
         bool save_to_flash = true;
         switch (state) {
         case DoorState::OPEN:
