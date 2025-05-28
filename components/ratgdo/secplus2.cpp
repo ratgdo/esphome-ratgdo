@@ -317,7 +317,7 @@ namespace ratgdo {
 
         void Secplus2::print_packet(const char* prefix, const WirePacket& packet) const
         {
-            ESP_LOG2(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+            ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
                 prefix,
                 packet[0],
                 packet[1],
