@@ -42,7 +42,7 @@ namespace ratgdo {
 
         void Secplus2::loop()
         {
-            if (this->transmit_pending_) {
+            if (this->flags_.transmit_pending) {
                 if (!this->transmit_packet()) {
                     return;
                 }
@@ -418,7 +418,7 @@ namespace ratgdo {
         void Secplus2::send_command(Command command, IncrementRollingCode increment)
         {
             ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
-            if (!this->transmit_pending_) { // have an untransmitted packet
+            if (!this->flags_.transmit_pending) { // have an untransmitted packet
                 this->encode_packet(command, this->tx_packet_);
                 if (increment == IncrementRollingCode::YES) {
                     this->increment_rolling_code_counter();
@@ -426,7 +426,7 @@ namespace ratgdo {
             } else {
                 // unlikely this would happed (unless not connected to GDO), we're ensuring any pending packet
                 // is transmitted each loop before doing anyting else
-                if (this->transmit_pending_start_ > 0) {
+                if (this->flags_.transmit_pendingstart_ > 0) {
                     ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", CommandType_to_string(command.type));
                 } else {
                     ESP_LOGW(TAG, "Not connected to GDO, ignoring command: %s", CommandType_to_string(command.type));
@@ -457,15 +457,15 @@ namespace ratgdo {
 
             while (micros() - now < 1300) {
                 if (this->rx_pin_->digital_read()) {
-                    if (!this->transmit_pending_) {
-                        this->transmit_pending_ = true;
-                        this->transmit_pending_start_ = millis();
+                    if (!this->flags_.transmit_pending) {
+                        this->flags_.transmit_pending = true;
+                        this->flags_.transmit_pendingstart_ = millis();
                         ESP_LOGD(TAG, "Collision detected, waiting to send packet");
                     } else {
-                        if (millis() - this->transmit_pending_start_ < 5000) {
+                        if (millis() - this->flags_.transmit_pendingstart_ < 5000) {
                             ESP_LOGD(TAG, "Collision detected, waiting to send packet");
                         } else {
-                            this->transmit_pending_start_ = 0; // to indicate GDO not connected state
+                            this->flags_.transmit_pendingstart_ = 0; // to indicate GDO not connected state
                         }
                     }
                     return false;
@@ -485,8 +485,8 @@ namespace ratgdo {
 
             this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
 
-            this->transmit_pending_ = false;
-            this->transmit_pending_start_ = 0;
+            this->flags_.transmit_pending = false;
+            this->flags_.transmit_pendingstart_ = 0;
             this->on_command_sent_.trigger();
             return true;
         }

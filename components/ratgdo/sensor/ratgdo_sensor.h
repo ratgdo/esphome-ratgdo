@@ -14,7 +14,7 @@
 namespace esphome {
 namespace ratgdo {
 
-    enum RATGDOSensorType {
+    enum RATGDOSensorType : uint8_t {
         RATGDO_OPENINGS,
         RATGDO_PAIRED_DEVICES_TOTAL,
         RATGDO_PAIRED_REMOTES,
