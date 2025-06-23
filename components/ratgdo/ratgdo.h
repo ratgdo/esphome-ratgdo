@@ -36,7 +36,7 @@ namespace ratgdo {
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
     const float DOOR_DELTA_UNKNOWN = -2.0;
-    const uint16_t PAIRED_DEVICES_UNKNOWN = 0xFF;
+    const uint8_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
     struct RATGDOStore {
         int obstruction_low_count = 0; // count obstruction low pulses
@@ -77,11 +77,11 @@ namespace ratgdo {
         observable<int16_t> last_distance_measurement { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
-        observable<uint16_t> paired_total { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
@@ -182,11 +182,11 @@ namespace ratgdo {
         void subscribe_closing_duration(std::function<void(float)>&& f);
         void subscribe_closing_delay(std::function<void(uint32_t)>&& f);
         void subscribe_openings(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_devices_total(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_remotes(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_keypads(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_accessories(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_devices_total(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_remotes(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_keypads(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_wall_controls(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_accessories(std::function<void(uint8_t)>&& f);
         void subscribe_door_state(std::function<void(DoorState, float)>&& f);
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);

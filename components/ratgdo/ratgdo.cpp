@@ -723,25 +723,25 @@ namespace ratgdo {
     {
         this->openings.subscribe([=](uint16_t state) { defer("openings", [=] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint8_t)>&& f)
     {
-        this->paired_total.subscribe([=](uint16_t state) { defer("paired_total", [=] { f(state); }); });
+        this->paired_total.subscribe([=](uint8_t state) { defer("paired_total", [=] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint8_t)>&& f)
     {
-        this->paired_remotes.subscribe([=](uint16_t state) { defer("paired_remotes", [=] { f(state); }); });
+        this->paired_remotes.subscribe([=](uint8_t state) { defer("paired_remotes", [=] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint8_t)>&& f)
     {
-        this->paired_keypads.subscribe([=](uint16_t state) { defer("paired_keypads", [=] { f(state); }); });
+        this->paired_keypads.subscribe([=](uint8_t state) { defer("paired_keypads", [=] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint8_t)>&& f)
     {
-        this->paired_wall_controls.subscribe([=](uint16_t state) { defer("paired_wall_controls", [=] { f(state); }); });
+        this->paired_wall_controls.subscribe([=](uint8_t state) { defer("paired_wall_controls", [=] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint8_t)>&& f)
     {
-        this->paired_accessories.subscribe([=](uint16_t state) { defer("paired_accessories", [=] { f(state); }); });
+        this->paired_accessories.subscribe([=](uint8_t state) { defer("paired_accessories", [=] { f(state); }); });
     }
     void RATGDOComponent::subscribe_door_state(std::function<void(DoorState, float)>&& f)
     {
