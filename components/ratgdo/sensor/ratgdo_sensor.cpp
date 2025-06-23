@@ -16,23 +16,23 @@ namespace ratgdo {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL) {
-            this->parent_->subscribe_paired_devices_total([=](uint16_t value) {
+            this->parent_->subscribe_paired_devices_total([=](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_REMOTES) {
-            this->parent_->subscribe_paired_remotes([=](uint16_t value) {
+            this->parent_->subscribe_paired_remotes([=](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_KEYPADS) {
-            this->parent_->subscribe_paired_keypads([=](uint16_t value) {
+            this->parent_->subscribe_paired_keypads([=](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS) {
-            this->parent_->subscribe_paired_wall_controls([=](uint16_t value) {
+            this->parent_->subscribe_paired_wall_controls([=](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES) {
-            this->parent_->subscribe_paired_accessories([=](uint16_t value) {
+            this->parent_->subscribe_paired_accessories([=](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
