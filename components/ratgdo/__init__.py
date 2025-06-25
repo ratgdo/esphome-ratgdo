@@ -120,20 +120,17 @@ async def to_code(config):
     cg.add(var.set_output_gdo_pin(pin))
     pin = await cg.gpio_pin_expression(config[CONF_INPUT_GDO])
     cg.add(var.set_input_gdo_pin(pin))
-    if CONF_INPUT_OBST in config and config[CONF_INPUT_OBST]:
+    if config.get(CONF_INPUT_OBST):
         pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
         cg.add(var.set_input_obst_pin(pin))
 
-    if CONF_DRY_CONTACT_OPEN_SENSOR in config and config[CONF_DRY_CONTACT_OPEN_SENSOR]:
+    if config.get(CONF_DRY_CONTACT_OPEN_SENSOR):
         dry_contact_open_sensor = await cg.get_variable(
             config[CONF_DRY_CONTACT_OPEN_SENSOR]
         )
         cg.add(var.set_dry_contact_open_sensor(dry_contact_open_sensor))
 
-    if (
-        CONF_DRY_CONTACT_CLOSE_SENSOR in config
-        and config[CONF_DRY_CONTACT_CLOSE_SENSOR]
-    ):
+    if config.get(CONF_DRY_CONTACT_CLOSE_SENSOR):
         dry_contact_close_sensor = await cg.get_variable(
             config[CONF_DRY_CONTACT_CLOSE_SENSOR]
         )
@@ -162,9 +159,9 @@ async def to_code(config):
         cg.add_define("PROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
 
-    if CONF_DISCRETE_OPEN_PIN in config and config[CONF_DISCRETE_OPEN_PIN]:
+    if config.get(CONF_DISCRETE_OPEN_PIN):
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_OPEN_PIN])
         cg.add(var.set_discrete_open_pin(pin))
-    if CONF_DISCRETE_CLOSE_PIN in config and config[CONF_DISCRETE_CLOSE_PIN]:
+    if config.get(CONF_DISCRETE_CLOSE_PIN):
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_CLOSE_PIN])
         cg.add(var.set_discrete_close_pin(pin))

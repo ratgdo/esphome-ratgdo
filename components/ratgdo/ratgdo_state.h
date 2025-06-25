@@ -127,7 +127,7 @@ namespace ratgdo {
 
     struct PairedDeviceCount {
         PairedDevice kind;
-        uint16_t count;
+        uint8_t count;
     };
 
     struct TimeToClose {

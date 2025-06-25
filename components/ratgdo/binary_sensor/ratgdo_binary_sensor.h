@@ -8,7 +8,7 @@
 namespace esphome {
 namespace ratgdo {
 
-    enum SensorType {
+    enum SensorType : uint8_t {
         RATGDO_SENSOR_MOTION,
         RATGDO_SENSOR_OBSTRUCTION,
         RATGDO_SENSOR_MOTOR,

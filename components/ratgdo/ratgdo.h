@@ -19,6 +19,8 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
 
+#include <array>
+
 #include "callbacks.h"
 #include "macros.h"
 #include "observable.h"
@@ -34,7 +36,7 @@ namespace ratgdo {
 
     const float DOOR_POSITION_UNKNOWN = -1.0;
     const float DOOR_DELTA_UNKNOWN = -2.0;
-    const uint16_t PAIRED_DEVICES_UNKNOWN = 0xFF;
+    const uint8_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
     struct RATGDOStore {
         int obstruction_low_count = 0; // count obstruction low pulses
@@ -50,6 +52,12 @@ namespace ratgdo {
 
     class RATGDOComponent : public Component {
     public:
+        RATGDOComponent()
+        {
+            // Initialize distance_measurement array with -1
+            distance_measurement.fill(-1);
+        }
+
         void setup() override;
         void loop() override;
         void dump_config() override;
@@ -65,15 +73,15 @@ namespace ratgdo {
         observable<uint32_t> closing_delay { 0 };
 
         observable<int16_t> target_distance_measurement { -1 };
-        std::vector<int16_t> distance_measurement { std::vector<int16_t>(30, -1) }; // the length of this vector determines how many in-range readings are required for presence detection to change states
+        std::array<int16_t, 30> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
         observable<int16_t> last_distance_measurement { 0 };
 
         observable<uint16_t> openings { 0 }; // number of times the door has been opened
-        observable<uint16_t> paired_total { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
-        observable<uint16_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+        observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
@@ -174,11 +182,11 @@ namespace ratgdo {
         void subscribe_closing_duration(std::function<void(float)>&& f);
         void subscribe_closing_delay(std::function<void(uint32_t)>&& f);
         void subscribe_openings(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_devices_total(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_remotes(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_keypads(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_accessories(std::function<void(uint16_t)>&& f);
+        void subscribe_paired_devices_total(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_remotes(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_keypads(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_wall_controls(std::function<void(uint8_t)>&& f);
+        void subscribe_paired_accessories(std::function<void(uint8_t)>&& f);
         void subscribe_door_state(std::function<void(DoorState, float)>&& f);
         void subscribe_light_state(std::function<void(LightState)>&& f);
         void subscribe_lock_state(std::function<void(LockState)>&& f);
@@ -195,16 +203,23 @@ namespace ratgdo {
         void subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f);
 
     protected:
-        RATGDOStore isr_store_ {};
+        // Pointers first (4-byte aligned)
         protocol::Protocol* protocol_;
-        bool obstruction_sensor_detected_ { false };
-        bool presence_detect_window_active_ { false };
-
         InternalGPIOPin* output_gdo_pin_;
         InternalGPIOPin* input_gdo_pin_;
         InternalGPIOPin* input_obst_pin_;
         esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_;
         esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_;
+
+        // 4-byte members
+        RATGDOStore isr_store_ {};
+
+        // Bool members packed into bitfield
+        struct {
+            uint8_t obstruction_sensor_detected : 1;
+            uint8_t presence_detect_window_active : 1;
+            uint8_t reserved : 6; // Reserved for future use
+        } flags_ { 0 };
     }; // RATGDOComponent
 
 } // namespace ratgdo
