@@ -151,8 +151,8 @@ async def to_code(config):
         version=None,
     )
 
-    # Only add SoftwareSerial library for Arduino framework and non-dry-contact protocols
-    if CORE.using_arduino and config[CONF_PROTOCOL] != PROTOCOL_DRYCONTACT:
+    # Only add SoftwareSerial library for non-dry-contact protocols
+    if config[CONF_PROTOCOL] != PROTOCOL_DRYCONTACT:
         cg.add_library(
             name="espsoftwareserial",
             repository="https://github.com/ratgdo/espsoftwareserial#ratgdo",
