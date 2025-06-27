@@ -2,7 +2,6 @@
 
 #include "esphome/core/defines.h"
 
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/gpio.h"
 #include "esphome/core/optional.h"
 

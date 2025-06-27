@@ -1,9 +1,11 @@
+import voluptuous as vol
+
 import esphome.codegen as cg
 import esphome.config_validation as cv
-import voluptuous as vol
 from esphome import automation, pins
 from esphome.components import binary_sensor
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
+from esphome.core import CORE
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
@@ -148,11 +150,14 @@ async def to_code(config):
         repository="https://github.com/ratgdo/secplus#f98c3220356c27717a25102c0b35815ebbd26ccc",
         version=None,
     )
-    cg.add_library(
-        name="espsoftwareserial",
-        repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
-        version=None,
-    )
+
+    # Only add SoftwareSerial library for Arduino framework and non-dry-contact protocols
+    if CORE.using_arduino and config[CONF_PROTOCOL] != PROTOCOL_DRYCONTACT:
+        cg.add_library(
+            name="espsoftwareserial",
+            repository="https://github.com/ratgdo/espsoftwareserial#ratgdo",
+            version=None,
+        )
 
     if config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV1:
         cg.add_define("PROTOCOL_SECPLUSV1")
