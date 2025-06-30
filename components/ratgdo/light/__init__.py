@@ -11,15 +11,9 @@ RATGDOLightOutput = ratgdo_ns.class_(
     "RATGDOLightOutput", light.LightOutput, cg.Component
 )
 
-CONFIG_SCHEMA = (
-    light.light_schema(RATGDOLightOutput)
-    .extend(
-        {
-            cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)
-        }
-    )
-    .extend(RATGDO_CLIENT_SCHMEA)
-)
+CONFIG_SCHEMA = light.LIGHT_SCHEMA.extend(
+    {cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}
+).extend(RATGDO_CLIENT_SCHMEA)
 
 async def to_code(config):
     var = cg.new_Pvariable(config[CONF_OUTPUT_ID])
