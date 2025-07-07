@@ -20,7 +20,7 @@ namespace ratgdo {
         if (state.has_value()) {
             this->parent_->set_door_position(state.value().position);
         }
-        this->parent_->subscribe_door_state([=](DoorState state, float position) {
+        this->parent_->subscribe_door_state([this](DoorState state, float position) {
             this->on_door_state(state, position);
         });
     }
