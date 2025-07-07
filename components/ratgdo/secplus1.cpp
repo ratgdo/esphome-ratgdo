@@ -54,7 +54,7 @@ namespace ratgdo {
             this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
             this->wall_panel_emulation();
 
-            this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [this] {
                 if (this->door_state == DoorState::UNKNOWN) {
                     ESP_LOGW(TAG, "Triggering sync failed actions.");
                     this->ratgdo_->sync_failed = true;
@@ -77,7 +77,7 @@ namespace ratgdo {
                     ESP_LOGD(TAG, "No wall panel detected. Switching to emulation mode.");
                     this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [this] {
                     this->wall_panel_emulation();
                 });
                 return;
@@ -99,7 +99,7 @@ namespace ratgdo {
                         index = 15;
                     }
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this] {
                     this->wall_panel_emulation(index);
                 });
             }
@@ -144,11 +144,11 @@ namespace ratgdo {
                     this->toggle_door();
                 } else if (this->door_state == DoorState::STOPPED) {
                     this->toggle_door(); // this starts closing door
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::CLOSING) {
                             // this changes direction of the door on some openers, on others it stops it
                             this->toggle_door();
-                            this->on_door_state_([=](DoorState s) {
+                            this->on_door_state_([this](DoorState s) {
                                 if (s == DoorState::STOPPED) {
                                     this->toggle_door();
                                 }
@@ -162,7 +162,7 @@ namespace ratgdo {
                 } else if (this->door_state == DoorState::OPENING) {
                     this->toggle_door(); // this switches to stopped
                     // another toggle needed to close
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::STOPPED) {
                             this->toggle_door();
                         }
@@ -177,7 +177,7 @@ namespace ratgdo {
                     this->toggle_door(); // this switches to opening
 
                     // another toggle needed to stop
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::OPENING) {
                             this->toggle_door();
                         }
