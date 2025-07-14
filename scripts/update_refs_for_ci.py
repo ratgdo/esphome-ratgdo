@@ -39,7 +39,11 @@ def get_pr_info() -> Tuple[str, Optional[str]]:
 def main():
     """Main function."""
     # Get the absolute path to the project root
-    project_root = Path(__file__).parent.parent.absolute()
+    # In GitHub Actions, use the workspace path
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        project_root = Path(os.environ.get("GITHUB_WORKSPACE", ".")).absolute()
+    else:
+        project_root = Path(__file__).parent.parent.absolute()
 
     # Get branch and fork info for dashboard_import
     branch, fork_repo = get_pr_info()
@@ -50,8 +54,8 @@ def main():
         print(f"Fork repository: {fork_repo}")
     print("Updating YAML files to use local paths for CI testing...")
 
-    # Process all YAML files
-    for yaml_file in Path(".").glob("*.yaml"):
+    # Process all YAML files in the project root
+    for yaml_file in project_root.glob("*.yaml"):
         with open(yaml_file, "r") as f:
             content = f.read()
 

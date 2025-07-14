@@ -95,11 +95,11 @@ external_components:
       ref: main
     refresh: 1s
 """
-        yaml_file = tmp_path / "test.yaml"
-        yaml_file.write_text(yaml_content)
-
         workspace_path = tmp_path / "workspace"
         workspace_path.mkdir()
+
+        yaml_file = workspace_path / "test.yaml"
+        yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
         with mock.patch.dict(
