@@ -110,7 +110,7 @@ namespace ratgdo {
                 if (tries % 3 == 0) {
                     delay *= 1.5;
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [this]() {
+                this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [this, start, delay, tries]() {
                     this->sync_helper(start, delay, tries + 1);
                 });
             };
@@ -176,7 +176,7 @@ namespace ratgdo {
         void Secplus2::door_command(DoorAction action)
         {
             this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [this]() {
-                this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this] {
+                this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this, action] {
                     this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 0, 1));
                 });
             });
@@ -204,7 +204,7 @@ namespace ratgdo {
             uint32_t timeout = 0;
             for (auto kind : kinds) {
                 timeout += 200;
-                this->scheduler_->set_timeout(this->ratgdo_, "", timeout, [this] { this->query_paired_devices(kind); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", timeout, [this, kind] { this->query_paired_devices(kind); });
             }
         }
 
@@ -232,7 +232,7 @@ namespace ratgdo {
                 uint8_t dev_kind = static_cast<uint8_t>(kind) - 1;
                 this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, dev_kind }); // just requested device
                 this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->query_status(); });
-                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this] { this->query_paired_devices(kind); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this, kind] { this->query_paired_devices(kind); });
             }
         }
 

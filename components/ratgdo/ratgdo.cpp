@@ -602,7 +602,7 @@ namespace ratgdo {
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
             this->door_action(DoorAction::STOP);
-            this->on_door_state_([this](DoorState s) {
+            this->on_door_state_([this, position](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
                 }
@@ -749,10 +749,10 @@ namespace ratgdo {
         auto name = "door_state" + std::to_string(num++);
 
         this->door_state.subscribe([this, f, name](DoorState state) {
-            defer(name, [this, f] { f(state, *this->door_position); });
+            defer(name, [this, f, state] { f(state, *this->door_position); });
         });
         this->door_position.subscribe([this, f, name](float position) {
-            defer(name, [this, f] { f(*this->door_state, position); });
+            defer(name, [this, f, position] { f(*this->door_state, position); });
         });
     }
     void RATGDOComponent::subscribe_light_state(std::function<void(LightState)>&& f)
