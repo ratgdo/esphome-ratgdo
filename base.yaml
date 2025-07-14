@@ -1,7 +1,4 @@
 ---
-esphome:
-  min_version: 2025.6.0
-
 external_components:
   - source:
       type: git
