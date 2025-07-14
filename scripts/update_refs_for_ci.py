@@ -39,7 +39,11 @@ def get_pr_info() -> Tuple[str, Optional[str]]:
 def main():
     """Main function."""
     # Get the absolute path to the project root
-    project_root = Path(__file__).parent.parent.absolute()
+    # In GitHub Actions, use the workspace path
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        project_root = Path(os.environ.get("GITHUB_WORKSPACE", ".")).absolute()
+    else:
+        project_root = Path(__file__).parent.parent.absolute()
 
     # Get branch and fork info for dashboard_import
     branch, fork_repo = get_pr_info()
@@ -50,8 +54,8 @@ def main():
         print(f"Fork repository: {fork_repo}")
     print("Updating YAML files to use local paths for CI testing...")
 
-    # Process all YAML files
-    for yaml_file in Path(".").glob("*.yaml"):
+    # Process all YAML files in the project root
+    for yaml_file in project_root.glob("*.yaml"):
         with open(yaml_file, "r") as f:
             content = f.read()
 
@@ -71,29 +75,29 @@ def main():
                 content,
             )
 
-        # Update remote_package to use local path
-        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
-            # First update the URL
+        # Remove dashboard_import section completely FIRST
+        if "dashboard_import:" in content and "package_import_url:" in content:
+            # Remove the entire dashboard_import section including trailing newlines
             content = re.sub(
-                r"(remote_package:\s*\n\s*)url:\s*https://github\.com/ratgdo/esphome-ratgdo",
-                rf"\1url: file://{project_root}",
+                r"dashboard_import:\s*\n\s+package_import_url:\s*github://[^\n]+\n+",
+                "",
                 content,
             )
-            # Then remove the ref line while preserving indentation
-            # This matches the ref line and removes it completely
-            content = re.sub(r"(\n\s+)ref:\s*\w+\n", r"\n", content)
 
-        # Update dashboard_import to use the correct branch (not local file)
-        if "dashboard_import:" in content:
-            # Update @main to @branch
-            content = re.sub(r"@main\b", f"@{branch}", content)
+        # Update remote_package to use local packages as a list
+        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
+            # Replace the entire remote_package with a list of local includes
+            def replace_remote_package(match):
+                files = match.group(1)
+                # Convert [base.yaml] to just base.yaml
+                files = files.strip("[]").strip()
+                return f"packages:\n  - !include {project_root}/{files}\n"
 
-            # If this is a fork, update repository URLs
-            if fork_repo and fork_repo != RATGDO_REPO:
-                # Update dashboard imports to use fork
-                content = re.sub(
-                    rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
-                )
+            content = re.sub(
+                r"packages:\s*\n\s+remote_package:\s*\n\s+url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n(?:\s+ref:\s*\w+\s*\n)?\s+files:\s*\[([^\]]+)\]\s*\n(?:\s+refresh:\s*\S+\s*\n)?",
+                replace_remote_package,
+                content,
+            )
 
         if content != original:
             with open(yaml_file, "w") as f:
