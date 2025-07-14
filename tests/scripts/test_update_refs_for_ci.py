@@ -222,10 +222,8 @@ external_components:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/main"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                with pytest.raises(SystemExit) as exc_info:
-                    exec(open(update_refs_for_ci.__file__).read())
-                assert exc_info.value.code == 0
+            result = update_refs_for_ci.main()
+            assert result == 0
 
         # Content should not be changed
         updated_content = yaml_file.read_text()
