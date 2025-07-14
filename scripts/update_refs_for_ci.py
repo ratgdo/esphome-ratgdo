@@ -71,17 +71,14 @@ def main():
                 content,
             )
 
-        # Update remote_package to use local path
+        # Delete the entire remote_package section
         if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
-            # First update the URL
+            # Remove the entire remote_package block under packages
             content = re.sub(
-                r"(remote_package:\s*\n\s*)url:\s*https://github\.com/ratgdo/esphome-ratgdo",
-                rf"\1url: file://{project_root}",
+                r"packages:\s*\n\s+remote_package:\s*\n\s+url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n(?:\s+ref:\s*\w+\s*\n)?\s+files:\s*\[([^\]]+)\]\s*\n\s+refresh:\s*\S+\s*\n",
+                "",
                 content,
             )
-            # Then remove the ref line while preserving indentation
-            # This matches the ref line and removes it completely
-            content = re.sub(r"(\n\s+)ref:\s*\w+\n", r"\n", content)
 
         # Update dashboard_import to use the correct branch (not local file)
         if "dashboard_import:" in content:
