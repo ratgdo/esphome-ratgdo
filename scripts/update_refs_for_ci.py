@@ -55,6 +55,10 @@ def main():
 
         original = content
 
+        # Only process files that reference the ratgdo repository
+        if RATGDO_REPO not in content and "ratgdo/esphome-ratgdo" not in content:
+            continue
+
         # Update ref: main to ref: <branch>
         content = re.sub(r"(\s+)ref:\s*main\b", rf"\1ref: {branch}", content)
 
