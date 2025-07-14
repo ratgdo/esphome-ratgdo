@@ -99,7 +99,7 @@ namespace ratgdo {
                         index = 15;
                     }
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this] {
+                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this, index] {
                     this->wall_panel_emulation(index);
                 });
             }
