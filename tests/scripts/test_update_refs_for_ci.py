@@ -85,6 +85,36 @@ class TestGetPRInfo:
 class TestUpdateRefs:
     """Test the main update functionality."""
 
+    def test_github_actions_workspace_path(self, tmp_path):
+        """Test that GITHUB_ACTIONS uses GITHUB_WORKSPACE for project root."""
+        yaml_content = """
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
+    refresh: 1s
+"""
+        yaml_file = tmp_path / "test.yaml"
+        yaml_file.write_text(yaml_content)
+
+        workspace_path = tmp_path / "workspace"
+        workspace_path.mkdir()
+
+        os.chdir(tmp_path)
+        with mock.patch.dict(
+            os.environ,
+            {
+                "GITHUB_ACTIONS": "true",
+                "GITHUB_WORKSPACE": str(workspace_path),
+                "GITHUB_REF": "refs/heads/test-branch",
+            },
+        ):
+            update_refs_for_ci.main()
+
+        updated_content = yaml_file.read_text()
+        assert f"path: {workspace_path}/components" in updated_content
+
     def test_update_external_components_to_local(self, tmp_path):
         """Test updating external_components to use local path."""
         yaml_content = """
@@ -111,14 +141,15 @@ external_components:
         assert "url: https://github.com/ratgdo/esphome-ratgdo" not in updated_content
         assert "ref: main" not in updated_content
 
-    def test_update_remote_package_to_local(self, tmp_path):
-        """Test updating remote_package to use local file URL."""
+    def test_delete_remote_package_section(self, tmp_path):
+        """Test deleting remote_package section entirely."""
         yaml_content = """
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
     ref: main
     files: [base.yaml]
+    refresh: 1s
 """
         yaml_file = tmp_path / "test.yaml"
         yaml_file.write_text(yaml_content)
@@ -129,9 +160,9 @@ packages:
                 update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert f"url: file://{tmp_path}" in updated_content
+        assert "packages:" not in updated_content
+        assert "remote_package:" not in updated_content
         assert "url: https://github.com/ratgdo/esphome-ratgdo" not in updated_content
-        assert "ref: main" not in updated_content
 
     def test_update_dashboard_import_branch(self, tmp_path):
         """Test updating dashboard_import to use correct branch."""
@@ -229,9 +260,11 @@ packages:
         assert (
             "github://ratgdo/esphome-ratgdo/v25board.yaml@test-mixed" in updated_content
         )
-        # Check remote_package
-        assert f"url: file://{tmp_path}" in updated_content
-        # Ensure no GitHub URLs remain for external_components and remote_package
+        # packages section should be completely removed
+        assert "packages:" not in updated_content
+        # Check remote_package is deleted
+        assert "remote_package:" not in updated_content
+        # Ensure no GitHub URLs remain for external_components
         assert updated_content.count("github.com/ratgdo/esphome-ratgdo") == 0
 
     def test_preserve_esphome_tags(self, tmp_path):
