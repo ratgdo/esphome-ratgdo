@@ -44,7 +44,8 @@ def main():
                 content,
             )
             # Remove ref line if present (local doesn't need it)
-            content = re.sub(r"(\s+)ref:\s*\w+\s*\n", "", content)
+            # Match the ref line and preserve proper spacing for the next line
+            content = re.sub(r"(\s+ref:\s*\w+\n)(\s*)", r"\2", content)
 
         # Update dashboard_import to point to local file
         if "dashboard_import:" in content:
