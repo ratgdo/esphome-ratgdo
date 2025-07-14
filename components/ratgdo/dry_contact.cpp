@@ -18,10 +18,10 @@ namespace ratgdo {
             this->tx_pin_ = tx_pin;
             this->rx_pin_ = rx_pin;
 
-            this->open_limit_reached_ = 0;
-            this->last_open_limit_ = 0;
-            this->close_limit_reached_ = 0;
-            this->last_close_limit_ = 0;
+            this->limits_.open_limit_reached = 0;
+            this->limits_.last_open_limit = 0;
+            this->limits_.close_limit_reached = 0;
+            this->limits_.last_close_limit = 0;
             this->door_state_ = DoorState::UNKNOWN;
         }
 
@@ -42,33 +42,33 @@ namespace ratgdo {
         void DryContact::set_open_limit(bool state)
         {
             ESP_LOGD(TAG, "Set open_limit_reached to %d", state);
-            this->last_open_limit_ = this->open_limit_reached_;
-            this->last_close_limit_ = false;
-            this->open_limit_reached_ = state;
+            this->limits_.last_open_limit = this->limits_.open_limit_reached;
+            this->limits_.last_close_limit = false;
+            this->limits_.open_limit_reached = state;
             this->send_door_state();
         }
 
         void DryContact::set_close_limit(bool state)
         {
             ESP_LOGD(TAG, "Set close_limit_reached to %d", state);
-            this->last_close_limit_ = this->close_limit_reached_;
-            this->last_open_limit_ = false;
-            this->close_limit_reached_ = state;
+            this->limits_.last_close_limit = this->limits_.close_limit_reached;
+            this->limits_.last_open_limit = false;
+            this->limits_.close_limit_reached = state;
             this->send_door_state();
         }
 
         void DryContact::send_door_state()
         {
-            if (this->open_limit_reached_) {
+            if (this->limits_.open_limit_reached) {
                 this->door_state_ = DoorState::OPEN;
-            } else if (this->close_limit_reached_) {
+            } else if (this->limits_.close_limit_reached) {
                 this->door_state_ = DoorState::CLOSED;
-            } else if (!this->close_limit_reached_ && !this->open_limit_reached_) {
-                if (this->last_close_limit_) {
+            } else if (!this->limits_.close_limit_reached && !this->limits_.open_limit_reached) {
+                if (this->limits_.last_close_limit) {
                     this->door_state_ = DoorState::OPENING;
                 }
 
-                if (this->last_open_limit_) {
+                if (this->limits_.last_open_limit) {
                     this->door_state_ = DoorState::CLOSING;
                 }
             }
@@ -103,20 +103,20 @@ namespace ratgdo {
 
             if (action == DoorAction::OPEN) {
                 this->discrete_open_pin_->digital_write(1);
-                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] {
                     this->discrete_open_pin_->digital_write(0);
                 });
             }
 
             if (action == DoorAction::CLOSE) {
                 this->discrete_close_pin_->digital_write(1);
-                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] {
                     this->discrete_close_pin_->digital_write(0);
                 });
             }
 
             this->tx_pin_->digital_write(1); // Single button control
-            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] {
                 this->tx_pin_->digital_write(0);
             });
         }

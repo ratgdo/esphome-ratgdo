@@ -16,7 +16,7 @@ namespace ratgdo {
 
     void RATGDOLightOutput::setup()
     {
-        this->parent_->subscribe_light_state([=](LightState state) {
+        this->parent_->subscribe_light_state([this](LightState state) {
             this->on_light_state(state);
         });
     }
