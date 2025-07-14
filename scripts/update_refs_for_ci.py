@@ -36,63 +36,74 @@ def get_pr_info() -> Tuple[str, Optional[str]]:
     return "main", None
 
 
-branch, fork_repo = get_pr_info()
+def main():
+    """Main function."""
+    branch, fork_repo = get_pr_info()
 
-if branch == "main":
-    print("On main branch, skipping ref updates")
-    sys.exit(0)
+    if branch == "main":
+        print("On main branch, skipping ref updates")
+        return 0
 
-print(f"Updating refs to: {branch}")
-if fork_repo and fork_repo != RATGDO_REPO:
-    print(f"Using fork repository: {fork_repo}")
-
-# Process all YAML files
-for yaml_file in Path(".").glob("*.yaml"):
-    with open(yaml_file, "r") as f:
-        content = f.read()
-
-    original = content
-
-    # Update ref: main to ref: <branch>
-    content = re.sub(r"(\s+)ref:\s*main\b", rf"\1ref: {branch}", content)
-
-    # Update @main in dashboard imports
-    content = re.sub(r"@main\b", f"@{branch}", content)
-
-    # If this is a fork, update repository URLs
+    print(f"Updating refs to: {branch}")
     if fork_repo and fork_repo != RATGDO_REPO:
-        # Update repository URL in external_components
-        content = re.sub(
-            rf"(url:\s*https://github\.com/){RATGDO_REPO}", rf"\1{fork_repo}", content
+        print(f"Using fork repository: {fork_repo}")
+
+    # Process all YAML files
+    for yaml_file in Path(".").glob("*.yaml"):
+        with open(yaml_file, "r") as f:
+            content = f.read()
+
+        original = content
+
+        # Update ref: main to ref: <branch>
+        content = re.sub(r"(\s+)ref:\s*main\b", rf"\1ref: {branch}", content)
+
+        # Update @main in dashboard imports
+        content = re.sub(r"@main\b", f"@{branch}", content)
+
+        # If this is a fork, update repository URLs
+        if fork_repo and fork_repo != RATGDO_REPO:
+            # Update repository URL in external_components
+            content = re.sub(
+                rf"(url:\s*https://github\.com/){RATGDO_REPO}",
+                rf"\1{fork_repo}",
+                content,
+            )
+            # Update dashboard imports to use fork
+            content = re.sub(
+                rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
+            )
+
+        # For remote_package sections without ref, add it after the URL
+        # Look for patterns like:
+        #   remote_package:
+        #     url: https://github.com/<repo>/esphome-ratgdo
+        #     files: [...]
+        repo_pattern = fork_repo if fork_repo else RATGDO_REPO
+        pattern = (
+            r"(remote_package:\s*\n\s*url:\s*https://github\.com/"
+            + repo_pattern.replace("/", r"\/")
+            + r"\s*\n)(\s*files:)"
         )
-        # Update dashboard imports to use fork
-        content = re.sub(rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content)
 
-    # For remote_package sections without ref, add it after the URL
-    # Look for patterns like:
-    #   remote_package:
-    #     url: https://github.com/<repo>/esphome-ratgdo
-    #     files: [...]
-    repo_pattern = fork_repo if fork_repo else RATGDO_REPO
-    pattern = (
-        r"(remote_package:\s*\n\s*url:\s*https://github\.com/"
-        + repo_pattern.replace("/", r"\/")
-        + r"\s*\n)(\s*files:)"
-    )
+        # Check if this pattern exists without a ref line
+        if re.search(pattern, content) and not re.search(
+            pattern.replace(r"(\s*files:)", r"(\s*ref:.*\n\s*files:)"), content
+        ):
+            # Get the indentation from the url line
+            match = re.search(r"(remote_package:\s*\n(\s*)url:)", content)
+            if match:
+                indent = match.group(2)
+                content = re.sub(pattern, rf"\1{indent}ref: {branch}\n\2", content)
 
-    # Check if this pattern exists without a ref line
-    if re.search(pattern, content) and not re.search(
-        pattern.replace(r"(\s*files:)", r"(\s*ref:.*\n\s*files:)"), content
-    ):
-        # Get the indentation from the url line
-        match = re.search(r"(remote_package:\s*\n(\s*)url:)", content)
-        if match:
-            indent = match.group(2)
-            content = re.sub(pattern, rf"\1{indent}ref: {branch}\n\2", content)
+        if content != original:
+            with open(yaml_file, "w") as f:
+                f.write(content)
+            print(f"Updated {yaml_file}")
 
-    if content != original:
-        with open(yaml_file, "w") as f:
-            f.write(content)
-        print(f"Updated {yaml_file}")
+    print("Done!")
+    return 0
 
-print("Done!")
+
+if __name__ == "__main__":
+    sys.exit(main())
