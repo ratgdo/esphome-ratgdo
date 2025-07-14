@@ -75,26 +75,29 @@ def main():
                 content,
             )
 
-        # Delete the entire remote_package section
-        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
-            # Remove the entire remote_package block under packages
+        # Remove dashboard_import section completely FIRST
+        if "dashboard_import:" in content and "package_import_url:" in content:
+            # Remove the entire dashboard_import section including trailing newlines
             content = re.sub(
-                r"packages:\s*\n\s+remote_package:\s*\n\s+url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n(?:\s+ref:\s*\w+\s*\n)?\s+files:\s*\[([^\]]+)\]\s*\n\s+refresh:\s*\S+\s*\n",
+                r"dashboard_import:\s*\n\s+package_import_url:\s*github://[^\n]+\n+",
                 "",
                 content,
             )
 
-        # Update dashboard_import to use the correct branch (not local file)
-        if "dashboard_import:" in content:
-            # Update @main to @branch
-            content = re.sub(r"@main\b", f"@{branch}", content)
+        # Update remote_package to use local packages as a list
+        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
+            # Replace the entire remote_package with a list of local includes
+            def replace_remote_package(match):
+                files = match.group(1)
+                # Convert [base.yaml] to just base.yaml
+                files = files.strip("[]").strip()
+                return f"packages:\n  - !include {project_root}/{files}\n"
 
-            # If this is a fork, update repository URLs
-            if fork_repo and fork_repo != RATGDO_REPO:
-                # Update dashboard imports to use fork
-                content = re.sub(
-                    rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
-                )
+            content = re.sub(
+                r"packages:\s*\n\s+remote_package:\s*\n\s+url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n(?:\s+ref:\s*\w+\s*\n)?\s+files:\s*\[([^\]]+)\]\s*\n(?:\s+refresh:\s*\S+\s*\n)?",
+                replace_remote_package,
+                content,
+            )
 
         if content != original:
             with open(yaml_file, "w") as f:
