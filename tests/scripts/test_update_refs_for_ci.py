@@ -121,8 +121,7 @@ packages:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/feature-x"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "ref: feature-x" in updated_content
@@ -141,8 +140,7 @@ packages:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/add-ref"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "ref: add-ref" in updated_content
@@ -160,8 +158,7 @@ dashboard_import:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/update-dash"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "@update-dash" in updated_content
@@ -200,8 +197,7 @@ dashboard_import:
                 "GITHUB_EVENT_PATH": str(event_file),
             },
         ):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "url: https://github.com/forkeduser/esphome-ratgdo" in updated_content
@@ -257,8 +253,7 @@ button:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/preserve-tags"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "ref: preserve-tags" in updated_content
@@ -279,8 +274,7 @@ packages:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/no-changes"}):
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            update_refs_for_ci.main()
 
         # File should not be modified
         assert yaml_file.stat().st_mtime == original_mtime
