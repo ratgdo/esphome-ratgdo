@@ -77,6 +77,31 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v4
+      - name: Update external_components ref to current branch
+        run: |
+          # Update all YAML files to use the current branch/ref
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PRs, use the head ref
+            CURRENT_REF="${{ github.head_ref }}"
+          else
+            # For pushes, use the ref name (strips refs/heads/ prefix)
+            CURRENT_REF="${GITHUB_REF#refs/heads/}"
+          fi
+          echo "Updating external_components ref to: $CURRENT_REF"
+
+          # Update ref: main to ref: $CURRENT_REF in all YAML files
+          # This handles both external_components and remote_package sections
+          find . -name "*.yaml" -type f -exec sed -i "s/ref: main/ref: $CURRENT_REF/g" {} \;
+
+          # Also update the dashboard_import URLs in all YAML files
+          find . -name "*.yaml" -type f -exec sed -i "s/@main/@$CURRENT_REF/g" {} \;
+
+          # Show the changes for debugging
+          echo "Files with updated refs:"
+          grep -l "ref: $CURRENT_REF" *.yaml || true
+          echo ""
+          echo "Sample of changes in base.yaml:"
+          grep -A2 -B2 "ref:" base.yaml || true
       - name: Build firmware
         uses: ratgdo/esphome-build-action@main
         id: esphome-build
