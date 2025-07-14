@@ -85,8 +85,8 @@ class TestGetPRInfo:
 class TestUpdateRefs:
     """Test the main update functionality."""
 
-    def test_update_external_components(self, tmp_path):
-        """Test updating external_components ref."""
+    def test_update_external_components_to_local(self, tmp_path):
+        """Test updating external_components to use local path."""
         yaml_content = """
 external_components:
   - source:
@@ -98,17 +98,21 @@ external_components:
         yaml_file = tmp_path / "test.yaml"
         yaml_file.write_text(yaml_content)
 
+        # Mock the project root to be tmp_path
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
-            # Run the main function
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
+                update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert "ref: test-branch" in updated_content
+        assert "type: local" in updated_content
+        assert f"path: {tmp_path}/components" in updated_content
+        assert "type: git" not in updated_content
+        assert "url: https://github.com/ratgdo/esphome-ratgdo" not in updated_content
         assert "ref: main" not in updated_content
 
-    def test_update_remote_package_with_ref(self, tmp_path):
-        """Test updating remote_package that already has ref."""
+    def test_update_remote_package_to_local(self, tmp_path):
+        """Test updating remote_package to use local file URL."""
         yaml_content = """
 packages:
   remote_package:
@@ -120,35 +124,17 @@ packages:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/feature-x"}):
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
+                update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert "ref: feature-x" in updated_content
+        assert f"url: file://{tmp_path}" in updated_content
+        assert "url: https://github.com/ratgdo/esphome-ratgdo" not in updated_content
         assert "ref: main" not in updated_content
 
-    def test_add_ref_to_remote_package(self, tmp_path):
-        """Test adding ref to remote_package that doesn't have one."""
-        yaml_content = """
-packages:
-  remote_package:
-    url: https://github.com/ratgdo/esphome-ratgdo
-    files: [base.yaml]
-"""
-        yaml_file = tmp_path / "test.yaml"
-        yaml_file.write_text(yaml_content)
-
-        os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/add-ref"}):
-            update_refs_for_ci.main()
-
-        updated_content = yaml_file.read_text()
-        assert "ref: add-ref" in updated_content
-        # Check proper indentation
-        assert "    ref: add-ref\n    files:" in updated_content
-
-    def test_update_dashboard_import(self, tmp_path):
-        """Test updating dashboard_import URL."""
+    def test_update_dashboard_import_branch(self, tmp_path):
+        """Test updating dashboard_import to use correct branch."""
         yaml_content = """
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board.yaml@main
@@ -157,21 +143,21 @@ dashboard_import:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/update-dash"}):
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/feature-x"}):
+                update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert "@update-dash" in updated_content
+        assert (
+            "github://ratgdo/esphome-ratgdo/v2board.yaml@feature-x" in updated_content
+        )
         assert "@main" not in updated_content
+        # Should NOT convert to file://
+        assert "file://" not in updated_content
 
-    def test_fork_updates_urls(self, tmp_path):
-        """Test that fork PRs update repository URLs."""
+    def test_fork_updates_dashboard_import(self, tmp_path):
+        """Test that fork PRs update dashboard import repository URLs."""
         yaml_content = """
-external_components:
-  - source:
-      type: git
-      url: https://github.com/ratgdo/esphome-ratgdo
-      ref: main
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board.yaml@main
 """
@@ -190,44 +176,63 @@ dashboard_import:
         event_file.write_text(json.dumps(event_data))
 
         os.chdir(tmp_path)
-        with mock.patch.dict(
-            os.environ,
-            {
-                "GITHUB_REF": "refs/pull/789/merge",
-                "GITHUB_EVENT_PATH": str(event_file),
-            },
-        ):
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "GITHUB_REF": "refs/pull/789/merge",
+                    "GITHUB_EVENT_PATH": str(event_file),
+                },
+            ):
+                update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert "url: https://github.com/forkeduser/esphome-ratgdo" in updated_content
         assert (
             "github://forkeduser/esphome-ratgdo/v2board.yaml@fork-feature"
             in updated_content
         )
-        assert "ref: fork-feature" in updated_content
         assert "ratgdo/esphome-ratgdo" not in updated_content
 
-    def test_skip_main_branch(self, tmp_path):
-        """Test that main branch is skipped."""
+    def test_mixed_updates(self, tmp_path):
+        """Test updating a file with multiple patterns."""
         yaml_content = """
 external_components:
   - source:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
       ref: main
+    refresh: 1s
+
+dashboard_import:
+  package_import_url: github://ratgdo/esphome-ratgdo/v25board.yaml@main
+
+packages:
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
+    files: [base.yaml]
+    refresh: 1s
 """
         yaml_file = tmp_path / "test.yaml"
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/main"}):
-            result = update_refs_for_ci.main()
-            assert result == 0
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-mixed"}):
+                update_refs_for_ci.main()
 
-        # Content should not be changed
         updated_content = yaml_file.read_text()
-        assert updated_content == yaml_content
+        # Check external_components
+        assert "type: local" in updated_content
+        assert f"path: {tmp_path}/components" in updated_content
+        # Check dashboard_import - should keep github:// but update branch
+        assert (
+            "github://ratgdo/esphome-ratgdo/v25board.yaml@test-mixed" in updated_content
+        )
+        # Check remote_package
+        assert f"url: file://{tmp_path}" in updated_content
+        # Ensure no GitHub URLs remain for external_components and remote_package
+        assert updated_content.count("github.com/ratgdo/esphome-ratgdo") == 0
 
     def test_preserve_esphome_tags(self, tmp_path):
         """Test that ESPHome-specific tags are preserved."""
@@ -250,11 +255,14 @@ button:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/preserve-tags"}):
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(
+                os.environ, {"GITHUB_REF": "refs/heads/preserve-tags"}
+            ):
+                update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
-        assert "ref: preserve-tags" in updated_content
+        assert "type: local" in updated_content
         assert "lambda: !lambda |-" in updated_content  # ESPHome tag preserved
         assert "id($id_prefix).query_status();" in updated_content
 
@@ -271,8 +279,9 @@ packages:
         original_mtime = yaml_file.stat().st_mtime
 
         os.chdir(tmp_path)
-        with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/no-changes"}):
-            update_refs_for_ci.main()
+        with mock.patch.object(Path, "absolute", return_value=tmp_path):
+            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/no-changes"}):
+                update_refs_for_ci.main()
 
         # File should not be modified
         assert yaml_file.stat().st_mtime == original_mtime

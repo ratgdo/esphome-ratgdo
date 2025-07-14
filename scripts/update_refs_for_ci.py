@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Update YAML files to use current Git branch instead of main."""
+"""Update YAML files to use local paths instead of GitHub URLs for CI testing."""
 
 import json
 import os
@@ -38,15 +38,17 @@ def get_pr_info() -> Tuple[str, Optional[str]]:
 
 def main():
     """Main function."""
+    # Get the absolute path to the project root
+    project_root = Path(__file__).parent.parent.absolute()
+
+    # Get branch and fork info for dashboard_import
     branch, fork_repo = get_pr_info()
 
-    if branch == "main":
-        print("On main branch, skipping ref updates")
-        return 0
-
-    print(f"Updating refs to: {branch}")
+    print(f"Project root: {project_root}")
+    print(f"Current branch: {branch}")
     if fork_repo and fork_repo != RATGDO_REPO:
-        print(f"Using fork repository: {fork_repo}")
+        print(f"Fork repository: {fork_repo}")
+    print("Updating YAML files to use local paths for CI testing...")
 
     # Process all YAML files
     for yaml_file in Path(".").glob("*.yaml"):
@@ -55,50 +57,43 @@ def main():
 
         original = content
 
-        # Only process files that reference the ratgdo repository
-        if RATGDO_REPO not in content and "ratgdo/esphome-ratgdo" not in content:
-            continue
-
-        # Update ref: main to ref: <branch>
-        content = re.sub(r"(\s+)ref:\s*main\b", rf"\1ref: {branch}", content)
-
-        # Update @main in dashboard imports
-        content = re.sub(r"@main\b", f"@{branch}", content)
-
-        # If this is a fork, update repository URLs
-        if fork_repo and fork_repo != RATGDO_REPO:
-            # Update repository URL in external_components
+        # Update external_components to use local path
+        if (
+            "external_components:" in content
+            and "type: git" in content
+            and "ratgdo/esphome-ratgdo" in content
+        ):
+            # Replace the git source with local source, preserving indentation
+            # This matches the exact structure: type: git, url: ..., ref: ...
             content = re.sub(
-                rf"(url:\s*https://github\.com/){RATGDO_REPO}",
-                rf"\1{fork_repo}",
+                r"type:\s*git\s*\n(\s+)url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n\s+ref:\s*\w+",
+                rf"type: local\n\1path: {project_root}/components",
                 content,
             )
-            # Update dashboard imports to use fork
+
+        # Update remote_package to use local path
+        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
+            # First update the URL
             content = re.sub(
-                rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
+                r"(remote_package:\s*\n\s*)url:\s*https://github\.com/ratgdo/esphome-ratgdo",
+                rf"\1url: file://{project_root}",
+                content,
             )
+            # Then remove the ref line while preserving indentation
+            # This matches the ref line and removes it completely
+            content = re.sub(r"(\n\s+)ref:\s*\w+\n", r"\n", content)
 
-        # For remote_package sections without ref, add it after the URL
-        # Look for patterns like:
-        #   remote_package:
-        #     url: https://github.com/<repo>/esphome-ratgdo
-        #     files: [...]
-        repo_pattern = fork_repo if fork_repo else RATGDO_REPO
-        pattern = (
-            r"(remote_package:\s*\n\s*url:\s*https://github\.com/"
-            + repo_pattern.replace("/", r"\/")
-            + r"\s*\n)(\s*files:)"
-        )
+        # Update dashboard_import to use the correct branch (not local file)
+        if "dashboard_import:" in content:
+            # Update @main to @branch
+            content = re.sub(r"@main\b", f"@{branch}", content)
 
-        # Check if this pattern exists without a ref line
-        if re.search(pattern, content) and not re.search(
-            pattern.replace(r"(\s*files:)", r"(\s*ref:.*\n\s*files:)"), content
-        ):
-            # Get the indentation from the url line
-            match = re.search(r"(remote_package:\s*\n(\s*)url:)", content)
-            if match:
-                indent = match.group(2)
-                content = re.sub(pattern, rf"\1{indent}ref: {branch}\n\2", content)
+            # If this is a fork, update repository URLs
+            if fork_repo and fork_repo != RATGDO_REPO:
+                # Update dashboard imports to use fork
+                content = re.sub(
+                    rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
+                )
 
         if content != original:
             with open(yaml_file, "w") as f:
