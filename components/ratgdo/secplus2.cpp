@@ -175,7 +175,7 @@ namespace ratgdo {
 
         void Secplus2::door_command(DoorAction action)
         {
-            this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [this]() {
+            this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [this, action]() {
                 this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this, action] {
                     this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 0, 1));
                 });
