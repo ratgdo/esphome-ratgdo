@@ -43,8 +43,8 @@ def main():
                 rf"\1url: file://{project_root}",
                 content,
             )
-            # Remove ref if present (local doesn't need it)
-            content = re.sub(r"(\s+ref:\s*\w+\s*\n)(\s*files:)", r"\2", content)
+            # Remove ref line if present (local doesn't need it)
+            content = re.sub(r"(\s+)ref:\s*\w+\s*\n", "", content)
 
         # Update dashboard_import to point to local file
         if "dashboard_import:" in content:
