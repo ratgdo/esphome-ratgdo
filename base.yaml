@@ -1,8 +1,9 @@
 ---
 external_components:
   - source:
-      type: local
-      path: /Users/bdraco/Dropbox/esphome-ratgdo/components
+      type: git
+      url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
     refresh: 1s
   # - source:
   #     type: local

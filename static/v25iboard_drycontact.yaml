@@ -26,8 +26,13 @@ esp8266:
   restore_from_flash: true
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_drycontact.yaml@test-branch
+  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_drycontact.yaml@main
 
+packages:
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    files: [base_drycontact.yaml]
+    refresh: 1s
   # remote_package: !include
   #   file: base_drycontact.yaml
 

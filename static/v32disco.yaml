@@ -27,8 +27,14 @@ esp32:
   board: esp32dev
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@test-branch
+  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@main
 
+packages:
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
+    files: [base.yaml]
+    refresh: 1s
   # remote_package: !include
   #   file: base.yaml
 
