@@ -100,9 +100,8 @@ external_components:
 
         os.chdir(tmp_path)
         with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
-            # Run the script
-            with mock.patch("sys.argv", ["update_refs_for_ci.py"]):
-                exec(open(update_refs_for_ci.__file__).read())
+            # Run the main function
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "ref: test-branch" in updated_content
