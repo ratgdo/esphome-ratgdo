@@ -15,7 +15,7 @@ namespace ratgdo {
 
     void RATGDOLock::setup()
     {
-        this->parent_->subscribe_lock_state([=](LockState state) {
+        this->parent_->subscribe_lock_state([this](LockState state) {
             this->on_lock_state(state);
         });
     }

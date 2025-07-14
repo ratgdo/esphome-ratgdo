@@ -12,27 +12,27 @@ namespace ratgdo {
     void RATGDOSensor::setup()
     {
         if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_OPENINGS) {
-            this->parent_->subscribe_openings([=](uint16_t value) {
+            this->parent_->subscribe_openings([this](uint16_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL) {
-            this->parent_->subscribe_paired_devices_total([=](uint8_t value) {
+            this->parent_->subscribe_paired_devices_total([this](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_REMOTES) {
-            this->parent_->subscribe_paired_remotes([=](uint8_t value) {
+            this->parent_->subscribe_paired_remotes([this](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_KEYPADS) {
-            this->parent_->subscribe_paired_keypads([=](uint8_t value) {
+            this->parent_->subscribe_paired_keypads([this](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS) {
-            this->parent_->subscribe_paired_wall_controls([=](uint8_t value) {
+            this->parent_->subscribe_paired_wall_controls([this](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES) {
-            this->parent_->subscribe_paired_accessories([=](uint8_t value) {
+            this->parent_->subscribe_paired_accessories([this](uint8_t value) {
                 this->publish_state(value);
             });
         } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
@@ -47,7 +47,7 @@ namespace ratgdo {
             this->distance_sensor_.VL53L4CX_SetDistanceMode(VL53L4CX_DISTANCEMODE_LONG);
             this->distance_sensor_.VL53L4CX_StartMeasurement();
 
-            this->parent_->subscribe_distance_measurement([=](int16_t value) {
+            this->parent_->subscribe_distance_measurement([this](int16_t value) {
                 this->publish_state(value);
             });
 #endif
