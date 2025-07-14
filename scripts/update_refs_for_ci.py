@@ -1,10 +1,39 @@
 #!/usr/bin/env python3
 """Update YAML files to use local paths instead of GitHub URLs for CI testing."""
 
+import json
 import os
 import re
 import sys
 from pathlib import Path
+from typing import Optional, Tuple
+
+RATGDO_REPO = "ratgdo/esphome-ratgdo"
+
+
+def get_pr_info() -> Tuple[str, Optional[str]]:
+    """Get PR branch and repository info from GitHub environment."""
+    # For PRs, check GITHUB_REF first
+    github_ref = os.environ.get("GITHUB_REF", "")
+    if "/pull/" in github_ref:
+        # It's a PR, get info from event file
+        github_event_path = os.environ.get("GITHUB_EVENT_PATH")
+        if github_event_path and os.path.exists(github_event_path):
+            with open(github_event_path) as f:
+                event_data = json.load(f)
+                pr_data = event_data.get("pull_request", {})
+                head = pr_data.get("head", {})
+                branch = head.get("ref", "main")
+                repo = head.get("repo", {})
+                fork_repo = repo.get("full_name")  # e.g., "someuser/esphome-ratgdo"
+                return branch, fork_repo
+
+    # For pushes, extract branch from GITHUB_REF
+    if github_ref.startswith("refs/heads/"):
+        branch = github_ref.replace("refs/heads/", "")
+        return branch, None
+
+    return "main", None
 
 
 def main():
@@ -12,7 +41,13 @@ def main():
     # Get the absolute path to the project root
     project_root = Path(__file__).parent.parent.absolute()
 
+    # Get branch and fork info for dashboard_import
+    branch, fork_repo = get_pr_info()
+
     print(f"Project root: {project_root}")
+    print(f"Current branch: {branch}")
+    if fork_repo and fork_repo != RATGDO_REPO:
+        print(f"Fork repository: {fork_repo}")
     print("Updating YAML files to use local paths for CI testing...")
 
     # Process all YAML files
@@ -48,19 +83,16 @@ def main():
             # This matches the ref line and removes it completely
             content = re.sub(r"(\n\s+)ref:\s*\w+\n", r"\n", content)
 
-        # Update dashboard_import to point to local file
+        # Update dashboard_import to use the correct branch (not local file)
         if "dashboard_import:" in content:
-            # Extract filename from the github URL
-            match = re.search(
-                r"github://ratgdo/esphome-ratgdo/(\S+\.yaml)@\w+", content
-            )
-            if match:
-                filename = match.group(1)
-                # Replace with local file path
+            # Update @main to @branch
+            content = re.sub(r"@main\b", f"@{branch}", content)
+
+            # If this is a fork, update repository URLs
+            if fork_repo and fork_repo != RATGDO_REPO:
+                # Update dashboard imports to use fork
                 content = re.sub(
-                    r"(package_import_url:\s*)github://ratgdo/esphome-ratgdo/\S+\.yaml@\w+",
-                    rf"\1file://{project_root}/{filename}",
-                    content,
+                    rf"github://{RATGDO_REPO}/", f"github://{fork_repo}/", content
                 )
 
         if content != original:
