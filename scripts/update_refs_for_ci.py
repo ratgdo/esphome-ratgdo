@@ -36,16 +36,16 @@ def main():
             )
 
         # Update remote_package to use local path
-        if "remote_package:" in content:
-            # Replace URL with local path
+        if "remote_package:" in content and "ratgdo/esphome-ratgdo" in content:
+            # First update the URL
             content = re.sub(
                 r"(remote_package:\s*\n\s*)url:\s*https://github\.com/ratgdo/esphome-ratgdo",
                 rf"\1url: file://{project_root}",
                 content,
             )
-            # Remove ref line if present (local doesn't need it)
-            # Match the ref line and preserve proper spacing for the next line
-            content = re.sub(r"(\s+ref:\s*\w+\n)(\s*)", r"\2", content)
+            # Then remove the ref line while preserving indentation
+            # This matches the ref line and removes it completely
+            content = re.sub(r"(\n\s+)ref:\s*\w+\n", r"\n", content)
 
         # Update dashboard_import to point to local file
         if "dashboard_import:" in content:
