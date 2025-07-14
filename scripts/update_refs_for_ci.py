@@ -8,6 +8,8 @@ from pathlib import Path
 
 import yaml
 
+RATGDO_REPO = "ratgdo/esphome-ratgdo"
+
 
 def get_current_branch():
     """Get current branch name from GitHub environment."""
@@ -50,19 +52,19 @@ for yaml_file in Path(".").glob("*.yaml"):
     # Update external_components
     if "external_components" in data:
         for comp in data.get("external_components", []):
-            if isinstance(comp, dict) and "source" in comp:
-                source = comp["source"]
-                if (
-                    "ratgdo/esphome-ratgdo" in source.get("url", "")
-                    and source.get("ref") == "main"
-                ):
-                    source["ref"] = branch
-                    changed = True
+            if not isinstance(comp, dict) or "source" not in comp:
+                continue
+            source = comp["source"]
+            if RATGDO_REPO not in source.get("url", ""):
+                continue
+            if source.get("ref") == "main":
+                source["ref"] = branch
+                changed = True
 
     # Update remote_package
     if "packages" in data and isinstance(data["packages"], dict):
         pkg = data["packages"].get("remote_package", {})
-        if "ratgdo/esphome-ratgdo" in pkg.get("url", ""):
+        if RATGDO_REPO in pkg.get("url", ""):
             if pkg.get("ref") == "main":
                 pkg["ref"] = branch
                 changed = True
