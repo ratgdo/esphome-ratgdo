@@ -3,10 +3,9 @@
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
-
-import yaml
 
 RATGDO_REPO = "ratgdo/esphome-ratgdo"
 
@@ -42,48 +41,41 @@ print(f"Updating refs to: {branch}")
 # Process all YAML files
 for yaml_file in Path(".").glob("*.yaml"):
     with open(yaml_file, "r") as f:
-        data = yaml.safe_load(f)
+        content = f.read()
 
-    if not data:
-        continue
+    original = content
 
-    changed = False
+    # Update ref: main to ref: <branch>
+    content = re.sub(r"(\s+)ref:\s*main\b", rf"\1ref: {branch}", content)
 
-    # Update external_components
-    if "external_components" in data:
-        for comp in data.get("external_components", []):
-            if not isinstance(comp, dict) or "source" not in comp:
-                continue
-            source = comp["source"]
-            if RATGDO_REPO not in source.get("url", ""):
-                continue
-            if source.get("ref") == "main":
-                source["ref"] = branch
-                changed = True
+    # Update @main in dashboard imports
+    content = re.sub(r"@main\b", f"@{branch}", content)
 
-    # Update remote_package
-    if "packages" in data and isinstance(data["packages"], dict):
-        pkg = data["packages"].get("remote_package", {})
-        if RATGDO_REPO in pkg.get("url", ""):
-            if pkg.get("ref") == "main":
-                pkg["ref"] = branch
-                changed = True
-            elif "ref" not in pkg:
-                pkg["ref"] = branch
-                changed = True
+    # For remote_package sections without ref, add it after the URL
+    # Look for patterns like:
+    #   remote_package:
+    #     url: https://github.com/ratgdo/esphome-ratgdo
+    #     files: [...]
+    pattern = (
+        r"(remote_package:\s*\n\s*url:\s*https://github\.com/"
+        + RATGDO_REPO.replace("/", r"\/")
+        + r"\s*\n)(\s*files:)"
+    )
+    replacement = rf"\1\2ref: {branch}\n\3"
 
-    # Update dashboard_import
-    if "dashboard_import" in data:
-        url = data["dashboard_import"].get("package_import_url", "")
-        if "@main" in url:
-            data["dashboard_import"]["package_import_url"] = url.replace(
-                "@main", f"@{branch}"
-            )
-            changed = True
+    # Check if this pattern exists without a ref line
+    if re.search(pattern, content) and not re.search(
+        pattern.replace(r"(\s*files:)", r"(\s*ref:.*\n\s*files:)"), content
+    ):
+        # Get the indentation from the url line
+        match = re.search(r"(remote_package:\s*\n(\s*)url:)", content)
+        if match:
+            indent = match.group(2)
+            content = re.sub(pattern, rf"\1{indent}ref: {branch}\n\2", content)
 
-    if changed:
+    if content != original:
         with open(yaml_file, "w") as f:
-            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+            f.write(content)
         print(f"Updated {yaml_file}")
 
 print("Done!")
