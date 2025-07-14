@@ -28,10 +28,11 @@ def main():
             and "type: git" in content
             and "ratgdo/esphome-ratgdo" in content
         ):
-            # Replace the git source with local source
+            # Replace the git source with local source, preserving indentation
+            # This matches the exact structure: type: git, url: ..., ref: ...
             content = re.sub(
-                r"(\s*-\s*source:\s*\n\s*)type:\s*git\s*\n\s*url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n\s*ref:\s*\w+",
-                rf"\1type: local\n\1path: {project_root}/components",
+                r"type:\s*git\s*\n(\s+)url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n\s+ref:\s*\w+",
+                rf"type: local\n\1path: {project_root}/components",
                 content,
             )
 
