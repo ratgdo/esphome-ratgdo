@@ -19,6 +19,7 @@ preferences:
 
 text_sensor:
   - platform: version
+    id: ${id_prefix}_firmware_version
     name: "Firmware Version"
 
 ratgdo:
