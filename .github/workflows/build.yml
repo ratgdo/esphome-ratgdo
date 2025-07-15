@@ -110,6 +110,7 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
       - name: Update external_components ref to current branch
+        if: github.ref != 'refs/heads/main'
         run: |
           python3 scripts/update_refs_for_ci.py
           echo ""
