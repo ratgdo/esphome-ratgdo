@@ -10,7 +10,7 @@ DEPENDENCIES = ["ratgdo"]
 RATGDOLock = ratgdo_ns.class_("RATGDOLock", lock.Lock, cg.Component)
 
 CONFIG_SCHEMA = (
-    lock.lock_schema()
+    lock.lock_schema(RATGDOLock)
     .extend(
         {
             cv.GenerateID(): cv.declare_id(RATGDOLock),

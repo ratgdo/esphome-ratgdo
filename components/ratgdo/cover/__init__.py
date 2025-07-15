@@ -25,7 +25,7 @@ CONF_ON_CLOSING = "on_closing"
 CONF_ON_STATE_CHANGE = "on_state_change"
 
 CONFIG_SCHEMA = (
-    cover.cover_schema()
+    cover.cover_schema(RATGDOCover)
     .extend(
         {
             cv.GenerateID(): cv.declare_id(RATGDOCover),
