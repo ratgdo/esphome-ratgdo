@@ -42,7 +42,7 @@ namespace ratgdo {
 
         void Secplus2::loop()
         {
-            if (this->transmit_pending_) {
+            if (this->flags_.transmit_pending) {
                 if (!this->transmit_packet()) {
                     return;
                 }
@@ -110,7 +110,7 @@ namespace ratgdo {
                 if (tries % 3 == 0) {
                     delay *= 1.5;
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [=]() {
+                this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [this, start, delay, tries]() {
                     this->sync_helper(start, delay, tries + 1);
                 });
             };
@@ -175,8 +175,8 @@ namespace ratgdo {
 
         void Secplus2::door_command(DoorAction action)
         {
-            this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [=]() {
-                this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] {
+            this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [this, action]() {
+                this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this, action] {
                     this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 0, 1));
                 });
             });
@@ -204,7 +204,7 @@ namespace ratgdo {
             uint32_t timeout = 0;
             for (auto kind : kinds) {
                 timeout += 200;
-                this->scheduler_->set_timeout(this->ratgdo_, "", timeout, [=] { this->query_paired_devices(kind); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", timeout, [this, kind] { this->query_paired_devices(kind); });
             }
         }
 
@@ -222,17 +222,17 @@ namespace ratgdo {
             }
             ESP_LOGW(TAG, "Clear paired devices of type: %s", PairedDevice_to_string(kind));
             if (kind == PairedDevice::ALL) {
-                this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE) - 1 }); }); // wireless
-                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [=] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD) - 1 }); }); // keypads
-                this->scheduler_->set_timeout(this->ratgdo_, "", 600, [=] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL) - 1 }); }); // wall controls
-                this->scheduler_->set_timeout(this->ratgdo_, "", 800, [=] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY) - 1 }); }); // accessories
-                this->scheduler_->set_timeout(this->ratgdo_, "", 1000, [=] { this->query_status(); });
-                this->scheduler_->set_timeout(this->ratgdo_, "", 1200, [=] { this->query_paired_devices(); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE) - 1 }); }); // wireless
+                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD) - 1 }); }); // keypads
+                this->scheduler_->set_timeout(this->ratgdo_, "", 600, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL) - 1 }); }); // wall controls
+                this->scheduler_->set_timeout(this->ratgdo_, "", 800, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY) - 1 }); }); // accessories
+                this->scheduler_->set_timeout(this->ratgdo_, "", 1000, [this] { this->query_status(); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", 1200, [this] { this->query_paired_devices(); });
             } else {
                 uint8_t dev_kind = static_cast<uint8_t>(kind) - 1;
                 this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, dev_kind }); // just requested device
-                this->scheduler_->set_timeout(this->ratgdo_, "", 200, [=] { this->query_status(); });
-                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [=] { this->query_paired_devices(kind); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->query_status(); });
+                this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this, kind] { this->query_paired_devices(kind); });
             }
         }
 
@@ -241,16 +241,16 @@ namespace ratgdo {
         {
             // Send LEARN with nibble = 0 then nibble = 1 to mimic wall control learn button
             this->send_command(Command { CommandType::LEARN, 0 });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] { this->send_command(Command { CommandType::LEARN, 1 }); });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] { this->query_status(); });
+            this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this] { this->send_command(Command { CommandType::LEARN, 1 }); });
+            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] { this->query_status(); });
         }
 
         void Secplus2::inactivate_learn()
         {
             // Send LEARN twice with nibble = 0 to inactivate learn and get status to update switch state
             this->send_command(Command { CommandType::LEARN, 0 });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 150, [=] { this->send_command(Command { CommandType::LEARN, 0 }); });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [=] { this->query_status(); });
+            this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this] { this->send_command(Command { CommandType::LEARN, 0 }); });
+            this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] { this->query_status(); });
         }
 
         optional<Command> Secplus2::read_command()
@@ -317,7 +317,7 @@ namespace ratgdo {
 
         void Secplus2::print_packet(const char* prefix, const WirePacket& packet) const
         {
-            ESP_LOG2(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
+            ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
                 prefix,
                 packet[0],
                 packet[1],
@@ -417,8 +417,8 @@ namespace ratgdo {
 
         void Secplus2::send_command(Command command, IncrementRollingCode increment)
         {
-            ESP_LOG1(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
-            if (!this->transmit_pending_) { // have an untransmitted packet
+            ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
+            if (!this->flags_.transmit_pending) { // have an untransmitted packet
                 this->encode_packet(command, this->tx_packet_);
                 if (increment == IncrementRollingCode::YES) {
                     this->increment_rolling_code_counter();
@@ -457,8 +457,8 @@ namespace ratgdo {
 
             while (micros() - now < 1300) {
                 if (this->rx_pin_->digital_read()) {
-                    if (!this->transmit_pending_) {
-                        this->transmit_pending_ = true;
+                    if (!this->flags_.transmit_pending) {
+                        this->flags_.transmit_pending = true;
                         this->transmit_pending_start_ = millis();
                         ESP_LOGD(TAG, "Collision detected, waiting to send packet");
                     } else {
@@ -485,7 +485,7 @@ namespace ratgdo {
 
             this->sw_serial_.write(this->tx_packet_, PACKET_LENGTH);
 
-            this->transmit_pending_ = false;
+            this->flags_.transmit_pending = false;
             this->transmit_pending_start_ = 0;
             this->on_command_sent_.trigger();
             return true;

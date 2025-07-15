@@ -12,6 +12,7 @@ substitutions:
   dry_contact_light_pin: D3
 
 web_server:
+  local: true
 
 esphome:
   name: ${id_prefix}
@@ -33,6 +34,8 @@ packages:
     url: https://github.com/ratgdo/esphome-ratgdo
     files: [base.yaml]
     refresh: 1s
+  # remote_package: !include
+  #   file: base.yaml
 
 # Sync time with Home Assistant.
 time:
@@ -46,5 +49,8 @@ improv_serial:
 
 wifi:
   ap:
+    ssid: "ratgdo"
+
+captive_portal:
 
 logger:

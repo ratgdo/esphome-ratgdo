@@ -11,6 +11,7 @@ substitutions:
   discrete_close_pin: D8
 
 web_server:
+  local: true
 
 esphome:
   name: ${id_prefix}
@@ -34,6 +35,7 @@ packages:
     refresh: 1s
   # remote_package: !include
   #   file: base_drycontact.yaml
+
 # Sync time with Home Assistant.
 time:
   - platform: homeassistant
@@ -46,6 +48,8 @@ improv_serial:
 
 wifi:
   ap:
+    ssid: "ratgdo"
+
+captive_portal:
 
 logger:
-  level: DEBUG

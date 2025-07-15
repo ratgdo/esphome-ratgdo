@@ -30,6 +30,9 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
 
+    static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
+    static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+
     void RATGDOComponent::setup()
     {
         this->output_gdo_pin_->setup();
@@ -39,18 +42,40 @@ namespace ratgdo {
         this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
         this->input_obst_pin_->setup();
+#ifdef USE_ESP32
+        this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
+#else
         this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
+#endif
         this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
 
         this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_, this->output_gdo_pin_);
 
         // many things happening at startup, use some delay for sync
-        set_timeout(SYNC_DELAY, [=] { this->sync(); });
+        set_timeout(SYNC_DELAY, [this] { this->sync(); });
         ESP_LOGD(TAG, " _____ _____ _____ _____ ____  _____ ");
         ESP_LOGD(TAG, "| __  |  _  |_   _|   __|    \\|     |");
         ESP_LOGD(TAG, "|    -|     | | | |  |  |  |  |  |  |");
         ESP_LOGD(TAG, "|__|__|__|__| |_| |_____|____/|_____|");
         ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
+
+        this->subscribe_door_state([this](DoorState state, float position) {
+            static DoorState lastState = DoorState::UNKNOWN;
+
+            if (lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
+                this->flags_.presence_detect_window_active = true;
+                set_timeout("presence_detect_window", PRESENCE_DETECT_WINDOW, [this] {
+                    this->flags_.presence_detect_window_active = false;
+                });
+            }
+
+            if (state == DoorState::CLOSED) {
+                this->flags_.presence_detect_window_active = false;
+                cancel_timeout("presence_detect_window");
+            }
+
+            lastState = state;
+        });
     }
 
     // initializing protocol, this gets called before setup() because
@@ -206,7 +231,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const ObstructionState obstruction_state)
     {
-        if (!this->obstruction_sensor_detected_) {
+        if (!this->flags_.obstruction_sensor_detected) {
             ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
 
             this->obstruction_state = obstruction_state;
@@ -233,7 +258,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
         this->motion_state = motion_state;
         if (motion_state == MotionState::DETECTED) {
-            this->set_timeout("clear_motion", 3000, [=] {
+            this->set_timeout("clear_motion", 3000, [this] {
                 this->motion_state = MotionState::CLEAR;
             });
             if (*this->light_state == LightState::OFF) {
@@ -302,7 +327,7 @@ namespace ratgdo {
             return;
         }
         auto count = int(1000 * duration / update_period);
-        set_retry("position_sync_while_moving", update_period, count, [=](uint8_t r) {
+        set_retry("position_sync_while_moving", update_period, count, [this](uint8_t r) {
             this->door_position_update();
             return RetryResult::RETRY;
         });
@@ -335,6 +360,70 @@ namespace ratgdo {
         this->closing_duration = duration;
     }
 
+    void RATGDOComponent::set_target_distance_measurement(int16_t distance)
+    {
+        this->target_distance_measurement = distance;
+    }
+
+    void RATGDOComponent::set_distance_measurement(int16_t distance)
+    {
+        this->last_distance_measurement = distance;
+
+        // current value = [0], last value = [1]
+        // Shift all elements to the right and insert new value at the beginning
+        for (size_t i = this->distance_measurement.size() - 1; i > 0; i--) {
+            this->distance_measurement[i] = this->distance_measurement[i - 1];
+        }
+        this->distance_measurement[0] = distance;
+        this->calculate_presence();
+    }
+
+    void RATGDOComponent::calculate_presence()
+    {
+        bool all_in_range = true;
+        bool all_out_of_range = true;
+        // int16_t min = *this->target_distance_measurement - PRESENCE_DETECT_TOLERANCE;
+        // int16_t max = *this->target_distance_measurement + PRESENCE_DETECT_TOLERANCE;
+
+        for (int16_t value : this->distance_measurement) {
+            // if (value < min || value > max || value == -1) {
+            if (value >= *this->target_distance_measurement || value == -1) {
+                all_in_range = false;
+            }
+
+            if (value < *this->target_distance_measurement && value != -1) {
+                all_out_of_range = false;
+            }
+        }
+
+        if (all_in_range)
+            this->vehicle_detected_state = VehicleDetectedState::YES;
+        if (all_out_of_range)
+            this->vehicle_detected_state = VehicleDetectedState::NO;
+
+        // auto k = this->distance_measurement;
+        // ESP_LOGD(TAG,"measure: %i,%i,%i,%i,%i,%i,%i,%i,%i,%i; target: %i; all_in: %s; all_out: %s;", k[0],k[1],k[2],k[3],k[4],k[5],k[6],k[7],k[8],k[9], *this->target_distance_measurement, all_in_range ? "y" : "n", all_out_of_range ? "y" : "n");
+    }
+
+    void RATGDOComponent::presence_change(bool sensor_value)
+    {
+        if (this->flags_.presence_detect_window_active) {
+            if (sensor_value) {
+                this->vehicle_arriving_state = VehicleArrivingState::YES;
+                this->vehicle_leaving_state = VehicleLeavingState::NO;
+                set_timeout(CLEAR_PRESENCE, [this] {
+                    this->vehicle_arriving_state = VehicleArrivingState::NO;
+                });
+            } else {
+                this->vehicle_arriving_state = VehicleArrivingState::NO;
+                this->vehicle_leaving_state = VehicleLeavingState::YES;
+                set_timeout(CLEAR_PRESENCE, [this] {
+                    this->vehicle_leaving_state = VehicleLeavingState::NO;
+                });
+            }
+        }
+    }
+
     Result RATGDOComponent::call_protocol(Args args)
     {
         return this->protocol_->call(args);
@@ -359,17 +448,21 @@ namespace ratgdo {
 
         if (current_millis - last_millis > CHECK_PERIOD) {
             // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
-            //     current_millis, this->isr_store_.obstruction_low_count, PULSES_EXPECTED,
+            //     current_millis, this->isr_store_.obstruction_low_count, PULSES_LOWER_LIMIT,
             //     current_millis - last_asleep
             // );
 
             // check to see if we got more then PULSES_LOWER_LIMIT pulses
             if (this->isr_store_.obstruction_low_count > PULSES_LOWER_LIMIT) {
                 this->obstruction_state = ObstructionState::CLEAR;
-                this->obstruction_sensor_detected_ = true;
+                this->flags_.obstruction_sensor_detected = true;
             } else if (this->isr_store_.obstruction_low_count == 0) {
                 // if there have been no pulses the line is steady high or low
+#ifdef USE_ESP32
+                if (this->input_obst_pin_->digital_read()) {
+#else
                 if (!this->input_obst_pin_->digital_read()) {
+#endif
                     // asleep
                     last_asleep = current_millis;
                 } else {
@@ -432,7 +525,7 @@ namespace ratgdo {
 
         if (*this->opening_duration > 0) {
             // query state in case we don't get a status message
-            set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [=]() {
+            set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [this]() {
                 if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
                     this->received(DoorState::OPEN); // probably missed a status mesage, assume it's open
                     this->query_status(); // query in case we're wrong and it's stopped
@@ -450,7 +543,7 @@ namespace ratgdo {
         if (*this->door_state == DoorState::OPENING) {
             // have to stop door first, otherwise close command is ignored
             this->door_action(DoorAction::STOP);
-            this->on_door_state_([=](DoorState s) {
+            this->on_door_state_([this](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_action(DoorAction::CLOSE);
                 } else {
@@ -460,7 +553,7 @@ namespace ratgdo {
             return;
         }
 
-        if (this->obstruction_sensor_detected_) {
+        if (this->flags_.obstruction_sensor_detected) {
             this->door_action(DoorAction::CLOSE);
         } else if (*this->door_state == DoorState::OPEN) {
             ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
@@ -469,7 +562,7 @@ namespace ratgdo {
 
         if (*this->closing_duration > 0) {
             // query state in case we don't get a status message
-            set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [=]() {
+            set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [this]() {
                 if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
                     this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
                     this->query_status(); // query in case we're wrong and it's stopped
@@ -494,14 +587,22 @@ namespace ratgdo {
 
     void RATGDOComponent::door_action(DoorAction action)
     {
-        this->protocol_->door_action(action);
+        if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
+            this->door_action_delayed = DoorActionDelayed::YES;
+            set_timeout("door_action", *this->closing_delay * 1000, [this] {
+                this->door_action_delayed = DoorActionDelayed::NO;
+                this->protocol_->door_action(DoorAction::CLOSE);
+            });
+        } else {
+            this->protocol_->door_action(action);
+        }
     }
 
     void RATGDOComponent::door_move_to_position(float position)
     {
         if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
             this->door_action(DoorAction::STOP);
-            this->on_door_state_([=](DoorState s) {
+            this->on_door_state_([this, position](DoorState s) {
                 if (s == DoorState::STOPPED) {
                     this->door_move_to_position(position);
                 }
@@ -526,7 +627,7 @@ namespace ratgdo {
         ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0);
 
         this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
-        set_timeout("move_to_position", operation_time, [=] {
+        set_timeout("move_to_position", operation_time, [this] {
             this->door_action(DoorAction::STOP);
         });
     }
@@ -603,73 +704,80 @@ namespace ratgdo {
         // if multiple changes occur during component loop, only the last one is notified
         auto counter = this->protocol_->call(GetRollingCodeCounter {});
         if (counter.tag == Result::Tag::rolling_code_counter) {
-            counter.value.rolling_code_counter.value->subscribe([=](uint32_t state) { defer("rolling_code_counter", [=] { f(state); }); });
+            counter.value.rolling_code_counter.value->subscribe([this, f = std::move(f)](uint32_t state) { defer("rolling_code_counter", [f, state] { f(state); }); });
         }
     }
     void RATGDOComponent::subscribe_opening_duration(std::function<void(float)>&& f)
     {
-        this->opening_duration.subscribe([=](float state) { defer("opening_duration", [=] { f(state); }); });
+        this->opening_duration.subscribe([this, f = std::move(f)](float state) { defer("opening_duration", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_closing_duration(std::function<void(float)>&& f)
     {
-        this->closing_duration.subscribe([=](float state) { defer("closing_duration", [=] { f(state); }); });
+        this->closing_duration.subscribe([this, f = std::move(f)](float state) { defer("closing_duration", [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_closing_delay(std::function<void(uint32_t)>&& f)
+    {
+        this->closing_delay.subscribe([this, f = std::move(f)](uint32_t state) { defer("closing_delay", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_openings(std::function<void(uint16_t)>&& f)
     {
-        this->openings.subscribe([=](uint16_t state) { defer("openings", [=] { f(state); }); });
+        this->openings.subscribe([this, f = std::move(f)](uint16_t state) { defer("openings", [f, state] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_devices_total(std::function<void(uint8_t)>&& f)
     {
-        this->paired_total.subscribe([=](uint16_t state) { defer("paired_total", [=] { f(state); }); });
+        this->paired_total.subscribe([this, f = std::move(f)](uint8_t state) { defer("paired_total", [f, state] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_remotes(std::function<void(uint8_t)>&& f)
     {
-        this->paired_remotes.subscribe([=](uint16_t state) { defer("paired_remotes", [=] { f(state); }); });
+        this->paired_remotes.subscribe([this, f = std::move(f)](uint8_t state) { defer("paired_remotes", [f, state] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_keypads(std::function<void(uint8_t)>&& f)
     {
-        this->paired_keypads.subscribe([=](uint16_t state) { defer("paired_keypads", [=] { f(state); }); });
+        this->paired_keypads.subscribe([this, f = std::move(f)](uint8_t state) { defer("paired_keypads", [f, state] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_wall_controls(std::function<void(uint8_t)>&& f)
     {
-        this->paired_wall_controls.subscribe([=](uint16_t state) { defer("paired_wall_controls", [=] { f(state); }); });
+        this->paired_wall_controls.subscribe([this, f = std::move(f)](uint8_t state) { defer("paired_wall_controls", [f, state] { f(state); }); });
     }
-    void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint16_t)>&& f)
+    void RATGDOComponent::subscribe_paired_accessories(std::function<void(uint8_t)>&& f)
     {
-        this->paired_accessories.subscribe([=](uint16_t state) { defer("paired_accessories", [=] { f(state); }); });
+        this->paired_accessories.subscribe([this, f = std::move(f)](uint8_t state) { defer("paired_accessories", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_door_state(std::function<void(DoorState, float)>&& f)
     {
-        this->door_state.subscribe([=](DoorState state) {
-            defer("door_state", [=] { f(state, *this->door_position); });
+        static int num = 0;
+        auto name = "door_state" + std::to_string(num++);
+
+        this->door_state.subscribe([this, f, name](DoorState state) {
+            defer(name, [this, f, state] { f(state, *this->door_position); });
         });
-        this->door_position.subscribe([=](float position) {
-            defer("door_state", [=] { f(*this->door_state, position); });
+        this->door_position.subscribe([this, f, name](float position) {
+            defer(name, [this, f, position] { f(*this->door_state, position); });
         });
     }
     void RATGDOComponent::subscribe_light_state(std::function<void(LightState)>&& f)
     {
-        this->light_state.subscribe([=](LightState state) { defer("light_state", [=] { f(state); }); });
+        this->light_state.subscribe([this, f = std::move(f)](LightState state) { defer("light_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_lock_state(std::function<void(LockState)>&& f)
     {
-        this->lock_state.subscribe([=](LockState state) { defer("lock_state", [=] { f(state); }); });
+        this->lock_state.subscribe([this, f = std::move(f)](LockState state) { defer("lock_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_obstruction_state(std::function<void(ObstructionState)>&& f)
     {
-        this->obstruction_state.subscribe([=](ObstructionState state) { defer("obstruction_state", [=] { f(state); }); });
+        this->obstruction_state.subscribe([this, f = std::move(f)](ObstructionState state) { defer("obstruction_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_motor_state(std::function<void(MotorState)>&& f)
     {
-        this->motor_state.subscribe([=](MotorState state) { defer("motor_state", [=] { f(state); }); });
+        this->motor_state.subscribe([this, f = std::move(f)](MotorState state) { defer("motor_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_button_state(std::function<void(ButtonState)>&& f)
     {
-        this->button_state.subscribe([=](ButtonState state) { defer("button_state", [=] { f(state); }); });
+        this->button_state.subscribe([this, f = std::move(f)](ButtonState state) { defer("button_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_motion_state(std::function<void(MotionState)>&& f)
     {
-        this->motion_state.subscribe([=](MotionState state) { defer("motion_state", [=] { f(state); }); });
+        this->motion_state.subscribe([this, f = std::move(f)](MotionState state) { defer("motion_state", [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_sync_failed(std::function<void(bool)>&& f)
     {
@@ -677,7 +785,38 @@ namespace ratgdo {
     }
     void RATGDOComponent::subscribe_learn_state(std::function<void(LearnState)>&& f)
     {
-        this->learn_state.subscribe([=](LearnState state) { defer("learn_state", [=] { f(state); }); });
+        this->learn_state.subscribe([this, f = std::move(f)](LearnState state) { defer("learn_state", [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_door_action_delayed(std::function<void(DoorActionDelayed)>&& f)
+    {
+        static int num = 0;
+        auto name = "door_action_delayed" + std::to_string(num++);
+
+        this->door_action_delayed.subscribe([this, f = std::move(f), name](DoorActionDelayed state) { defer(name, [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_distance_measurement(std::function<void(int16_t)>&& f)
+    {
+        static int num = 0;
+        auto name = "last_distance_measurement" + std::to_string(num++);
+        this->last_distance_measurement.subscribe([this, f = std::move(f), name](int16_t state) { defer(name, [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f)
+    {
+        static int num = 0;
+        auto name = "vehicle_detected_state" + std::to_string(num++);
+        this->vehicle_detected_state.subscribe([this, f = std::move(f), name](VehicleDetectedState state) { defer(name, [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_vehicle_arriving_state(std::function<void(VehicleArrivingState)>&& f)
+    {
+        static int num = 0;
+        auto name = "vehicle_arriving_state" + std::to_string(num++);
+        this->vehicle_arriving_state.subscribe([this, f = std::move(f), name](VehicleArrivingState state) { defer(name, [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f)
+    {
+        static int num = 0;
+        auto name = "vehicle_leaving_state" + std::to_string(num++);
+        this->vehicle_leaving_state.subscribe([this, f = std::move(f), name](VehicleLeavingState state) { defer(name, [f, state] { f(state); }); });
     }
 
     // dry contact methods

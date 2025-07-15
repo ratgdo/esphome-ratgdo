@@ -18,6 +18,9 @@ TYPES = {
     "obstruction": SensorType.RATGDO_SENSOR_OBSTRUCTION,
     "motor": SensorType.RATGDO_SENSOR_MOTOR,
     "button": SensorType.RATGDO_SENSOR_BUTTON,
+    "vehicle_detected": SensorType.RATGDO_SENSOR_VEHICLE_DETECTED,
+    "vehicle_arriving": SensorType.RATGDO_SENSOR_VEHICLE_ARRIVING,
+    "vehicle_leaving": SensorType.RATGDO_SENSOR_VEHICLE_LEAVING,
 }
 
 

@@ -18,8 +18,13 @@ namespace ratgdo {
     void RATGDOSwitch::setup()
     {
         if (this->switch_type_ == SwitchType::RATGDO_LEARN) {
-            this->parent_->subscribe_learn_state([=](LearnState state) {
+            this->parent_->subscribe_learn_state([this](LearnState state) {
                 this->publish_state(state == LearnState::ACTIVE);
+            });
+        } else if (this->switch_type_ == SwitchType::RATGDO_LED) {
+            this->pin_->setup();
+            this->parent_->subscribe_vehicle_arriving_state([this](VehicleArrivingState state) {
+                this->write_state(state == VehicleArrivingState::YES);
             });
         }
     }
@@ -32,6 +37,9 @@ namespace ratgdo {
             } else {
                 this->parent_->inactivate_learn();
             }
+        } else if (this->switch_type_ == SwitchType::RATGDO_LED) {
+            this->pin_->digital_write(state);
+            this->publish_state(state);
         }
     }
 

@@ -1,12 +1,16 @@
 ---
+esphome:
+  min_version: 2025.6.0
 
 external_components:
   - source:
-      # type: local
-      # path: components
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
     refresh: 1s
+  # - source:
+  #     type: local
+  #     path: components
 
 safe_mode:
 
@@ -21,6 +25,7 @@ text_sensor:
 ratgdo:
   id: ${id_prefix}
   output_gdo_pin: ${uart_tx_pin}
+  input_gdo_pin: ${uart_rx_pin}
   input_obst_pin: ${input_obst_pin}
   dry_contact_open_sensor: ${id_prefix}_dry_contact_open
   dry_contact_close_sensor: ${id_prefix}_dry_contact_close

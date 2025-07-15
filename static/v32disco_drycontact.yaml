@@ -1,0 +1,153 @@
+---
+substitutions:
+  id_prefix: ratgdo32disco
+  friendly_name: "ratgdo32disco"
+  uart_tx_pin: GPIO17
+  uart_rx_pin: GPIO21
+  input_obst_pin: GPIO4
+  dry_contact_open_pin: GPIO13
+  dry_contact_close_pin: GPIO14
+  discrete_open_pin: GPIO26
+  discrete_close_pin: GPIO25
+
+web_server:
+  include_internal: true
+  local: true
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.esphome
+    version: "32disco"
+
+esp32:
+  board: esp32dev
+
+dashboard_import:
+  package_import_url: github://ratgdo/esphome-ratgdo/v32disco_drycontact.yaml@main
+
+packages:
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
+    files: [base_drycontact.yaml]
+    refresh: 1s
+  # remote_package: !include
+  #   file: base_drycontact.yaml
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+improv_serial:
+
+wifi:
+  ap:
+
+logger:
+  logs:
+    sensor: NONE
+
+ota:
+
+binary_sensor:
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_detected
+    type: vehicle_detected
+    name: "Vehicle detected"
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_arriving
+    type: vehicle_arriving
+    name: "Vehicle arriving"
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_vehicle_leaving
+    type: vehicle_leaving
+    name: "Vehicle leaving"
+
+number:
+  - platform: ratgdo
+    id: ${id_prefix}_target_distance_measurement
+    type: target_distance_measurement
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Vehicle distance target"
+    mode: box
+    unit_of_measurement: "mm"
+  - platform: ratgdo
+    id: ${id_prefix}_closing_delay
+    type: closing_delay
+    entity_category: config
+    ratgdo_id: ${id_prefix}
+    name: "Closing Delay"
+    unit_of_measurement: "s"
+
+output:
+  - platform: ledc
+    pin: GPIO33
+    id: ${id_prefix}_ledc
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_beeper
+    type: beeper
+    rtttl: ${id_prefix}_rtttl
+    song: "alert:d=8,o=5,b=120:a,p,a,p,a,p,4b,p"
+
+rtttl:
+  - id: ${id_prefix}_rtttl
+    output: ${id_prefix}_ledc
+
+switch:
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_led
+    type: led
+    pin: GPIO2
+    name: "LED"
+    entity_category: config
+  - platform: ratgdo
+    ratgdo_id: ${id_prefix}
+    id: ${id_prefix}_laser
+    type: led
+    pin: GPIO23
+    name: "LASER"
+    entity_category: config
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 120s
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_distance_actual
+    type: distance
+    name: "Vehicle distance actual"
+    ratgdo_id: ${id_prefix}
+    unit_of_measurement: "mm"
+    internal: true
+    filters:
+      - throttle: 1ms
+      - heartbeat: 1ms
+  - platform: copy
+    source_id: ${id_prefix}_vehicle_distance_actual
+    name: Vehicle distance actual filtered
+    filters:
+      - min:
+          window_size: 5000
+          send_every: 5000
+  - platform: adc
+    pin: GPIO34
+    name: "Voltage"
+    attenuation: auto
+    update_interval: 60s
+    filters:
+    - calibrate_linear:
+        - 1.16 -> 5
+        - 2.783 -> 12

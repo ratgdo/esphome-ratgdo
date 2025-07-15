@@ -11,7 +11,6 @@ RATGDOLightOutput = ratgdo_ns.class_(
     "RATGDOLightOutput", light.LightOutput, cg.Component
 )
 
-
 CONFIG_SCHEMA = light.LIGHT_SCHEMA.extend(
     {cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}
 ).extend(RATGDO_CLIENT_SCHMEA)

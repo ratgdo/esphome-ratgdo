@@ -10,8 +10,40 @@ on:
     - cron: '0 4 * * 1'
 
 jobs:
+  test:
+    name: Run tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '**/requirements*.txt'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-test.txt
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v
+
   build:
     name: Build ${{ matrix.firmware.name }}
+    needs: test  # Only build if tests pass
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -55,15 +87,40 @@ jobs:
           - file: v25iboard_drycontact.yaml
             name: V2.5i Board Dry Contact
             manifest_filename: v25iboard_drycontact-manifest.json
+          - file: v32board.yaml
+            name: V32 Board Security+ 2.0
+            manifest_filename: v32board-manifest.json
+          - file: v32board_secplusv1.yaml
+            name: V32 Board Security+ 1.0
+            manifest_filename: v32board_secplusv1-manifest.json
+          - file: v32board_drycontact.yaml
+            name: V32 Board Dry Contact
+            manifest_filename: v32board_drycontact-manifest.json
+          - file: v32disco.yaml
+            name: V32 Disco Board Security+ 2.0
+            manifest_filename: v32disco-manifest.json
+          - file: v32disco_secplusv1.yaml
+            name: V32 Disco Board Security+ 1.0
+            manifest_filename: v32disco_secplusv1-manifest.json
+          - file: v32disco_drycontact.yaml
+            name: V32 Disco Board Dry Contact
+            manifest_filename: v32disco_drycontact-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v4
+      - name: Update external_components ref to current branch
+        if: github.ref != 'refs/heads/main'
+        run: |
+          python3 scripts/update_refs_for_ci.py
+          echo ""
+          echo "Changes made:"
+          git diff --color=always
       - name: Build firmware
         uses: ratgdo/esphome-build-action@main
         id: esphome-build
         with:
-          yaml_file: ${{ matrix.firmware.file }}
+          yaml-file: ${{ matrix.firmware.file }}
           version: latest
       - name: Copy firmware and manifest
         run: |
@@ -72,7 +129,7 @@ jobs:
           jq -s '{"name": "${{ matrix.firmware.name }}", "new_install_improv_wait_time": 15, "new_install_prompt_erase": true, "version": "${{ steps.esphome-build.outputs.esphome-version }}", "home_assistant_domain": "esphome", "new_install_skip_erase": false, "builds":.}' output/${{ steps.esphome-build.outputs.name }}/manifest.json > output/${{ matrix.firmware.manifest_filename }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: ${{ matrix.firmware.name }}
           path: output
@@ -85,9 +142,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Download built firmwares
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: firmwares
       - name: Copy files
@@ -95,8 +152,9 @@ jobs:
           mkdir output
           cp -R static/* output/
           cp -R firmwares/*/* output/
+          mv output/*/*.bin output/
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v2.0.0
+        uses: actions/upload-pages-artifact@v3.0.1
         with:
           path: output
 
@@ -113,7 +171,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Setup Pages
-        uses: actions/configure-pages@v2
+        uses: actions/configure-pages@v5
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1.2.9
+        uses: actions/deploy-pages@v4.0.5

@@ -26,6 +26,10 @@ namespace ratgdo {
         (OPENING, 4),
         (CLOSING, 5))
 
+    ENUM(DoorActionDelayed, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
     /// Enum for all states a the light can be in.
     ENUM(LightState, uint8_t,
         (OFF, 0),
@@ -104,6 +108,18 @@ namespace ratgdo {
         (STOP, 3),
         (UNKNOWN, 4))
 
+    ENUM(VehicleDetectedState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
+    ENUM(VehicleArrivingState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
+    ENUM(VehicleLeavingState, uint8_t,
+        (NO, 0),
+        (YES, 1))
+
     struct Openings {
         uint16_t count;
         uint8_t flag;
@@ -111,7 +127,7 @@ namespace ratgdo {
 
     struct PairedDeviceCount {
         PairedDevice kind;
-        uint16_t count;
+        uint8_t count;
     };
 
     struct TimeToClose {
