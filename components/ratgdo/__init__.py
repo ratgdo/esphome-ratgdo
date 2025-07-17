@@ -1,7 +1,6 @@
-import voluptuous as vol
-
 import esphome.codegen as cg
 import esphome.config_validation as cv
+import voluptuous as vol
 from esphome import automation, pins
 from esphome.components import binary_sensor
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
