@@ -1,6 +1,7 @@
+import voluptuous as vol
+
 import esphome.codegen as cg
 import esphome.config_validation as cv
-import voluptuous as vol
 from esphome import automation, pins
 from esphome.components import binary_sensor
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
@@ -152,11 +153,11 @@ async def to_code(config):
     )
 
     if config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV1:
-        cg.add_define("PROTOCOL_SECPLUSV1")
+        cg.add_build_flag("-DPROTOCOL_SECPLUSV1")
     elif config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV2:
-        cg.add_define("PROTOCOL_SECPLUSV2")
+        cg.add_build_flag("-DPROTOCOL_SECPLUSV2")
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
-        cg.add_define("PROTOCOL_DRYCONTACT")
+        cg.add_build_flag("-DPROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
 
     if config.get(CONF_DISCRETE_OPEN_PIN):
