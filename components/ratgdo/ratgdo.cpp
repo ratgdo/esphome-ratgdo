@@ -13,10 +13,17 @@
 
 #include "ratgdo.h"
 #include "common.h"
-#include "dry_contact.h"
 #include "ratgdo_state.h"
+
+#ifdef PROTOCOL_DRYCONTACT
+#include "dry_contact.h"
+#endif
+#ifdef PROTOCOL_SECPLUSV1
 #include "secplus1.h"
+#endif
+#ifdef PROTOCOL_SECPLUSV2
 #include "secplus2.h"
+#endif
 
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
