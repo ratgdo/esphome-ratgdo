@@ -3,6 +3,7 @@
 #include "ratgdo.h"
 
 #include "esphome/core/gpio.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
@@ -82,14 +83,28 @@ namespace ratgdo {
                 });
                 return;
             } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
+#ifdef USE_ESP8266
+                // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", progmem_read_byte(&secplus1_states[index]));
+#else
                 // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
+#endif
 
                 if (index < 15 || !this->do_transmit_if_pending()) {
+#ifdef USE_ESP8266
+                    this->transmit_byte(progmem_read_byte(&secplus1_states[index]));
+#else
                     this->transmit_byte(secplus1_states[index]);
+#endif
                     // gdo response simulation for testing
+#ifdef USE_ESP8266
+                    // auto resp = progmem_read_byte(&secplus1_states[index]) == 0x39 ? 0x00 :
+                    //             progmem_read_byte(&secplus1_states[index]) == 0x3A ? 0x5C :
+                    //             progmem_read_byte(&secplus1_states[index]) == 0x38 ? 0x52 : 0xFF;
+#else
                     // auto resp = secplus1_states[index] == 0x39 ? 0x00 :
                     //             secplus1_states[index] == 0x3A ? 0x5C :
                     //             secplus1_states[index] == 0x38 ? 0x52 : 0xFF;
+#endif
                     // if (resp != 0xFF) {
                     //     this->transmit_byte(resp, true);
                     // }
