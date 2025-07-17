@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PROTOCOL_DRYCONTACT
+
 #include "esphome/core/defines.h"
 
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
@@ -81,3 +83,5 @@ namespace ratgdo {
     } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_DRYCONTACT

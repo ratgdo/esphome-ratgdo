@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PROTOCOL_SECPLUSV2
+
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/optional.h"
 
@@ -166,3 +168,5 @@ namespace ratgdo {
     } // namespace secplus2
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_SECPLUSV2
