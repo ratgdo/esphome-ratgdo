@@ -1,4 +1,6 @@
 
+#ifdef PROTOCOL_DRYCONTACT
+
 #include "dry_contact.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
@@ -129,3 +131,5 @@ namespace ratgdo {
     } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_DRYCONTACT

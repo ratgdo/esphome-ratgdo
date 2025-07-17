@@ -1,4 +1,6 @@
 
+#ifdef PROTOCOL_SECPLUSV2
+
 #include "secplus2.h"
 #include "ratgdo.h"
 
@@ -510,3 +512,5 @@ namespace ratgdo {
     } // namespace secplus2
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_SECPLUSV2
