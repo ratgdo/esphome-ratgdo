@@ -54,8 +54,6 @@ logger:
   logs:
     sensor: NONE
 
-ota:
-
 binary_sensor:
   - platform: ratgdo
     ratgdo_id: ${id_prefix}
