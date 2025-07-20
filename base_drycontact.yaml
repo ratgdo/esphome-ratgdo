@@ -1,6 +1,6 @@
 ---
 esphome:
-  min_version: 2025.6.0
+  min_version: 2025.7.0
 
 external_components:
   - source:
