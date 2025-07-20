@@ -37,7 +37,7 @@ ota:
   - platform: esphome
     id: ${id_prefix}_ratgdo_ota
   - platform: web_server
-    id: ${id_prefix}_ratgdo_ota
+    id: ${id_prefix}_ratgdo_ota_ws
 
 binary_sensor:
   - platform: ratgdo
