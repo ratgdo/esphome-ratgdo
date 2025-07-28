@@ -22,18 +22,31 @@ namespace ratgdo {
     void RATGDONumber::dump_config()
     {
         LOG_NUMBER("", "RATGDO Number", this);
-        if (this->number_type_ == RATGDO_CLIENT_ID) {
+        switch (this->number_type_) {
+        case RATGDO_CLIENT_ID:
             ESP_LOGCONFIG(TAG, " Type: Client ID");
-        } else if (this->number_type_ == RATGDO_ROLLING_CODE_COUNTER) {
+            break;
+        case RATGDO_ROLLING_CODE_COUNTER:
             ESP_LOGCONFIG(TAG, "  Type: Rolling Code Counter");
-        } else if (this->number_type_ == RATGDO_OPENING_DURATION) {
+            break;
+        case RATGDO_OPENING_DURATION:
             ESP_LOGCONFIG(TAG, "  Type: Opening Duration");
-        } else if (this->number_type_ == RATGDO_CLOSING_DURATION) {
+            break;
+        case RATGDO_CLOSING_DURATION:
             ESP_LOGCONFIG(TAG, "  Type: Closing Duration");
-        } else if (this->number_type_ == RATGDO_CLOSING_DELAY) {
+            break;
+#ifdef RATGDO_USE_CLOSING_DELAY
+        case RATGDO_CLOSING_DELAY:
             ESP_LOGCONFIG(TAG, "  Type: Closing Delay");
-        } else if (this->number_type_ == RATGDO_TARGET_DISTANCE_MEASUREMENT) {
+            break;
+#endif
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+        case RATGDO_TARGET_DISTANCE_MEASUREMENT:
             ESP_LOGCONFIG(TAG, " Type: Target Distance Measurement");
+            break;
+#endif
+        default:
+            break;
         }
     }
 

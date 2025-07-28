@@ -608,6 +608,7 @@ namespace ratgdo {
 
     void RATGDOComponent::door_action(DoorAction action)
     {
+#ifdef RATGDO_USE_CLOSING_DELAY
         if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
             this->door_action_delayed = DoorActionDelayed::YES;
             set_timeout("door_action", *this->closing_delay * 1000, [this] {
@@ -617,6 +618,9 @@ namespace ratgdo {
         } else {
             this->protocol_->door_action(action);
         }
+#else
+        this->protocol_->door_action(action);
+#endif
     }
 
     void RATGDOComponent::door_move_to_position(float position)
@@ -817,12 +821,14 @@ namespace ratgdo {
 
         this->door_action_delayed.subscribe([this, f = std::move(f), name](DoorActionDelayed state) { defer(name, [f, state] { f(state); }); });
     }
+#ifdef RATGDO_USE_DISTANCE_SENSOR
     void RATGDOComponent::subscribe_distance_measurement(std::function<void(int16_t)>&& f)
     {
         static int num = 0;
         auto name = "last_distance_measurement" + std::to_string(num++);
         this->last_distance_measurement.subscribe([this, f = std::move(f), name](int16_t state) { defer(name, [f, state] { f(state); }); });
     }
+#endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f)
     {
