@@ -6,7 +6,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/ratgdo/esphome-ratgdo
-      ref: feature_flags
+      ref: main
     refresh: 1s
   # - source:
   #     type: local
