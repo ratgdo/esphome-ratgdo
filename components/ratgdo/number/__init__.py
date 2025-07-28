@@ -7,6 +7,9 @@ from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 
+# Track which number types have been used
+USED_TYPES: set[str] = set()
+
 RATGDONumber = ratgdo_ns.class_("RATGDONumber", number.Number, cg.Component)
 NumberType = ratgdo_ns.enum("NumberType")
 
@@ -21,14 +24,24 @@ TYPES = {
 }
 
 
-CONFIG_SCHEMA = (
+def validate_unique_type(config):
+    """Validate that each number type is only used once."""
+    number_type = config[CONF_TYPE]
+    if number_type in USED_TYPES:
+        raise cv.Invalid(f"Only one number of type '{number_type}' is allowed")
+    USED_TYPES.add(number_type)
+    return config
+
+
+CONFIG_SCHEMA = cv.All(
     number.number_schema(RATGDONumber)
     .extend(
         {
             cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
         }
     )
-    .extend(RATGDO_CLIENT_SCHMEA)
+    .extend(RATGDO_CLIENT_SCHMEA),
+    validate_unique_type,
 )
 
 
