@@ -9,6 +9,9 @@ from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 
+# Track which sensor types have been used
+USED_TYPES: set[str] = set()
+
 RATGDOSensor = ratgdo_ns.class_("RATGDOSensor", sensor.Sensor, cg.Component)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
@@ -24,14 +27,24 @@ TYPES = {
 }
 
 
-CONFIG_SCHEMA = (
+def validate_unique_type(config):
+    """Validate that each sensor type is only used once."""
+    sensor_type = config[CONF_TYPE]
+    if sensor_type in USED_TYPES:
+        raise cv.Invalid(f"Only one sensor of type '{sensor_type}' is allowed")
+    USED_TYPES.add(sensor_type)
+    return config
+
+
+CONFIG_SCHEMA = cv.All(
     sensor.sensor_schema(RATGDOSensor)
     .extend(
         {
             cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
         }
     )
-    .extend(RATGDO_CLIENT_SCHMEA)
+    .extend(RATGDO_CLIENT_SCHMEA),
+    validate_unique_type,
 )
 
 

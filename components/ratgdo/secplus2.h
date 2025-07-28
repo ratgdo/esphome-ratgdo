@@ -150,7 +150,7 @@ namespace ratgdo {
             uint32_t transmit_pending_start_ { 0 };
 
             // Larger structures
-            observable<uint32_t> rolling_code_counter_ { 0 };
+            single_observable<uint32_t> rolling_code_counter_ { 0 };
             OnceCallbacks<void()> on_command_sent_;
             Traits traits_;
             SoftwareSerial sw_serial_;
