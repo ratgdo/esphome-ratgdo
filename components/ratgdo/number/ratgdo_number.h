@@ -4,6 +4,7 @@
 #include "../ratgdo_state.h"
 #include "esphome/components/number/number.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 
 namespace esphome {
 namespace ratgdo {
@@ -13,8 +14,12 @@ namespace ratgdo {
         RATGDO_ROLLING_CODE_COUNTER,
         RATGDO_OPENING_DURATION,
         RATGDO_CLOSING_DURATION,
+#ifdef RATGDO_USE_CLOSING_DELAY
         RATGDO_CLOSING_DELAY,
+#endif
+#ifdef RATGDO_USE_DISTANCE_SENSOR
         RATGDO_TARGET_DISTANCE_MEASUREMENT,
+#endif
     };
 
     class RATGDONumber : public number::Number, public RATGDOClient, public Component {

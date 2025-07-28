@@ -26,6 +26,9 @@ TYPES = {
     "vehicle_leaving": SensorType.RATGDO_SENSOR_VEHICLE_LEAVING,
 }
 
+# Sensor types that require vehicle sensor support
+VEHICLE_SENSOR_TYPES = {"vehicle_detected", "vehicle_arriving", "vehicle_leaving"}
+
 
 def validate_unique_type(config):
     """Validate that each sensor type is only used once."""
@@ -54,3 +57,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     cg.add(var.set_binary_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
+
+    # Add defines for enabled features
+    if config[CONF_TYPE] in VEHICLE_SENSOR_TYPES:
+        cg.add_define("RATGDO_USE_VEHICLE_SENSORS")
