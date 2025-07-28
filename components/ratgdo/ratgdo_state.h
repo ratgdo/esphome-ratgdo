@@ -12,6 +12,7 @@
  ************************************/
 
 #pragma once
+#include "esphome/core/defines.h"
 #include "macros.h"
 #include <cstdint>
 

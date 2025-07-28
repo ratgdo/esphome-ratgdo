@@ -4,6 +4,7 @@
 #include "../ratgdo_state.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
 #include "Wire.h"

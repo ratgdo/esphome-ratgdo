@@ -4,6 +4,7 @@
 #include "../ratgdo_state.h"
 #include "esphome/components/number/number.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 
 namespace esphome {
 namespace ratgdo {
