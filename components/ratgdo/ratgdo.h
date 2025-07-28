@@ -54,8 +54,10 @@ namespace ratgdo {
     public:
         RATGDOComponent()
         {
+#ifdef RATGDO_USE_DISTANCE_SENSOR
             // Initialize distance_measurement array with -1
             distance_measurement.fill(-1);
+#endif
         }
 
         void setup() override;
@@ -70,11 +72,15 @@ namespace ratgdo {
         single_observable<float> opening_duration { 0 };
         float start_closing { -1 };
         single_observable<float> closing_duration { 0 };
+#ifdef RATGDO_USE_CLOSING_DELAY
         single_observable<uint32_t> closing_delay { 0 };
+#endif
 
+#ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
         std::array<int16_t, 30> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
         single_observable<int16_t> last_distance_measurement { 0 };
+#endif
 
         single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
         single_observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
@@ -98,9 +104,11 @@ namespace ratgdo {
         single_observable<ButtonState> button_state { ButtonState::UNKNOWN };
         single_observable<MotionState> motion_state { MotionState::UNKNOWN };
         single_observable<LearnState> learn_state { LearnState::UNKNOWN };
+#ifdef RATGDO_USE_VEHICLE_SENSORS
         single_observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
         single_observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
         single_observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+#endif
 
         OnceCallbacks<void(DoorState)> on_door_state_;
 
@@ -144,14 +152,20 @@ namespace ratgdo {
         void set_door_position(float door_position) { this->door_position = door_position; }
         void set_opening_duration(float duration);
         void set_closing_duration(float duration);
+#ifdef RATGDO_USE_CLOSING_DELAY
         void set_closing_delay(uint32_t delay) { this->closing_delay = delay; }
+#endif
         void schedule_door_position_sync(float update_period = 500);
         void door_position_update();
         void cancel_position_sync_callbacks();
+#ifdef RATGDO_USE_DISTANCE_SENSOR
         void set_target_distance_measurement(int16_t distance);
         void set_distance_measurement(int16_t distance);
+#endif
+#ifdef RATGDO_USE_VEHICLE_SENSORS
         void calculate_presence();
         void presence_change(bool sensor_value);
+#endif
 
         // light
         void light_toggle();
@@ -180,7 +194,9 @@ namespace ratgdo {
         void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
         void subscribe_opening_duration(std::function<void(float)>&& f);
         void subscribe_closing_duration(std::function<void(float)>&& f);
+#ifdef RATGDO_USE_CLOSING_DELAY
         void subscribe_closing_delay(std::function<void(uint32_t)>&& f);
+#endif
         void subscribe_openings(std::function<void(uint16_t)>&& f);
         void subscribe_paired_devices_total(std::function<void(uint8_t)>&& f);
         void subscribe_paired_remotes(std::function<void(uint8_t)>&& f);
@@ -197,10 +213,14 @@ namespace ratgdo {
         void subscribe_sync_failed(std::function<void(bool)>&& f);
         void subscribe_learn_state(std::function<void(LearnState)>&& f);
         void subscribe_door_action_delayed(std::function<void(DoorActionDelayed)>&& f);
+#ifdef RATGDO_USE_DISTANCE_SENSOR
         void subscribe_distance_measurement(std::function<void(int16_t)>&& f);
+#endif
+#ifdef RATGDO_USE_VEHICLE_SENSORS
         void subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f);
         void subscribe_vehicle_arriving_state(std::function<void(VehicleArrivingState)>&& f);
         void subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f);
+#endif
 
     protected:
         // Pointers first (4-byte aligned)
@@ -217,8 +237,12 @@ namespace ratgdo {
         // Bool members packed into bitfield
         struct {
             uint8_t obstruction_sensor_detected : 1;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
             uint8_t presence_detect_window_active : 1;
             uint8_t reserved : 6; // Reserved for future use
+#else
+            uint8_t reserved : 7; // Reserved for future use
+#endif
         } flags_ { 0 };
     }; // RATGDOComponent
 

@@ -108,6 +108,7 @@ namespace ratgdo {
         (STOP, 3),
         (UNKNOWN, 4))
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     ENUM(VehicleDetectedState, uint8_t,
         (NO, 0),
         (YES, 1))
@@ -119,6 +120,7 @@ namespace ratgdo {
     ENUM(VehicleLeavingState, uint8_t,
         (NO, 0),
         (YES, 1))
+#endif
 
     struct Openings {
         uint16_t count;

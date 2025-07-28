@@ -51,3 +51,8 @@ async def to_code(config):
     await cg.register_component(var, config)
     cg.add(var.set_number_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
+
+    # Add defines for enabled features
+    # sensor will add the define for the distance sensor
+    if config[CONF_TYPE] == "closing_delay":
+        cg.add_define("RATGDO_USE_CLOSING_DELAY")

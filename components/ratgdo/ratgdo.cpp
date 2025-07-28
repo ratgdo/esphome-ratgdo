@@ -37,8 +37,10 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+#endif
 
     void RATGDOComponent::setup()
     {
@@ -69,6 +71,7 @@ namespace ratgdo {
         this->subscribe_door_state([this](DoorState state, float position) {
             static DoorState lastState = DoorState::UNKNOWN;
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
             if (lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
                 this->flags_.presence_detect_window_active = true;
                 set_timeout("presence_detect_window", PRESENCE_DETECT_WINDOW, [this] {
@@ -80,6 +83,7 @@ namespace ratgdo {
                 this->flags_.presence_detect_window_active = false;
                 cancel_timeout("presence_detect_window");
             }
+#endif
 
             lastState = state;
         });
@@ -367,6 +371,7 @@ namespace ratgdo {
         this->closing_duration = duration;
     }
 
+#ifdef RATGDO_USE_DISTANCE_SENSOR
     void RATGDOComponent::set_target_distance_measurement(int16_t distance)
     {
         this->target_distance_measurement = distance;
@@ -382,9 +387,13 @@ namespace ratgdo {
             this->distance_measurement[i] = this->distance_measurement[i - 1];
         }
         this->distance_measurement[0] = distance;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
         this->calculate_presence();
+#endif
     }
+#endif
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::calculate_presence()
     {
         bool all_in_range = true;
@@ -392,6 +401,7 @@ namespace ratgdo {
         // int16_t min = *this->target_distance_measurement - PRESENCE_DETECT_TOLERANCE;
         // int16_t max = *this->target_distance_measurement + PRESENCE_DETECT_TOLERANCE;
 
+#ifdef RATGDO_USE_DISTANCE_SENSOR
         for (int16_t value : this->distance_measurement) {
             // if (value < min || value > max || value == -1) {
             if (value >= *this->target_distance_measurement || value == -1) {
@@ -402,6 +412,7 @@ namespace ratgdo {
                 all_out_of_range = false;
             }
         }
+#endif
 
         if (all_in_range)
             this->vehicle_detected_state = VehicleDetectedState::YES;
@@ -411,7 +422,9 @@ namespace ratgdo {
         // auto k = this->distance_measurement;
         // ESP_LOGD(TAG,"measure: %i,%i,%i,%i,%i,%i,%i,%i,%i,%i; target: %i; all_in: %s; all_out: %s;", k[0],k[1],k[2],k[3],k[4],k[5],k[6],k[7],k[8],k[9], *this->target_distance_measurement, all_in_range ? "y" : "n", all_out_of_range ? "y" : "n");
     }
+#endif
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::presence_change(bool sensor_value)
     {
         if (this->flags_.presence_detect_window_active) {
@@ -430,6 +443,7 @@ namespace ratgdo {
             }
         }
     }
+#endif
 
     Result RATGDOComponent::call_protocol(Args args)
     {
@@ -722,10 +736,12 @@ namespace ratgdo {
     {
         this->closing_duration.subscribe([this, f = std::move(f)](float state) { defer("closing_duration", [f, state] { f(state); }); });
     }
+#ifdef RATGDO_USE_CLOSING_DELAY
     void RATGDOComponent::subscribe_closing_delay(std::function<void(uint32_t)>&& f)
     {
         this->closing_delay.subscribe([this, f = std::move(f)](uint32_t state) { defer("closing_delay", [f, state] { f(state); }); });
     }
+#endif
     void RATGDOComponent::subscribe_openings(std::function<void(uint16_t)>&& f)
     {
         this->openings.subscribe([this, f = std::move(f)](uint16_t state) { defer("openings", [f, state] { f(state); }); });
@@ -807,6 +823,7 @@ namespace ratgdo {
         auto name = "last_distance_measurement" + std::to_string(num++);
         this->last_distance_measurement.subscribe([this, f = std::move(f), name](int16_t state) { defer(name, [f, state] { f(state); }); });
     }
+#ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f)
     {
         static int num = 0;
@@ -825,6 +842,7 @@ namespace ratgdo {
         auto name = "vehicle_leaving_state" + std::to_string(num++);
         this->vehicle_leaving_state.subscribe([this, f = std::move(f), name](VehicleLeavingState state) { defer(name, [f, state] { f(state); }); });
     }
+#endif
 
     // dry contact methods
     void RATGDOComponent::set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor)

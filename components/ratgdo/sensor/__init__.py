@@ -62,4 +62,4 @@ async def to_code(config):
             repository="https://github.com/stm32duino/VL53L4CX",
             version=None,
         )
-        cg.add_define("USE_DISTANCE")
+        cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
