@@ -67,44 +67,44 @@ namespace ratgdo {
         void obstruction_loop();
 
         float start_opening { -1 };
-        observable<float> opening_duration { 0 };
+        single_observable<float> opening_duration { 0 };
         float start_closing { -1 };
-        observable<float> closing_duration { 0 };
-        observable<uint32_t> closing_delay { 0 };
+        single_observable<float> closing_duration { 0 };
+        single_observable<uint32_t> closing_delay { 0 };
 
-        observable<int16_t> target_distance_measurement { -1 };
+        single_observable<int16_t> target_distance_measurement { -1 };
         std::array<int16_t, 30> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
-        observable<int16_t> last_distance_measurement { 0 };
+        single_observable<int16_t> last_distance_measurement { 0 };
 
-        observable<uint16_t> openings { 0 }; // number of times the door has been opened
-        observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
-        observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
-        observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
-        observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
-        observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
+        single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
+        single_observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
+        single_observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+        single_observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+        single_observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+        single_observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
+        single_observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
 
         unsigned long door_start_moving { 0 };
         float door_start_position { DOOR_POSITION_UNKNOWN };
         float door_move_delta { DOOR_DELTA_UNKNOWN };
 
-        observable<LightState> light_state { LightState::UNKNOWN };
-        observable<LockState> lock_state { LockState::UNKNOWN };
-        observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
-        observable<MotorState> motor_state { MotorState::UNKNOWN };
-        observable<ButtonState> button_state { ButtonState::UNKNOWN };
-        observable<MotionState> motion_state { MotionState::UNKNOWN };
-        observable<LearnState> learn_state { LearnState::UNKNOWN };
-        observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
-        observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
-        observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+        single_observable<LightState> light_state { LightState::UNKNOWN };
+        single_observable<LockState> lock_state { LockState::UNKNOWN };
+        single_observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
+        single_observable<MotorState> motor_state { MotorState::UNKNOWN };
+        single_observable<ButtonState> button_state { ButtonState::UNKNOWN };
+        single_observable<MotionState> motion_state { MotionState::UNKNOWN };
+        single_observable<LearnState> learn_state { LearnState::UNKNOWN };
+        single_observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
+        single_observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
+        single_observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
 
         OnceCallbacks<void(DoorState)> on_door_state_;
 
-        observable<bool> sync_failed { false };
+        single_observable<bool> sync_failed { false };
 
         void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
         void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
