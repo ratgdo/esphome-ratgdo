@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -112,7 +112,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Update external_components ref to current branch
         if: github.ref != 'refs/heads/main'
         run: |
@@ -146,9 +146,9 @@ jobs:
     needs: build
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Download built firmwares
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: firmwares
       - name: Copy files
@@ -158,7 +158,7 @@ jobs:
           cp -R firmwares/*/* output/
           mv output/*/*.bin output/
       - name: Upload GitHub Pages artifact
-        uses: actions/upload-pages-artifact@v3.0.1
+        uses: actions/upload-pages-artifact@v4.0.0
         with:
           path: output
 
