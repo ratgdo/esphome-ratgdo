@@ -103,7 +103,7 @@ CONFIG_SCHEMA = cv.All(
 
 RATGDO_CLIENT_SCHMEA = cv.Schema(
     {
-        cv.Required(CONF_RATGDO_ID): cv.use_id(RATGDO),
+        cv.GenerateID(CONF_RATGDO_ID): cv.use_id(RATGDO),
     }
 )
 

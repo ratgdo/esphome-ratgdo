@@ -46,7 +46,6 @@ ota:
 lock:
   - platform: ratgdo
     id: ${id_prefix}_lock_remotes
-    ratgdo_id: ${id_prefix}
     name: "Lock remotes"
 
 switch:
@@ -73,13 +72,11 @@ binary_sensor:
   - platform: ratgdo
     type: motion
     id: ${id_prefix}_motion
-    ratgdo_id: ${id_prefix}
     name: "Motion"
     device_class: motion
   - platform: ratgdo
     type: obstruction
     id: ${id_prefix}_obstruction
-    ratgdo_id: ${id_prefix}
     name: "Obstruction"
     device_class: problem
     on_press:
@@ -89,7 +86,6 @@ binary_sensor:
   - platform: ratgdo
     type: button
     id: ${id_prefix}_button
-    ratgdo_id: ${id_prefix}
     name: "Button"
     entity_category: diagnostic
   - platform: gpio
@@ -168,7 +164,6 @@ number:
     id: ${id_prefix}_rolling_code_counter
     type: rolling_code_counter
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Rolling code counter"
     mode: box
     unit_of_measurement: "codes"
@@ -177,7 +172,6 @@ number:
     id: ${id_prefix}_opening_duration
     type: opening_duration
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Opening duration"
     unit_of_measurement: "s"
 
@@ -185,7 +179,6 @@ number:
     id: ${id_prefix}_closing_duration
     type: closing_duration
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Closing duration"
     unit_of_measurement: "s"
 
@@ -193,7 +186,6 @@ number:
     id: ${id_prefix}_client_id
     type: client_id
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Client ID"
     mode: box
 
@@ -202,7 +194,6 @@ cover:
     id: ${id_prefix}_garage_door
     device_class: garage
     name: "Door"
-    ratgdo_id: ${id_prefix}
     on_closed:
       - switch.turn_off: ${id_prefix}_status_door
     on_open:
@@ -212,7 +203,6 @@ light:
   - platform: ratgdo
     id: ${id_prefix}_light
     name: "Light"
-    ratgdo_id: ${id_prefix}
 
 button:
   - platform: restart
