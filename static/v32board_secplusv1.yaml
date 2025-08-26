@@ -39,7 +39,6 @@ packages:
 
 switch:
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_led
     type: led
     pin: GPIO2
