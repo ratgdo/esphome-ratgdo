@@ -1,0 +1,57 @@
+---
+substitutions:
+  id_prefix: ratgdov25hap
+  friendly_name: "ratgdov25hap"
+  uart_tx_pin: "4"
+  uart_rx_pin: "16"
+  input_obst_pin: "14"
+  status_door_pin: "12"
+  status_obstruction_pin: "13"
+  dry_contact_open_pin: "17"
+  dry_contact_close_pin: "21"
+  dry_contact_light_pin: "18"
+
+web_server:
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.esphome-hap
+    version: "2.5-hap"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    version: 5.3.1
+    platform_version: 6.8.1
+    sdkconfig_options:
+      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_LWIP_MAX_SOCKETS: "16"
+      CONFIG_MBEDTLS_HKDF_C: y
+
+dashboard_import:
+  package_import_url: github://donavanbecker/esphome-ratgdo/v25board_esp32_d1_mini_hap.yaml@main
+
+packages:
+  remote_package:
+    url: https://github.com/donavanbecker/esphome-ratgdo
+    files: [base_hap.yaml]
+    refresh: 1s
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+improv_serial:
+
+wifi:
+  ap:
+
+logger:

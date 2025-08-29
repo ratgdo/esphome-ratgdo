@@ -1,0 +1,76 @@
+---
+# HAP (HomeKit) enabled base configuration for RATGDO
+# This extends the base configuration with HomeKit Accessory Protocol support
+# Requires ESP32 (ESP8266 not supported by HAP-ESPHome)
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
+    refresh: 1s
+  # HAP-ESPHome components for HomeKit support (fork with garage door opener support)
+  - source:
+      type: git
+      url: https://github.com/donavanbecker/HAP-ESPHome
+      ref: main
+    refresh: 1s
+
+# Include base RATGDO configuration
+packages:
+  ratgdo_base:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    files: [base.yaml]
+    refresh: 1s
+
+# HomeKit base component configuration
+homekit_base:
+  meta:
+    name: "RATGDO HomeKit Bridge"
+    manufacturer: "RATGDO"
+    model: "ESPHome Garage Door Controller"
+    serial_number: "${id_prefix}"
+    fw_rev: "2.0-hap"
+  setup_code: '159-35-728'
+  setup_id: "RGDO"
+
+# HomeKit accessory mapping for RATGDO entities  
+homekit:
+  # Garage light as HomeKit light
+  light:
+    - id: ${id_prefix}_light
+      meta:
+        name: "Garage Light"
+        manufacturer: "RATGDO"
+        model: "Garage Light"
+        serial_number: "${id_prefix}_light"
+        fw_rev: "2.0-hap"
+  
+  # Remote lock as HomeKit lock
+  lock:
+    - id: ${id_prefix}_lock_remotes
+      meta:
+        name: "Remote Lock"
+        manufacturer: "RATGDO"
+        model: "Remote Control Lock"
+        serial_number: "${id_prefix}_lock"
+        fw_rev: "2.0-hap"
+
+  # Garage door as HomeKit garage door opener (native HomeKit service)
+  cover:
+    - id: ${id_prefix}_garage_door
+      meta:
+        name: "Garage Door"
+        manufacturer: "RATGDO"
+        model: "Garage Door Opener"
+        serial_number: "${id_prefix}_door"
+        fw_rev: "2.0-hap"
+
+
+
+# Factory reset button for HomeKit pairings
+button:
+  - platform: homekit_base
+    factory_reset:
+      name: "Reset HomeKit Pairings"
+      entity_category: config
