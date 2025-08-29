@@ -76,12 +76,18 @@ switch:
     internal: true  # Hidden from main interface since main cover is available
     optimistic: false
     turn_on_action:
-      - cover.toggle: ${id_prefix}_garage_door
+      # Always open the door when switch is turned on
+      - cover.open: ${id_prefix}_garage_door
     turn_off_action:
-      - cover.toggle: ${id_prefix}_garage_door
+      # Always close the door when switch is turned off
+      - cover.close: ${id_prefix}_garage_door
     lambda: |-
-      // Return state based on door position
-      return id(${id_prefix}_garage_door).current_operation != cover::COVER_OPERATION_IDLE;
+      // Return true if door is open (position > 50%), false if closed
+      auto pos = id(${id_prefix}_garage_door).position;
+      if (pos == COVER_OPEN) return true;
+      if (pos == COVER_CLOSED) return false;
+      // For partial positions, consider > 50% as "open"
+      return pos > 0.5;
 
 # Factory reset button for HomeKit pairings
 button:
