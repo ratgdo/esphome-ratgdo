@@ -9,10 +9,10 @@ external_components:
       url: https://github.com/ratgdo/esphome-ratgdo
       ref: main
     refresh: 1s
-  # HAP-ESPHome components for HomeKit support
+  # HAP-ESPHome components for HomeKit support (fork with garage door opener support)
   - source:
       type: git
-      url: https://github.com/rednblkx/HAP-ESPHome
+      url: https://github.com/donavanbecker/HAP-ESPHome
       ref: main
     refresh: 1s
 
@@ -56,9 +56,9 @@ homekit:
         serial_number: "${id_prefix}_lock"
         fw_rev: "2.0-hap"
 
-  # Garage door toggle as HomeKit switch (HAP-ESPHome doesn't yet support GarageDoorOpener service)
-  switch:
-    - id: ${id_prefix}_garage_door_switch
+  # Garage door as HomeKit garage door opener (native HomeKit service)
+  cover:
+    - id: ${id_prefix}_garage_door
       meta:
         name: "Garage Door"
         manufacturer: "RATGDO"
@@ -66,29 +66,7 @@ homekit:
         serial_number: "${id_prefix}_door"
         fw_rev: "2.0-hap"
 
-# Template switch for garage door control in HomeKit
-# Note: This is a workaround until HAP-ESPHome supports native GarageDoorOpener service
-switch:
-  - platform: template
-    id: ${id_prefix}_garage_door_switch
-    name: "Garage Door (HomeKit)"
-    icon: mdi:garage
-    entity_category: config
-    internal: true  # Hidden from main interface since main cover is available
-    optimistic: false
-    turn_on_action:
-      # Always open the door when switch is turned on
-      - cover.open: ${id_prefix}_garage_door
-    turn_off_action:
-      # Always close the door when switch is turned off
-      - cover.close: ${id_prefix}_garage_door
-    lambda: |-
-      // Return true if door is open (position > 50%), false if closed
-      auto pos = id(${id_prefix}_garage_door).position;
-      if (pos == COVER_OPEN) return true;
-      if (pos == COVER_CLOSED) return false;
-      // For partial positions, consider > 50% as "open"
-      return pos > 0.5;
+
 
 # Factory reset button for HomeKit pairings
 button:

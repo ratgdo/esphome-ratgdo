@@ -12,7 +12,7 @@ This project now includes HomeKit Accessory Protocol (HAP) support for ESP32 boa
 
 When using HAP-enabled configurations, the following RATGDO features are exposed to HomeKit:
 
-- **Garage Door**: Exposed as a switch that toggles the garage door
+- **Garage Door**: Exposed as a proper HomeKit garage door opener with open/close/stop operations
 - **Garage Light**: Exposed as a light that can be turned on/off
 - **Remote Lock**: Exposed as a lock for controlling remote access
 - **Motion Sensor**: Reports motion detection in the garage
@@ -52,7 +52,7 @@ Use the [Web Installer](https://ratgdo.github.io/esphome-ratgdo/) and select one
 
 Once paired, you'll see these accessories in the Home app:
 
-- **Garage Door**: Toggle switch to open/close the garage door
+- **Garage Door**: Proper garage door opener with open/close/stop controls and current state display
 - **Garage Light**: Light control for the garage light
 - **Remote Lock**: Lock to enable/disable remote controls
 - **Motion Sensor**: Shows motion detection status
@@ -69,12 +69,20 @@ If you have trouble pairing:
 3. Use the "Reset HomeKit Pairings" button in the RATGDO web interface
 4. Restart the RATGDO device and try pairing again
 
-### Garage Door as Switch
+### Garage Door Control
 
-The garage door appears as a switch in HomeKit rather than a garage door accessory. This is because:
-- HAP-ESPHome doesn't currently support native garage door accessories
-- A switch provides the same core functionality (open/close toggle)
-- Future updates may add proper garage door accessory support
+The garage door is exposed as a proper HomeKit garage door opener accessory, providing:
+- Open/Close/Stop controls in the Home app
+- Current state display (Open, Closed, Opening, Closing, Stopped)
+- Integration with Siri voice commands ("Hey Siri, open the garage door")
+- Proper garage door icon and controls in HomeKit
+
+The state mapping from ESPHome to HomeKit is:
+- Door fully open → HomeKit "Open"
+- Door fully closed → HomeKit "Closed"  
+- Door opening → HomeKit "Opening"
+- Door closing → HomeKit "Closing"
+- Door stopped at partial position → HomeKit "Stopped"
 
 ### Factory Reset HomeKit Pairings
 
@@ -94,6 +102,10 @@ You can reset HomeKit pairings using:
 - Requires mDNS for discovery
 - Uses ESP-IDF framework with HomeKit SDK
 
+### HAP-ESPHome Library
+
+This implementation uses a fork of HAP-ESPHome (https://github.com/donavanbecker/HAP-ESPHome) that includes support for garage door opener accessories. This provides proper HomeKit integration with native garage door controls rather than using a switch workaround.
+
 ### Security
 - All communication is encrypted using HomeKit's security protocols
 - Device keys are generated and stored securely on the ESP32
@@ -108,4 +120,4 @@ To customize the HomeKit configuration, you can:
 3. Create your own board-specific configuration files
 4. Build and flash your custom firmware
 
-See the [HAP-ESPHome documentation](https://github.com/rednblkx/HAP-ESPHome) for more details on customization options.
+See the [HAP-ESPHome documentation](https://github.com/donavanbecker/HAP-ESPHome) for more details on customization options.
