@@ -11,7 +11,7 @@ substitutions:
   status_door_pin: "12"
   status_obstruction_pin: "13"
   dry_contact_open_pin: "17"
-  dry_contact_close_pin: "21" 
+  dry_contact_close_pin: "21"
   dry_contact_light_pin: "18"
 
 esphome:

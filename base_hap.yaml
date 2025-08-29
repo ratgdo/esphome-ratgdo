@@ -34,7 +34,7 @@ homekit_base:
   setup_code: '159-35-728'
   setup_id: "RGDO"
 
-# HomeKit accessory mapping for RATGDO entities  
+# HomeKit accessory mapping for RATGDO entities
 homekit:
   # Garage light as HomeKit light
   light:
@@ -45,7 +45,7 @@ homekit:
         model: "Garage Light"
         serial_number: "${id_prefix}_light"
         fw_rev: "2.0-hap"
-  
+
   # Remote lock as HomeKit lock
   lock:
     - id: ${id_prefix}_lock_remotes

@@ -79,7 +79,7 @@ The garage door is exposed as a proper HomeKit garage door opener accessory, pro
 
 The state mapping from ESPHome to HomeKit is:
 - Door fully open → HomeKit "Open"
-- Door fully closed → HomeKit "Closed"  
+- Door fully closed → HomeKit "Closed"
 - Door opening → HomeKit "Opening"
 - Door closing → HomeKit "Closing"
 - Door stopped at partial position → HomeKit "Stopped"
