@@ -56,7 +56,7 @@ homekit:
         serial_number: "${id_prefix}_lock"
         fw_rev: "2.0-hap"
 
-  # Garage door toggle as HomeKit switch (HomeKit doesn't have native garage door support in HAP-ESPHome)
+  # Garage door toggle as HomeKit switch (HAP-ESPHome doesn't yet support GarageDoorOpener service)
   switch:
     - id: ${id_prefix}_garage_door_switch
       meta:
@@ -67,6 +67,7 @@ homekit:
         fw_rev: "2.0-hap"
 
 # Template switch for garage door control in HomeKit
+# Note: This is a workaround until HAP-ESPHome supports native GarageDoorOpener service
 switch:
   - platform: template
     id: ${id_prefix}_garage_door_switch
