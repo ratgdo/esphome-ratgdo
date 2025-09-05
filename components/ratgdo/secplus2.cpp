@@ -212,7 +212,7 @@ namespace ratgdo {
 
         void Secplus2::query_paired_devices(PairedDevice kind)
         {
-            ESP_LOGD(TAG, "Query paired devices of type: %s", PairedDevice_to_string(kind));
+            ESP_LOGD(TAG, "Query paired devices of type: %s", LOG_STR_ARG(PairedDevice_to_string(kind)));
             this->send_command(Command { CommandType::GET_PAIRED_DEVICES, static_cast<uint8_t>(kind) });
         }
 
@@ -365,14 +365,14 @@ namespace ratgdo {
             uint8_t byte1 = (data >> 16) & 0xff;
             uint8_t byte2 = (data >> 24) & 0xff;
 
-            ESP_LOG1(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, CommandType_to_string(cmd_type), byte2, byte1, nibble);
+            ESP_LOG1(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, LOG_STR_ARG(CommandType_to_string(cmd_type)), byte2, byte1, nibble);
 
             return Command { cmd_type, nibble, byte1, byte2 };
         }
 
         void Secplus2::handle_command(const Command& cmd)
         {
-            ESP_LOG1(TAG, "Handle command: %s", CommandType_to_string(cmd.type));
+            ESP_LOG1(TAG, "Handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
 
             if (cmd.type == CommandType::STATUS) {
 
@@ -414,12 +414,12 @@ namespace ratgdo {
                 this->ratgdo_->received(to_BatteryState(cmd.byte1, BatteryState::UNKNOWN));
             }
 
-            ESP_LOG1(TAG, "Done handle command: %s", CommandType_to_string(cmd.type));
+            ESP_LOG1(TAG, "Done handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
         }
 
         void Secplus2::send_command(Command command, IncrementRollingCode increment)
         {
-            ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", CommandType_to_string(command.type), command.byte2, command.byte1, command.nibble);
+            ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", LOG_STR_ARG(CommandType_to_string(command.type)), command.byte2, command.byte1, command.nibble);
             if (!this->flags_.transmit_pending) { // have an untransmitted packet
                 this->encode_packet(command, this->tx_packet_);
                 if (increment == IncrementRollingCode::YES) {
@@ -429,9 +429,9 @@ namespace ratgdo {
                 // unlikely this would happed (unless not connected to GDO), we're ensuring any pending packet
                 // is transmitted each loop before doing anyting else
                 if (this->transmit_pending_start_ > 0) {
-                    ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", CommandType_to_string(command.type));
+                    ESP_LOGW(TAG, "Have untransmitted packet, ignoring command: %s", LOG_STR_ARG(CommandType_to_string(command.type)));
                 } else {
-                    ESP_LOGW(TAG, "Not connected to GDO, ignoring command: %s", CommandType_to_string(command.type));
+                    ESP_LOGW(TAG, "Not connected to GDO, ignoring command: %s", LOG_STR_ARG(CommandType_to_string(command.type)));
                 }
             }
             this->transmit_packet();
