@@ -80,28 +80,28 @@ namespace ratgdo {
 
         void DryContact::light_action(LightAction action)
         {
-            ESP_LOG1(TAG, "Ignoring light action: %s", LightAction_to_string(action));
+            ESP_LOG1(TAG, "Ignoring light action: %s", LOG_STR_ARG(LightAction_to_string(action)));
             return;
         }
 
         void DryContact::lock_action(LockAction action)
         {
-            ESP_LOG1(TAG, "Ignoring lock action: %s", LockAction_to_string(action));
+            ESP_LOG1(TAG, "Ignoring lock action: %s", LOG_STR_ARG(LockAction_to_string(action)));
             return;
         }
 
         void DryContact::door_action(DoorAction action)
         {
             if (action == DoorAction::OPEN && this->door_state_ != DoorState::CLOSED) {
-                ESP_LOGW(TAG, "The door is not closed. Ignoring door action: %s", DoorAction_to_string(action));
+                ESP_LOGW(TAG, "The door is not closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
                 return;
             }
             if (action == DoorAction::CLOSE && this->door_state_ != DoorState::OPEN) {
-                ESP_LOGW(TAG, "The door is not open. Ignoring door action: %s", DoorAction_to_string(action));
+                ESP_LOGW(TAG, "The door is not open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
                 return;
             }
 
-            ESP_LOG1(TAG, "Door action: %s", DoorAction_to_string(action));
+            ESP_LOG1(TAG, "Door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
 
             if (action == DoorAction::OPEN) {
                 this->discrete_open_pin_->digital_write(1);

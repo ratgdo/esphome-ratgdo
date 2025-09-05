@@ -121,7 +121,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const DoorState door_state)
     {
-        ESP_LOGD(TAG, "Door state=%s", DoorState_to_string(door_state));
+        ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
 
         auto prev_door_state = *this->door_state;
 
@@ -215,7 +215,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const LearnState learn_state)
     {
-        ESP_LOGD(TAG, "Learn state=%s", LearnState_to_string(learn_state));
+        ESP_LOGD(TAG, "Learn state=%s", LOG_STR_ARG(LearnState_to_string(learn_state)));
 
         if (*this->learn_state == learn_state) {
             return;
@@ -230,20 +230,20 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const LightState light_state)
     {
-        ESP_LOGD(TAG, "Light state=%s", LightState_to_string(light_state));
+        ESP_LOGD(TAG, "Light state=%s", LOG_STR_ARG(LightState_to_string(light_state)));
         this->light_state = light_state;
     }
 
     void RATGDOComponent::received(const LockState lock_state)
     {
-        ESP_LOGD(TAG, "Lock state=%s", LockState_to_string(lock_state));
+        ESP_LOGD(TAG, "Lock state=%s", LOG_STR_ARG(LockState_to_string(lock_state)));
         this->lock_state = lock_state;
     }
 
     void RATGDOComponent::received(const ObstructionState obstruction_state)
     {
         if (!this->flags_.obstruction_sensor_detected) {
-            ESP_LOGD(TAG, "Obstruction: state=%s", ObstructionState_to_string(*this->obstruction_state));
+            ESP_LOGD(TAG, "Obstruction: state=%s", LOG_STR_ARG(ObstructionState_to_string(*this->obstruction_state)));
 
             this->obstruction_state = obstruction_state;
             // This isn't very fast to update, but its still better
@@ -254,19 +254,19 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const MotorState motor_state)
     {
-        ESP_LOGD(TAG, "Motor: state=%s", MotorState_to_string(*this->motor_state));
+        ESP_LOGD(TAG, "Motor: state=%s", LOG_STR_ARG(MotorState_to_string(*this->motor_state)));
         this->motor_state = motor_state;
     }
 
     void RATGDOComponent::received(const ButtonState button_state)
     {
-        ESP_LOGD(TAG, "Button state=%s", ButtonState_to_string(*this->button_state));
+        ESP_LOGD(TAG, "Button state=%s", LOG_STR_ARG(ButtonState_to_string(*this->button_state)));
         this->button_state = button_state;
     }
 
     void RATGDOComponent::received(const MotionState motion_state)
     {
-        ESP_LOGD(TAG, "Motion: %s", MotionState_to_string(*this->motion_state));
+        ESP_LOGD(TAG, "Motion: %s", LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
         this->motion_state = motion_state;
         if (motion_state == MotionState::DETECTED) {
             this->set_timeout("clear_motion", 3000, [this] {
@@ -281,8 +281,8 @@ namespace ratgdo {
     void RATGDOComponent::received(const LightAction light_action)
     {
         ESP_LOGD(TAG, "Light cmd=%s state=%s",
-            LightAction_to_string(light_action),
-            LightState_to_string(*this->light_state));
+            LOG_STR_ARG(LightAction_to_string(light_action)),
+            LOG_STR_ARG(LightState_to_string(*this->light_state)));
         if (light_action == LightAction::OFF) {
             this->light_state = LightState::OFF;
         } else if (light_action == LightAction::ON) {
@@ -304,7 +304,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const PairedDeviceCount pdc)
     {
-        ESP_LOGD(TAG, "Paired device count, kind=%s count=%d", PairedDevice_to_string(pdc.kind), pdc.count);
+        ESP_LOGD(TAG, "Paired device count, kind=%s count=%d", LOG_STR_ARG(PairedDevice_to_string(pdc.kind)), pdc.count);
 
         if (pdc.kind == PairedDevice::ALL) {
             this->paired_total = pdc.count;
@@ -326,7 +326,7 @@ namespace ratgdo {
 
     void RATGDOComponent::received(const BatteryState battery_state)
     {
-        ESP_LOGD(TAG, "Battery state=%s", BatteryState_to_string(battery_state));
+        ESP_LOGD(TAG, "Battery state=%s", LOG_STR_ARG(BatteryState_to_string(battery_state)));
     }
 
     void RATGDOComponent::schedule_door_position_sync(float update_period)
