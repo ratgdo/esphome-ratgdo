@@ -23,6 +23,8 @@ esphome:
 
 esp32:
   board: wemos_d1_mini32
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v25board_esp32_d1_mini.yaml@main

@@ -124,7 +124,7 @@ namespace ratgdo {
 
         void Secplus1::light_action(LightAction action)
         {
-            ESP_LOG1(TAG, "Light action: %s", LightAction_to_string(action));
+            ESP_LOG1(TAG, "Light action: %s", LOG_STR_ARG(LightAction_to_string(action)));
             if (action == LightAction::UNKNOWN) {
                 return;
             }
@@ -136,7 +136,7 @@ namespace ratgdo {
 
         void Secplus1::lock_action(LockAction action)
         {
-            ESP_LOG1(TAG, "Lock action: %s", LockAction_to_string(action));
+            ESP_LOG1(TAG, "Lock action: %s", LOG_STR_ARG(LockAction_to_string(action)));
             if (action == LockAction::UNKNOWN) {
                 return;
             }
@@ -148,7 +148,7 @@ namespace ratgdo {
 
         void Secplus1::door_action(DoorAction action)
         {
-            ESP_LOG1(TAG, "Door action: %s, door state: %s", DoorAction_to_string(action), DoorState_to_string(this->door_state));
+            ESP_LOG1(TAG, "Door action: %s, door state: %s", LOG_STR_ARG(DoorAction_to_string(action)), LOG_STR_ARG(DoorState_to_string(this->door_state)));
             if (action == DoorAction::UNKNOWN) {
                 return;
             }
@@ -346,7 +346,7 @@ namespace ratgdo {
 
                 if (!this->flags_.is_0x37_panel && door_state != this->maybe_door_state) {
                     this->maybe_door_state = door_state;
-                    ESP_LOG1(TAG, "Door maybe %s, waiting for 2nd status message to confirm", DoorState_to_string(door_state));
+                    ESP_LOG1(TAG, "Door maybe %s, waiting for 2nd status message to confirm", LOG_STR_ARG(DoorState_to_string(door_state)));
                 } else {
                     this->maybe_door_state = door_state;
                     this->door_state = door_state;
