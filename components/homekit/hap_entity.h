@@ -24,7 +24,7 @@ namespace homekit {
                 }
             }
         }
-        void virtual setup() { ESP_LOGI(TAG, "Uninmplemented!"); }
+        void virtual setup() { ESP_LOGI(TAG, "Unimplemented!"); }
     };
 }
 }

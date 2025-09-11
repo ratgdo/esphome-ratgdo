@@ -38,7 +38,7 @@
         FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)       \
     };                                                  \
     inline const char*                                  \
-    name##_to_string(name _e)                           \
+        name##_to_string(name _e)                       \
     {                                                   \
         switch (_e) {                                   \
             FOR_EACH(TO_STRING_CASE, name, __VA_ARGS__) \
@@ -47,7 +47,7 @@
         }                                               \
     }                                                   \
     inline name                                         \
-    to_##name(type _t, name _unknown)                   \
+        to_##name(type _t, name _unknown)               \
     {                                                   \
         switch (_t) {                                   \
             FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)  \
