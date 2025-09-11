@@ -33,11 +33,7 @@ esp32:
       CONFIG_MBEDTLS_HKDF_C: y
 
 packages:
-  remote_package:
-    url: https://github.com/ratgdo/esphome-ratgdo
-    files: [base_hap.yaml]
-    refresh: 1s
-
+  - !include /home/runner/work/esphome-ratgdo/esphome-ratgdo/base_hap.yaml
 # Sync time with Home Assistant.
 time:
   - platform: homeassistant
