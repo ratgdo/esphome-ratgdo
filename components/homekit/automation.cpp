@@ -2,6 +2,6 @@
 
 namespace esphome {
 namespace homekit {
-  // Placeholder implementation
+    // Placeholder implementation
 }
 }

@@ -1,30 +1,25 @@
 #pragma once
 
-namespace esphome
-{
-  namespace homekit
-  {
-    enum TemperatureUnits
-    {
-      CELSIUS,
-      FAHRENHEIT
+namespace esphome {
+namespace homekit {
+    enum TemperatureUnits {
+        CELSIUS,
+        FAHRENHEIT
     };
 
-    enum HKFinish
-    {
-      TAN,
-      GOLD,
-      SILVER,
-      BLACK
+    enum HKFinish {
+        TAN,
+        GOLD,
+        SILVER,
+        BLACK
     };
 
-    enum AInfo
-    {
-      NAME,
-      MODEL,
-      SN,
-      MANUFACTURER,
-      FW_REV
+    enum AInfo {
+        NAME,
+        MODEL,
+        SN,
+        MANUFACTURER,
+        FW_REV
     };
-  }
+}
 }
