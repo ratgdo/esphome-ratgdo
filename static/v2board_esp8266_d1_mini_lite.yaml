@@ -24,6 +24,8 @@ esphome:
 esp8266:
   board: d1_mini_lite
   restore_from_flash: true
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp8266_d1_mini_lite.yaml@main
