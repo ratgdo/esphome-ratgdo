@@ -23,6 +23,8 @@ esphome:
 
 esp32:
   board: lolin_s2_mini
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp32_lolin_s2_mini.yaml@main
