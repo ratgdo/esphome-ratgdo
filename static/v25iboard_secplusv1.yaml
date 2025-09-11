@@ -25,8 +25,6 @@ esphome:
 esp8266:
   board: d1_mini
   restore_from_flash: true
-  framework:
-    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_secplusv1.yaml@main
