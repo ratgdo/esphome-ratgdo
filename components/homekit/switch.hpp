@@ -83,7 +83,7 @@ namespace homekit {
             hap_acc_t* accessory = nullptr;
             hap_serv_t* service = nullptr;
             std::string accessory_name = switchPtr->get_name();
-            
+
             if (accessory_info[NAME] == NULL) {
                 acc_cfg.name = (char*)accessory_name.c_str();
             } else {
@@ -94,11 +94,11 @@ namespace homekit {
             } else {
                 acc_cfg.serial_num = (char*)accessory_info[SN];
             }
-            
+
             accessory = hap_acc_create(&acc_cfg);
             service = hap_serv_switch_create(switchPtr->state);
             hap_serv_add_char(service, hap_char_name_create(accessory_name.data()));
-            
+
             ESP_LOGD(TAG, "ID HASH: %lu", switchPtr->get_object_id_hash());
             hap_serv_set_priv(service, switchPtr);
 
@@ -110,7 +110,7 @@ namespace homekit {
 
             /* Add the Accessory to the HomeKit Database */
             hap_add_bridged_accessory(accessory, hap_get_unique_aid(std::to_string(switchPtr->get_object_id_hash()).c_str()));
-            
+
             if (!switchPtr->is_internal())
                 switchPtr->add_on_state_callback([this]() { SwitchEntity::on_switch_update(switchPtr); });
 
