@@ -54,8 +54,11 @@ def main():
         print(f"Fork repository: {fork_repo}")
     print("Updating YAML files to use local paths for CI testing...")
 
-    # Process all YAML files in the project root
+    # Process all YAML files in the project root (excluding symlinks to static files)
     for yaml_file in project_root.glob("*.yaml"):
+        # Skip symbolic links - these point to files in static/ which are for end users
+        if yaml_file.is_symlink():
+            continue
         with open(yaml_file, "r") as f:
             content = f.read()
 

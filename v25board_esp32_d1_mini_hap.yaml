@@ -32,12 +32,9 @@ esp32:
       CONFIG_LWIP_MAX_SOCKETS: "16"
       CONFIG_MBEDTLS_HKDF_C: y
 
-dashboard_import:
-  package_import_url: github://donavanbecker/esphome-ratgdo/v25board_esp32_d1_mini_hap.yaml@main
-
 packages:
   remote_package:
-    url: https://github.com/donavanbecker/esphome-ratgdo
+    url: https://github.com/ratgdo/esphome-ratgdo
     files: [base_hap.yaml]
     refresh: 1s
 
