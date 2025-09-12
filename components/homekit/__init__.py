@@ -100,14 +100,12 @@ CONFIG_SCHEMA = cv.All(
                     cv.Optional("meta"): ACCESSORY_INFORMATION,
                 }
             ),
-
             cv.Optional("switch"): cv.ensure_list(
                 {
                     cv.Required(CONF_ID): cv.use_id(switch.Switch),
                     cv.Optional("meta"): ACCESSORY_INFORMATION,
                 }
             ),
-
             cv.Optional("cover"): cv.ensure_list(
                 {
                     cv.Required(CONF_ID): cv.use_id(cover.Cover),
