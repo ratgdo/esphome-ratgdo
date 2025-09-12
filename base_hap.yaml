@@ -4,18 +4,19 @@
 # Requires ESP32 (ESP8266 not supported by HAP-ESPHome)
 
 external_components:
-  # Local RATGDO and HomeKit components (with compatibility fixes)
+  # Local RATGDO components
   - source:
       type: local
       path: /home/runner/work/esphome-ratgdo/esphome-ratgdo/components
     refresh: 1s
-  # HAP-ESPHome components for HomeKit support (excluding homekit component which is local)
+    components: [ ratgdo ]
+  # HAP-ESPHome components for HomeKit support (includes cover support)
   - source:
       type: git
-      url: https://github.com/donavanbecker/HAP-ESPHome
+      url: https://github.com/rednblkx/HAP-ESPHome
       ref: main
     refresh: 1s
-    components: [ homekit_base ]
+    components: [ homekit_base, homekit ]
 
 # Include base RATGDO configuration
 packages:
