@@ -13,7 +13,7 @@ external_components:
   # HAP-ESPHome components for HomeKit support (includes cover support)
   - source:
       type: git
-      url: https://github.com/rednblkx/HAP-ESPHome
+      url: https://github.com/donavanbecker/HAP-ESPHome
       ref: main
     refresh: 1s
     components: [ homekit_base, homekit ]
@@ -68,7 +68,22 @@ homekit:
         serial_number: "${id_prefix}_door"
         fw_rev: "2.0-hap"
 
-
+  # Motion and obstruction sensors as HomeKit binary sensors
+  binary_sensor:
+    - id: ${id_prefix}_motion
+      meta:
+        name: "Motion Sensor"
+        manufacturer: "RATGDO"
+        model: "Motion Sensor"
+        serial_number: "${id_prefix}_motion"
+        fw_rev: "2.0-hap"
+    - id: ${id_prefix}_obstruction
+      meta:
+        name: "Obstruction Sensor"
+        manufacturer: "RATGDO"
+        model: "Obstruction Sensor"
+        serial_number: "${id_prefix}_obstruction"
+        fw_rev: "2.0-hap"
 
 # Factory reset button for HomeKit pairings
 button:
