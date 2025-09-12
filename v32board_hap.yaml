@@ -31,7 +31,7 @@ esp32:
       CONFIG_MBEDTLS_HKDF_C: y
 
 packages:
-  - !include /home/runner/work/esphome-ratgdo/esphome-ratgdo/base_hap.yaml
+  - !include base_hap.yaml
 # Sync time with Home Assistant.
 time:
   - platform: homeassistant
