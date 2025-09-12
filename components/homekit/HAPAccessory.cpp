@@ -22,11 +22,7 @@ namespace homekit {
             v->setup();
         }
 #endif
-#ifdef USE_FAN
-        for (const auto v : fans) {
-            v->setup();
-        }
-#endif
+
 #ifdef USE_SWITCH
         for (const auto v : switches) {
             v->setup();
@@ -37,11 +33,7 @@ namespace homekit {
             v->setup();
         }
 #endif
-#ifdef USE_CLIMATE
-        for (const auto v : climates) {
-            v->setup();
-        }
-#endif
+
 #ifdef USE_COVER
         for (const auto v : covers) {
             v->setup();
@@ -59,15 +51,11 @@ namespace homekit {
 #ifdef USE_SENSOR
         ESP_LOGCONFIG(TAG, "Sensor HK Entities: %d", sensors.size());
 #endif
-#ifdef USE_FAN
-        ESP_LOGCONFIG(TAG, "Fan HK Entities: %d", fans.size());
-#endif
+
 #ifdef USE_SWITCH
         ESP_LOGCONFIG(TAG, "Switch HK Entities: %d", switches.size());
 #endif
-#ifdef USE_CLIMATE
-        ESP_LOGCONFIG(TAG, "Climate HK Entities: %d", climates.size());
-#endif
+
 #ifdef USE_COVER
         ESP_LOGCONFIG(TAG, "Cover HK Entities: %d", covers.size());
 #endif
@@ -96,13 +84,7 @@ namespace homekit {
         hkHwFinish = color;
     }
 #endif
-#ifdef USE_FAN
-    FanEntity* HAPAccessory::add_fan(fan::Fan* fanPtr)
-    {
-        fans.push_back(new FanEntity(fanPtr));
-        return fans.back();
-    }
-#endif
+
 #ifdef USE_SWITCH
     SwitchEntity* HAPAccessory::add_switch(switch_::Switch* switchPtr)
     {
@@ -113,17 +95,11 @@ namespace homekit {
 #ifdef USE_SENSOR
     SensorEntity* HAPAccessory::add_sensor(sensor::Sensor* sensorPtr, TemperatureUnits units)
     {
-        sensors.push_back(new SensorEntity(sensorPtr));
+        sensors.push_back(new SensorEntity(sensorPtr, units));
         return sensors.back();
     }
 #endif
-#ifdef USE_CLIMATE
-    ClimateEntity* HAPAccessory::add_climate(climate::Climate* climatePtr)
-    {
-        climates.push_back(new ClimateEntity(climatePtr));
-        return climates.back();
-    }
-#endif
+
 #ifdef USE_COVER
     CoverEntity* HAPAccessory::add_cover(cover::Cover* coverPtr)
     {

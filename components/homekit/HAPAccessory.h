@@ -14,18 +14,14 @@
 #ifdef USE_LOCK
 #include "lock.h"
 #endif
-#ifdef USE_FAN
-#include "fan.hpp"
-#endif
+
 #ifdef USE_SWITCH
 #include "switch.hpp"
 #endif
 #ifdef USE_SENSOR
 #include "sensor.hpp"
 #endif
-#ifdef USE_CLIMATE
-#include "climate.hpp"
-#endif
+
 #ifdef USE_COVER
 #include "cover.hpp"
 #endif
@@ -54,10 +50,7 @@ namespace homekit {
         void set_nfc_ctx(pn532::PN532* nfcCtx);
         void set_hk_hw_finish(HKFinish color);
 #endif
-#ifdef USE_FAN
-        std::vector<FanEntity*> fans;
-        FanEntity* add_fan(fan::Fan* fanPtr);
-#endif
+
 #ifdef USE_SWITCH
         std::vector<SwitchEntity*> switches;
         SwitchEntity* add_switch(switch_::Switch* switchPtr);
@@ -66,10 +59,7 @@ namespace homekit {
         std::vector<SensorEntity*> sensors;
         SensorEntity* add_sensor(sensor::Sensor* sensorPtr, TemperatureUnits units);
 #endif
-#ifdef USE_CLIMATE
-        std::vector<ClimateEntity*> climates;
-        ClimateEntity* add_climate(climate::Climate* sensorPtr);
-#endif
+
 #ifdef USE_COVER
         std::vector<CoverEntity*> covers;
         CoverEntity* add_cover(cover::Cover* coverPtr);
