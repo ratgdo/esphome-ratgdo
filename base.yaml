@@ -5,11 +5,8 @@ esphome:
 external_components:
   - source:
       type: local
-      path: /home/runner/work/esphome-ratgdo/esphome-ratgdo/components
+      path: components
     refresh: 1s
-  # - source:
-  #     type: local
-  #     path: components
 
 safe_mode:
 
