@@ -108,10 +108,13 @@ You can reset HomeKit pairings using:
 
 This implementation uses a fork of HAP-ESPHome (https://github.com/donavanbecker/HAP-ESPHome) that includes support for garage door opener accessories and has been updated with API compatibility fixes for the latest ESP-IDF HAP library.
 
-**Build Requirements**: The HomeKit configurations require the latest HAP-ESPHome version that includes:
-- Fixed function names and API signatures
-- Proper type definitions and includes
-- Compatibility with current ESP-IDF HAP library
+**Build Requirements**: The HomeKit configurations use HAP-ESPHome commit `910e053b` ("Production Ready") that maintains compatibility with ESP-IDF HAP library. This commit was specifically marked as production-ready for garage door opener integration and avoids the API compatibility issues introduced in later commits:
+- Uses correct `hap_char_get_val()` API with pointer parameters
+- Maintains `HAP_VAL_TYPE_INVALID` constant compatibility  
+- Includes proper header dependencies and type definitions
+- Stable garage door opener service implementation
+
+Later commits introduced breaking changes that cause the build failures reported in this issue.
 
 The HAP-ESPHome library provides proper HomeKit integration with native garage door controls rather than using a switch workaround.
 

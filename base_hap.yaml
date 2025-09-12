@@ -3,11 +3,12 @@
 # This extends the base configuration with HomeKit Accessory Protocol support
 # Requires ESP32 (ESP8266 not supported by HAP-ESPHome)
 #
-# IMPORTANT: Ensure the upstream HAP-ESPHome repository is up-to-date
-# This configuration requires HAP-ESPHome commit that includes fixes for:
-# - API compatibility with ESP-IDF HAP library
-# - Correct function names and signatures
-# - Proper type definitions and includes
+# IMPORTANT: This configuration uses the "Production Ready" commit from HAP-ESPHome
+# (910e053b) that was marked as stable for garage door opener integration.
+# This commit predates the API compatibility issues introduced in later commits:
+# - Maintains proper hap_char_get_val() API usage
+# - Avoids HAP_VAL_TYPE_INVALID compatibility issues  
+# - Includes proper header dependencies and type definitions
 
 external_components:
   # Local RATGDO components
@@ -17,11 +18,11 @@ external_components:
     refresh: 1s
     components: [ ratgdo ]
   # HAP-ESPHome components for HomeKit support
-  # Uses fixed version with API compatibility updates
+  # Uses "Production Ready" commit that maintains API compatibility  
   - source:
       type: git
-      url: https://github.com/donavanbecker/HAP-ESPHome
-      ref: main
+      url: https://github.com/rednblkx/HAP-ESPHome
+      ref: 910e053b0ead74e73715b90ebf00e6a92ff66f18
     refresh: 1s
     components: [ homekit_base, homekit ]
 
