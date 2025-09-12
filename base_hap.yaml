@@ -7,7 +7,7 @@
 # (910e053b) that was marked as stable for garage door opener integration.
 # This commit predates the API compatibility issues introduced in later commits:
 # - Maintains proper hap_char_get_val() API usage
-# - Avoids HAP_VAL_TYPE_INVALID compatibility issues  
+# - Avoids HAP_VAL_TYPE_INVALID compatibility issues
 # - Includes proper header dependencies and type definitions
 
 external_components:
@@ -18,7 +18,7 @@ external_components:
     refresh: 1s
     components: [ ratgdo ]
   # HAP-ESPHome components for HomeKit support
-  # Uses "Production Ready" commit that maintains API compatibility  
+  # Uses "Production Ready" commit that maintains API compatibility
   - source:
       type: git
       url: https://github.com/rednblkx/HAP-ESPHome

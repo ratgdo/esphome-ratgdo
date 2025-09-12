@@ -110,7 +110,7 @@ This implementation uses a fork of HAP-ESPHome (https://github.com/donavanbecker
 
 **Build Requirements**: The HomeKit configurations use HAP-ESPHome commit `910e053b` ("Production Ready") that maintains compatibility with ESP-IDF HAP library. This commit was specifically marked as production-ready for garage door opener integration and avoids the API compatibility issues introduced in later commits:
 - Uses correct `hap_char_get_val()` API with pointer parameters
-- Maintains `HAP_VAL_TYPE_INVALID` constant compatibility  
+- Maintains `HAP_VAL_TYPE_INVALID` constant compatibility
 - Includes proper header dependencies and type definitions
 - Stable garage door opener service implementation
 
