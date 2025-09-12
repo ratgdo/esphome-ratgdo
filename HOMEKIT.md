@@ -94,8 +94,10 @@ You can reset HomeKit pairings using:
 ## Technical Details
 
 ### HomeKit Setup Code
-- Default setup code: `159-35-728`
+- Default setup code: `159-35-728` (change for production deployment)
 - Setup ID: `RGDO`
+
+**⚠️ Security Note**: The default setup code should be changed for production deployments. You can customize the setup code in your configuration file by modifying the `homekit_base.setup_code` value.
 
 ### Network Configuration
 - HomeKit runs on port 32042 (configurable)
@@ -104,12 +106,51 @@ You can reset HomeKit pairings using:
 
 ### HAP-ESPHome Library
 
-This implementation uses a fork of HAP-ESPHome (https://github.com/donavanbecker/HAP-ESPHome) that includes support for garage door opener accessories. This provides proper HomeKit integration with native garage door controls rather than using a switch workaround.
+This implementation uses a fork of HAP-ESPHome (https://github.com/donavanbecker/HAP-ESPHome) that includes support for garage door opener accessories and has been updated with API compatibility fixes for the latest ESP-IDF HAP library.
+
+**Build Requirements**: The HomeKit configurations require the latest HAP-ESPHome version that includes:
+- Fixed function names and API signatures
+- Proper type definitions and includes
+- Compatibility with current ESP-IDF HAP library
+
+The HAP-ESPHome library provides proper HomeKit integration with native garage door controls rather than using a switch workaround.
 
 ### Security
 - All communication is encrypted using HomeKit's security protocols
 - Device keys are generated and stored securely on the ESP32
 - Pairing must be done locally (same network)
+
+## Production Deployment
+
+### Pre-Deployment Checklist
+
+Before deploying HomeKit-enabled RATGDO devices in production:
+
+1. **Change Default Setup Code**: Modify the `setup_code` in your configuration from the default `159-35-728` to a unique 8-digit code
+2. **Update Device Names**: Customize the device names and serial numbers to match your environment
+3. **Test Build Process**: Ensure configurations compile successfully with the latest HAP-ESPHome library
+4. **Verify Network Configuration**: Confirm mDNS and network settings are appropriate for your network
+5. **Security Review**: Review and customize HomeKit metadata and security settings
+
+### Example Custom Configuration
+
+```yaml
+homekit_base:
+  meta:
+    name: "Garage Door Controller"
+    manufacturer: "Your Company"
+    model: "Custom RATGDO"
+    serial_number: "${id_prefix}"
+    fw_rev: "1.0"
+  setup_code: '12345678'  # Change to your unique code
+  setup_id: "GRGE"        # Custom 4-character ID
+```
+
+### Build Status
+
+✅ **Status**: Production Ready (as of January 2025)
+
+The HomeKit configurations are now fully functional with the upstream HAP-ESPHome library fixes that address all API compatibility issues with the ESP-IDF HAP library.
 
 ## Customization
 

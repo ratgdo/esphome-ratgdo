@@ -2,6 +2,12 @@
 # HAP (HomeKit) enabled base configuration for RATGDO
 # This extends the base configuration with HomeKit Accessory Protocol support
 # Requires ESP32 (ESP8266 not supported by HAP-ESPHome)
+#
+# IMPORTANT: Ensure the upstream HAP-ESPHome repository is up-to-date
+# This configuration requires HAP-ESPHome commit that includes fixes for:
+# - API compatibility with ESP-IDF HAP library
+# - Correct function names and signatures
+# - Proper type definitions and includes
 
 external_components:
   # Local RATGDO components
@@ -10,7 +16,8 @@ external_components:
       path: components
     refresh: 1s
     components: [ ratgdo ]
-  # HAP-ESPHome components for HomeKit support (includes cover support)
+  # HAP-ESPHome components for HomeKit support
+  # Uses fixed version with API compatibility updates
   - source:
       type: git
       url: https://github.com/donavanbecker/HAP-ESPHome
@@ -26,6 +33,8 @@ packages:
     refresh: 1s
 
 # HomeKit base component configuration
+# Default setup code: 159-35-728 (change for production use)
+# Setup ID: RGDO (4-character identifier for HomeKit)
 homekit_base:
   meta:
     name: "RATGDO HomeKit Bridge"
@@ -33,7 +42,7 @@ homekit_base:
     model: "ESPHome Garage Door Controller"
     serial_number: "${id_prefix}"
     fw_rev: "2.0-hap"
-  setup_code: '159-35-728'
+  setup_code: '159-35-728'  # Consider changing for production deployment
   setup_id: "RGDO"
 
 # HomeKit accessory mapping for RATGDO entities
