@@ -143,15 +143,15 @@ namespace homekit {
         void setup()
         {
             hap_acc_cfg_t acc_cfg = {
+                .name = nullptr,
                 .model = (char*)accessory_info[MODEL],
                 .manufacturer = (char*)accessory_info[MANUFACTURER],
+                .serial_num = nullptr,
                 .fw_rev = (char*)accessory_info[FW_REV],
                 .hw_rev = (char*)"1.0",
                 .pv = (char*)"1.1.0",
                 .cid = HAP_CID_BRIDGE,
                 .identify_routine = acc_identify,
-                .name = nullptr,
-                .serial_num = nullptr,
                 .hw_finish = HAP_HW_FINISH_OTHER
             };
             hap_acc_t* accessory = nullptr;
