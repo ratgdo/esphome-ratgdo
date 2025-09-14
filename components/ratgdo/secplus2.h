@@ -132,7 +132,7 @@ namespace ratgdo {
             void activate_learn();
             void inactivate_learn();
 
-            void print_packet(const char* prefix, const WirePacket& packet) const;
+            void print_packet(const esphome::LogString* prefix, const WirePacket& packet) const;
             optional<Command> decode_packet(const WirePacket& packet) const;
 
             void sync_helper(uint32_t start, uint32_t delay, uint8_t tries);

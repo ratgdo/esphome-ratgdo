@@ -222,7 +222,7 @@ namespace ratgdo {
             if (kind == PairedDevice::UNKNOWN) {
                 return;
             }
-            ESP_LOGW(TAG, "Clear paired devices of type: %s", PairedDevice_to_string(kind));
+            ESP_LOGW(TAG, "Clear paired devices of type: %s", LOG_STR_ARG(PairedDevice_to_string(kind)));
             if (kind == PairedDevice::ALL) {
                 this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE) - 1 }); }); // wireless
                 this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD) - 1 }); }); // keypads
@@ -299,7 +299,7 @@ namespace ratgdo {
                     if (byte_count == PACKET_LENGTH) {
                         reading_msg = false;
                         byte_count = 0;
-                        this->print_packet("Received packet: ", rx_packet);
+                        this->print_packet(LOG_STR("Received packet: "), rx_packet);
                         return this->decode_packet(rx_packet);
                     }
                 }
@@ -317,10 +317,10 @@ namespace ratgdo {
             return {};
         }
 
-        void Secplus2::print_packet(const char* prefix, const WirePacket& packet) const
+        void Secplus2::print_packet(const esphome::LogString* prefix, const WirePacket& packet) const
         {
             ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
-                prefix,
+                LOG_STR_ARG(prefix),
                 packet[0],
                 packet[1],
                 packet[2],
@@ -475,7 +475,7 @@ namespace ratgdo {
                 delayMicroseconds(100);
             }
 
-            this->print_packet("Sending packet", this->tx_packet_);
+            this->print_packet(LOG_STR("Sending packet"), this->tx_packet_);
 
             // indicate the start of a frame by pulling the 12V line low for at leat 1 byte followed by
             // one STOP bit, which indicates to the receiving end that the start of the message follows
