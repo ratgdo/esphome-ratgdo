@@ -560,12 +560,13 @@ namespace ratgdo {
                     // if the line is high and was last asleep more than 700ms ago, then there is an obstruction present
                     if (current_millis - last_asleep > 700) {
                         this->obstruction_state = ObstructionState::OBSTRUCTED;
-
+#ifdef PROTOCOL_DRYCONTACT
                         if (*this->door_state == DoorState::CLOSING) {
                             this->received(DoorState::OPENING);
                             // If obstruction sensor is tripped during closing,
                             // assume the motor has reversed direction.
                         }
+#endif
                     }
                 }
             }
@@ -657,18 +658,20 @@ namespace ratgdo {
             this->door_action(DoorAction::TOGGLE);
         }
 
+#ifdef PROTOCOL_DRYCONTACT
+        // Dry Contact protocol can't query state from GDO
+        // The protocol sets state via limit switch
+#else
         if (*this->closing_duration > 0) {
             // query state in case we don't get a status message
             set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [this]() {
                 if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
-                    // In case the door fully rebounded from an obstruction
-                    if (*this->door_state != DoorState::OPEN) {
-                        this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
-                        this->query_status(); // query in case we're wrong and it's stopped
-                    }
+                    this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
+                    this->query_status(); // query in case we're wrong and it's stopped
                 }
             });
         }
+#endif
     }
 
     void RATGDOComponent::door_stop()
