@@ -22,7 +22,7 @@ esphome:
     version: "2.0"
 
 esp32:
-  board: lolin_s2_mini
+  variant: esp32s2
   framework:
     type: arduino
 
