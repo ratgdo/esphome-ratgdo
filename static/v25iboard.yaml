@@ -19,7 +19,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v25iboard_secplus2
     version: "2.5i"
 
 esp8266:

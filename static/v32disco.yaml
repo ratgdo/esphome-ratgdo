@@ -21,7 +21,7 @@ esphome:
   name_add_mac_suffix: true
   min_version: 2025.10.0
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v32disco_secplus2
     version: "32disco"
 
 esp32:

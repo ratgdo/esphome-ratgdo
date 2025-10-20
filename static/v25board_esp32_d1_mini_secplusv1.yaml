@@ -19,7 +19,7 @@ esphome:
   name_add_mac_suffix: true
   min_version: 2025.10.0
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v25board_esp32_secplusv1
     version: "2.5"
 
 esp32:
