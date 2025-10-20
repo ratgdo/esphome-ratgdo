@@ -18,7 +18,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo.esphome
+    name: ratgdo
     version: "2.5"
 
 esp8266:
