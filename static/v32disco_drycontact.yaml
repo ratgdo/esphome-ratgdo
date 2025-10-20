@@ -19,7 +19,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo
+    name: ratgdo.v32disco_drycontact
     version: "32disco"
 
 esp32:

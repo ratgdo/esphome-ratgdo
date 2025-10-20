@@ -18,7 +18,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo
+    name: ratgdo.v2board_esp32_lolin_s2_mini
     version: "2.0"
 
 esp32:

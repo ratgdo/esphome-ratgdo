@@ -18,7 +18,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo
+    name: ratgdo.v25board_esp32_d1_mini
     version: "2.5"
 
 esp32:

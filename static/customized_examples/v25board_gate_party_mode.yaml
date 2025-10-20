@@ -17,7 +17,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo
+    name: ratgdo.v25board_gate
     version: "2.5i"
 
 esp8266:
