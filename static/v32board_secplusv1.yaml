@@ -19,7 +19,7 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v32board_secplusv1
     version: "32.0"
 
 esp32:
