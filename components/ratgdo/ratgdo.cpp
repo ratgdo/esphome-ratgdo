@@ -409,7 +409,7 @@ namespace ratgdo {
             //     all_in_range = false;
             // }
 
-            if (value <= *this->target_distance_measurement){
+            if (value <= *this->target_distance_measurement) {
                 any_in_range = true;
             }
 
