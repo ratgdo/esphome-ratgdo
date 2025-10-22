@@ -78,7 +78,7 @@ namespace ratgdo {
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
-        std::array<int16_t, 30> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
+        std::array<int16_t, 120> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
         single_observable<int16_t> last_distance_measurement { 0 };
 #endif
 
