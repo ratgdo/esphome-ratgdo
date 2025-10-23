@@ -381,12 +381,12 @@ namespace ratgdo {
     {
         this->last_distance_measurement = distance;
 
-        // current value = [0], last value = [1]
-        // Shift all elements to the right and insert new value at the beginning
-        for (size_t i = this->distance_measurement.size() - 1; i > 0; i--) {
-            this->distance_measurement[i] = this->distance_measurement[i - 1];
-        }
-        this->distance_measurement[0] = distance;
+		this->in_range <<= 1;
+		if (distance <= *this->target_distance_measurement) {
+			this->in_range.set(0, true);
+		} else {
+			this->in_range.set(0, false);
+		}
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         this->calculate_presence();
 #endif
@@ -396,37 +396,10 @@ namespace ratgdo {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::calculate_presence()
     {
-        // bool all_in_range = true;
-        bool all_out_of_range = true;
-        bool any_in_range = false;
-        // int16_t min = *this->target_distance_measurement - PRESENCE_DETECT_TOLERANCE;
-        // int16_t max = *this->target_distance_measurement + PRESENCE_DETECT_TOLERANCE;
-
-#ifdef RATGDO_USE_DISTANCE_SENSOR
-        for (int16_t value : this->distance_measurement) {
-            // if (value < min || value > max || value == -1) {
-            // if (value >= *this->target_distance_measurement || value == -1) {
-            //     all_in_range = false;
-            // }
-
-            if (value <= *this->target_distance_measurement){
-                any_in_range = true;
-            }
-
-            if (value < *this->target_distance_measurement && value != -1) {
-                all_out_of_range = false;
-            }
-        }
-#endif
-
-        // if (all_in_range)
-        if (any_in_range)
+        if (this->in_range.any())
             this->vehicle_detected_state = VehicleDetectedState::YES;
-        if (all_out_of_range)
+        if (this->in_range.none())
             this->vehicle_detected_state = VehicleDetectedState::NO;
-
-        // auto k = this->distance_measurement;
-        // ESP_LOGD(TAG,"measure: %i,%i,%i,%i,%i,%i,%i,%i,%i,%i; target: %i; all_in: %s; any_in: %s; all_out: %s;", k[0],k[1],k[2],k[3],k[4],k[5],k[6],k[7],k[8],k[9], *this->target_distance_measurement, all_in_range ? "y" : "n", any_in_range ? "y" : "n", all_out_of_range ? "y" : "n");
     }
 #endif
 
