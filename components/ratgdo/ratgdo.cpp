@@ -400,7 +400,6 @@ namespace ratgdo {
             this->vehicle_detected_state = VehicleDetectedState::YES;
         if (this->in_range.none())
             this->vehicle_detected_state = VehicleDetectedState::NO;
-
         float percent = (float)this->in_range.count() / this->in_range.size() * 100.0f;
         static float last_percent = -1.0f;
         if (percent != last_percent) {
