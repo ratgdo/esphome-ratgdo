@@ -400,8 +400,8 @@ namespace ratgdo {
             this->vehicle_detected_state = VehicleDetectedState::YES;
         if (this->in_range.none())
             this->vehicle_detected_state = VehicleDetectedState::NO;
-        float percent = (float)this->in_range.count() / this->in_range.size() * 100.0f;
-        static float last_percent = -1.0f;
+        int percent = this->in_range.count() * 100 / this->in_range.size();
+        float last_percent = -1.0;
         if (percent != last_percent) {
             ESP_LOGD(TAG, "pct_in_range: %f", percent);
             last_percent = percent;
