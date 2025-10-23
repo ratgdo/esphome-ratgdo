@@ -382,12 +382,12 @@ namespace ratgdo {
         this->last_distance_measurement = distance;
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-		this->in_range <<= 1;
-		if (distance <= *this->target_distance_measurement) {
-			this->in_range.set(0, true);
-		} else {
-			this->in_range.set(0, false);
-		}
+        this->in_range <<= 1;
+        if (distance <= *this->target_distance_measurement) {
+            this->in_range.set(0, true);
+        } else {
+            this->in_range.set(0, false);
+        }
         this->calculate_presence();
 #endif
     }
