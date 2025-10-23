@@ -75,7 +75,7 @@ namespace ratgdo {
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
-        in_range std::bitset<2056> // the length of this bitset determines how many out of range readings are required for presence detection to change states
+        std::bitset<256> in_range; // the length of this bitset determines how many out of range readings are required for presence detection to change states
 		single_observable<int16_t> last_distance_measurement { 0 };
 #endif
 
