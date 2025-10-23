@@ -75,7 +75,7 @@ namespace ratgdo {
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
         std::bitset<256> in_range; // the length of this bitset determines how many out of range readings are required for presence detection to change states
-            single_observable<int16_t> last_distance_measurement { 0 };
+        single_observable<int16_t> last_distance_measurement { 0 };
 #endif
 
         single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
