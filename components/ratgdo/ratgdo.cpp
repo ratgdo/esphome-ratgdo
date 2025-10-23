@@ -401,8 +401,12 @@ namespace ratgdo {
         if (this->in_range.none())
             this->vehicle_detected_state = VehicleDetectedState::NO;
 
-        // float percent = (float)this->in_range.count() / this->in_range.size() * 100.0f;
-        // ESP_LOGD(TAG, "pct_in_range: %f", percent);
+        float percent = (float)this->in_range.count() / this->in_range.size() * 100.0f;
+        static float last_percent = -1.0f;
+        if (percent != last_percent) {
+            ESP_LOGD(TAG, "pct_in_range: %f", percent);
+            last_percent = percent;
+        }
         // ESP_LOGD(TAG, "in_range: %s", this->in_range.to_string().c_str());
     }
 #endif
