@@ -75,7 +75,7 @@ namespace ratgdo {
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
         std::bitset<256> in_range; // the length of this bitset determines how many out of range readings are required for presence detection to change states
-        single_observable<int16_t> last_distance_measurement { 0 };
+        observable<int16_t> last_distance_measurement { 0 };
 #endif
 
         single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
@@ -87,7 +87,7 @@ namespace ratgdo {
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        single_observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
+        observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
 
         unsigned long door_start_moving { 0 };
         float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -101,9 +101,9 @@ namespace ratgdo {
         single_observable<MotionState> motion_state { MotionState::UNKNOWN };
         single_observable<LearnState> learn_state { LearnState::UNKNOWN };
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        single_observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
-        single_observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
-        single_observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+        observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
+        observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
+        observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
 #endif
 
         OnceCallbacks<void(DoorState)> on_door_state_;
