@@ -4,9 +4,8 @@ esphome:
 
 external_components:
   - source:
-      type: git
-      url: https://github.com/ratgdo/esphome-ratgdo
-      ref: main
+      type: local
+      path: /home/runner/work/esphome-ratgdo/esphome-ratgdo/components
     refresh: 1s
   # - source:
   #     type: local

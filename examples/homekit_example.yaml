@@ -1,0 +1,70 @@
+# Example HomeKit configuration for RATGDO ESP32 boards
+# This demonstrates how to create a custom HAP-enabled configuration
+
+substitutions:
+  id_prefix: my_garage_hap
+  friendly_name: "My Garage HomeKit"
+  # Update these pins based on your board type
+  uart_tx_pin: "4"
+  uart_rx_pin: "16"
+  input_obst_pin: "14"
+  status_door_pin: "12"
+  status_obstruction_pin: "13"
+  dry_contact_open_pin: "17"
+  dry_contact_close_pin: "21"
+  dry_contact_light_pin: "18"
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.esphome-hap
+    version: "example"
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+    version: 5.3.1
+    platform_version: 6.8.1
+    sdkconfig_options:
+      CONFIG_COMPILER_OPTIMIZATION_SIZE: y
+      CONFIG_LWIP_MAX_SOCKETS: "16"
+      CONFIG_MBEDTLS_HKDF_C: y
+
+# Include HAP-enabled base configuration
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
+    refresh: 1s
+  - source:
+      type: git
+      url: https://github.com/rednblkx/HAP-ESPHome
+      ref: main
+    refresh: 1s
+
+packages:
+  ratgdo_hap:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    files: [base_hap.yaml]
+    refresh: 1s
+
+# WiFi and other basic configuration
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "${friendly_name} Fallback"
+
+api:
+improv_serial:
+web_server:
+logger:
+
+# Time sync (optional but recommended)
+time:
+  - platform: homeassistant
+    id: homeassistant_time
