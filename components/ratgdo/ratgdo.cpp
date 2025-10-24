@@ -840,6 +840,7 @@ namespace ratgdo {
         dry_contact_open_sensor_ = dry_contact_open_sensor;
         dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value) {
             this->protocol_->set_open_limit(sensor_value);
+            this->door_position = 1.0;
         });
     }
 
@@ -848,6 +849,7 @@ namespace ratgdo {
         dry_contact_close_sensor_ = dry_contact_close_sensor;
         dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {
             this->protocol_->set_close_limit(sensor_value);
+            this->door_position = 0.0;
         });
     }
 
