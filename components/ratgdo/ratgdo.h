@@ -19,7 +19,7 @@
 #include "esphome/core/hal.h"
 #include "esphome/core/preferences.h"
 
-#include <array>
+#include <bitset>
 
 #include "callbacks.h"
 #include "macros.h"
@@ -54,10 +54,6 @@ namespace ratgdo {
     public:
         RATGDOComponent()
         {
-#ifdef RATGDO_USE_DISTANCE_SENSOR
-            // Initialize distance_measurement array with -1
-            distance_measurement.fill(-1);
-#endif
         }
 
         void setup() override;
@@ -78,8 +74,8 @@ namespace ratgdo {
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
-        std::array<int16_t, 30> distance_measurement {}; // the length of this array determines how many in-range readings are required for presence detection to change states
-        single_observable<int16_t> last_distance_measurement { 0 };
+        std::bitset<256> in_range; // the length of this bitset determines how many out of range readings are required for presence detection to change states
+        observable<int16_t> last_distance_measurement { 0 };
 #endif
 
         single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
@@ -91,7 +87,7 @@ namespace ratgdo {
 
         observable<DoorState> door_state { DoorState::UNKNOWN };
         observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        single_observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
+        observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
 
         unsigned long door_start_moving { 0 };
         float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -105,9 +101,9 @@ namespace ratgdo {
         single_observable<MotionState> motion_state { MotionState::UNKNOWN };
         single_observable<LearnState> learn_state { LearnState::UNKNOWN };
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        single_observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
-        single_observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
-        single_observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+        observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
+        observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
+        observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
 #endif
 
         OnceCallbacks<void(DoorState)> on_door_state_;
