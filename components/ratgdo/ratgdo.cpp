@@ -41,7 +41,7 @@ namespace ratgdo {
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
     static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid samples required to detect vehicle
-	static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 3; // The number of consecutive bitset::in_range iterations must be 0 before clearing vehicle detected state
+	static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations must be 0 before clearing vehicle detected state
 #endif
 
     void RATGDOComponent::setup()
