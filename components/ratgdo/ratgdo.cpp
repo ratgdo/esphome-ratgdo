@@ -40,7 +40,8 @@ namespace ratgdo {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
-    static constexpr int PRESENCE_DETECTION_THRESHOLD = 5; // minimum percentage of valid samples required to detect vehicle
+    static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid samples required to detect vehicle
+	static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 3; // The number of consecutive bitset::in_range iterations must be 0 before clearing vehicle detected state
 #endif
 
     void RATGDOComponent::setup()
@@ -395,14 +396,25 @@ namespace ratgdo {
     {
         int percent = this->in_range.count() * 100 / this->in_range.size();
         static int last_percent = -1;
+		static int off_counter = 0;
 
-        if (percent >= PRESENCE_DETECTION_THRESHOLD)
+        if (percent >= PRESENCE_DETECTION_ON_THRESHOLD)
             this->vehicle_detected_state = VehicleDetectedState::YES;
-        if (percent == 0)
-            this->vehicle_detected_state = VehicleDetectedState::NO;
+
+        if (percent == 0){
+            off_counter++;
+            ESP_LOGD(TAG, "Off counter: %d", off_counter);
+
+            if(off_counter / this->in_range.size() >= PRESENCE_DETECTION_OFF_DEBOUNCE){
+                off_counter = 0;
+                this->vehicle_detected_state = VehicleDetectedState::NO;
+            }
+        }
+        
         if (percent != last_percent) {
             ESP_LOGD(TAG, "pct_in_range: %d", percent);
             last_percent = percent;
+            off_counter = 0;
         }
         // ESP_LOGD(TAG, "in_range: %s", this->in_range.to_string().c_str());
     }
