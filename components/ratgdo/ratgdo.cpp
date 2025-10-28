@@ -403,7 +403,7 @@ namespace ratgdo {
         if (percent >= PRESENCE_DETECTION_ON_THRESHOLD)
             this->vehicle_detected_state = VehicleDetectedState::YES;
 
-        if (percent == 0) {
+        if (percent == 0 && *this->vehicle_detected_state == VehicleDetectedState::YES) {
             off_counter++;
             ESP_LOGD(TAG, "Off counter: %d", off_counter);
 
