@@ -35,7 +35,7 @@ namespace ratgdo {
         } else if (state == LockState::UNLOCKED) {
             call.set_state(lock::LockState::LOCK_STATE_UNLOCKED);
         }
-        this->control(call);
+        this->publish_state(*call.get_state());
     }
 
     void RATGDOLock::control(const lock::LockCall& call)
