@@ -52,63 +52,60 @@ jobs:
     strategy:
       matrix:
         firmware:
-          - file: v2board_esp8266_d1_mini_lite.yaml
-            name: V2.0 Board ESP8266 D1 Mini Lite Security+ 2.0
-            manifest_filename: v2board_esp8266_d1_mini_lite-manifest.json
-          - file: v2board_esp8266_d1_mini.yaml
-            name: V2.0 Board ESP8266 D1 Mini Security+ 2.0
-            manifest_filename: v2board_esp8266_d1_mini-manifest.json
-          - file: v2board_esp32_d1_mini.yaml
-            name: V2.0 Board ESP32 D1 Mini Security+ 2.0
-            manifest_filename: v2board_esp32_d1_mini-manifest.json
-#          - file: v2board_esp32_lolin_s2_mini.yaml
-#            name: V2.0 Board ESP32 lolin S2 mini Security+ 2.0
-#            manifest_filename: v2board_esp32_lolin_s2_mini-manifest.json
-          - file: v25board_esp8266_d1_mini_lite.yaml
-            name: V2.5 Board ESP8266 D1 Mini Lite Security+ 2.0
-            manifest_filename: v25board_esp8266_d1_mini_lite-manifest.json
-          - file: v25board_esp8266_d1_mini_lite_secplusv1.yaml
-            name: V2.5 Board ESP8266 D1 Mini Lite Security+ 1.0
-            manifest_filename: v25board_esp8266_d1_mini_lite_secplusv1-manifest.json
-          - file: v25board_esp8266_d1_mini.yaml
-            name: V2.5 Board ESP8266 D1 Mini Security+ 2.0
-            manifest_filename: v25board_esp8266_d1_mini-manifest.json
-          - file: v25board_esp8266_d1_mini_secplusv1.yaml
-            name: V2.5 Board ESP8266 D1 Mini Security+ 1.0
-            manifest_filename: v25board_esp8266_d1_mini_secplusv1-manifest.json
-          - file: v25board_esp32_d1_mini.yaml
-            name: V2.5 Board ESP32 D1 Mini Security+ 2.0
-            manifest_filename: v25board_esp32_d1_mini-manifest.json
-          - file: v25board_esp32_d1_mini_secplusv1.yaml
-            name: V2.5 Board ESP32 D1 Mini Security+ 1.0
-            manifest_filename: v25board_esp32_d1_mini_secplusv1-manifest.json
-          - file: v25iboard.yaml
-            name: V2.5i Board Security+ 2.0
-            manifest_filename: v25iboard-manifest.json
-          - file: v25iboard_secplusv1.yaml
-            name: V2.5i Board Security+ 1.0
-            manifest_filename: v25iboard_secplusv1-manifest.json
-          - file: v25iboard_drycontact.yaml
-            name: V2.5i Board Dry Contact
-            manifest_filename: v25iboard_drycontact-manifest.json
+        #   - file: v2board_esp8266_d1_mini_lite.yaml
+        #     name: V2.0 Board ESP8266 D1 Mini Lite Security+ 2.0
+        #     manifest_filename: v2board_esp8266_d1_mini_lite-manifest.json
+        #   - file: v2board_esp8266_d1_mini.yaml
+        #     name: V2.0 Board ESP8266 D1 Mini Security+ 2.0
+        #     manifest_filename: v2board_esp8266_d1_mini-manifest.json
+        #   - file: v2board_esp32_d1_mini.yaml
+        #     name: V2.0 Board ESP32 D1 Mini Security+ 2.0
+        #     manifest_filename: v2board_esp32_d1_mini-manifest.json
+        #   - file: v25board_esp8266_d1_mini_lite.yaml
+        #     name: V2.5 Board ESP8266 D1 Mini Lite Security+ 2.0
+        #     manifest_filename: v25board_esp8266_d1_mini_lite-manifest.json
+        #   - file: v25board_esp8266_d1_mini_lite_secplusv1.yaml
+        #     name: V2.5 Board ESP8266 D1 Mini Lite Security+ 1.0
+        #     manifest_filename: v25board_esp8266_d1_mini_lite_secplusv1-manifest.json
+        #   - file: v25board_esp8266_d1_mini.yaml
+        #     name: V2.5 Board ESP8266 D1 Mini Security+ 2.0
+        #     manifest_filename: v25board_esp8266_d1_mini-manifest.json
+        #   - file: v25board_esp8266_d1_mini_secplusv1.yaml
+        #     name: V2.5 Board ESP8266 D1 Mini Security+ 1.0
+        #     manifest_filename: v25board_esp8266_d1_mini_secplusv1-manifest.json
+        #   - file: v25board_esp32_d1_mini.yaml
+        #     name: V2.5 Board ESP32 D1 Mini Security+ 2.0
+        #     manifest_filename: v25board_esp32_d1_mini-manifest.json
+        #   - file: v25board_esp32_d1_mini_secplusv1.yaml
+        #     name: V2.5 Board ESP32 D1 Mini Security+ 1.0
+        #     manifest_filename: v25board_esp32_d1_mini_secplusv1-manifest.json
+        #   - file: v25iboard.yaml
+        #     name: V2.5i Board Security+ 2.0
+        #     manifest_filename: v25iboard-manifest.json
+        #   - file: v25iboard_secplusv1.yaml
+        #     name: V2.5i Board Security+ 1.0
+        #     manifest_filename: v25iboard_secplusv1-manifest.json
+        #   - file: v25iboard_drycontact.yaml
+        #     name: V2.5i Board Dry Contact
+        #     manifest_filename: v25iboard_drycontact-manifest.json
           - file: v32board.yaml
             name: V32 Board Security+ 2.0
             manifest_filename: v32board-manifest.json
-          - file: v32board_secplusv1.yaml
-            name: V32 Board Security+ 1.0
-            manifest_filename: v32board_secplusv1-manifest.json
-          - file: v32board_drycontact.yaml
-            name: V32 Board Dry Contact
-            manifest_filename: v32board_drycontact-manifest.json
-          - file: v32disco.yaml
-            name: V32 Disco Board Security+ 2.0
-            manifest_filename: v32disco-manifest.json
-          - file: v32disco_secplusv1.yaml
-            name: V32 Disco Board Security+ 1.0
-            manifest_filename: v32disco_secplusv1-manifest.json
-          - file: v32disco_drycontact.yaml
-            name: V32 Disco Board Dry Contact
-            manifest_filename: v32disco_drycontact-manifest.json
+        #   - file: v32board_secplusv1.yaml
+        #     name: V32 Board Security+ 1.0
+        #     manifest_filename: v32board_secplusv1-manifest.json
+        #   - file: v32board_drycontact.yaml
+        #     name: V32 Board Dry Contact
+        #     manifest_filename: v32board_drycontact-manifest.json
+        #   - file: v32disco.yaml
+        #     name: V32 Disco Board Security+ 2.0
+        #     manifest_filename: v32disco-manifest.json
+        #   - file: v32disco_secplusv1.yaml
+        #     name: V32 Disco Board Security+ 1.0
+        #     manifest_filename: v32disco_secplusv1-manifest.json
+        #   - file: v32disco_drycontact.yaml
+        #     name: V32 Disco Board Dry Contact
+        #     manifest_filename: v32disco_drycontact-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
