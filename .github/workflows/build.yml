@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -112,7 +112,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Update external_components ref to current branch
         if: github.ref != 'refs/heads/main'
         run: |
@@ -146,7 +146,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Download built firmwares
         uses: actions/download-artifact@v6
         with:
@@ -189,7 +189,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Download built firmwares
         uses: actions/download-artifact@v6
@@ -204,7 +204,7 @@ jobs:
           find . -name "*.bin" -o -name "*-manifest.json" | head -20
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: release_assets/**/*
           tag_name: v${{ github.run_number }}
