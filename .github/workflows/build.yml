@@ -199,9 +199,7 @@ jobs:
       - name: Prepare release assets
         run: |-
           mkdir release_assets
-          cp -R firmwares/*/* release_assets/
-          cd release_assets
-          find . -name "*.bin" -o -name "*-manifest.json" | head -20
+          find firmwares -name '*ota.bin' -exec cp {} release_assets/ \;
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
