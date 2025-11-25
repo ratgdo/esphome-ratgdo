@@ -181,7 +181,7 @@ jobs:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: build
+    needs: deploy
     permissions:
       contents: write
     steps:
