@@ -1,4 +1,8 @@
 ---
+substitutions:
+  # Default Value(s)
+  obst_sleep_level: high
+
 esphome:
   min_version: 2025.7.0
 
