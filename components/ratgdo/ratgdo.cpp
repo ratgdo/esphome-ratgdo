@@ -477,7 +477,11 @@ namespace ratgdo {
                 this->flags_.obstruction_sensor_detected = true;
             } else if (this->isr_store_.obstruction_low_count == 0) {
                 // if there have been no pulses the line is steady high or low
+<<<<<<< Updated upstream
 #ifdef USE_ESP32
+=======
+#if defined(USE_ESP32) && !defined(RATGDO_OBST_SLEEP_LOW)
+>>>>>>> Stashed changes
                 if (this->input_obst_pin_->digital_read()) {
 #else
                 if (!this->input_obst_pin_->digital_read()) {
