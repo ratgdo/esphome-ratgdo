@@ -84,9 +84,7 @@ CONFIG_SCHEMA = cv.All(
                 cv.none, pins.gpio_input_pin_schema
             ),
             cv.Optional(CONF_OBST_SLEEP_LVL, default=DEFAULT_OBST_SLEEP_LVL): cv.one_of(
-                OBST_SLEEP_LEVEL_LOW,
-                OBST_SLEEP_LEVEL_HIGH,
-                lower=True
+                OBST_SLEEP_LEVEL_LOW, OBST_SLEEP_LEVEL_HIGH, lower=True
             ),
             cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
