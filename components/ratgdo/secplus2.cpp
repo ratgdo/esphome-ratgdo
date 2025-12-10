@@ -348,7 +348,11 @@ namespace ratgdo {
             uint64_t fixed = 0;
             uint32_t data = 0;
 
-            decode_wireline(packet, &rolling, &fixed, &data);
+            int err = decode_wireline(packet, &rolling, &fixed, &data);
+            if (err < 0) {
+                ESP_LOGW(TAG, "Decode failed (parity error or invalid frame)");
+                return {};
+            }
 
             uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
             data &= ~0xf000; // clear parity nibble
