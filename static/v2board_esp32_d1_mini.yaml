@@ -17,6 +17,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
+  min_version: 2025.12.0
   project:
     name: ratgdo.v2board_esp32_d1_mini
     version: "2.0"
@@ -44,6 +45,9 @@ api:
   id: api_server
 
 improv_serial:
+
+esp32_improv:
+  authorizer: none
 
 wifi:
   ap:
