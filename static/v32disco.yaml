@@ -30,7 +30,7 @@ esp32:
     type: arduino
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@static_strings_defer
+  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@main
 
 packages:
   remote_package:
