@@ -35,7 +35,7 @@ dashboard_import:
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: static_strings_defer
+    ref: main
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include
