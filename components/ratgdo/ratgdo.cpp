@@ -45,7 +45,7 @@ namespace ratgdo {
 #endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     static const char* const DEFER_VEHICLE_DETECTED[] = { "vd0" }; // 1 caller
-    static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2" }; // 3 callers
+    static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2", "va3" }; // 4 callers
     static const char* const DEFER_VEHICLE_LEAVING[] = { "vl0" }; // 1 caller
 #endif
 
