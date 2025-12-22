@@ -38,15 +38,15 @@ namespace ratgdo {
     static const int SYNC_DELAY = 1000;
 
     // Short static defer names to avoid heap allocations from std::to_string()
-    static const char* const DEFER_DOOR_STATE[] = { "ds0", "ds1" }; // 2 subscribers
-    static const char* const DEFER_DOOR_ACTION_DELAYED[] = { "da0" }; // 1 subscriber
+    static const char* const DEFER_DOOR_STATE[] = { "ds0", "ds1" }; // 2 callers
+    static const char* const DEFER_DOOR_ACTION_DELAYED[] = { "da0" }; // 1 caller
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-    static const char* const DEFER_DISTANCE[] = { "dm0" }; // 1 subscriber
+    static const char* const DEFER_DISTANCE[] = { "dm0" }; // 1 caller
 #endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-    static const char* const DEFER_VEHICLE_DETECTED[] = { "vd0" }; // 1 subscriber
-    static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2" }; // 3 subscribers
-    static const char* const DEFER_VEHICLE_LEAVING[] = { "vl0" }; // 1 subscriber
+    static const char* const DEFER_VEHICLE_DETECTED[] = { "vd0" }; // 1 caller
+    static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2" }; // 3 callers
+    static const char* const DEFER_VEHICLE_LEAVING[] = { "vl0" }; // 1 caller
 #endif
 
     static void log_subscriber_overflow(const LogString* observable_name, uint8_t max)
@@ -59,8 +59,9 @@ namespace ratgdo {
     {
         if (counter >= N) {
             log_subscriber_overflow(observable_name, N);
+            return names[N - 1];
         }
-        return names[counter++ % N];
+        return names[counter++];
     }
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
