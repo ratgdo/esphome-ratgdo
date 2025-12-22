@@ -240,6 +240,18 @@ namespace ratgdo {
             uint8_t reserved : 7; // Reserved for future use
 #endif
         } flags_ { 0 };
+
+        // Subscriber counters for defer name allocation
+        uint8_t door_state_sub_num_ { 0 };
+        uint8_t door_action_delayed_sub_num_ { 0 };
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+        uint8_t distance_sub_num_ { 0 };
+#endif
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        uint8_t vehicle_detected_sub_num_ { 0 };
+        uint8_t vehicle_arriving_sub_num_ { 0 };
+        uint8_t vehicle_leaving_sub_num_ { 0 };
+#endif
     }; // RATGDOComponent
 
 } // namespace ratgdo

@@ -37,6 +37,32 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
 
+    // Short static defer names to avoid heap allocations from std::to_string()
+    static const char* const DEFER_DOOR_STATE[] = { "ds0", "ds1" }; // 2 subscribers
+    static const char* const DEFER_DOOR_ACTION_DELAYED[] = { "da0" }; // 1 subscriber
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+    static const char* const DEFER_DISTANCE[] = { "dm0" }; // 1 subscriber
+#endif
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    static const char* const DEFER_VEHICLE_DETECTED[] = { "vd0" }; // 1 subscriber
+    static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2" }; // 3 subscribers
+    static const char* const DEFER_VEHICLE_LEAVING[] = { "vl0" }; // 1 subscriber
+#endif
+
+    static void log_subscriber_overflow(const LogString* observable_name, uint8_t max)
+    {
+        ESP_LOGE(TAG, "Too many subscribers for %s (max %d)", LOG_STR_ARG(observable_name), max);
+    }
+
+    template <size_t N>
+    static const char* get_defer_name(const char* const (&names)[N], uint8_t& counter, const LogString* observable_name)
+    {
+        if (counter >= N) {
+            log_subscriber_overflow(observable_name, N);
+        }
+        return names[counter++ % N];
+    }
+
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
@@ -770,8 +796,7 @@ namespace ratgdo {
     }
     void RATGDOComponent::subscribe_door_state(std::function<void(DoorState, float)>&& f)
     {
-        static int num = 0;
-        auto name = "door_state" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_DOOR_STATE, this->door_state_sub_num_, LOG_STR("door_state"));
 
         this->door_state.subscribe([this, f, name](DoorState state) {
             defer(name, [this, f, state] { f(state, *this->door_position); });
@@ -814,36 +839,31 @@ namespace ratgdo {
     }
     void RATGDOComponent::subscribe_door_action_delayed(std::function<void(DoorActionDelayed)>&& f)
     {
-        static int num = 0;
-        auto name = "door_action_delayed" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_DOOR_ACTION_DELAYED, this->door_action_delayed_sub_num_, LOG_STR("door_action_delayed"));
 
         this->door_action_delayed.subscribe([this, f = std::move(f), name](DoorActionDelayed state) { defer(name, [f, state] { f(state); }); });
     }
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     void RATGDOComponent::subscribe_distance_measurement(std::function<void(int16_t)>&& f)
     {
-        static int num = 0;
-        auto name = "last_distance_measurement" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_DISTANCE, this->distance_sub_num_, LOG_STR("distance_measurement"));
         this->last_distance_measurement.subscribe([this, f = std::move(f), name](int16_t state) { defer(name, [f, state] { f(state); }); });
     }
 #endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     void RATGDOComponent::subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_detected_state" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_VEHICLE_DETECTED, this->vehicle_detected_sub_num_, LOG_STR("vehicle_detected"));
         this->vehicle_detected_state.subscribe([this, f = std::move(f), name](VehicleDetectedState state) { defer(name, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_vehicle_arriving_state(std::function<void(VehicleArrivingState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_arriving_state" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_VEHICLE_ARRIVING, this->vehicle_arriving_sub_num_, LOG_STR("vehicle_arriving"));
         this->vehicle_arriving_state.subscribe([this, f = std::move(f), name](VehicleArrivingState state) { defer(name, [f, state] { f(state); }); });
     }
     void RATGDOComponent::subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f)
     {
-        static int num = 0;
-        auto name = "vehicle_leaving_state" + std::to_string(num++);
+        const char* name = get_defer_name(DEFER_VEHICLE_LEAVING, this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
         this->vehicle_leaving_state.subscribe([this, f = std::move(f), name](VehicleLeavingState state) { defer(name, [f, state] { f(state); }); });
     }
 #endif
