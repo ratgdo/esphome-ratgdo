@@ -467,12 +467,8 @@ namespace ratgdo {
                         this->flags_.transmit_pending = true;
                         this->transmit_pending_start_ = millis();
                         ESP_LOGD(TAG, "Collision detected, waiting to send packet");
-                    } else {
-                        if (millis() - this->transmit_pending_start_ < 5000) {
-                            ESP_LOGD(TAG, "Collision detected, waiting to send packet");
-                        } else {
-                            this->transmit_pending_start_ = 0; // to indicate GDO not connected state
-                        }
+                    } else if (millis() - this->transmit_pending_start_ >= 5000) {
+                        this->transmit_pending_start_ = 0; // to indicate GDO not connected state
                     }
                     return false;
                 }
