@@ -42,14 +42,14 @@ namespace ratgdo {
     // IMPORTANT: All names must be unique across the entire list to prevent conflicts
     // Multi-subscriber arrays (use get_defer_name helper)
     static const char* const DEFER_DOOR_STATE[] = { "ds0", "ds1" }; // door_state (2 callers)
-    static const char* const DEFER_DOOR_ACTION_DELAYED[] = { "dad" }; // door_action_delayed
+    static const char* const DEFER_DOOR_ACTION_DELAYED[] = { "da0" }; // door_action_delayed (1 caller)
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-    static const char* const DEFER_DISTANCE[] = { "dis" }; // distance_measurement
+    static const char* const DEFER_DISTANCE[] = { "dm0" }; // distance_measurement (1 caller)
 #endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-    static const char* const DEFER_VEHICLE_DETECTED[] = { "vdt" }; // vehicle_detected
+    static const char* const DEFER_VEHICLE_DETECTED[] = { "vd0" }; // vehicle_detected (1 caller)
     static const char* const DEFER_VEHICLE_ARRIVING[] = { "va0", "va1", "va2", "va3" }; // vehicle_arriving (4 callers)
-    static const char* const DEFER_VEHICLE_LEAVING[] = { "vlv" }; // vehicle_leaving
+    static const char* const DEFER_VEHICLE_LEAVING[] = { "vl0" }; // vehicle_leaving (1 caller)
 #endif
     // Single-subscriber constexpr names
     static constexpr const char* DEFER_ROLLING_CODE = "rcc"; // rolling_code_counter
