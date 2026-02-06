@@ -1,5 +1,8 @@
 
 
+#include <cstddef>
+#include <cstdint>
+
 #include "esphome/core/log.h"
 
 #define PARENS ()
@@ -41,41 +44,92 @@
         return type::name;
 #define FROM_INT_CASE(type, tuple) FROM_INT_CASE0 LPAREN type, TUPLE tuple)
 
+// String blob helpers for packed enum-to-string lookup tables
+#define STR_BLOB_ENTRY0(type, name, val) #name "\0"
+#define STR_BLOB_ENTRY(type, tuple) STR_BLOB_ENTRY0 LPAREN type, TUPLE tuple)
+
+#define COUNT_ONE0(type, name, val) +1
+#define COUNT_ONE(name, tuple) COUNT_ONE0 LPAREN name, TUPLE tuple)
+
+namespace esphome {
+namespace ratgdo {
+    namespace detail {
+
+        template <size_t N>
+        struct EnumStringOffsets {
+            uint8_t data[N];
+        };
+
+        template <size_t Count, size_t BlobSize>
+        constexpr EnumStringOffsets<Count> compute_enum_string_offsets(const char (&blob)[BlobSize])
+        {
+            EnumStringOffsets<Count> result {};
+            result.data[0] = 0;
+            size_t entry = 1;
+            for (size_t i = 0; i < BlobSize - 1 && entry < Count; ++i) {
+                if (blob[i] == '\0') {
+                    result.data[entry++] = static_cast<uint8_t>(i + 1);
+                }
+            }
+            return result;
+        }
+
+    } // namespace detail
+} // namespace ratgdo
+} // namespace esphome
+
+// Platform-specific helpers for enum string return types
 #ifdef USE_ESP8266
-#define ENUM(name, type, ...)                           \
-    enum class name : type {                            \
-        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)       \
-    };                                                  \
-    inline const esphome::LogString*                    \
-    name##_to_string(name _e)                           \
-    {                                                   \
-        switch (_e) {                                   \
-            FOR_EACH(TO_STRING_CASE, name, __VA_ARGS__) \
-        default:                                        \
-            return LOG_STR("UNKNOWN");                  \
-        }                                               \
-    }                                                   \
-    inline name                                         \
-    to_##name(type _t, name _unknown)                   \
-    {                                                   \
-        switch (_t) {                                   \
-            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)  \
-        default:                                        \
-            return _unknown;                            \
-        }                                               \
-    }
+#define ENUM_STR_RET const esphome::LogString*
+#define ENUM_STR_UNKNOWN LOG_STR("UNKNOWN")
+#define ENUM_BLOB_ATTR PROGMEM
+#define ENUM_BLOB_RETURN(blob, offset) reinterpret_cast<const esphome::LogString*>(&(blob)[offset])
 #else
-#define ENUM(name, type, ...)                           \
+#define ENUM_STR_RET const char*
+#define ENUM_STR_UNKNOWN "UNKNOWN"
+#define ENUM_BLOB_ATTR
+#define ENUM_BLOB_RETURN(blob, offset) (&(blob)[offset])
+#endif
+
+// ENUM: packed string blob with O(1) offset lookup (for contiguous 0-based enums)
+#define ENUM(name, type, ...)                                                                          \
+    enum class name : type {                                                                           \
+        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)                                                      \
+    };                                                                                                 \
+    inline ENUM_STR_RET                                                                                \
+    name##_to_string(name _e)                                                                          \
+    {                                                                                                  \
+        static constexpr size_t _n = (0 FOR_EACH(COUNT_ONE, name, __VA_ARGS__));                       \
+        static const char _b[] ENUM_BLOB_ATTR = FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN"; \
+        static constexpr auto _o = ::esphome::ratgdo::detail::compute_enum_string_offsets<_n + 1>(     \
+            FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN");                                    \
+        auto _i = static_cast<uint8_t>(_e);                                                            \
+        if (_i >= _n)                                                                                  \
+            _i = static_cast<uint8_t>(_n);                                                             \
+        return ENUM_BLOB_RETURN(_b, _o.data[_i]);                                                      \
+    }                                                                                                  \
+    inline name                                                                                        \
+    to_##name(type _t, name _unknown)                                                                  \
+    {                                                                                                  \
+        switch (_t) {                                                                                  \
+            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)                                                 \
+        default:                                                                                       \
+            return _unknown;                                                                           \
+        }                                                                                              \
+    }
+
+// ENUM_SPARSE: switch-based lookup (for non-contiguous enum values)
+#define ENUM_SPARSE(name, type, ...)                    \
     enum class name : type {                            \
         FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)       \
     };                                                  \
-    inline const char*                                  \
+    inline ENUM_STR_RET                                 \
     name##_to_string(name _e)                           \
     {                                                   \
         switch (_e) {                                   \
             FOR_EACH(TO_STRING_CASE, name, __VA_ARGS__) \
         default:                                        \
-            return "UNKNOWN";                           \
+            return ENUM_STR_UNKNOWN;                    \
         }                                               \
     }                                                   \
     inline name                                         \
@@ -87,7 +141,6 @@
             return _unknown;                            \
         }                                               \
     }
-#endif
 
 #define SUM_TYPE_UNION_MEMBER0(type, var) type var;
 #define SUM_TYPE_UNION_MEMBER(name, tuple) SUM_TYPE_UNION_MEMBER0 tuple

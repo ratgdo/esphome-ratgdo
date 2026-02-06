@@ -69,7 +69,7 @@ namespace ratgdo {
         (RELEASED, 1),
         (UNKNOWN, 2))
 
-    ENUM(BatteryState, uint8_t,
+    ENUM_SPARSE(BatteryState, uint8_t,
         (UNKNOWN, 0),
         (CHARGING, 0x6),
         (FULL, 0x8))
