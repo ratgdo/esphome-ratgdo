@@ -101,12 +101,13 @@ namespace ratgdo {
     name##_to_string(name _e)                                                                            \
     {                                                                                                    \
         static constexpr size_t _n = (0 FOR_EACH(COUNT_ONE, name, __VA_ARGS__));                         \
-        static const char _b[] ENUM_BLOB_ATTR = FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN";   \
-        static constexpr auto _o = ::esphome::ratgdo::detail::compute_enum_string_offsets<_n + 1>(       \
-            FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN");                                      \
+        static const char _b[] ENUM_BLOB_ATTR = FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__);             \
+        static_assert(sizeof(_b) <= 256, "ENUM() string blob exceeds 255 bytes; use shorter names");     \
+        static constexpr auto _o = ::esphome::ratgdo::detail::compute_enum_string_offsets<_n>(           \
+            FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__));                                                \
         auto _i = static_cast<uint8_t>(_e);                                                              \
         if (_i >= _n)                                                                                    \
-            _i = static_cast<uint8_t>(_n);                                                               \
+            return ENUM_STR_UNKNOWN;                                                                     \
         return ENUM_BLOB_RETURN(_b, _o.data[_i]);                                                        \
     }                                                                                                    \
     inline name                                                                                          \
