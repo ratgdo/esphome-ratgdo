@@ -26,7 +26,7 @@ namespace ratgdo {
         static const uint8_t PACKET_LENGTH = 19;
         typedef uint8_t WirePacket[PACKET_LENGTH];
 
-        ENUM(CommandType, uint16_t,
+        ENUM_SPARSE(CommandType, uint16_t,
             (UNKNOWN, 0x000),
             (GET_STATUS, 0x080),
             (STATUS, 0x081),
