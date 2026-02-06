@@ -29,15 +29,15 @@
 #define LPAREN (
 
 #ifdef USE_ESP8266
-#define TO_STRING_CASE0(type, name, val) \
-    case type::name:                     \
+#define TO_STRING_IF0(type, name, val) \
+    if (_e == type::name)              \
         return LOG_STR(#name);
 #else
-#define TO_STRING_CASE0(type, name, val) \
-    case type::name:                     \
+#define TO_STRING_IF0(type, name, val) \
+    if (_e == type::name)              \
         return #name;
 #endif
-#define TO_STRING_CASE(type, tuple) TO_STRING_CASE0 LPAREN type, TUPLE tuple)
+#define TO_STRING_IF(type, tuple) TO_STRING_IF0 LPAREN type, TUPLE tuple)
 
 #define FROM_INT_CASE0(type, name, val) \
     case val:                           \
@@ -118,28 +118,25 @@ namespace ratgdo {
         }                                                                                              \
     }
 
-// ENUM_SPARSE: switch-based lookup (for non-contiguous enum values)
-#define ENUM_SPARSE(name, type, ...)                    \
-    enum class name : type {                            \
-        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)       \
-    };                                                  \
-    inline ENUM_STR_RET                                 \
-    name##_to_string(name _e)                           \
-    {                                                   \
-        switch (_e) {                                   \
-            FOR_EACH(TO_STRING_CASE, name, __VA_ARGS__) \
-        default:                                        \
-            return ENUM_STR_UNKNOWN;                    \
-        }                                               \
-    }                                                   \
-    inline name                                         \
-    to_##name(type _t, name _unknown)                   \
-    {                                                   \
-        switch (_t) {                                   \
-            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)  \
-        default:                                        \
-            return _unknown;                            \
-        }                                               \
+// ENUM_SPARSE: if-chain lookup (for non-contiguous enum values, avoids CSWTCH)
+#define ENUM_SPARSE(name, type, ...)                   \
+    enum class name : type {                           \
+        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)      \
+    };                                                 \
+    inline ENUM_STR_RET                                \
+    name##_to_string(name _e)                          \
+    {                                                  \
+        FOR_EACH(TO_STRING_IF, name, __VA_ARGS__)      \
+        return ENUM_STR_UNKNOWN;                       \
+    }                                                  \
+    inline name                                        \
+    to_##name(type _t, name _unknown)                  \
+    {                                                  \
+        switch (_t) {                                  \
+            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__) \
+        default:                                       \
+            return _unknown;                           \
+        }                                              \
     }
 
 #define SUM_TYPE_UNION_MEMBER0(type, var) type var;
