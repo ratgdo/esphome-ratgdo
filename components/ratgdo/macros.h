@@ -91,31 +91,32 @@ namespace ratgdo {
 #define ENUM_BLOB_RETURN(blob, offset) (&(blob)[offset])
 #endif
 
-// ENUM: packed string blob with O(1) offset lookup (for contiguous 0-based enums)
-#define ENUM(name, type, ...)                                                                          \
-    enum class name : type {                                                                           \
-        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)                                                      \
-    };                                                                                                 \
-    inline ENUM_STR_RET                                                                                \
-    name##_to_string(name _e)                                                                          \
-    {                                                                                                  \
-        static constexpr size_t _n = (0 FOR_EACH(COUNT_ONE, name, __VA_ARGS__));                       \
-        static const char _b[] ENUM_BLOB_ATTR = FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN"; \
-        static constexpr auto _o = ::esphome::ratgdo::detail::compute_enum_string_offsets<_n + 1>(     \
-            FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN");                                    \
-        auto _i = static_cast<uint8_t>(_e);                                                            \
-        if (_i >= _n)                                                                                  \
-            _i = static_cast<uint8_t>(_n);                                                             \
-        return ENUM_BLOB_RETURN(_b, _o.data[_i]);                                                      \
-    }                                                                                                  \
-    inline name                                                                                        \
-    to_##name(type _t, name _unknown)                                                                  \
-    {                                                                                                  \
-        switch (_t) {                                                                                  \
-            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)                                                 \
-        default:                                                                                       \
-            return _unknown;                                                                           \
-        }                                                                                              \
+// ENUM: packed string blob with O(1) offset lookup (for contiguous 0-based enums with uint8_t type)
+#define ENUM(name, type, ...)                                                                            \
+    enum class name : type {                                                                             \
+        FOR_EACH(ENUM_VARIANT, name, __VA_ARGS__)                                                        \
+    };                                                                                                   \
+    static_assert(sizeof(type) == 1, "ENUM() requires uint8_t type; use ENUM_SPARSE() for wider types"); \
+    inline ENUM_STR_RET                                                                                  \
+    name##_to_string(name _e)                                                                            \
+    {                                                                                                    \
+        static constexpr size_t _n = (0 FOR_EACH(COUNT_ONE, name, __VA_ARGS__));                         \
+        static const char _b[] ENUM_BLOB_ATTR = FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN";   \
+        static constexpr auto _o = ::esphome::ratgdo::detail::compute_enum_string_offsets<_n + 1>(       \
+            FOR_EACH(STR_BLOB_ENTRY, name, __VA_ARGS__) "UNKNOWN");                                      \
+        auto _i = static_cast<uint8_t>(_e);                                                              \
+        if (_i >= _n)                                                                                    \
+            _i = static_cast<uint8_t>(_n);                                                               \
+        return ENUM_BLOB_RETURN(_b, _o.data[_i]);                                                        \
+    }                                                                                                    \
+    inline name                                                                                          \
+    to_##name(type _t, name _unknown)                                                                    \
+    {                                                                                                    \
+        switch (_t) {                                                                                    \
+            FOR_EACH(FROM_INT_CASE, name, __VA_ARGS__)                                                   \
+        default:                                                                                         \
+            return _unknown;                                                                             \
+        }                                                                                                \
     }
 
 // ENUM_SPARSE: if-chain lookup (for non-contiguous enum values, avoids CSWTCH)
