@@ -106,6 +106,12 @@ jobs:
           - file: v32disco_drycontact.yaml
             name: V32 Disco Board Dry Contact
             manifest_filename: v32disco_drycontact-manifest.json
+          - file: v25board_esp32_d1_mini_hap.yaml
+            name: V2.5 Board ESP32 D1 Mini with HomeKit
+            manifest_filename: v25board_esp32_d1_mini_hap-manifest.json
+          - file: v32board_hap.yaml
+            name: V32 Board with HomeKit
+            manifest_filename: v32board_hap-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code
