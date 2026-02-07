@@ -15,7 +15,7 @@ namespace ratgdo {
 
     void RATGDOLock::setup()
     {
-        this->parent_->subscribe_lock_state([=](LockState state) {
+        this->parent_->subscribe_lock_state([this](LockState state) {
             this->on_lock_state(state);
         });
     }
@@ -35,7 +35,7 @@ namespace ratgdo {
         } else if (state == LockState::UNLOCKED) {
             call.set_state(lock::LockState::LOCK_STATE_UNLOCKED);
         }
-        this->control(call);
+        this->publish_state(*call.get_state());
     }
 
     void RATGDOLock::control(const lock::LockCall& call)

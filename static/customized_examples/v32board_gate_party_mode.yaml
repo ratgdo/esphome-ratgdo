@@ -18,11 +18,13 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v32board_gate
     version: "32.0"
 
 esp32:
   board: esp32dev
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v32board_drycontact.yaml@main
@@ -38,7 +40,6 @@ packages:
 
 switch:
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_led
     type: led
     pin: GPIO2

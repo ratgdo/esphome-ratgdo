@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PROTOCOL_DRYCONTACT
+
 #include "esphome/core/defines.h"
 
 #include "esphome/core/gpio.h"
@@ -55,23 +57,30 @@ namespace ratgdo {
             const Traits& traits() const { return this->traits_; }
 
         protected:
-            Traits traits_;
-
+            // Pointers first (4-byte aligned)
             InternalGPIOPin* tx_pin_;
             InternalGPIOPin* rx_pin_;
             InternalGPIOPin* discrete_open_pin_;
             InternalGPIOPin* discrete_close_pin_;
-
             RATGDOComponent* ratgdo_;
             Scheduler* scheduler_;
 
+            // Traits (likely aligned structure)
+            Traits traits_;
+
+            // Small members grouped at the end
             DoorState door_state_;
-            bool open_limit_reached_;
-            bool last_open_limit_;
-            bool close_limit_reached_;
-            bool last_close_limit_;
+            struct {
+                uint8_t open_limit_reached : 1;
+                uint8_t last_open_limit : 1;
+                uint8_t close_limit_reached : 1;
+                uint8_t last_close_limit : 1;
+                uint8_t reserved : 4; // Reserved for future use
+            } limits_;
         };
 
     } // namespace dry_contact
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_DRYCONTACT

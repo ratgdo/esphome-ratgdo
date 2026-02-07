@@ -1,4 +1,6 @@
 ---
+esphome:
+  min_version: 2026.1.4
 
 external_components:
   - source:
@@ -17,6 +19,7 @@ preferences:
 
 text_sensor:
   - platform: version
+    id: ${id_prefix}_firmware_version
     name: "Firmware Version"
 
 ratgdo:
@@ -32,13 +35,14 @@ ratgdo:
 
 ota:
   - platform: esphome
-    id: ratgdo_ota
+    id: ${id_prefix}_ratgdo_ota
+  - platform: web_server
+    id: ${id_prefix}_ratgdo_ota_ws
 
 binary_sensor:
   - platform: ratgdo
     type: obstruction
     id: ${id_prefix}_obstruction
-    ratgdo_id: ${id_prefix}
     name: "Obstruction"
     device_class: problem
   - platform: gpio
@@ -71,7 +75,6 @@ number:
     id: ${id_prefix}_opening_duration
     type: opening_duration
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Opening duration"
     unit_of_measurement: "s"
 
@@ -79,7 +82,6 @@ number:
     id: ${id_prefix}_closing_duration
     type: closing_duration
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Closing duration"
     unit_of_measurement: "s"
 
@@ -88,7 +90,6 @@ cover:
     id: ${id_prefix}_garage_door
     device_class: garage
     name: "Door"
-    ratgdo_id: ${id_prefix}
 
 button:
   - platform: restart

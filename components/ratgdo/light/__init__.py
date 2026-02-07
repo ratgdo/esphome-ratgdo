@@ -7,14 +7,29 @@ from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 
+# Track if light has been used
+USED_LIGHTS: set[str] = set()
+
 RATGDOLightOutput = ratgdo_ns.class_(
     "RATGDOLightOutput", light.LightOutput, cg.Component
 )
 
 
-CONFIG_SCHEMA = light.LIGHT_SCHEMA.extend(
-    {cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}
-).extend(RATGDO_CLIENT_SCHMEA)
+def validate_single_light(config):
+    """Validate that only one RATGDO light is configured."""
+    light_id = "ratgdo_light"
+    if light_id in USED_LIGHTS:
+        raise cv.Invalid("Only one RATGDO light is allowed")
+    USED_LIGHTS.add(light_id)
+    return config
+
+
+CONFIG_SCHEMA = cv.All(
+    light.LIGHT_SCHEMA.extend(
+        {cv.GenerateID(CONF_OUTPUT_ID): cv.declare_id(RATGDOLightOutput)}
+    ).extend(RATGDO_CLIENT_SCHMEA),
+    validate_single_light,
+)
 
 
 async def to_code(config):

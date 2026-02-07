@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef PROTOCOL_SECPLUSV1
+
 #include <queue>
 
 #include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
@@ -30,9 +32,9 @@ namespace ratgdo {
         static const TxPacket toggle_light = { 0x32, 0x33 };
         static const TxPacket toggle_lock = { 0x34, 0x35 };
 
-        static const uint8_t secplus1_states[] = { 0x35, 0x35, 0x35, 0x35, 0x33, 0x33, 0x53, 0x53, 0x38, 0x3A, 0x3A, 0x3A, 0x39, 0x38, 0x3A, 0x38, 0x3A, 0x39, 0x3A };
+        static const uint8_t secplus1_states[] PROGMEM = { 0x35, 0x35, 0x35, 0x35, 0x33, 0x33, 0x53, 0x53, 0x38, 0x3A, 0x3A, 0x3A, 0x39, 0x38, 0x3A, 0x38, 0x3A, 0x39, 0x3A };
 
-        ENUM(CommandType, uint16_t,
+        ENUM(CommandType, uint8_t,
             (TOGGLE_DOOR_PRESS, 0x30),
             (TOGGLE_DOOR_RELEASE, 0x31),
             (TOGGLE_LIGHT_PRESS, 0x32),
@@ -124,39 +126,42 @@ namespace ratgdo {
             void toggle_door();
             void query_status();
 
-            LightState light_state { LightState::UNKNOWN };
-            LockState lock_state { LockState::UNKNOWN };
-            DoorState door_state { DoorState::UNKNOWN };
+            // Pointers first (4-byte aligned)
+            InternalGPIOPin* tx_pin_;
+            InternalGPIOPin* rx_pin_;
+            RATGDOComponent* ratgdo_;
+            Scheduler* scheduler_;
 
-            LightState maybe_light_state { LightState::UNKNOWN };
-            LockState maybe_lock_state { LockState::UNKNOWN };
-            DoorState maybe_door_state { DoorState::UNKNOWN };
-
-            OnceCallbacks<void(DoorState)> on_door_state_;
-
-            bool door_moving_ { false };
-
-            bool wall_panel_starting_ { false };
+            // 4-byte members
             uint32_t wall_panel_emulation_start_ { 0 };
-            WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
-
-            bool is_0x37_panel_ { false };
-            std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
             uint32_t last_rx_ { 0 };
             uint32_t last_tx_ { 0 };
             uint32_t last_status_query_ { 0 };
 
+            // Larger structures
+            std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
+            SoftwareSerial sw_serial_;
+            OnceCallbacks<void(DoorState)> on_door_state_;
             Traits traits_;
 
-            SoftwareSerial sw_serial_;
-
-            InternalGPIOPin* tx_pin_;
-            InternalGPIOPin* rx_pin_;
-
-            RATGDOComponent* ratgdo_;
-            Scheduler* scheduler_;
+            // Group all 1-byte members at the end to minimize padding
+            LightState light_state { LightState::UNKNOWN };
+            LockState lock_state { LockState::UNKNOWN };
+            DoorState door_state { DoorState::UNKNOWN };
+            LightState maybe_light_state { LightState::UNKNOWN };
+            LockState maybe_lock_state { LockState::UNKNOWN };
+            DoorState maybe_door_state { DoorState::UNKNOWN };
+            WallPanelEmulationState wall_panel_emulation_state_ { WallPanelEmulationState::WAITING };
+            struct {
+                uint8_t door_moving : 1;
+                uint8_t wall_panel_starting : 1;
+                uint8_t is_0x37_panel : 1;
+                uint8_t reserved : 5; // Reserved for future use
+            } flags_ { 0 };
         };
 
     } // namespace secplus1
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_SECPLUSV1

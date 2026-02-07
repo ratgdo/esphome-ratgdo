@@ -20,14 +20,14 @@ namespace ratgdo {
         if (state.has_value()) {
             this->parent_->set_door_position(state.value().position);
         }
-        this->parent_->subscribe_door_state([=](DoorState state, float position) {
+        this->parent_->subscribe_door_state([this](DoorState state, float position) {
             this->on_door_state(state, position);
         });
     }
 
     void RATGDOCover::on_door_state(DoorState state, float position)
     {
-        // ESP_LOGD("ON_DOOR_STATE", "%s %f", DoorState_to_string(state), position);
+        // ESP_LOGD("ON_DOOR_STATE", "%s %f", LOG_STR_ARG(DoorState_to_string(state)), position);
         bool save_to_flash = true;
         switch (state) {
         case DoorState::OPEN:

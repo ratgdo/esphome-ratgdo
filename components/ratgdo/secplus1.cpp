@@ -1,8 +1,11 @@
 
+#ifdef PROTOCOL_SECPLUSV1
+
 #include "secplus1.h"
 #include "ratgdo.h"
 
 #include "esphome/core/gpio.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
@@ -35,7 +38,7 @@ namespace ratgdo {
                 (millis() - this->last_tx_) > 200 && // don't send twice in a period
                 (millis() - this->last_rx_) > 50 && // time to send it
                 tx_cmd && // have pending command
-                !(this->is_0x37_panel_ && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) && this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING) {
+                !(this->flags_.is_0x37_panel && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) && this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING) {
                 this->do_transmit_if_pending();
             }
         }
@@ -54,7 +57,7 @@ namespace ratgdo {
             this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
             this->wall_panel_emulation();
 
-            this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [=] {
+            this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [this] {
                 if (this->door_state == DoorState::UNKNOWN) {
                     ESP_LOGW(TAG, "Triggering sync failed actions.");
                     this->ratgdo_->sync_failed = true;
@@ -64,7 +67,7 @@ namespace ratgdo {
 
         void Secplus1::wall_panel_emulation(size_t index)
         {
-            if (this->wall_panel_starting_) {
+            if (this->flags_.wall_panel_starting) {
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;
             } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
                 ESP_LOGD(TAG, "Looking for security+ 1.0 wall panel...");
@@ -73,23 +76,37 @@ namespace ratgdo {
                     ESP_LOG1(TAG, "Wall panel detected");
                     return;
                 }
-                if (millis() - this->wall_panel_emulation_start_ > 35000 && !this->wall_panel_starting_) {
+                if (millis() - this->wall_panel_emulation_start_ > 35000 && !this->flags_.wall_panel_starting) {
                     ESP_LOGD(TAG, "No wall panel detected. Switching to emulation mode.");
                     this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [this] {
                     this->wall_panel_emulation();
                 });
                 return;
             } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::RUNNING) {
+#ifdef USE_ESP8266
+                // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", progmem_read_byte(&secplus1_states[index]));
+#else
                 // ESP_LOG2(TAG, "[Wall panel emulation] Sending byte: [%02X]", secplus1_states[index]);
+#endif
 
                 if (index < 15 || !this->do_transmit_if_pending()) {
+#ifdef USE_ESP8266
+                    this->transmit_byte(progmem_read_byte(&secplus1_states[index]));
+#else
                     this->transmit_byte(secplus1_states[index]);
+#endif
                     // gdo response simulation for testing
+#ifdef USE_ESP8266
+                    // auto resp = progmem_read_byte(&secplus1_states[index]) == 0x39 ? 0x00 :
+                    //             progmem_read_byte(&secplus1_states[index]) == 0x3A ? 0x5C :
+                    //             progmem_read_byte(&secplus1_states[index]) == 0x38 ? 0x52 : 0xFF;
+#else
                     // auto resp = secplus1_states[index] == 0x39 ? 0x00 :
                     //             secplus1_states[index] == 0x3A ? 0x5C :
                     //             secplus1_states[index] == 0x38 ? 0x52 : 0xFF;
+#endif
                     // if (resp != 0xFF) {
                     //     this->transmit_byte(resp, true);
                     // }
@@ -99,7 +116,7 @@ namespace ratgdo {
                         index = 15;
                     }
                 }
-                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [=] {
+                this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this, index] {
                     this->wall_panel_emulation(index);
                 });
             }
@@ -107,7 +124,7 @@ namespace ratgdo {
 
         void Secplus1::light_action(LightAction action)
         {
-            ESP_LOG1(TAG, "Light action: %s", LightAction_to_string(action));
+            ESP_LOG1(TAG, "Light action: %s", LOG_STR_ARG(LightAction_to_string(action)));
             if (action == LightAction::UNKNOWN) {
                 return;
             }
@@ -119,7 +136,7 @@ namespace ratgdo {
 
         void Secplus1::lock_action(LockAction action)
         {
-            ESP_LOG1(TAG, "Lock action: %s", LockAction_to_string(action));
+            ESP_LOG1(TAG, "Lock action: %s", LOG_STR_ARG(LockAction_to_string(action)));
             if (action == LockAction::UNKNOWN) {
                 return;
             }
@@ -131,7 +148,7 @@ namespace ratgdo {
 
         void Secplus1::door_action(DoorAction action)
         {
-            ESP_LOG1(TAG, "Door action: %s, door state: %s", DoorAction_to_string(action), DoorState_to_string(this->door_state));
+            ESP_LOG1(TAG, "Door action: %s, door state: %s", LOG_STR_ARG(DoorAction_to_string(action)), LOG_STR_ARG(DoorState_to_string(this->door_state)));
             if (action == DoorAction::UNKNOWN) {
                 return;
             }
@@ -144,11 +161,11 @@ namespace ratgdo {
                     this->toggle_door();
                 } else if (this->door_state == DoorState::STOPPED) {
                     this->toggle_door(); // this starts closing door
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::CLOSING) {
                             // this changes direction of the door on some openers, on others it stops it
                             this->toggle_door();
-                            this->on_door_state_([=](DoorState s) {
+                            this->on_door_state_([this](DoorState s) {
                                 if (s == DoorState::STOPPED) {
                                     this->toggle_door();
                                 }
@@ -162,7 +179,7 @@ namespace ratgdo {
                 } else if (this->door_state == DoorState::OPENING) {
                     this->toggle_door(); // this switches to stopped
                     // another toggle needed to close
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::STOPPED) {
                             this->toggle_door();
                         }
@@ -177,7 +194,7 @@ namespace ratgdo {
                     this->toggle_door(); // this switches to opening
 
                     // another toggle needed to stop
-                    this->on_door_state_([=](DoorState s) {
+                    this->on_door_state_([this](DoorState s) {
                         if (s == DoorState::OPENING) {
                             this->toggle_door();
                         }
@@ -201,7 +218,7 @@ namespace ratgdo {
             this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
             this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
             if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
-                this->door_moving_ = true;
+                this->flags_.door_moving = true;
             }
         }
 
@@ -297,7 +314,7 @@ namespace ratgdo {
         {
             if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31) {
                 ESP_LOGD(TAG, "wall panel is starting");
-                this->wall_panel_starting_ = true;
+                this->flags_.wall_panel_starting = true;
             } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
 
                 DoorState door_state;
@@ -327,25 +344,25 @@ namespace ratgdo {
                     this->on_door_state_.trigger(door_state);
                 }
 
-                if (!this->is_0x37_panel_ && door_state != this->maybe_door_state) {
+                if (!this->flags_.is_0x37_panel && door_state != this->maybe_door_state) {
                     this->maybe_door_state = door_state;
-                    ESP_LOG1(TAG, "Door maybe %s, waiting for 2nd status message to confirm", DoorState_to_string(door_state));
+                    ESP_LOG1(TAG, "Door maybe %s, waiting for 2nd status message to confirm", LOG_STR_ARG(DoorState_to_string(door_state)));
                 } else {
                     this->maybe_door_state = door_state;
                     this->door_state = door_state;
                     if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
-                        this->door_moving_ = false;
+                        this->flags_.door_moving = false;
                     }
                     this->ratgdo_->received(door_state);
                 }
             } else if (cmd.req == CommandType::QUERY_DOOR_STATUS_0x37) {
-                this->is_0x37_panel_ = true;
+                this->flags_.is_0x37_panel = true;
                 auto cmd = this->pending_tx();
                 if (cmd && cmd.value() == CommandType::TOGGLE_LOCK_PRESS) {
                     this->do_transmit_if_pending();
                 } else {
                     // inject door status request
-                    if (door_moving_ || (millis() - this->last_status_query_ > 10000)) {
+                    if (flags_.door_moving || (millis() - this->last_status_query_ > 10000)) {
                         this->transmit_byte(static_cast<uint8_t>(CommandType::QUERY_DOOR_STATUS));
                         this->last_status_query_ = millis();
                     }
@@ -353,7 +370,7 @@ namespace ratgdo {
             } else if (cmd.req == CommandType::QUERY_OTHER_STATUS) {
                 LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
 
-                if (!this->is_0x37_panel_ && light_state != this->maybe_light_state) {
+                if (!this->flags_.is_0x37_panel && light_state != this->maybe_light_state) {
                     this->maybe_light_state = light_state;
                 } else {
                     this->light_state = light_state;
@@ -361,7 +378,7 @@ namespace ratgdo {
                 }
 
                 LockState lock_state = to_LockState((~cmd.resp >> 3) & 1, LockState::UNKNOWN);
-                if (!this->is_0x37_panel_ && lock_state != this->maybe_lock_state) {
+                if (!this->flags_.is_0x37_panel && lock_state != this->maybe_lock_state) {
                     this->maybe_lock_state = lock_state;
                 } else {
                     this->lock_state = lock_state;
@@ -451,3 +468,5 @@ namespace ratgdo {
     } // namespace secplus1
 } // namespace ratgdo
 } // namespace esphome
+
+#endif // PROTOCOL_SECPLUSV1

@@ -7,6 +7,9 @@ from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
 
 DEPENDENCIES = ["ratgdo"]
 
+# Track which sensor types have been used
+USED_TYPES: set[str] = set()
+
 RATGDOBinarySensor = ratgdo_ns.class_(
     "RATGDOBinarySensor", binary_sensor.BinarySensor, cg.Component
 )
@@ -23,15 +26,28 @@ TYPES = {
     "vehicle_leaving": SensorType.RATGDO_SENSOR_VEHICLE_LEAVING,
 }
 
+# Sensor types that require vehicle sensor support
+VEHICLE_SENSOR_TYPES = {"vehicle_detected", "vehicle_arriving", "vehicle_leaving"}
 
-CONFIG_SCHEMA = (
+
+def validate_unique_type(config):
+    """Validate that each sensor type is only used once."""
+    sensor_type = config[CONF_TYPE]
+    if sensor_type in USED_TYPES:
+        raise cv.Invalid(f"Only one binary sensor of type '{sensor_type}' is allowed")
+    USED_TYPES.add(sensor_type)
+    return config
+
+
+CONFIG_SCHEMA = cv.All(
     binary_sensor.binary_sensor_schema(RATGDOBinarySensor)
     .extend(
         {
             cv.Required(CONF_TYPE): cv.enum(TYPES, lower=True),
         }
     )
-    .extend(RATGDO_CLIENT_SCHMEA)
+    .extend(RATGDO_CLIENT_SCHMEA),
+    validate_unique_type,
 )
 
 
@@ -41,3 +57,7 @@ async def to_code(config):
     await cg.register_component(var, config)
     cg.add(var.set_binary_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
+
+    # Add defines for enabled features
+    if config[CONF_TYPE] in VEHICLE_SENSOR_TYPES:
+        cg.add_define("RATGDO_USE_VEHICLE_SENSORS")

@@ -89,7 +89,7 @@ namespace ratgdo {
             (ClearPairedDevices, clear_paired_devices), )
 
         struct RollingCodeCounter {
-            observable<uint32_t>* value;
+            single_observable<uint32_t>* value;
         };
 
         SUM_TYPE(Result,

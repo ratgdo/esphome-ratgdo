@@ -18,11 +18,13 @@ esphome:
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v2board_esp32_lolin_s2_mini
     version: "2.0"
 
 esp32:
-  board: lolin_s2_mini
+  variant: esp32s2
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp32_lolin_s2_mini.yaml@main

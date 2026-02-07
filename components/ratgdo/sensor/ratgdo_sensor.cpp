@@ -11,32 +11,39 @@ namespace ratgdo {
 
     void RATGDOSensor::setup()
     {
-        if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_OPENINGS) {
-            this->parent_->subscribe_openings([=](uint16_t value) {
+        switch (this->ratgdo_sensor_type_) {
+        case RATGDOSensorType::RATGDO_OPENINGS:
+            this->parent_->subscribe_openings([this](uint16_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL) {
-            this->parent_->subscribe_paired_devices_total([=](uint16_t value) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL:
+            this->parent_->subscribe_paired_devices_total([this](uint8_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_REMOTES) {
-            this->parent_->subscribe_paired_remotes([=](uint16_t value) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_REMOTES:
+            this->parent_->subscribe_paired_remotes([this](uint8_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_KEYPADS) {
-            this->parent_->subscribe_paired_keypads([=](uint16_t value) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_KEYPADS:
+            this->parent_->subscribe_paired_keypads([this](uint8_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS) {
-            this->parent_->subscribe_paired_wall_controls([=](uint16_t value) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS:
+            this->parent_->subscribe_paired_wall_controls([this](uint8_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES) {
-            this->parent_->subscribe_paired_accessories([=](uint16_t value) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES:
+            this->parent_->subscribe_paired_accessories([this](uint8_t value) {
                 this->publish_state(value);
             });
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
-#ifdef USE_DISTANCE
+            break;
+        case RATGDOSensorType::RATGDO_DISTANCE:
+#ifdef RATGDO_USE_DISTANCE_SENSOR
             this->distance_sensor_.setI2cDevice(&I2C);
             this->distance_sensor_.setXShutPin(32);
             // I2C.begin(17,16);
@@ -46,37 +53,51 @@ namespace ratgdo {
             this->distance_sensor_.InitSensor(0x59);
             this->distance_sensor_.VL53L4CX_SetDistanceMode(VL53L4CX_DISTANCEMODE_LONG);
             this->distance_sensor_.VL53L4CX_StartMeasurement();
-
-            this->parent_->subscribe_distance_measurement([=](int16_t value) {
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+            this->parent_->subscribe_distance_measurement([this](int16_t value) {
                 this->publish_state(value);
             });
 #endif
+#endif
+            break;
+        default:
+            break;
         }
     }
 
     void RATGDOSensor::dump_config()
     {
         LOG_SENSOR("", "RATGDO Sensor", this);
-        if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_OPENINGS) {
+        switch (this->ratgdo_sensor_type_) {
+        case RATGDOSensorType::RATGDO_OPENINGS:
             ESP_LOGCONFIG(TAG, "  Type: Openings");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_DEVICES_TOTAL:
             ESP_LOGCONFIG(TAG, "  Type: Paired Devices");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_REMOTES) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_REMOTES:
             ESP_LOGCONFIG(TAG, "  Type: Paired Remotes");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_KEYPADS) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_KEYPADS:
             ESP_LOGCONFIG(TAG, "  Type: Paired Keypads");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_WALL_CONTROLS:
             ESP_LOGCONFIG(TAG, "  Type: Paired Wall Controls");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES) {
+            break;
+        case RATGDOSensorType::RATGDO_PAIRED_ACCESSORIES:
             ESP_LOGCONFIG(TAG, "  Type: Paired Accessories");
-        } else if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
+            break;
+        case RATGDOSensorType::RATGDO_DISTANCE:
             ESP_LOGCONFIG(TAG, "  Type: Distance");
+            break;
+        default:
+            break;
         }
     }
 
+#ifdef RATGDO_USE_DISTANCE_SENSOR
     void RATGDOSensor::loop()
     {
-#ifdef USE_DISTANCE
         if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
             VL53L4CX_MultiRangingData_t distanceData;
             VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
@@ -116,8 +137,8 @@ namespace ratgdo {
                 }
             }
         }
-#endif
     }
+#endif
 
 } // namespace ratgdo
 } // namespace esphome

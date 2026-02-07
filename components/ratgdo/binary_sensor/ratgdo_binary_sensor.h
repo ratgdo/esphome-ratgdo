@@ -4,18 +4,21 @@
 #include "../ratgdo_state.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/core/component.h"
+#include "esphome/core/defines.h"
 
 namespace esphome {
 namespace ratgdo {
 
-    enum SensorType {
+    enum SensorType : uint8_t {
         RATGDO_SENSOR_MOTION,
         RATGDO_SENSOR_OBSTRUCTION,
         RATGDO_SENSOR_MOTOR,
         RATGDO_SENSOR_BUTTON,
+#ifdef RATGDO_USE_VEHICLE_SENSORS
         RATGDO_SENSOR_VEHICLE_DETECTED,
         RATGDO_SENSOR_VEHICLE_ARRIVING,
         RATGDO_SENSOR_VEHICLE_LEAVING,
+#endif
     };
 
     class RATGDOBinarySensor : public binary_sensor::BinarySensor, public RATGDOClient, public Component {

@@ -19,12 +19,15 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
+  min_version: 2025.12.0
   project:
-    name: ratgdo.esphome
+    name: ratgdo.v32disco_secplus2
     version: "32disco"
 
 esp32:
   board: esp32dev
+  framework:
+    type: arduino
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@main
@@ -48,6 +51,9 @@ api:
 
 improv_serial:
 
+esp32_improv:
+  authorizer: none
+
 wifi:
   ap:
     ssid: "ratgdo"
@@ -58,21 +64,16 @@ logger:
   logs:
     sensor: NONE
 
-ota:
-
 binary_sensor:
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_vehicle_detected
     type: vehicle_detected
     name: "Vehicle detected"
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_vehicle_arriving
     type: vehicle_arriving
     name: "Vehicle arriving"
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_vehicle_leaving
     type: vehicle_leaving
     name: "Vehicle leaving"
@@ -82,7 +83,6 @@ number:
     id: ${id_prefix}_target_distance_measurement
     type: target_distance_measurement
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Vehicle distance target"
     mode: box
     unit_of_measurement: "mm"
@@ -90,7 +90,6 @@ number:
     id: ${id_prefix}_closing_delay
     type: closing_delay
     entity_category: config
-    ratgdo_id: ${id_prefix}
     name: "Closing Delay"
     unit_of_measurement: "s"
 
@@ -99,7 +98,6 @@ output:
     pin: GPIO33
     id: ${id_prefix}_ledc
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_beeper
     type: beeper
     rtttl: ${id_prefix}_rtttl
@@ -111,14 +109,12 @@ rtttl:
 
 switch:
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_led
     type: led
     pin: GPIO2
     name: "LED"
     entity_category: config
   - platform: ratgdo
-    ratgdo_id: ${id_prefix}
     id: ${id_prefix}_laser
     type: led
     pin: GPIO23
@@ -133,7 +129,6 @@ sensor:
     id: ${id_prefix}_vehicle_distance_actual
     type: distance
     name: "Vehicle distance actual"
-    ratgdo_id: ${id_prefix}
     unit_of_measurement: "mm"
     internal: true
     filters:
