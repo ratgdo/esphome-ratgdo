@@ -37,11 +37,14 @@ namespace ratgdo {
     static const char* const TAG = "ratgdo";
     static const int SYNC_DELAY = 1000;
 
+    // Interval IDs using uint32_t to avoid heap allocations
+    static constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
+
     // Defer IDs using uint32_t ranges to avoid heap allocations
     // Bases are auto-generated from counts to prevent ID conflicts
     // Multi-subscriber ranges (use get_defer_id helper)
     static constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
-    static constexpr uint32_t DEFER_DOOR_STATE_BASE = 0;
+    static constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
 
     static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
     static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
@@ -408,10 +411,12 @@ namespace ratgdo {
         if (duration == 0) {
             return;
         }
-        auto count = int(1000 * duration / update_period);
-        set_retry("position_sync_while_moving", update_period, count, [this](uint8_t r) {
+        this->position_sync_remaining_ = std::max(static_cast<uint16_t>(1000 * duration / update_period), static_cast<uint16_t>(1));
+        set_interval(INTERVAL_POSITION_SYNC, static_cast<uint32_t>(update_period), [this]() {
             this->door_position_update();
-            return RetryResult::RETRY;
+            if (--this->position_sync_remaining_ == 0) {
+                cancel_interval(INTERVAL_POSITION_SYNC);
+            }
         });
     }
 
@@ -727,7 +732,7 @@ namespace ratgdo {
         if (this->door_start_moving != 0) {
             ESP_LOGD(TAG, "Cancelling position callbacks");
             cancel_timeout("move_to_position");
-            cancel_retry("position_sync_while_moving");
+            cancel_interval(INTERVAL_POSITION_SYNC);
 
             this->door_start_moving = 0;
             this->door_start_position = DOOR_POSITION_UNKNOWN;
