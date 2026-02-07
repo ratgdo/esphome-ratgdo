@@ -411,7 +411,7 @@ namespace ratgdo {
         if (duration == 0) {
             return;
         }
-        this->position_sync_remaining_ = static_cast<uint16_t>(1000 * duration / update_period);
+        this->position_sync_remaining_ = std::max(static_cast<uint16_t>(1000 * duration / update_period), static_cast<uint16_t>(1));
         set_interval(INTERVAL_POSITION_SYNC, static_cast<uint32_t>(update_period), [this]() {
             this->door_position_update();
             if (--this->position_sync_remaining_ == 0) {
