@@ -92,6 +92,7 @@ namespace ratgdo {
         unsigned long door_start_moving { 0 };
         float door_start_position { DOOR_POSITION_UNKNOWN };
         float door_move_delta { DOOR_DELTA_UNKNOWN };
+        uint16_t position_sync_remaining_ { 0 };
 
         single_observable<LightState> light_state { LightState::UNKNOWN };
         single_observable<LockState> lock_state { LockState::UNKNOWN };
