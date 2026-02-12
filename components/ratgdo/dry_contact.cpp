@@ -92,12 +92,12 @@ namespace ratgdo {
 
         void DryContact::door_action(DoorAction action)
         {
-            if (action == DoorAction::OPEN && this->door_state_ != DoorState::CLOSED) {
-                ESP_LOGW(TAG, "The door is not closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
+            if (action == DoorAction::OPEN && this->limits_.open_limit_reached) {
+                ESP_LOGW(TAG, "The door is already fully open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
                 return;
             }
-            if (action == DoorAction::CLOSE && this->door_state_ != DoorState::OPEN) {
-                ESP_LOGW(TAG, "The door is not open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
+            if (action == DoorAction::CLOSE && this->limits_.close_limit_reached) {
+                ESP_LOGW(TAG, "The door is already fully closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
                 return;
             }
 
