@@ -651,12 +651,18 @@ namespace ratgdo {
             return;
         }
 
+#ifdef PROTOCOL_SECPLUSV2
+        // Most ROW Sec+ 2 openers don't actually have obstruction sensors,
+        // they ignore the discrete close command, but accept a toggle command.
         if (this->flags_.obstruction_sensor_detected) {
             this->door_action(DoorAction::CLOSE);
         } else if (*this->door_state == DoorState::OPEN) {
             ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
             this->door_action(DoorAction::TOGGLE);
         }
+#else
+        this->door_action(DoorAction::CLOSE);
+#endif
 
 #ifdef PROTOCOL_DRYCONTACT
         // Dry Contact protocol can't query state from GDO
