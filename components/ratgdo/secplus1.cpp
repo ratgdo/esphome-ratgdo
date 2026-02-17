@@ -313,10 +313,11 @@ namespace ratgdo {
 
         void Secplus1::handle_command(const RxCommand& cmd)
         {
-            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING && (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31)) {
-                ESP_LOGD(TAG, "wall panel is starting");
-                this->flags_.wall_panel_starting = true;
-
+            if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31) {
+                if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
+                    ESP_LOGD(TAG, "wall panel is starting");
+                    this->flags_.wall_panel_starting = true;
+                }
             } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
                 DoorState door_state;
                 auto val = cmd.resp & 0x7;
