@@ -316,10 +316,8 @@ namespace ratgdo {
             if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING && (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31)) {
                 ESP_LOGD(TAG, "wall panel is starting");
                 this->flags_.wall_panel_starting = true;
-            }
 
-            if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
-
+            } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
                 DoorState door_state;
                 auto val = cmd.resp & 0x7;
                 // 000 0x0 stopped
