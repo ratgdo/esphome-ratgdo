@@ -53,7 +53,7 @@ namespace ratgdo {
     void RATGDONumber::setup()
     {
         float value;
-        this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
+        this->pref_ = this->make_entity_preference<float>();
         if (!this->pref_.load(&value)) {
             if (this->number_type_ == RATGDO_CLIENT_ID) {
                 value = ((random_uint32() + 1) % 0x7FF) << 12 | 0x539; // max size limited to be precisely convertible to float
