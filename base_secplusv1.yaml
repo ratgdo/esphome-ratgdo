@@ -196,7 +196,7 @@ cover:
     name: "Door"
     on_closed:
       - switch.turn_off: ${id_prefix}_status_door
-    on_open:
+    on_opened:
       - switch.turn_on: ${id_prefix}_status_door
 
 light:
