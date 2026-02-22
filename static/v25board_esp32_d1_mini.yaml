@@ -5,6 +5,7 @@ substitutions:
   uart_tx_pin: D1
   uart_rx_pin: D2
   input_obst_pin: D7
+  obst_sleep_lvl: low
   status_door_pin: D0
   status_obstruction_pin: D8
   dry_contact_open_pin: D5
