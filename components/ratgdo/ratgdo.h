@@ -182,6 +182,30 @@ namespace ratgdo {
         void query_paired_devices(PairedDevice kind);
         void clear_paired_devices(PairedDevice kind);
 
+        // Uses length + first character instead of string comparisons to avoid
+        // string literals in RODATA which consume RAM on ESP8266.
+        // Valid values: "all" (3,a), "remote" (6,r), "keypad" (6,k), "wall" (4,w), "accessory" (9,a)
+        // Template so it works with std::string, StringRef, or any type with length() and operator[].
+        template <typename StringT>
+        void clear_paired_devices(const StringT& kind)
+        {
+            PairedDevice device;
+            if (kind.length() == 3 && kind[0] == 'a') {
+                device = PairedDevice::ALL;
+            } else if (kind.length() == 6 && kind[0] == 'r') {
+                device = PairedDevice::REMOTE;
+            } else if (kind.length() == 6 && kind[0] == 'k') {
+                device = PairedDevice::KEYPAD;
+            } else if (kind.length() == 4 && kind[0] == 'w') {
+                device = PairedDevice::WALL_CONTROL;
+            } else if (kind.length() == 9 && kind[0] == 'a') {
+                device = PairedDevice::ACCESSORY;
+            } else {
+                return;
+            }
+            this->clear_paired_devices(device);
+        }
+
         // button functionality
         void query_status();
         void query_openings();
