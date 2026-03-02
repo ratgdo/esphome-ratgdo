@@ -172,7 +172,7 @@ namespace ratgdo {
             } else if (args.tag == Tag::inactivate_learn) {
                 this->inactivate_learn();
             }
-            return {};
+            return { };
         }
 
         void Secplus2::door_command(DoorAction action)
@@ -314,7 +314,7 @@ namespace ratgdo {
                 }
             }
 
-            return {};
+            return { };
         }
 
         void Secplus2::print_packet(const esphome::LogString* prefix, const WirePacket& packet) const
@@ -351,7 +351,7 @@ namespace ratgdo {
             int err = decode_wireline(packet, &rolling, &fixed, &data);
             if (err < 0) {
                 ESP_LOGW(TAG, "Decode failed (parity error or invalid frame)");
-                return {};
+                return { };
             }
 
             uint16_t cmd = ((fixed >> 24) & 0xf00) | (data & 0xff);
@@ -359,7 +359,7 @@ namespace ratgdo {
 
             if ((fixed & 0xFFFFFFFF) == this->client_id_) { // my commands
                 ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
-                return {};
+                return { };
             } else {
                 ESP_LOG1(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             }
