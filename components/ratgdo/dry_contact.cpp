@@ -125,7 +125,7 @@ namespace ratgdo {
 
         Result DryContact::call(Args args)
         {
-            return {};
+            return { };
         }
 
     } // namespace dry_contact

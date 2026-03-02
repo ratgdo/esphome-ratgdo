@@ -63,7 +63,7 @@ namespace ratgdo {
         template <size_t Count, size_t BlobSize>
         constexpr EnumStringOffsets<Count> compute_enum_string_offsets(const char (&blob)[BlobSize])
         {
-            EnumStringOffsets<Count> result {};
+            EnumStringOffsets<Count> result { };
             result.data[0] = 0;
             size_t entry = 1;
             for (size_t i = 0; i < BlobSize - 1 && entry < Count; ++i) {

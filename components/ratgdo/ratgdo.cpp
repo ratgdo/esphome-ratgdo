@@ -570,17 +570,17 @@ namespace ratgdo {
 
     void RATGDOComponent::query_status()
     {
-        this->protocol_->call(QueryStatus {});
+        this->protocol_->call(QueryStatus { });
     }
 
     void RATGDOComponent::query_openings()
     {
-        this->protocol_->call(QueryOpenings {});
+        this->protocol_->call(QueryOpenings { });
     }
 
     void RATGDOComponent::query_paired_devices()
     {
-        this->protocol_->call(QueryPairedDevicesAll {});
+        this->protocol_->call(QueryPairedDevicesAll { });
     }
 
     void RATGDOComponent::query_paired_devices(PairedDevice kind)
@@ -785,19 +785,19 @@ namespace ratgdo {
     // Learn functions
     void RATGDOComponent::activate_learn()
     {
-        this->protocol_->call(ActivateLearn {});
+        this->protocol_->call(ActivateLearn { });
     }
 
     void RATGDOComponent::inactivate_learn()
     {
-        this->protocol_->call(InactivateLearn {});
+        this->protocol_->call(InactivateLearn { });
     }
 
     void RATGDOComponent::subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f)
     {
         // change update to children is defered until after component loop
         // if multiple changes occur during component loop, only the last one is notified
-        auto counter = this->protocol_->call(GetRollingCodeCounter {});
+        auto counter = this->protocol_->call(GetRollingCodeCounter { });
         if (counter.tag == Result::Tag::rolling_code_counter) {
             counter.value.rolling_code_counter.value->subscribe([this, f = std::move(f)](uint32_t state) { defer(DEFER_ROLLING_CODE, [f, state] { f(state); }); });
         }
