@@ -105,6 +105,7 @@ namespace ratgdo {
         observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
         observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
         observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+        single_observable<bool> beep_on_arrival { true };
 #endif
 
         OnceCallbacks<void(DoorState)> on_door_state_;
@@ -162,6 +163,9 @@ namespace ratgdo {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         void calculate_presence();
         void presence_change(bool sensor_value);
+        void set_beep_on_arrival(bool enabled) { this->beep_on_arrival = enabled; }
+        bool get_beep_on_arrival() const { return *this->beep_on_arrival; }
+        void subscribe_beep_on_arrival(std::function<void(bool)>&& f);
 #endif
 
         // light
