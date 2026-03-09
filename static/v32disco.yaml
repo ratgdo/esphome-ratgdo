@@ -120,6 +120,11 @@ switch:
     pin: GPIO23
     name: "LASER"
     entity_category: config
+  - platform: ratgdo
+    id: ${id_prefix}_beep_on_arrival
+    type: beep_on_arrival
+    name: "Beep on arrival"
+    entity_category: config
 
 sensor:
   - platform: wifi_signal

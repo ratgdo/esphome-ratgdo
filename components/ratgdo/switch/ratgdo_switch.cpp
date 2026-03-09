@@ -17,6 +17,11 @@ namespace ratgdo {
         case SwitchType::RATGDO_LED:
             ESP_LOGCONFIG(TAG, "  Type: LED");
             break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        case SwitchType::RATGDO_BEEP_ON_ARRIVAL:
+            ESP_LOGCONFIG(TAG, "  Type: Beep on arrival");
+            break;
+#endif
         default:
             break;
         }
@@ -38,6 +43,21 @@ namespace ratgdo {
             });
 #endif
             break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        case SwitchType::RATGDO_BEEP_ON_ARRIVAL: {
+            bool value;
+            this->pref_ = this->make_entity_preference<bool>();
+            if (!this->pref_.load(&value)) {
+                value = true;
+            }
+            this->parent_->set_beep_on_arrival(value);
+            this->publish_state(value);
+            this->parent_->subscribe_beep_on_arrival([this](bool state) {
+                this->publish_state(state);
+            });
+            break;
+        }
+#endif
         default:
             break;
         }
@@ -57,6 +77,13 @@ namespace ratgdo {
             this->pin_->digital_write(state);
             this->publish_state(state);
             break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        case SwitchType::RATGDO_BEEP_ON_ARRIVAL:
+            this->parent_->set_beep_on_arrival(state);
+            this->pref_.save(&state);
+            this->publish_state(state);
+            break;
+#endif
         default:
             break;
         }
