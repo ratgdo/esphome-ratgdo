@@ -70,7 +70,7 @@ def main():
             # Replace the git source with local source, preserving indentation
             # This matches the exact structure: type: git, url: ..., ref: ...
             content = re.sub(
-                r"type:\s*git\s*\n(\s+)url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n\s+ref:\s*\w+",
+                r"type:\s*git\s*\n(\s+)url:\s*https://github\.com/ratgdo/esphome-ratgdo\s*\n\s+ref:\s*[\w-]+",
                 rf"type: local\n\1path: {project_root}/components",
                 content,
             )
