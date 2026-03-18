@@ -253,7 +253,7 @@ namespace ratgdo {
         esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_;
 
         // 4-byte members
-        RATGDOStore isr_store_ {};
+        RATGDOStore isr_store_ { };
 
         // Bool members packed into bitfield
         struct {

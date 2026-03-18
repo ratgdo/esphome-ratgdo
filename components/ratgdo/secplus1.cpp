@@ -225,7 +225,7 @@ namespace ratgdo {
 
         Result Secplus1::call(Args args)
         {
-            return {};
+            return { };
         }
 
         optional<RxCommand> Secplus1::read_command()
@@ -285,7 +285,7 @@ namespace ratgdo {
                 }
             }
 
-            return {};
+            return { };
         }
 
         void Secplus1::print_rx_packet(const RxPacket& packet) const
@@ -435,11 +435,11 @@ namespace ratgdo {
         optional<CommandType> Secplus1::pending_tx()
         {
             if (this->pending_tx_.empty()) {
-                return {};
+                return { };
             }
             auto cmd = this->pending_tx_.top();
             if (cmd.time > millis()) {
-                return {};
+                return { };
             }
             return cmd.request;
         }
