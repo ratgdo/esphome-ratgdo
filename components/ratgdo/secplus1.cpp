@@ -241,19 +241,19 @@ namespace ratgdo {
                     this->last_rx_ = millis();
 
                     if (ser_byte < 0x30 || ser_byte > 0x3A) {
-                        ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
+                        ESP_LOGW(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
                         byte_count = 0;
                         continue;
                     }
                     rx_packet[byte_count++] = ser_byte;
-                    ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                    ESP_LOGW(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
                     reading_msg = true;
 
                     if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
                         rx_packet[byte_count++] = 0;
                         reading_msg = false;
                         byte_count = 0;
-                        ESP_LOG2(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
+                        ESP_LOGW(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
                         return this->decode_packet(rx_packet);
                     }
 
