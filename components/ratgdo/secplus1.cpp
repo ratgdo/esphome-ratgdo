@@ -409,7 +409,7 @@ namespace ratgdo {
                 this->enqueue_command_pair(cmd.value());
                 this->transmit_byte(static_cast<uint32_t>(cmd.value()));
             }
-            return cmd;
+            return cmd.has_value();
         }
 
         void Secplus1::enqueue_command_pair(CommandType cmd)
