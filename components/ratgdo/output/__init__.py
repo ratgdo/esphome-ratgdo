@@ -3,7 +3,13 @@ from esphome.components import rtttl
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import (
+    RATGDO_CLIENT_SCHMEA,
+    ratgdo_ns,
+    register_ratgdo_child,
+    subscribe_door_action_delayed,
+    subscribe_vehicle_arriving,
+)
 
 CONF_RTTTL = "rtttl"
 CONF_SONG = "song"
@@ -33,3 +39,5 @@ async def to_code(config):
     cg.add(var.set_rtttl(rtttl))
     cg.add(var.set_song(config[CONF_SONG]))
     await register_ratgdo_child(var, config)
+    subscribe_vehicle_arriving()
+    subscribe_door_action_delayed()

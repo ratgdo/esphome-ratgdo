@@ -1,16 +1,77 @@
+from dataclasses import dataclass
+
 from esphome import automation, pins
 import esphome.codegen as cg
 from esphome.components import binary_sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
+from esphome.core import CORE
+from esphome.coroutine import CoroPriority, coroutine_with_priority
 import voluptuous as vol
 
 DEPENDENCIES = ["preferences"]
-MULTI_CONF = True
+MULTI_CONF = False
 
+DOMAIN = "ratgdo"
 
 ratgdo_ns = cg.esphome_ns.namespace("ratgdo")
 RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
+
+
+@dataclass
+class RATGDOData:
+    """Track observable subscriber counts for compile-time sizing."""
+
+    door_state: int = 0
+    door_action_delayed: int = 0
+    distance: int = 0
+    vehicle_detected: int = 0
+    vehicle_arriving: int = 0
+    vehicle_leaving: int = 0
+
+
+def _get_data() -> RATGDOData:
+    if DOMAIN not in CORE.data:
+        CORE.data[DOMAIN] = RATGDOData()
+    return CORE.data[DOMAIN]
+
+
+def subscribe_door_state() -> None:
+    _get_data().door_state += 1
+
+
+def subscribe_door_action_delayed() -> None:
+    _get_data().door_action_delayed += 1
+
+
+def subscribe_distance() -> None:
+    _get_data().distance += 1
+
+
+def subscribe_vehicle_detected() -> None:
+    _get_data().vehicle_detected += 1
+
+
+def subscribe_vehicle_arriving() -> None:
+    _get_data().vehicle_arriving += 1
+
+
+def subscribe_vehicle_leaving() -> None:
+    _get_data().vehicle_leaving += 1
+
+
+@coroutine_with_priority(CoroPriority.FINAL)
+async def _emit_subscriber_defines():
+    """Emit observable subscriber count defines after all children have registered."""
+    data = _get_data()
+    cg.add_define("RATGDO_MAX_DOOR_STATE_SUBSCRIBERS", data.door_state)
+    cg.add_define(
+        "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed
+    )
+    cg.add_define("RATGDO_MAX_DISTANCE_SUBSCRIBERS", data.distance)
+    cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
+    cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
+    cg.add_define("RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS", data.vehicle_leaving)
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())
@@ -158,6 +219,12 @@ async def to_code(config):
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
         cg.add_build_flag("-DPROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
+
+    # RATGDOComponent::setup() subscribes to door_state
+    subscribe_door_state()
+
+    # Emit observable subscriber count defines after all children register
+    CORE.add_job(_emit_subscriber_defines)
 
     if config.get(CONF_DISCRETE_OPEN_PIN):
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_OPEN_PIN])

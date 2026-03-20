@@ -3,7 +3,14 @@ from esphome.components import binary_sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import (
+    RATGDO_CLIENT_SCHMEA,
+    ratgdo_ns,
+    register_ratgdo_child,
+    subscribe_vehicle_arriving,
+    subscribe_vehicle_detected,
+    subscribe_vehicle_leaving,
+)
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -58,6 +65,13 @@ async def to_code(config):
     cg.add(var.set_binary_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
 
-    # Add defines for enabled features
-    if config[CONF_TYPE] in VEHICLE_SENSOR_TYPES:
+    # Add defines for enabled features and register observable subscriptions
+    sensor_type = config[CONF_TYPE]
+    if sensor_type in VEHICLE_SENSOR_TYPES:
         cg.add_define("RATGDO_USE_VEHICLE_SENSORS")
+    if sensor_type == "vehicle_detected":
+        subscribe_vehicle_detected()
+    elif sensor_type == "vehicle_arriving":
+        subscribe_vehicle_arriving()
+    elif sensor_type == "vehicle_leaving":
+        subscribe_vehicle_leaving()
