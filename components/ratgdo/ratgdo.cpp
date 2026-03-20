@@ -504,9 +504,9 @@ void RATGDOComponent::obstruction_loop()
     }
 }
 
-void RATGDOComponent::set_timeout(uint32_t timeout, std::function<void()> &&f)
+void RATGDOComponent::set_timeout(uint32_t timeout, std::function<void()>&& f)
 {
-    App.scheduler.set_timeout(this, static_cast<const char *>(nullptr), timeout, std::move(f));
+    App.scheduler.set_timeout(this, static_cast<const char*>(nullptr), timeout, std::move(f));
 }
 
 void RATGDOComponent::query_status()

@@ -235,7 +235,7 @@ public:
     void sync();
 
     using Component::set_timeout;
-    void set_timeout(uint32_t timeout, std::function<void()> &&f);
+    void set_timeout(uint32_t timeout, std::function<void()>&& f);
 
     // children subscriptions — type-safe templates (no std::function)
     // Callbacks must be trivially copyable and fit in Callback storage
