@@ -10,7 +10,7 @@ from esphome.coroutine import CoroPriority, coroutine_with_priority
 import voluptuous as vol
 
 DEPENDENCIES = ["preferences"]
-MULTI_CONF = True
+MULTI_CONF = False
 
 DOMAIN = "ratgdo"
 
