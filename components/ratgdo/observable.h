@@ -19,8 +19,8 @@ namespace ratgdo {
         static constexpr size_t STORAGE_SIZE = 3 * sizeof(void*);
 
         using fn_t = void (*)(const void*, Ts...);
-        fn_t fn_{nullptr};
-        alignas(void*) uint8_t storage_[STORAGE_SIZE]{};
+        fn_t fn_ { nullptr };
+        alignas(void*) uint8_t storage_[STORAGE_SIZE] { };
 
         void call(Ts... args) const { this->fn_(this->storage_, args...); }
         explicit operator bool() const { return this->fn_ != nullptr; }
@@ -82,8 +82,8 @@ namespace ratgdo {
 
     private:
         T value_;
-        Callback<T> observers_[MaxObservers]{};
-        uint8_t count_{0};
+        Callback<T> observers_[MaxObservers] { };
+        uint8_t count_ { 0 };
     };
 
     template <typename T>
@@ -125,7 +125,7 @@ namespace ratgdo {
 
     private:
         T value_;
-        Callback<T> observer_{};
+        Callback<T> observer_ { };
     };
 
 } // namespace ratgdo

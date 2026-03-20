@@ -1,6 +1,6 @@
 #pragma once
-#include <functional>
 #include <cstdint>
+#include <functional>
 
 namespace esphome {
 namespace ratgdo {
