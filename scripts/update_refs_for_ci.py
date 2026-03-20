@@ -3,15 +3,14 @@
 
 import json
 import os
+from pathlib import Path
 import re
 import sys
-from pathlib import Path
-from typing import Optional, Tuple
 
 RATGDO_REPO = "ratgdo/esphome-ratgdo"
 
 
-def get_pr_info() -> Tuple[str, Optional[str]]:
+def get_pr_info() -> tuple[str, str | None]:
     """Get PR branch and repository info from GitHub environment."""
     # For PRs, check GITHUB_REF first
     github_ref = os.environ.get("GITHUB_REF", "")
@@ -56,7 +55,7 @@ def main():
 
     # Process all YAML files in the project root
     for yaml_file in project_root.glob("*.yaml"):
-        with open(yaml_file, "r") as f:
+        with open(yaml_file) as f:
             content = f.read()
 
         original = content

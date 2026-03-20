@@ -1,6 +1,6 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import lock
+import esphome.config_validation as cv
 from esphome.const import CONF_ID
 
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
