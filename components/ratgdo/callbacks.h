@@ -1,6 +1,7 @@
 #pragma once
 #include "observable.h"
 #include <cstdint>
+#include <utility>
 
 namespace esphome::ratgdo {
 

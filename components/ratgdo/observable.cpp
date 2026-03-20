@@ -18,7 +18,7 @@ void log_observer_overflow()
 
 void log_once_callbacks_overflow(uint8_t max)
 {
-    ESP_LOGE(TAG, "OnceCallbacks overflow (max %u)! Ignoring callback.", max);
+    ESP_LOGE(TAG, "OnceCallbacks overflow (max %u)! Ignoring callback.", static_cast<unsigned>(max));
 }
 
 } // namespace esphome::ratgdo
