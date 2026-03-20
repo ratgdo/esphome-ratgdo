@@ -1,9 +1,7 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import sensor
+import esphome.config_validation as cv
 from esphome.const import CONF_ID
-
-CONF_DISTANCE = "distance"
 
 from .. import (
     RATGDO_CLIENT_SCHMEA,
@@ -11,6 +9,8 @@ from .. import (
     register_ratgdo_child,
     subscribe_distance,
 )
+
+CONF_DISTANCE = "distance"
 
 DEPENDENCIES = ["ratgdo"]
 

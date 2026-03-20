@@ -1,13 +1,13 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-import esphome.codegen as cg
-import esphome.config_validation as cv
-import voluptuous as vol
 from esphome import automation, pins
+import esphome.codegen as cg
 from esphome.components import binary_sensor
+import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 from esphome.core import CORE
 from esphome.coroutine import CoroPriority, coroutine_with_priority
+import voluptuous as vol
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True

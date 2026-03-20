@@ -1,6 +1,6 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import light
+import esphome.config_validation as cv
 from esphome.const import CONF_OUTPUT_ID  # New in 2023.5
 
 from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child

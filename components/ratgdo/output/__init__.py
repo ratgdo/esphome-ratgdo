@@ -1,11 +1,7 @@
 import esphome.codegen as cg
-import esphome.config_validation as cv
 from esphome.components import rtttl
+import esphome.config_validation as cv
 from esphome.const import CONF_ID
-
-CONF_RTTTL = "rtttl"
-CONF_SONG = "song"
-
 
 from .. import (
     RATGDO_CLIENT_SCHMEA,
@@ -14,6 +10,9 @@ from .. import (
     subscribe_door_action_delayed,
     subscribe_vehicle_arriving,
 )
+
+CONF_RTTTL = "rtttl"
+CONF_SONG = "song"
 
 DEPENDENCIES = ["esp32", "ratgdo", "rtttl"]
 
