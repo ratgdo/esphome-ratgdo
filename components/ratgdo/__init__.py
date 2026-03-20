@@ -203,11 +203,12 @@ async def to_code(config):
 
     if CORE.is_esp32 and CORE.using_esp_idf:
         from esphome.components import esp32
+
         esp32.include_builtin_idf_component("esp_driver_rmt")
         esp32.add_idf_component(
             name="secplus",
             repo="https://github.com/ratgdo/secplus.git",
-            ref="add-esp-idf-support"
+            ref="add-esp-idf-support",
         )
     else:
         cg.add_library(
