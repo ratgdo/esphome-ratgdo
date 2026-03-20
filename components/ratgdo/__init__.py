@@ -28,7 +28,6 @@ class RATGDOData:
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
     vehicle_leaving: int = 0
-    emit_job_added: bool = False
 
 
 def _get_data() -> RATGDOData:
@@ -224,11 +223,8 @@ async def to_code(config):
     # RATGDOComponent::setup() subscribes to door_state
     subscribe_door_state()
 
-    # Emit observable subscriber count defines after all children register (once)
-    data = _get_data()
-    if not data.emit_job_added:
-        data.emit_job_added = True
-        CORE.add_job(_emit_subscriber_defines)
+    # Emit observable subscriber count defines after all children register
+    CORE.add_job(_emit_subscriber_defines)
 
     if config.get(CONF_DISCRETE_OPEN_PIN):
         pin = await cg.gpio_pin_expression(config[CONF_DISCRETE_OPEN_PIN])
