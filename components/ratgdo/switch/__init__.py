@@ -4,7 +4,7 @@ from esphome import pins
 from esphome.components import switch
 from esphome.const import CONF_ID, CONF_PIN
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, subscribe_vehicle_arriving
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -36,3 +36,5 @@ async def to_code(config):
     if CONF_PIN in config:
         pin = await cg.gpio_pin_expression(config[CONF_PIN])
         cg.add(var.set_pin(pin))
+    if config[CONF_TYPE] == "led":
+        subscribe_vehicle_arriving()

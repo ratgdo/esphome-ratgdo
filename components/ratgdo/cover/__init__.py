@@ -4,7 +4,7 @@ from esphome import automation
 from esphome.components import cover
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, subscribe_door_state
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -60,3 +60,4 @@ async def to_code(config):
         await automation.build_automation(trigger, [], conf)
 
     await register_ratgdo_child(var, config)
+    subscribe_door_state()

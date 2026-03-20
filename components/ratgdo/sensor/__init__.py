@@ -5,7 +5,7 @@ from esphome.const import CONF_ID
 
 CONF_DISTANCE = "distance"
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, subscribe_distance
 
 DEPENDENCIES = ["ratgdo"]
 
@@ -63,3 +63,4 @@ async def to_code(config):
             version=None,
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
+        subscribe_distance()

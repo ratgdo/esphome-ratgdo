@@ -27,6 +27,9 @@
 #include "protocol.h"
 #include "ratgdo_state.h"
 
+// Observable subscriber counts — set by Python codegen via cg.add_define().
+// These defines are always emitted by codegen in __init__.py.
+
 namespace esphome {
 class InternalGPIOPin;
 namespace ratgdo {
@@ -75,7 +78,7 @@ namespace ratgdo {
 #ifdef RATGDO_USE_DISTANCE_SENSOR
         single_observable<int16_t> target_distance_measurement { -1 };
         std::bitset<256> in_range; // the length of this bitset determines how many out of range readings are required for presence detection to change states
-        observable<int16_t> last_distance_measurement { 0 };
+        observable<int16_t, RATGDO_MAX_DISTANCE_SUBSCRIBERS> last_distance_measurement { 0 };
 #endif
 
         single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
@@ -85,9 +88,9 @@ namespace ratgdo {
         single_observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
         single_observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
-        observable<DoorState> door_state { DoorState::UNKNOWN };
-        observable<float> door_position { DOOR_POSITION_UNKNOWN };
-        observable<DoorActionDelayed> door_action_delayed { DoorActionDelayed::NO };
+        observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
+        observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };
+        observable<DoorActionDelayed, RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS> door_action_delayed { DoorActionDelayed::NO };
 
         unsigned long door_start_moving { 0 };
         float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -102,9 +105,9 @@ namespace ratgdo {
         single_observable<MotionState> motion_state { MotionState::UNKNOWN };
         single_observable<LearnState> learn_state { LearnState::UNKNOWN };
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        observable<VehicleDetectedState> vehicle_detected_state { VehicleDetectedState::NO };
-        observable<VehicleArrivingState> vehicle_arriving_state { VehicleArrivingState::NO };
-        observable<VehicleLeavingState> vehicle_leaving_state { VehicleLeavingState::NO };
+        observable<VehicleDetectedState, RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS> vehicle_detected_state { VehicleDetectedState::NO };
+        observable<VehicleArrivingState, RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS> vehicle_arriving_state { VehicleArrivingState::NO };
+        observable<VehicleLeavingState, RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS> vehicle_leaving_state { VehicleLeavingState::NO };
 #endif
 
         OnceCallbacks<void(DoorState)> on_door_state_;
