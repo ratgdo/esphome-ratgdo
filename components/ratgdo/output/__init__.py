@@ -39,6 +39,5 @@ async def to_code(config):
     cg.add(var.set_rtttl(rtttl))
     cg.add(var.set_song(config[CONF_SONG]))
     await register_ratgdo_child(var, config)
-    cg.add_define("RATGDO_USE_VEHICLE_SENSORS")
     subscribe_vehicle_arriving()
     subscribe_door_action_delayed()
