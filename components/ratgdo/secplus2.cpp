@@ -440,11 +440,7 @@ namespace secplus2 {
         this->transmit_packet();
     }
 
-    void Secplus2::send_command(Command command, IncrementRollingCode increment, std::function<void()>&& on_sent)
-    {
-        this->on_command_sent_(on_sent);
-        this->send_command(command, increment);
-    }
+    // 3-arg send_command is now a template in secplus2.h
 
     void Secplus2::encode_packet(Command command, WirePacket& packet)
     {

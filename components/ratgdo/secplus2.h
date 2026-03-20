@@ -120,7 +120,12 @@ namespace secplus2 {
         void handle_command(const Command& cmd);
 
         void send_command(Command cmd, IncrementRollingCode increment = IncrementRollingCode::YES);
-        void send_command(Command cmd, IncrementRollingCode increment, std::function<void()>&& on_sent);
+        template <typename F>
+        void send_command(Command cmd, IncrementRollingCode increment, F&& on_sent)
+        {
+            this->on_command_sent_(std::forward<F>(on_sent));
+            this->send_command(cmd, increment);
+        }
         void encode_packet(Command cmd, WirePacket& packet);
         bool transmit_packet();
 
