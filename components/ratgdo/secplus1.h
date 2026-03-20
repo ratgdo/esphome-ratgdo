@@ -4,8 +4,8 @@
 
 #include <queue>
 
-#include "ratgdo_uart.h"
 #include "esphome/core/optional.h"
+#include "ratgdo_uart.h"
 
 #include "callbacks.h"
 #include "observable.h"
