@@ -28,7 +28,25 @@
 #include "ratgdo_state.h"
 
 // Observable subscriber counts — set by Python codegen via cg.add_define().
-// These defines are always emitted by codegen in __init__.py.
+// Defaults provided for IDE analysis and unit testing without codegen.
+#ifndef RATGDO_MAX_DOOR_STATE_SUBSCRIBERS
+#define RATGDO_MAX_DOOR_STATE_SUBSCRIBERS 4
+#endif
+#ifndef RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS
+#define RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS 4
+#endif
+#ifndef RATGDO_MAX_DISTANCE_SUBSCRIBERS
+#define RATGDO_MAX_DISTANCE_SUBSCRIBERS 4
+#endif
+#ifndef RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS
+#define RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS 4
+#endif
+#ifndef RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS
+#define RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS 4
+#endif
+#ifndef RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS
+#define RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS 4
+#endif
 
 namespace esphome {
 class InternalGPIOPin;
@@ -322,33 +340,33 @@ namespace ratgdo {
     // Defer IDs using uint32_t ranges to avoid heap allocations
     // Bases are auto-generated from counts to prevent ID conflicts
     namespace defer_ids {
-        static constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
+        inline constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
 
         // Multi-subscriber ranges
-        static constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
-        static constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
+        inline constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
+        inline constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
 
-        static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
-        static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
+        inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
+        inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-        static constexpr uint32_t DEFER_DISTANCE_COUNT = 1;
-        static constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
-        static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
+        inline constexpr uint32_t DEFER_DISTANCE_COUNT = 1;
+        inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+        inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
 #else
-        static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+        inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
 #endif
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        static constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = 1;
-        static constexpr uint32_t DEFER_VEHICLE_DETECTED_BASE = DEFER_DISTANCE_END;
-        static constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = 4;
-        static constexpr uint32_t DEFER_VEHICLE_ARRIVING_BASE = DEFER_VEHICLE_DETECTED_BASE + DEFER_VEHICLE_DETECTED_COUNT;
-        static constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = 1;
-        static constexpr uint32_t DEFER_VEHICLE_LEAVING_BASE = DEFER_VEHICLE_ARRIVING_BASE + DEFER_VEHICLE_ARRIVING_COUNT;
-        static constexpr uint32_t DEFER_VEHICLE_END = DEFER_VEHICLE_LEAVING_BASE + DEFER_VEHICLE_LEAVING_COUNT;
+        inline constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = 1;
+        inline constexpr uint32_t DEFER_VEHICLE_DETECTED_BASE = DEFER_DISTANCE_END;
+        inline constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = 4;
+        inline constexpr uint32_t DEFER_VEHICLE_ARRIVING_BASE = DEFER_VEHICLE_DETECTED_BASE + DEFER_VEHICLE_DETECTED_COUNT;
+        inline constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = 1;
+        inline constexpr uint32_t DEFER_VEHICLE_LEAVING_BASE = DEFER_VEHICLE_ARRIVING_BASE + DEFER_VEHICLE_ARRIVING_COUNT;
+        inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_VEHICLE_LEAVING_BASE + DEFER_VEHICLE_LEAVING_COUNT;
 #else
-        static constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
+        inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
 #endif
 
         // Single-subscriber IDs

@@ -15,7 +15,6 @@ namespace ratgdo {
     // For small trivially-copyable callables (like [this], [this, f], or [this, f, id] lambdas),
     // stores the callable inline — zero heap allocation.
     // Supports up to 3 * sizeof(void*) bytes (12 bytes on 32-bit, 24 on 64-bit).
-    // Max inline storage for Callback — fits lambdas capturing up to 3 pointers.
     inline constexpr size_t CALLBACK_STORAGE_SIZE = 3 * sizeof(void*);
 
     template <typename... Ts>
@@ -34,17 +33,18 @@ namespace ratgdo {
             using Decay = std::decay_t<F>;
             static_assert(std::is_trivially_copyable_v<Decay>, "Observable callbacks must be trivially copyable (e.g. [this] lambdas)");
             static_assert(sizeof(Decay) <= CALLBACK_STORAGE_SIZE, "Observable callbacks must fit in storage (capture at most 3 pointers)");
+            // Cast directly from properly aligned storage — no copy needed.
+            // storage_ is alignas(void*) which satisfies alignment for pointer-capturing lambdas.
             cb.fn_ = [](const void* storage, Ts... args) {
-                alignas(Decay) char buf[sizeof(Decay)];
-                __builtin_memcpy(buf, storage, sizeof(Decay));
-                (*std::launder(reinterpret_cast<Decay*>(buf)))(args...);
+                (*reinterpret_cast<const Decay*>(storage))(args...);
             };
             __builtin_memcpy(cb.storage_, &f, sizeof(Decay));
             return cb;
         }
     };
 
-    template <typename T, uint8_t MaxObservers = 4>
+    // Primary template for observable with subscribers.
+    template <typename T, uint8_t MaxObservers>
     class observable {
     public:
         observable(const T& value)
@@ -86,6 +86,39 @@ namespace ratgdo {
         T value_;
         Callback<T> observers_[MaxObservers] { };
         uint8_t count_ { 0 };
+    };
+
+    // Specialization for zero subscribers — no array, no count, notify is a no-op.
+    template <typename T>
+    class observable<T, 0> {
+    public:
+        observable(const T& value)
+            : value_(value)
+        {
+        }
+
+        template <typename U>
+        observable& operator=(U value)
+        {
+            if (value != this->value_) {
+                this->value_ = value;
+            }
+            return *this;
+        }
+
+        T const* operator&() const { return &this->value_; }
+        T const& operator*() const { return this->value_; }
+
+        template <typename F>
+        void subscribe(F&&)
+        {
+            log_observer_overflow();
+        }
+
+        void notify() const { }
+
+    private:
+        T value_;
     };
 
     template <typename T>
