@@ -31,6 +31,8 @@ namespace ratgdo {
         {
             Callback cb;
             using Decay = std::decay_t<F>;
+            static_assert(!std::is_function_v<std::remove_reference_t<F>>,
+                "Pass function pointers, not function references");
             static_assert(std::is_trivially_copyable_v<Decay>, "Observable callbacks must be trivially copyable (e.g. [this] lambdas)");
             static_assert(sizeof(Decay) <= CALLBACK_STORAGE_SIZE, "Observable callbacks must fit in storage (capture at most 3 pointers)");
             cb.fn_ = [](const void* storage, Ts... args) {
@@ -38,8 +40,7 @@ namespace ratgdo {
                 __builtin_memcpy(buf, storage, sizeof(Decay));
                 (*std::launder(reinterpret_cast<Decay*>(buf)))(args...);
             };
-            Decay d = std::forward<F>(f);
-            __builtin_memcpy(cb.storage_, &d, sizeof(Decay));
+            __builtin_memcpy(cb.storage_, &f, sizeof(Decay));
             return cb;
         }
     };
