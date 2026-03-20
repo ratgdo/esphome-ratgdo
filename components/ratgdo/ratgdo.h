@@ -28,24 +28,24 @@
 #include "ratgdo_state.h"
 
 // Observable subscriber counts — set by Python codegen via cg.add_define().
-// Defaults provided for IDE analysis and unit testing without codegen.
+// Missing defines are a build error to catch codegen issues early.
 #ifndef RATGDO_MAX_DOOR_STATE_SUBSCRIBERS
-#define RATGDO_MAX_DOOR_STATE_SUBSCRIBERS 4
+#error "RATGDO_MAX_DOOR_STATE_SUBSCRIBERS must be defined by codegen"
 #endif
 #ifndef RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS
-#define RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS 4
+#error "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS must be defined by codegen"
 #endif
 #ifndef RATGDO_MAX_DISTANCE_SUBSCRIBERS
-#define RATGDO_MAX_DISTANCE_SUBSCRIBERS 4
+#error "RATGDO_MAX_DISTANCE_SUBSCRIBERS must be defined by codegen"
 #endif
 #ifndef RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS
-#define RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS 4
+#error "RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS must be defined by codegen"
 #endif
 #ifndef RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS
-#define RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS 4
+#error "RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS must be defined by codegen"
 #endif
 #ifndef RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS
-#define RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS 4
+#error "RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS must be defined by codegen"
 #endif
 
 namespace esphome {
