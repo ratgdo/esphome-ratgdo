@@ -2,54 +2,52 @@
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo {
 
-    static const char* const TAG = "ratgdo.lock";
+static const char* const TAG = "ratgdo.lock";
 
-    void RATGDOLock::dump_config()
-    {
-        LOG_LOCK("", "RATGDO Lock", this);
-        ESP_LOGCONFIG(TAG, "  Type: Lock");
+void RATGDOLock::dump_config()
+{
+    LOG_LOCK("", "RATGDO Lock", this);
+    ESP_LOGCONFIG(TAG, "  Type: Lock");
+}
+
+void RATGDOLock::setup()
+{
+    this->parent_->subscribe_lock_state([this](LockState state) {
+        this->on_lock_state(state);
+    });
+}
+
+void RATGDOLock::on_lock_state(LockState state)
+{
+    if (state == LockState::LOCKED && this->state == lock::LockState::LOCK_STATE_LOCKED) {
+        return;
+    }
+    if (state == LockState::UNLOCKED && this->state == lock::LockState::LOCK_STATE_UNLOCKED) {
+        return;
     }
 
-    void RATGDOLock::setup()
-    {
-        this->parent_->subscribe_lock_state([this](LockState state) {
-            this->on_lock_state(state);
-        });
+    auto call = this->make_call();
+    if (state == LockState::LOCKED) {
+        call.set_state(lock::LockState::LOCK_STATE_LOCKED);
+    } else if (state == LockState::UNLOCKED) {
+        call.set_state(lock::LockState::LOCK_STATE_UNLOCKED);
+    }
+    this->publish_state(*call.get_state());
+}
+
+void RATGDOLock::control(const lock::LockCall& call)
+{
+    auto state = *call.get_state();
+
+    if (state == lock::LockState::LOCK_STATE_LOCKED) {
+        this->parent_->lock();
+    } else if (state == lock::LockState::LOCK_STATE_UNLOCKED) {
+        this->parent_->unlock();
     }
 
-    void RATGDOLock::on_lock_state(LockState state)
-    {
-        if (state == LockState::LOCKED && this->state == lock::LockState::LOCK_STATE_LOCKED) {
-            return;
-        }
-        if (state == LockState::UNLOCKED && this->state == lock::LockState::LOCK_STATE_UNLOCKED) {
-            return;
-        }
+    this->publish_state(state);
+}
 
-        auto call = this->make_call();
-        if (state == LockState::LOCKED) {
-            call.set_state(lock::LockState::LOCK_STATE_LOCKED);
-        } else if (state == LockState::UNLOCKED) {
-            call.set_state(lock::LockState::LOCK_STATE_UNLOCKED);
-        }
-        this->publish_state(*call.get_state());
-    }
-
-    void RATGDOLock::control(const lock::LockCall& call)
-    {
-        auto state = *call.get_state();
-
-        if (state == lock::LockState::LOCK_STATE_LOCKED) {
-            this->parent_->lock();
-        } else if (state == lock::LockState::LOCK_STATE_UNLOCKED) {
-            this->parent_->unlock();
-        }
-
-        this->publish_state(state);
-    }
-
-} // namespace ratgdo
-} // namespace esphome
+} // namespace esphome::ratgdo

@@ -51,32 +51,30 @@
 #define COUNT_ONE0(type, name, val) +1
 #define COUNT_ONE(name, tuple) COUNT_ONE0 LPAREN name, TUPLE tuple)
 
-namespace esphome {
-namespace ratgdo {
-    namespace detail {
+namespace esphome::ratgdo {
+namespace detail {
 
-        template <size_t N>
-        struct EnumStringOffsets {
-            uint8_t data[N];
-        };
+    template <size_t N>
+    struct EnumStringOffsets {
+        uint8_t data[N];
+    };
 
-        template <size_t Count, size_t BlobSize>
-        constexpr EnumStringOffsets<Count> compute_enum_string_offsets(const char (&blob)[BlobSize])
-        {
-            EnumStringOffsets<Count> result { };
-            result.data[0] = 0;
-            size_t entry = 1;
-            for (size_t i = 0; i < BlobSize - 1 && entry < Count; ++i) {
-                if (blob[i] == '\0') {
-                    result.data[entry++] = static_cast<uint8_t>(i + 1);
-                }
+    template <size_t Count, size_t BlobSize>
+    constexpr EnumStringOffsets<Count> compute_enum_string_offsets(const char (&blob)[BlobSize])
+    {
+        EnumStringOffsets<Count> result { };
+        result.data[0] = 0;
+        size_t entry = 1;
+        for (size_t i = 0; i < BlobSize - 1 && entry < Count; ++i) {
+            if (blob[i] == '\0') {
+                result.data[entry++] = static_cast<uint8_t>(i + 1);
             }
-            return result;
         }
+        return result;
+    }
 
-    } // namespace detail
-} // namespace ratgdo
-} // namespace esphome
+} // namespace detail
+} // namespace esphome::ratgdo
 
 // Platform-specific helpers for enum string return types
 #ifdef USE_ESP8266
