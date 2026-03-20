@@ -201,13 +201,20 @@ async def to_code(config):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
         await automation.build_automation(trigger, [], conf)
 
-    cg.add_library(
-        name="secplus",
-        repository="https://github.com/ratgdo/secplus#f98c3220356c27717a25102c0b35815ebbd26ccc",
-        version=None,
-    )
-
     if CORE.is_esp32 and CORE.using_esp_idf:
+        from esphome.components import esp32
+        esp32.include_builtin_idf_component("esp_driver_rmt")
+        esp32.add_idf_component(
+            name="secplus",
+            repo="https://github.com/ratgdo/secplus.git",
+            ref="add-esp-idf-support"
+        )
+    else:
+        cg.add_library(
+            name="secplus",
+            repository="https://github.com/ratgdo/secplus#f98c3220356c27717a25102c0b35815ebbd26ccc",
+            version=None,
+        )
         cg.add_library("esp_driver_rmt", None)
     if CORE.is_esp8266:
         cg.add_library(
