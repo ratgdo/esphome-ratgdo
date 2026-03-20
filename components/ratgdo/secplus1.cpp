@@ -57,7 +57,7 @@ namespace secplus1 {
         this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
         this->wall_panel_emulation();
 
-        this->scheduler_->set_timeout(this->ratgdo_, "", 45000, [this] {
+        this->ratgdo_->set_timeout(45000, [this] {
             if (this->door_state == DoorState::UNKNOWN) {
                 ESP_LOGW(TAG, "Triggering sync failed actions.");
                 this->ratgdo_->sync_failed = true;

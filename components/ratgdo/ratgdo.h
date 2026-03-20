@@ -234,6 +234,9 @@ public:
     void query_openings();
     void sync();
 
+    using Component::set_timeout;
+    void set_timeout(uint32_t timeout, std::function<void()> &&f);
+
     // children subscriptions — type-safe templates (no std::function)
     // Callbacks must be trivially copyable and fit in Callback storage
     // (3 * sizeof(void*)), e.g. [this] or [this, f] lambdas.
