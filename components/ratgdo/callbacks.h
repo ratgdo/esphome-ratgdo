@@ -4,28 +4,26 @@
 #include <utility>
 #include <vector>
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo {
 
-    template <typename... X>
-    class OnceCallbacks;
+template <typename... X>
+class OnceCallbacks;
 
-    template <typename... Ts>
-    class OnceCallbacks<void(Ts...)> {
-    public:
-        template <typename Callback>
-        void operator()(Callback&& callback) { this->callbacks_.push_back(std::forward<Callback>(callback)); }
+template <typename... Ts>
+class OnceCallbacks<void(Ts...)> {
+public:
+    template <typename Callback>
+    void operator()(Callback&& callback) { this->callbacks_.push_back(std::forward<Callback>(callback)); }
 
-        void trigger(Ts... args)
-        {
-            for (auto& cb : this->callbacks_)
-                cb(args...);
-            this->callbacks_.clear();
-        }
+    void trigger(Ts... args)
+    {
+        for (auto& cb : this->callbacks_)
+            cb(args...);
+        this->callbacks_.clear();
+    }
 
-    protected:
-        std::vector<std::function<void(Ts...)>> callbacks_;
-    };
+protected:
+    std::vector<std::function<void(Ts...)>> callbacks_;
+};
 
-} // namespace ratgdo
-} // namespace esphome
+} // namespace esphome::ratgdo
