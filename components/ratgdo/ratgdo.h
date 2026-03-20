@@ -331,9 +331,9 @@ namespace ratgdo {
 
     inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
     {
-        if (counter >= count) {
+        if (count == 0 || counter >= count) {
             log_subscriber_overflow(observable_name, count);
-            return base + count - 1;
+            return base;
         }
         return base + counter++;
     }

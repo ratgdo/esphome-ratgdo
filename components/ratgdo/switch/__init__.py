@@ -42,4 +42,5 @@ async def to_code(config):
         pin = await cg.gpio_pin_expression(config[CONF_PIN])
         cg.add(var.set_pin(pin))
     if config[CONF_TYPE] == "led":
+        cg.add_define("RATGDO_USE_VEHICLE_SENSORS")
         subscribe_vehicle_arriving()
