@@ -33,10 +33,10 @@ namespace ratgdo {
             using Decay = std::decay_t<F>;
             static_assert(std::is_trivially_copyable_v<Decay>, "Observable callbacks must be trivially copyable (e.g. [this] lambdas)");
             static_assert(sizeof(Decay) <= CALLBACK_STORAGE_SIZE, "Observable callbacks must fit in storage (capture at most 3 pointers)");
-            // Cast directly from properly aligned storage — no copy needed.
-            // storage_ is alignas(void*) which satisfies alignment for pointer-capturing lambdas.
             cb.fn_ = [](const void* storage, Ts... args) {
-                (*reinterpret_cast<const Decay*>(storage))(args...);
+                alignas(Decay) char buf[sizeof(Decay)];
+                __builtin_memcpy(buf, storage, sizeof(Decay));
+                (*std::launder(reinterpret_cast<Decay*>(buf)))(args...);
             };
             __builtin_memcpy(cb.storage_, &f, sizeof(Decay));
             return cb;

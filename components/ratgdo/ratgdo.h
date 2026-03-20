@@ -233,8 +233,9 @@ namespace ratgdo {
         void sync();
 
         // children subscriptions — type-safe templates (no std::function)
-        // All callbacks must be trivially copyable and fit in sizeof(void*),
-        // i.e. [this] lambdas. Enforced at compile time by Callback::create().
+        // Callbacks must be trivially copyable and fit in Callback storage
+        // (3 * sizeof(void*)), e.g. [this] or [this, f] lambdas.
+        // Enforced at compile time by Callback::create().
         template <typename F>
         void subscribe_rolling_code_counter(F&& f);
         template <typename F>
@@ -342,15 +343,15 @@ namespace ratgdo {
     namespace defer_ids {
         inline constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
 
-        // Multi-subscriber ranges
-        inline constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
+        // Multi-subscriber ranges — counts derived from codegen defines
+        inline constexpr uint32_t DEFER_DOOR_STATE_COUNT = RATGDO_MAX_DOOR_STATE_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
 
-        inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
+        inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-        inline constexpr uint32_t DEFER_DISTANCE_COUNT = 1;
+        inline constexpr uint32_t DEFER_DISTANCE_COUNT = RATGDO_MAX_DISTANCE_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
         inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
 #else
@@ -358,11 +359,11 @@ namespace ratgdo {
 #endif
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        inline constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = 1;
+        inline constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_VEHICLE_DETECTED_BASE = DEFER_DISTANCE_END;
-        inline constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = 4;
+        inline constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_VEHICLE_ARRIVING_BASE = DEFER_VEHICLE_DETECTED_BASE + DEFER_VEHICLE_DETECTED_COUNT;
-        inline constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = 1;
+        inline constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS;
         inline constexpr uint32_t DEFER_VEHICLE_LEAVING_BASE = DEFER_VEHICLE_ARRIVING_BASE + DEFER_VEHICLE_ARRIVING_COUNT;
         inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_VEHICLE_LEAVING_BASE + DEFER_VEHICLE_LEAVING_COUNT;
 #else
