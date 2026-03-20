@@ -1,10 +1,11 @@
 #pragma once
+#include "observable.h"
 #include <cstdint>
-#include <functional>
 #include <utility>
-#include <vector>
 
 namespace esphome::ratgdo {
+
+void log_once_callbacks_overflow(uint8_t max);
 
 template <typename... X>
 class OnceCallbacks;
@@ -12,18 +13,34 @@ class OnceCallbacks;
 template <typename... Ts>
 class OnceCallbacks<void(Ts...)> {
 public:
-    template <typename Callback>
-    void operator()(Callback&& callback) { this->callbacks_.push_back(std::forward<Callback>(callback)); }
+    // Runtime max is 1 for all current usage (door_state waits, command_sent waits).
+    // Set to 2 for safety margin.
+    static constexpr uint8_t MAX_CALLBACKS = 2;
 
+    template <typename F>
+    void operator()(F&& callback)
+    {
+        if (this->count_ >= MAX_CALLBACKS) {
+            log_once_callbacks_overflow(MAX_CALLBACKS);
+            return;
+        }
+        this->callbacks_[this->count_++] = Callback<Ts...>::create(std::forward<F>(callback));
+    }
+
+    // Re-entrant safe: count_ is zeroed before invoking callbacks,
+    // so callbacks can queue new entries during trigger().
     void trigger(Ts... args)
     {
-        for (auto& cb : this->callbacks_)
-            cb(args...);
-        this->callbacks_.clear();
+        uint8_t count = this->count_;
+        this->count_ = 0;
+        for (uint8_t i = 0; i < count; i++) {
+            this->callbacks_[i].call(args...);
+        }
     }
 
 protected:
-    std::vector<std::function<void(Ts...)>> callbacks_;
+    Callback<Ts...> callbacks_[MAX_CALLBACKS] { };
+    uint8_t count_ { 0 };
 };
 
 } // namespace esphome::ratgdo

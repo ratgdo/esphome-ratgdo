@@ -440,12 +440,6 @@ namespace secplus2 {
         this->transmit_packet();
     }
 
-    void Secplus2::send_command(Command command, IncrementRollingCode increment, std::function<void()>&& on_sent)
-    {
-        this->on_command_sent_(on_sent);
-        this->send_command(command, increment);
-    }
-
     void Secplus2::encode_packet(Command command, WirePacket& packet)
     {
         auto cmd = static_cast<uint64_t>(command.type);
