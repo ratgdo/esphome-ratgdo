@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include <cstdint>
 #include <new>
 #include <type_traits>
@@ -14,13 +15,14 @@ namespace ratgdo {
     // For small trivially-copyable callables (like [this], [this, f], or [this, f, id] lambdas),
     // stores the callable inline — zero heap allocation.
     // Supports up to 3 * sizeof(void*) bytes (12 bytes on 32-bit, 24 on 64-bit).
+    // Max inline storage for Callback — fits lambdas capturing up to 3 pointers.
+    inline constexpr size_t CALLBACK_STORAGE_SIZE = 3 * sizeof(void*);
+
     template <typename... Ts>
     struct Callback {
-        static constexpr size_t STORAGE_SIZE = 3 * sizeof(void*);
-
         using fn_t = void (*)(const void*, Ts...);
         fn_t fn_ { nullptr };
-        alignas(void*) uint8_t storage_[STORAGE_SIZE] { };
+        alignas(void*) uint8_t storage_[CALLBACK_STORAGE_SIZE] { };
 
         void call(Ts... args) const { this->fn_(this->storage_, args...); }
         explicit operator bool() const { return this->fn_ != nullptr; }
@@ -31,7 +33,7 @@ namespace ratgdo {
             Callback cb;
             using Decay = std::decay_t<F>;
             static_assert(std::is_trivially_copyable_v<Decay>, "Observable callbacks must be trivially copyable (e.g. [this] lambdas)");
-            static_assert(sizeof(Decay) <= STORAGE_SIZE, "Observable callbacks must fit in storage (capture at most 3 pointers)");
+            static_assert(sizeof(Decay) <= CALLBACK_STORAGE_SIZE, "Observable callbacks must fit in storage (capture at most 3 pointers)");
             cb.fn_ = [](const void* storage, Ts... args) {
                 alignas(Decay) char buf[sizeof(Decay)];
                 __builtin_memcpy(buf, storage, sizeof(Decay));
