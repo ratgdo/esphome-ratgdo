@@ -211,36 +211,38 @@ namespace ratgdo {
         void query_openings();
         void sync();
 
-        // children subscriptions
-        void subscribe_rolling_code_counter(std::function<void(uint32_t)>&& f);
-        void subscribe_opening_duration(std::function<void(float)>&& f);
-        void subscribe_closing_duration(std::function<void(float)>&& f);
+        // children subscriptions — type-safe templates (no std::function)
+        // All callbacks must be trivially copyable and fit in sizeof(void*),
+        // i.e. [this] lambdas. Enforced at compile time by Callback::create().
+        template <typename F> void subscribe_rolling_code_counter(F&& f);
+        template <typename F> void subscribe_opening_duration(F&& f);
+        template <typename F> void subscribe_closing_duration(F&& f);
 #ifdef RATGDO_USE_CLOSING_DELAY
-        void subscribe_closing_delay(std::function<void(uint32_t)>&& f);
+        template <typename F> void subscribe_closing_delay(F&& f);
 #endif
-        void subscribe_openings(std::function<void(uint16_t)>&& f);
-        void subscribe_paired_devices_total(std::function<void(uint8_t)>&& f);
-        void subscribe_paired_remotes(std::function<void(uint8_t)>&& f);
-        void subscribe_paired_keypads(std::function<void(uint8_t)>&& f);
-        void subscribe_paired_wall_controls(std::function<void(uint8_t)>&& f);
-        void subscribe_paired_accessories(std::function<void(uint8_t)>&& f);
-        void subscribe_door_state(std::function<void(DoorState, float)>&& f);
-        void subscribe_light_state(std::function<void(LightState)>&& f);
-        void subscribe_lock_state(std::function<void(LockState)>&& f);
-        void subscribe_obstruction_state(std::function<void(ObstructionState)>&& f);
-        void subscribe_motor_state(std::function<void(MotorState)>&& f);
-        void subscribe_button_state(std::function<void(ButtonState)>&& f);
-        void subscribe_motion_state(std::function<void(MotionState)>&& f);
-        void subscribe_sync_failed(std::function<void(bool)>&& f);
-        void subscribe_learn_state(std::function<void(LearnState)>&& f);
-        void subscribe_door_action_delayed(std::function<void(DoorActionDelayed)>&& f);
+        template <typename F> void subscribe_openings(F&& f);
+        template <typename F> void subscribe_paired_devices_total(F&& f);
+        template <typename F> void subscribe_paired_remotes(F&& f);
+        template <typename F> void subscribe_paired_keypads(F&& f);
+        template <typename F> void subscribe_paired_wall_controls(F&& f);
+        template <typename F> void subscribe_paired_accessories(F&& f);
+        template <typename F> void subscribe_door_state(F&& f);
+        template <typename F> void subscribe_light_state(F&& f);
+        template <typename F> void subscribe_lock_state(F&& f);
+        template <typename F> void subscribe_obstruction_state(F&& f);
+        template <typename F> void subscribe_motor_state(F&& f);
+        template <typename F> void subscribe_button_state(F&& f);
+        template <typename F> void subscribe_motion_state(F&& f);
+        template <typename F> void subscribe_sync_failed(F&& f);
+        template <typename F> void subscribe_learn_state(F&& f);
+        template <typename F> void subscribe_door_action_delayed(F&& f);
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-        void subscribe_distance_measurement(std::function<void(int16_t)>&& f);
+        template <typename F> void subscribe_distance_measurement(F&& f);
 #endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        void subscribe_vehicle_detected_state(std::function<void(VehicleDetectedState)>&& f);
-        void subscribe_vehicle_arriving_state(std::function<void(VehicleArrivingState)>&& f);
-        void subscribe_vehicle_leaving_state(std::function<void(VehicleLeavingState)>&& f);
+        template <typename F> void subscribe_vehicle_detected_state(F&& f);
+        template <typename F> void subscribe_vehicle_arriving_state(F&& f);
+        template <typename F> void subscribe_vehicle_leaving_state(F&& f);
 #endif
 
     protected:
@@ -278,6 +280,292 @@ namespace ratgdo {
         uint8_t vehicle_leaving_sub_num_ { 0 };
 #endif
     }; // RATGDOComponent
+
+    void log_subscriber_overflow(const LogString* observable_name, uint32_t max);
+
+    inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
+    {
+        if (counter >= count) {
+            log_subscriber_overflow(observable_name, count);
+            return base + count - 1;
+        }
+        return base + counter++;
+    }
+
+    // Defer IDs using uint32_t ranges to avoid heap allocations
+    // Bases are auto-generated from counts to prevent ID conflicts
+    namespace defer_ids {
+        static constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
+
+        // Multi-subscriber ranges
+        static constexpr uint32_t DEFER_DOOR_STATE_COUNT = 2;
+        static constexpr uint32_t DEFER_DOOR_STATE_BASE = INTERVAL_POSITION_SYNC + 1;
+
+        static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = 1;
+        static constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
+
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+        static constexpr uint32_t DEFER_DISTANCE_COUNT = 1;
+        static constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+        static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
+#else
+        static constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+#endif
+
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        static constexpr uint32_t DEFER_VEHICLE_DETECTED_COUNT = 1;
+        static constexpr uint32_t DEFER_VEHICLE_DETECTED_BASE = DEFER_DISTANCE_END;
+        static constexpr uint32_t DEFER_VEHICLE_ARRIVING_COUNT = 4;
+        static constexpr uint32_t DEFER_VEHICLE_ARRIVING_BASE = DEFER_VEHICLE_DETECTED_BASE + DEFER_VEHICLE_DETECTED_COUNT;
+        static constexpr uint32_t DEFER_VEHICLE_LEAVING_COUNT = 1;
+        static constexpr uint32_t DEFER_VEHICLE_LEAVING_BASE = DEFER_VEHICLE_ARRIVING_BASE + DEFER_VEHICLE_ARRIVING_COUNT;
+        static constexpr uint32_t DEFER_VEHICLE_END = DEFER_VEHICLE_LEAVING_BASE + DEFER_VEHICLE_LEAVING_COUNT;
+#else
+        static constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
+#endif
+
+        // Single-subscriber IDs
+        enum : uint32_t {
+            DEFER_ROLLING_CODE = DEFER_VEHICLE_END,
+            DEFER_OPENING_DURATION,
+            DEFER_CLOSING_DURATION,
+            DEFER_CLOSING_DELAY,
+            DEFER_OPENINGS,
+            DEFER_PAIRED_TOTAL,
+            DEFER_PAIRED_REMOTES,
+            DEFER_PAIRED_KEYPADS,
+            DEFER_PAIRED_WALL_CONTROLS,
+            DEFER_PAIRED_ACCESSORIES,
+            DEFER_LIGHT_STATE,
+            DEFER_LOCK_STATE,
+            DEFER_OBSTRUCTION_STATE,
+            DEFER_MOTOR_STATE,
+            DEFER_BUTTON_STATE,
+            DEFER_MOTION_STATE,
+            DEFER_LEARN_STATE,
+        };
+    } // namespace defer_ids
+
+    // Template implementations for subscribe methods.
+    // Each wraps the callback in a deferred call so that if the observable
+    // fires multiple times during one loop iteration, only the last value
+    // is dispatched to the child component.
+
+    template <typename F>
+    void RATGDOComponent::subscribe_rolling_code_counter(F&& f)
+    {
+        // change update to children is defered until after component loop
+        // if multiple changes occur during component loop, only the last one is notified
+        auto counter = this->protocol_->call(protocol::GetRollingCodeCounter { });
+        if (counter.tag == protocol::Result::Tag::rolling_code_counter) {
+            counter.value.rolling_code_counter.value->subscribe([this, f](uint32_t state) {
+                defer(defer_ids::DEFER_ROLLING_CODE, [f, state] { f(state); });
+            });
+        }
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_opening_duration(F&& f)
+    {
+        this->opening_duration.subscribe([this, f](float state) {
+            defer(defer_ids::DEFER_OPENING_DURATION, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_closing_duration(F&& f)
+    {
+        this->closing_duration.subscribe([this, f](float state) {
+            defer(defer_ids::DEFER_CLOSING_DURATION, [f, state] { f(state); });
+        });
+    }
+
+#ifdef RATGDO_USE_CLOSING_DELAY
+    template <typename F>
+    void RATGDOComponent::subscribe_closing_delay(F&& f)
+    {
+        this->closing_delay.subscribe([this, f](uint32_t state) {
+            defer(defer_ids::DEFER_CLOSING_DELAY, [f, state] { f(state); });
+        });
+    }
+#endif
+
+    template <typename F>
+    void RATGDOComponent::subscribe_openings(F&& f)
+    {
+        this->openings.subscribe([this, f](uint16_t state) {
+            defer(defer_ids::DEFER_OPENINGS, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_paired_devices_total(F&& f)
+    {
+        this->paired_total.subscribe([this, f](uint8_t state) {
+            defer(defer_ids::DEFER_PAIRED_TOTAL, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_paired_remotes(F&& f)
+    {
+        this->paired_remotes.subscribe([this, f](uint8_t state) {
+            defer(defer_ids::DEFER_PAIRED_REMOTES, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_paired_keypads(F&& f)
+    {
+        this->paired_keypads.subscribe([this, f](uint8_t state) {
+            defer(defer_ids::DEFER_PAIRED_KEYPADS, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_paired_wall_controls(F&& f)
+    {
+        this->paired_wall_controls.subscribe([this, f](uint8_t state) {
+            defer(defer_ids::DEFER_PAIRED_WALL_CONTROLS, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_paired_accessories(F&& f)
+    {
+        this->paired_accessories.subscribe([this, f](uint8_t state) {
+            defer(defer_ids::DEFER_PAIRED_ACCESSORIES, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_door_state(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_STATE_BASE, defer_ids::DEFER_DOOR_STATE_COUNT,
+                                   this->door_state_sub_num_, LOG_STR("door_state"));
+        this->door_state.subscribe([this, f, id](DoorState state) {
+            defer(id, [this, f, state] { f(state, *this->door_position); });
+        });
+        this->door_position.subscribe([this, f, id](float position) {
+            defer(id, [this, f, position] { f(*this->door_state, position); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_light_state(F&& f)
+    {
+        this->light_state.subscribe([this, f](LightState state) {
+            defer(defer_ids::DEFER_LIGHT_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_lock_state(F&& f)
+    {
+        this->lock_state.subscribe([this, f](LockState state) {
+            defer(defer_ids::DEFER_LOCK_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_obstruction_state(F&& f)
+    {
+        this->obstruction_state.subscribe([this, f](ObstructionState state) {
+            defer(defer_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_motor_state(F&& f)
+    {
+        this->motor_state.subscribe([this, f](MotorState state) {
+            defer(defer_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_button_state(F&& f)
+    {
+        this->button_state.subscribe([this, f](ButtonState state) {
+            defer(defer_ids::DEFER_BUTTON_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_motion_state(F&& f)
+    {
+        this->motion_state.subscribe([this, f](MotionState state) {
+            defer(defer_ids::DEFER_MOTION_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_sync_failed(F&& f)
+    {
+        this->sync_failed.subscribe(std::forward<F>(f));
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_learn_state(F&& f)
+    {
+        this->learn_state.subscribe([this, f](LearnState state) {
+            defer(defer_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_door_action_delayed(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_ACTION_DELAYED_BASE, defer_ids::DEFER_DOOR_ACTION_DELAYED_COUNT,
+                                   this->door_action_delayed_sub_num_, LOG_STR("door_action_delayed"));
+        this->door_action_delayed.subscribe([this, f, id](DoorActionDelayed state) {
+            defer(id, [f, state] { f(state); });
+        });
+    }
+
+#ifdef RATGDO_USE_DISTANCE_SENSOR
+    template <typename F>
+    void RATGDOComponent::subscribe_distance_measurement(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_DISTANCE_BASE, defer_ids::DEFER_DISTANCE_COUNT,
+                                   this->distance_sub_num_, LOG_STR("distance_measurement"));
+        this->last_distance_measurement.subscribe([this, f, id](int16_t state) {
+            defer(id, [f, state] { f(state); });
+        });
+    }
+#endif
+
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    template <typename F>
+    void RATGDOComponent::subscribe_vehicle_detected_state(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_DETECTED_BASE, defer_ids::DEFER_VEHICLE_DETECTED_COUNT,
+                                   this->vehicle_detected_sub_num_, LOG_STR("vehicle_detected"));
+        this->vehicle_detected_state.subscribe([this, f, id](VehicleDetectedState state) {
+            defer(id, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_vehicle_arriving_state(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_ARRIVING_BASE, defer_ids::DEFER_VEHICLE_ARRIVING_COUNT,
+                                   this->vehicle_arriving_sub_num_, LOG_STR("vehicle_arriving"));
+        this->vehicle_arriving_state.subscribe([this, f, id](VehicleArrivingState state) {
+            defer(id, [f, state] { f(state); });
+        });
+    }
+
+    template <typename F>
+    void RATGDOComponent::subscribe_vehicle_leaving_state(F&& f)
+    {
+        uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_LEAVING_BASE, defer_ids::DEFER_VEHICLE_LEAVING_COUNT,
+                                   this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
+        this->vehicle_leaving_state.subscribe([this, f, id](VehicleLeavingState state) {
+            defer(id, [f, state] { f(state); });
+        });
+    }
+#endif
 
 } // namespace ratgdo
 } // namespace esphome

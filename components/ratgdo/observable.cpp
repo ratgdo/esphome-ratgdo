@@ -11,5 +11,10 @@ namespace ratgdo {
         ESP_LOGE(TAG, "single_observable already has a subscriber! This will overwrite the existing subscriber.");
     }
 
+    void log_observer_overflow()
+    {
+        ESP_LOGE(TAG, "observable has too many subscribers! Ignoring new subscriber.");
+    }
+
 } // namespace ratgdo
 } // namespace esphome
