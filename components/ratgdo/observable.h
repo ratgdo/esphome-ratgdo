@@ -38,7 +38,8 @@ namespace ratgdo {
                 __builtin_memcpy(buf, storage, sizeof(Decay));
                 (*std::launder(reinterpret_cast<Decay*>(buf)))(args...);
             };
-            __builtin_memcpy(cb.storage_, &f, sizeof(Decay));
+            Decay d = std::forward<F>(f);
+            __builtin_memcpy(cb.storage_, &d, sizeof(Decay));
             return cb;
         }
     };
