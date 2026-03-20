@@ -4,7 +4,12 @@ from esphome import pins
 from esphome.components import switch
 from esphome.const import CONF_ID, CONF_PIN
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, subscribe_vehicle_arriving
+from .. import (
+    RATGDO_CLIENT_SCHMEA,
+    ratgdo_ns,
+    register_ratgdo_child,
+    subscribe_vehicle_arriving,
+)
 
 DEPENDENCIES = ["ratgdo"]
 

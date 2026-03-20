@@ -65,7 +65,9 @@ async def _emit_subscriber_defines():
     """Emit observable subscriber count defines after all children have registered."""
     data = _get_data()
     cg.add_define("RATGDO_MAX_DOOR_STATE_SUBSCRIBERS", data.door_state)
-    cg.add_define("RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed)
+    cg.add_define(
+        "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed
+    )
     cg.add_define("RATGDO_MAX_DISTANCE_SUBSCRIBERS", data.distance)
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)

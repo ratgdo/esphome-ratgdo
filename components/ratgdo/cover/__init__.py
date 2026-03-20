@@ -4,7 +4,12 @@ from esphome import automation
 from esphome.components import cover
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, subscribe_door_state
+from .. import (
+    RATGDO_CLIENT_SCHMEA,
+    ratgdo_ns,
+    register_ratgdo_child,
+    subscribe_door_state,
+)
 
 DEPENDENCIES = ["ratgdo"]
 
