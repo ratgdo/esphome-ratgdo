@@ -1,9 +1,9 @@
-import esphome.codegen as cg
-import esphome.config_validation as cv
-import voluptuous as vol
 from esphome import automation, pins
+import esphome.codegen as cg
 from esphome.components import binary_sensor
+import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
+import voluptuous as vol
 
 DEPENDENCIES = ["preferences"]
 MULTI_CONF = True
