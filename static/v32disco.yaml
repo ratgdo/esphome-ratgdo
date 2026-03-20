@@ -27,15 +27,15 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v32disco.yaml@softserial-killer
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: main
+    ref: softserial-killer
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include

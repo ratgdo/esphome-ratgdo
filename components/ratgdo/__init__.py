@@ -206,11 +206,15 @@ async def to_code(config):
         repository="https://github.com/ratgdo/secplus#f98c3220356c27717a25102c0b35815ebbd26ccc",
         version=None,
     )
-    cg.add_library(
-        name="espsoftwareserial",
-        repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
-        version=None,
-    )
+
+    if CORE.is_esp32 and CORE.using_esp_idf:
+        cg.add_library("esp_driver_rmt", None)
+    if CORE.is_esp8266:
+        cg.add_library(
+            name="espsoftwareserial",
+            repository="https://github.com/ratgdo/espsoftwareserial#autobaud",
+            version=None,
+        )
 
     if config[CONF_PROTOCOL] == PROTOCOL_SECPLUSV1:
         cg.add_build_flag("-DPROTOCOL_SECPLUSV1")

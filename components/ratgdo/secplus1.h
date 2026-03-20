@@ -4,7 +4,7 @@
 
 #include <queue>
 
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
+#include "ratgdo_uart.h"
 #include "esphome/core/optional.h"
 
 #include "callbacks.h"
@@ -142,7 +142,7 @@ namespace secplus1 {
 
         // Larger structures
         std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
-        SoftwareSerial sw_serial_;
+        RatgdoUART uart_;
         OnceCallbacks<void(DoorState)> on_door_state_;
         Traits traits_;
 
