@@ -15,7 +15,7 @@ namespace ratgdo {
             this->beeper_->add_on_finished_playback_callback([this] { this->finished_playback(); });
 
             this->parent_->subscribe_vehicle_arriving_state([this](VehicleArrivingState state) {
-                if (state == VehicleArrivingState::YES) {
+                if (state == VehicleArrivingState::YES && this->parent_->get_beep_on_arrival()) {
                     this->play();
                 }
             });

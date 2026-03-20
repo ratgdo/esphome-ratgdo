@@ -11,7 +11,8 @@ namespace ratgdo {
 
     enum SwitchType {
         RATGDO_LEARN,
-        RATGDO_LED
+        RATGDO_LED,
+        RATGDO_BEEP_ON_ARRIVAL
     };
 
     class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
@@ -26,6 +27,7 @@ namespace ratgdo {
     protected:
         SwitchType switch_type_;
         GPIOPin* pin_;
+        ESPPreferenceObject pref_;
     };
 
 } // namespace ratgdo

@@ -91,6 +91,7 @@ namespace ratgdo {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+        DEFER_BEEP_ON_ARRIVAL,
     };
 
     static void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
@@ -911,6 +912,10 @@ namespace ratgdo {
     {
         uint32_t id = get_defer_id(DEFER_VEHICLE_LEAVING_BASE, DEFER_VEHICLE_LEAVING_COUNT, this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
         this->vehicle_leaving_state.subscribe([this, f = std::move(f), id](VehicleLeavingState state) { defer(id, [f, state] { f(state); }); });
+    }
+    void RATGDOComponent::subscribe_beep_on_arrival(std::function<void(bool)>&& f)
+    {
+        this->beep_on_arrival.subscribe([this, f = std::move(f)](bool state) { defer(DEFER_BEEP_ON_ARRIVAL, [f, state] { f(state); }); });
     }
 #endif
 
