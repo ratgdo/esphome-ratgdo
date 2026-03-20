@@ -26,6 +26,8 @@ public:
         this->callbacks_[this->count_++] = Callback<Ts...>::create(std::forward<F>(callback));
     }
 
+    // Re-entrant safe: count_ is zeroed before invoking callbacks,
+    // so callbacks can queue new entries during trigger().
     void trigger(Ts... args)
     {
         uint8_t count = this->count_;
