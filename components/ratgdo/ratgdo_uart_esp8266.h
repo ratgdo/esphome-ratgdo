@@ -8,13 +8,18 @@
 
 namespace esphome::ratgdo {
 
+enum RatgdoUARTConfig {
+    RATGDO_UART_8N1 = SWSERIAL_8N1,
+    RATGDO_UART_8E1 = SWSERIAL_8E1,
+};
+
 // On ESP8266, simply fall back to SoftwareSerial
 class RatgdoUART : public SoftwareSerial {
 public:
-    void begin(uint32_t baud, Config config, int8_t rxPin, int8_t txPin,
+    void begin(uint32_t baud, RatgdoUARTConfig config, int8_t rxPin, int8_t txPin,
         bool invert)
     {
-        SoftwareSerial::begin(baud, config, rxPin, txPin, invert);
+        SoftwareSerial::begin(baud, static_cast<Config>(config), rxPin, txPin, invert);
     }
 
     // Fallback for SECPLUS2 preamble on ESP8266
@@ -30,11 +35,6 @@ public:
         ::digitalWrite(m_txPin, LOW);
         ::delayMicroseconds(130);
     }
-};
-
-enum RatgdoUARTConfig {
-    RATGDO_UART_8N1 = SWSERIAL_8N1,
-    RATGDO_UART_8E1 = SWSERIAL_8E1,
 };
 
 } // namespace esphome::ratgdo
