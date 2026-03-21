@@ -32,6 +32,8 @@ public:
     // Sends the SecPlus 2.0 preamble using RMT
     void transmit_secplus2_preamble();
 
+    void on_shutdown();
+
 private:
     int tx_pin_ { -1 };
     int rx_pin_ { -1 };

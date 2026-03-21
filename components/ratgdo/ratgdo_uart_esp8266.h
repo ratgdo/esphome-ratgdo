@@ -22,6 +22,16 @@ public:
         SoftwareSerial::begin(baud, static_cast<Config>(config), rxPin, txPin, invert);
     }
 
+    void on_shutdown()
+    {
+        if (m_txPin >= 0) {
+            ::pinMode(m_txPin, INPUT);
+        }
+        if (m_rxPin >= 0) {
+            ::pinMode(m_rxPin, INPUT);
+        }
+    }
+
     // Fallback for SECPLUS2 preamble on ESP8266
     void transmit_secplus2_preamble()
     {

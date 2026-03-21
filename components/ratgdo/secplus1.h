@@ -90,6 +90,7 @@ namespace secplus1 {
         void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         void loop();
         void dump_config();
+        void on_shutdown() override;
 
         void sync();
 

@@ -153,6 +153,16 @@ void RatgdoUART::enableIntTx(bool enable) { }
 void RatgdoUART::enableAutoBaud(bool enable) { }
 int RatgdoUART::baudRate() { return baud_; }
 
+void RatgdoUART::on_shutdown()
+{
+    if (is_initialized_) {
+        // Unmap the matrix output signal so that UART peripheral resets do not pull the hardware line dominant.
+        esp_rom_gpio_connect_out_signal(tx_pin_, SIG_GPIO_OUT_IDX, false, false);
+        gpio_set_direction((gpio_num_t)tx_pin_, GPIO_MODE_INPUT);
+        gpio_set_direction((gpio_num_t)rx_pin_, GPIO_MODE_INPUT);
+    }
+}
+
 } // namespace esphome::ratgdo
 
 #endif

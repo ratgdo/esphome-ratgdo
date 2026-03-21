@@ -47,6 +47,11 @@ namespace secplus1 {
         ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v1");
     }
 
+    void Secplus1::on_shutdown()
+    {
+        this->uart_.on_shutdown();
+    }
+
     void Secplus1::sync()
     {
         this->wall_panel_emulation_state_ = WallPanelEmulationState::WAITING;

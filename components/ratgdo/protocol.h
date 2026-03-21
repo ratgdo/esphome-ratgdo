@@ -102,6 +102,8 @@ namespace protocol {
         virtual void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         virtual void loop();
         virtual void dump_config();
+        
+        virtual void on_shutdown() {}
 
         virtual void sync();
 

@@ -62,6 +62,11 @@ namespace secplus2 {
         ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v2");
     }
 
+    void Secplus2::on_shutdown()
+    {
+        this->uart_.on_shutdown();
+    }
+
     void Secplus2::sync_helper(uint32_t start, uint32_t delay, uint8_t tries)
     {
         bool synced = true;
