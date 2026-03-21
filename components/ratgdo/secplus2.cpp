@@ -281,6 +281,7 @@ namespace secplus2 {
                     rx_packet[0] = 0x55;
                     rx_packet[1] = 0x01;
                     rx_packet[2] = 0x00;
+                    byte_count = 3;
 
                     reading_msg = true;
                     break;

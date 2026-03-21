@@ -82,8 +82,6 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
             UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
     }
 
-    esp_rom_gpio_connect_out_signal(tx_pin, U1TXD_OUT_IDX, invert, false);
-
     is_initialized_ = true;
     ESP_LOGD(TAG, "Hardware UART and RMT initialized on TX=%d RX=%d", tx_pin,
         rx_pin);
@@ -116,7 +114,7 @@ void RatgdoUART::transmit_secplus2_preamble()
         &transmit_config);
     rmt_tx_wait_all_done(rmt_chan_handle_, -1);
 
-    esp_rom_gpio_connect_out_signal(tx_pin_, U1TXD_OUT_IDX, inverted_, false);
+    esp_rom_gpio_connect_out_signal(tx_pin_, U1TXD_OUT_IDX, false, false);
     esp_rom_delay_us(5);
 }
 
