@@ -11,7 +11,7 @@ def toggle_env(mode, ref="softserial-killer"):
     yaml_files = glob.glob("*.yaml") + glob.glob("static/*.yaml")
 
     for filepath in yaml_files:
-        if filepath == "secrets.yaml" or filepath == "ratgdo.yaml":
+        if filepath in {"secrets.yaml", "ratgdo.yaml"}:
             continue
 
         with open(filepath) as f:
