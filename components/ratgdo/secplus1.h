@@ -7,8 +7,6 @@
 #include "esphome/core/optional.h"
 #include "ratgdo_uart.h"
 
-
-
 #include "callbacks.h"
 #include "observable.h"
 #include "protocol.h"
