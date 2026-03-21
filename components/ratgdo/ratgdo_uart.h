@@ -49,8 +49,7 @@ namespace ratgdo {
 
 #include "SoftwareSerial.h"
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo
 
     // On ESP8266, simply fall back to SoftwareSerial
     class RatgdoUART : public SoftwareSerial {
