@@ -182,7 +182,7 @@ namespace secplus2 {
     void Secplus2::door_command(DoorAction action)
     {
         this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 1, 1), IncrementRollingCode::NO, [this, action]() {
-            this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this, action] {
+            this->ratgdo_->set_timeout(150, [this, action] {
                 this->send_command(Command(CommandType::DOOR_ACTION, static_cast<uint8_t>(action), 0, 1));
             });
         });
@@ -210,7 +210,7 @@ namespace secplus2 {
         uint32_t timeout = 0;
         for (auto kind : kinds) {
             timeout += 200;
-            this->scheduler_->set_timeout(this->ratgdo_, "", timeout, [this, kind] { this->query_paired_devices(kind); });
+            this->ratgdo_->set_timeout(timeout, [this, kind] { this->query_paired_devices(kind); });
         }
     }
 
@@ -228,17 +228,17 @@ namespace secplus2 {
         }
         ESP_LOGW(TAG, "Clear paired devices of type: %s", LOG_STR_ARG(PairedDevice_to_string(kind)));
         if (kind == PairedDevice::ALL) {
-            this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE) - 1 }); }); // wireless
-            this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD) - 1 }); }); // keypads
-            this->scheduler_->set_timeout(this->ratgdo_, "", 600, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL) - 1 }); }); // wall controls
-            this->scheduler_->set_timeout(this->ratgdo_, "", 800, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY) - 1 }); }); // accessories
-            this->scheduler_->set_timeout(this->ratgdo_, "", 1000, [this] { this->query_status(); });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 1200, [this] { this->query_paired_devices(); });
+            this->ratgdo_->set_timeout(200, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::REMOTE) - 1 }); }); // wireless
+            this->ratgdo_->set_timeout(400, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::KEYPAD) - 1 }); }); // keypads
+            this->ratgdo_->set_timeout(600, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::WALL_CONTROL) - 1 }); }); // wall controls
+            this->ratgdo_->set_timeout(800, [this] { this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, static_cast<uint8_t>(PairedDevice::ACCESSORY) - 1 }); }); // accessories
+            this->ratgdo_->set_timeout(1000, [this] { this->query_status(); });
+            this->ratgdo_->set_timeout(1200, [this] { this->query_paired_devices(); });
         } else {
             uint8_t dev_kind = static_cast<uint8_t>(kind) - 1;
             this->send_command(Command { CommandType::CLEAR_PAIRED_DEVICES, dev_kind }); // just requested device
-            this->scheduler_->set_timeout(this->ratgdo_, "", 200, [this] { this->query_status(); });
-            this->scheduler_->set_timeout(this->ratgdo_, "", 400, [this, kind] { this->query_paired_devices(kind); });
+            this->ratgdo_->set_timeout(200, [this] { this->query_status(); });
+            this->ratgdo_->set_timeout(400, [this, kind] { this->query_paired_devices(kind); });
         }
     }
 
@@ -247,16 +247,16 @@ namespace secplus2 {
     {
         // Send LEARN with nibble = 0 then nibble = 1 to mimic wall control learn button
         this->send_command(Command { CommandType::LEARN, 0 });
-        this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this] { this->send_command(Command { CommandType::LEARN, 1 }); });
-        this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] { this->query_status(); });
+        this->ratgdo_->set_timeout(150, [this] { this->send_command(Command { CommandType::LEARN, 1 }); });
+        this->ratgdo_->set_timeout(500, [this] { this->query_status(); });
     }
 
     void Secplus2::inactivate_learn()
     {
         // Send LEARN twice with nibble = 0 to inactivate learn and get status to update switch state
         this->send_command(Command { CommandType::LEARN, 0 });
-        this->scheduler_->set_timeout(this->ratgdo_, "", 150, [this] { this->send_command(Command { CommandType::LEARN, 0 }); });
-        this->scheduler_->set_timeout(this->ratgdo_, "", 500, [this] { this->query_status(); });
+        this->ratgdo_->set_timeout(150, [this] { this->send_command(Command { CommandType::LEARN, 0 }); });
+        this->ratgdo_->set_timeout(500, [this] { this->query_status(); });
     }
 
     optional<Command> Secplus2::read_command()
