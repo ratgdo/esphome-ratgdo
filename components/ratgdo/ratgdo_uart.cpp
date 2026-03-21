@@ -18,8 +18,7 @@
 #include <freertos/task.h>
 #include <soc/gpio_sig_map.h>
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo
 
     static const char* const TAG = "ratgdo_uart";
 
