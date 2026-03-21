@@ -32,6 +32,7 @@ dashboard_import:
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
+    ref: softserial-killer
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include
