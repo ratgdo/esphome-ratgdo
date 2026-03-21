@@ -19,7 +19,7 @@ def toggle_env(mode, ref="softserial-killer"):
 
         new_content = content
         
-        # 1. Handle board files with `packages:` block
+        # Handle board files with `packages:` block
         if 'packages:' in new_content:
             # Extract the base file name (e.g. base.yaml, base_secplusv1.yaml)
             base_file_match = re.search(r'file[s]?:\s*\[?(base[\w\.]*\.yaml)\]?', new_content)
@@ -54,7 +54,7 @@ def toggle_env(mode, ref="softserial-killer"):
                     flags=re.MULTILINE
                 )
 
-        # 2. Handle base files with `external_components:` block
+        # Handle base files with `external_components:` block
         if 'external_components:' in new_content:
             if mode == 'local':
                 ext_block = f"""external_components:
@@ -84,7 +84,7 @@ def toggle_env(mode, ref="softserial-killer"):
                 flags=re.MULTILINE
             )
             
-        # 3. Handle dashboard_import branch suffix update
+        # Handle dashboard_import branch suffix update
         new_content = re.sub(
             r'package_import_url: github://ratgdo/esphome-ratgdo/([^@\n]+)(?:@[^\n]+)?',
             f'package_import_url: github://ratgdo/esphome-ratgdo/\\1@{ref}',
