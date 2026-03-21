@@ -4,6 +4,7 @@
 
 #include <queue>
 
+#include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
 #include "ratgdo_uart.h"
 
