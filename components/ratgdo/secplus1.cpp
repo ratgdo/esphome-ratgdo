@@ -12,7 +12,9 @@
 namespace esphome::ratgdo {
 namespace secplus1 {
 
+    using namespace scheduler_ids;
     static const char* const TAG = "ratgdo_secplus1";
+    static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -59,7 +61,7 @@ namespace secplus1 {
         this->flags_.wall_panel_starting = false;
         this->door_state = DoorState::UNKNOWN;
         this->light_state = LightState::UNKNOWN;
-        this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION);
         this->wall_panel_emulation();
 
         this->ratgdo_->set_timeout(45000, [this] {
@@ -85,7 +87,7 @@ namespace secplus1 {
                 ESP_LOGD(TAG, "No wall panel detected. Switching to emulation mode.");
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [this] {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION, 2000, [this] {
                 this->wall_panel_emulation();
             });
             return;
@@ -121,7 +123,7 @@ namespace secplus1 {
                     index = 15;
                 }
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this, index] {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION, 250, [this, index] {
                 this->wall_panel_emulation(index);
             });
         }
@@ -151,6 +153,19 @@ namespace secplus1 {
         }
     }
 
+    void Secplus1::set_door_state_expiry()
+    {
+        this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
+        });
+    }
+
+    void Secplus1::cancel_door_state_expiry()
+    {
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+    }
+
     void Secplus1::door_action(DoorAction action)
     {
         ESP_LOG1(TAG, "Door action: %s, door state: %s", LOG_STR_ARG(DoorAction_to_string(action)), LOG_STR_ARG(DoorState_to_string(this->door_state)));
@@ -166,11 +181,14 @@ namespace secplus1 {
                 this->toggle_door();
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
-                this->on_door_state_([this](DoorState s) {
+                // When the outer callback fires and registers an inner callback,
+                // on_door_state() replaces the outer's expiry with a new one for
+                // the inner callback (same timeout ID = replace, not add).
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::CLOSING) {
                         // this changes direction of the door on some openers, on others it stops it
                         this->toggle_door();
-                        this->on_door_state_([this](DoorState s) {
+                        this->on_door_state([this](DoorState s) {
                             if (s == DoorState::STOPPED) {
                                 this->toggle_door();
                             }
@@ -184,7 +202,7 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::OPENING) {
                 this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
-                this->on_door_state_([this](DoorState s) {
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::STOPPED) {
                         this->toggle_door();
                     }
@@ -199,7 +217,7 @@ namespace secplus1 {
                 this->toggle_door(); // this switches to opening
 
                 // another toggle needed to stop
-                this->on_door_state_([this](DoorState s) {
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::OPENING) {
                         this->toggle_door();
                     }

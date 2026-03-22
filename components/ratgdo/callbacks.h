@@ -38,6 +38,9 @@ public:
         }
     }
 
+    void clear() { this->count_ = 0; }
+    uint8_t count() const { return this->count_; }
+
 protected:
     Callback<Ts...> callbacks_[MAX_CALLBACKS] { };
     uint8_t count_ { 0 };

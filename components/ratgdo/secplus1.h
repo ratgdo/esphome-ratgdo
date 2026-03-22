@@ -3,6 +3,8 @@
 #ifdef PROTOCOL_SECPLUSV1
 
 #include <queue>
+#include <type_traits>
+#include <utility>
 
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
@@ -97,6 +99,23 @@ namespace secplus1 {
         void light_action(LightAction action);
         void lock_action(LockAction action);
         void door_action(DoorAction action);
+        void set_door_state_expiry();
+        void cancel_door_state_expiry();
+
+        // See RATGDOComponent::on_door_state() in ratgdo.h for detailed
+        // explanation of why the callback runs before the expiry check.
+        template <typename F>
+        void on_door_state(F&& callback)
+        {
+            using Cb = std::decay_t<F>;
+            this->on_door_state_([this, cb = Cb(std::forward<F>(callback))](DoorState s) {
+                cb(s);
+                if (!this->on_door_state_.count()) {
+                    this->cancel_door_state_expiry();
+                }
+            });
+            this->set_door_state_expiry();
+        }
 
         Result call(Args args);
 
