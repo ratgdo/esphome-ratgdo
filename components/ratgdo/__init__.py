@@ -26,10 +26,7 @@ DEFAULT_INPUT_GDO = (
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
-CONF_OBST_SLEEP_LEVEL = "obst_sleep_level"
-OBST_SLEEP_LEVEL_LOW = "low"
-OBST_SLEEP_LEVEL_HIGH = "high"
-DEFAULT_OBST_SLEEP_LEVEL = OBST_SLEEP_LEVEL_HIGH
+CONF_OBST_SLEEP_LOW = "obst_sleep_low"
 
 CONF_DISCRETE_OPEN_PIN = "discrete_open_pin"
 CONF_DISCRETE_CLOSE_PIN = "discrete_close_pin"
@@ -83,9 +80,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
                 cv.none, pins.gpio_input_pin_schema
             ),
-            cv.Optional(
-                CONF_OBST_SLEEP_LEVEL, default=DEFAULT_OBST_SLEEP_LEVEL
-            ): cv.one_of(OBST_SLEEP_LEVEL_LOW, OBST_SLEEP_LEVEL_HIGH, lower=True),
+            cv.Optional(CONF_OBST_SLEEP_LOW, default=False): cv.boolean,
             cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
@@ -132,8 +127,7 @@ async def to_code(config):
         pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
         cg.add(var.set_input_obst_pin(pin))
 
-    if config[CONF_OBST_SLEEP_LEVEL] == OBST_SLEEP_LEVEL_LOW:
-        cg.add(var.set_obst_sleep_low(True))
+    cg.add(var.set_obst_sleep_low(config[CONF_OBST_SLEEP_LOW]))
 
     if config.get(CONF_DRY_CONTACT_OPEN_SENSOR):
         dry_contact_open_sensor = await cg.get_variable(
