@@ -107,6 +107,11 @@ void RatgdoUART::transmit_secplus2_preamble()
 
     esp_rom_delay_us(5);
 
+    // Indicate the start of a frame by pulling the 12V line low for at least
+    // 1 byte followed by one STOP bit, which indicates to the receiving end
+    // that the start of the message follows.
+    // The output pin controls a transistor, so the logic is inverted:
+    // RMT level 1 (HIGH) pulls the wire low, level 0 (LOW) lets it float high.
     rmt_symbol_word_t symbols[1];
     symbols[0].duration0 = PREAMBLE_DURATION_US;
     symbols[0].level0 = 1;
