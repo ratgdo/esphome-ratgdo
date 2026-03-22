@@ -30,6 +30,10 @@ static constexpr uint32_t RMT_RESOLUTION_HZ = 1000000; // 1MHz = 1us per tick
 static constexpr size_t RMT_MEM_BLOCK_SYMBOLS = 64;
 static constexpr size_t RMT_TRANS_QUEUE_DEPTH = 4;
 
+// UART port and signal index — must stay in sync
+static constexpr int UART_PORT = UART_NUM_1;
+static constexpr int UART_TX_SIGNAL_IDX = U1TXD_OUT_IDX;
+
 RatgdoUART::RatgdoUART() { }
 
 RatgdoUART::~RatgdoUART()
@@ -56,7 +60,7 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     this->baud_ = baud;
     this->inverted_ = invert;
 
-    this->uart_num_ = UART_NUM_1;
+    this->uart_num_ = UART_PORT;
 
     uart_config_t uart_config = { };
     uart_config.baud_rate = baud;
@@ -131,7 +135,7 @@ void RatgdoUART::transmit_secplus2_preamble()
     rmt_tx_wait_all_done(this->rmt_chan_handle_, -1);
 
     // Switch GPIO matrix back to UART TX
-    esp_rom_gpio_connect_out_signal(this->tx_pin_, U1TXD_OUT_IDX, false, false);
+    esp_rom_gpio_connect_out_signal(this->tx_pin_, UART_TX_SIGNAL_IDX, false, false);
     esp_rom_delay_us(SIGNAL_SETTLE_US);
 }
 
