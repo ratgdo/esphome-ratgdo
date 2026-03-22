@@ -25,6 +25,11 @@ static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
 static constexpr uint16_t PREAMBLE_MARK_US = 130;
 static constexpr uint8_t SIGNAL_SETTLE_US = 5;
 
+// RMT channel configuration
+static constexpr uint32_t RMT_RESOLUTION_HZ = 1000000; // 1MHz = 1us per tick
+static constexpr size_t RMT_MEM_BLOCK_SYMBOLS = 64;
+static constexpr size_t RMT_TRANS_QUEUE_DEPTH = 4;
+
 RatgdoUART::RatgdoUART() { }
 
 RatgdoUART::~RatgdoUART()
@@ -68,9 +73,9 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     rmt_tx_channel_config_t tx_chan_config = { };
     tx_chan_config.gpio_num = (gpio_num_t)tx_pin;
     tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;
-    tx_chan_config.resolution_hz = 1000000;
-    tx_chan_config.mem_block_symbols = 64;
-    tx_chan_config.trans_queue_depth = 4;
+    tx_chan_config.resolution_hz = RMT_RESOLUTION_HZ;
+    tx_chan_config.mem_block_symbols = RMT_MEM_BLOCK_SYMBOLS;
+    tx_chan_config.trans_queue_depth = RMT_TRANS_QUEUE_DEPTH;
     tx_chan_config.flags.invert_out = 0;
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &this->rmt_chan_handle_));
 
