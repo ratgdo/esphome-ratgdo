@@ -243,16 +243,27 @@ public:
 
     // Register a one-shot door state callback with automatic expiry.
     //
-    // The user callback runs first because it may re-arm the callback
-    // chain by calling on_door_state() again (e.g. secplus1's nested
-    // open sequence: stop → wait for CLOSING → toggle → wait for
-    // STOPPED → toggle). If it does, on_door_state() sets a new expiry
-    // for the inner callback. We must not cancel that new expiry, so
-    // we only cancel if no new callback was queued (count() == 0).
+    // Handles secplus1's nested callback chains where opening from
+    // STOPPED requires multiple state transitions:
     //
-    // Without this order, the inner expiry would be set by the nested
-    // on_door_state() call, then immediately cancelled here — defeating
-    // the safety mechanism for the inner callback.
+    //   on_door_state(outer_cb)          // wait for CLOSING
+    //     → set_door_state_expiry()      // expiry A
+    //     → [door reports CLOSING]
+    //       → outer_cb fires, calls:
+    //         toggle_door()
+    //         on_door_state(inner_cb)    // wait for STOPPED
+    //           → set_door_state_expiry() // expiry B (replaces A)
+    //           → [door reports STOPPED]
+    //             → inner_cb fires
+    //               toggle_door()        // door now opening
+    //               count()==0 → cancel expiry B
+    //
+    // The user callback runs BEFORE the expiry check because it may
+    // re-arm the chain by calling on_door_state() again. If it does,
+    // the new call sets expiry B which replaces expiry A (same timeout
+    // ID = replace, not add). We only cancel expiry when count()==0,
+    // meaning no new callback was queued — otherwise we'd cancel
+    // expiry B here and leave the inner callback without protection.
     template <typename F>
     void on_door_state(F&& callback)
     {
