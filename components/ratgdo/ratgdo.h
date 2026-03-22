@@ -21,6 +21,7 @@
 
 #include <bitset>
 #include <type_traits>
+#include <utility>
 
 #include "callbacks.h"
 #include "macros.h"

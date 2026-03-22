@@ -4,6 +4,7 @@
 
 #include <queue>
 #include <type_traits>
+#include <utility>
 
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
