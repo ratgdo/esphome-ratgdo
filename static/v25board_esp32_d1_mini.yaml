@@ -28,12 +28,12 @@ esp32:
     type: arduino
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25board_esp32_d1_mini.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v25board_esp32_d1_mini.yaml@throttle-distance-sensor-polling
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: main
+    ref: throttle-distance-sensor-polling
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include
