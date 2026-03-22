@@ -23,6 +23,7 @@ static constexpr size_t UART_RX_BUFFER_SIZE = 512;
 // Security+ 2.0 preamble timing (microseconds, at 1MHz RMT resolution = ticks)
 static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
 static constexpr uint16_t PREAMBLE_MARK_US = 130;
+static constexpr uint8_t SIGNAL_SETTLE_US = 5;
 
 RatgdoUART::RatgdoUART() { }
 
@@ -105,7 +106,7 @@ void RatgdoUART::transmit_secplus2_preamble()
     esp_rom_gpio_connect_out_signal(this->tx_pin_, RMT_SIG_OUT0_IDX + channel_id,
         false, false);
 
-    esp_rom_delay_us(5);
+    esp_rom_delay_us(SIGNAL_SETTLE_US);
 
     // Indicate the start of a frame by pulling the 12V line low for at least
     // 1 byte followed by one STOP bit, which indicates to the receiving end
@@ -126,7 +127,7 @@ void RatgdoUART::transmit_secplus2_preamble()
 
     // Switch GPIO matrix back to UART TX
     esp_rom_gpio_connect_out_signal(this->tx_pin_, U1TXD_OUT_IDX, false, false);
-    esp_rom_delay_us(5);
+    esp_rom_delay_us(SIGNAL_SETTLE_US);
 }
 
 void RatgdoUART::write(const uint8_t* data, size_t len)
