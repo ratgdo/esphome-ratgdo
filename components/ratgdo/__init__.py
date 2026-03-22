@@ -201,7 +201,7 @@ async def to_code(config):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
         await automation.build_automation(trigger, [], conf)
 
-    if CORE.is_esp32 and CORE.using_esp_idf:
+    if CORE.is_esp32 and not CORE.using_arduino:
         from esphome.components import esp32
 
         esp32.include_builtin_idf_component("esp_driver_rmt")
