@@ -29,7 +29,7 @@ public:
     void enableAutoBaud(bool enable);
     int baudRate();
 
-    // Sends the SecPlus 2.0 preamble using RMT
+    // Sends the SecPlus 2.0 preamble
     void transmit_secplus2_preamble();
 
     void on_shutdown();
