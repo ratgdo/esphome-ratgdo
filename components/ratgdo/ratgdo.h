@@ -244,15 +244,24 @@ public:
     // Register a one-shot door state callback with automatic expiry.
     // Wraps the callback to cancel expiry on fire, registers it, and
     // sets the expiry timeout. Callers just provide the action logic.
+    // Register a one-shot door state callback with automatic expiry.
+    //
+    // The user callback runs first because it may re-arm the callback
+    // chain by calling on_door_state() again (e.g. secplus1's nested
+    // open sequence: stop → wait for CLOSING → toggle → wait for
+    // STOPPED → toggle). If it does, on_door_state() sets a new expiry
+    // for the inner callback. We must not cancel that new expiry, so
+    // we only cancel if no new callback was queued (count() == 0).
+    //
+    // Without this order, the inner expiry would be set by the nested
+    // on_door_state() call, then immediately cancelled here — defeating
+    // the safety mechanism for the inner callback.
     template <typename F>
     void on_door_state(F&& callback)
     {
         using Cb = std::decay_t<F>;
         this->on_door_state_([this, cb = Cb(std::forward<F>(callback))](DoorState s) {
-            // Run user callback first — it may register a new on_door_state()
-            // with its own expiry.
             cb(s);
-            // Only cancel expiry if no new callback was queued during cb().
             if (!this->on_door_state_.count()) {
                 this->cancel_door_state_expiry();
             }
