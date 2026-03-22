@@ -35,6 +35,10 @@ using namespace protocol;
 
 static const char* const TAG = "ratgdo";
 static constexpr int SYNC_DELAY = 1000;
+// Door state updates arrive every ~200-400ms during movement.
+// 2 seconds gives ample margin for slow networks or busy openers
+// while still expiring stale callbacks before a user could
+// reasonably trigger an unrelated door state change.
 static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
 using namespace scheduler_ids;
