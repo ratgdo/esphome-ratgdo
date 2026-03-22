@@ -5,20 +5,18 @@
 #include "esphome/components/cover/cover.h"
 #include "esphome/core/component.h"
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo {
 
-    class RATGDOCover : public cover::Cover, public RATGDOClient, public Component {
-    public:
-        void dump_config() override;
-        void setup() override;
+class RATGDOCover : public cover::Cover, public RATGDOClient, public Component {
+public:
+    void dump_config() override;
+    void setup() override;
 
-        cover::CoverTraits get_traits() override;
-        void on_door_state(DoorState state, float position);
+    cover::CoverTraits get_traits() override;
+    void on_door_state(DoorState state, float position);
 
-    protected:
-        void control(const cover::CoverCall& call) override;
-    };
+protected:
+    void control(const cover::CoverCall& call) override;
+};
 
-} // namespace ratgdo
-} // namespace esphome
+} // namespace esphome::ratgdo

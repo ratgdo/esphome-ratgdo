@@ -1,10 +1,6 @@
 ---
-substitutions:
-  # Default Value(s)
-  obst_sleep_low: false
-
 esphome:
-  min_version: 2025.7.0
+  min_version: 2026.2.0
 
 external_components:
   - source:
@@ -31,7 +27,6 @@ ratgdo:
   input_gdo_pin: ${uart_rx_pin}
   output_gdo_pin: ${uart_tx_pin}
   input_obst_pin: ${input_obst_pin}
-  obst_sleep_low: ${obst_sleep_low}
   on_sync_failed:
     then:
       - homeassistant.service:
@@ -47,17 +42,7 @@ api:
       devices_to_wipe: string
     then:
       - lambda: !lambda |-
-          if(devices_to_wipe.compare("all") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ALL);
-          } else if (devices_to_wipe.compare("remote") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::REMOTE);
-          } else if (devices_to_wipe.compare("keypad") == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::KEYPAD);
-          } else if (devices_to_wipe.compare("wall") == 0)  {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::WALL_CONTROL);
-          } else if (devices_to_wipe.compare("accessory")  == 0) {
-            id($id_prefix).clear_paired_devices(ratgdo::PairedDevice::ACCESSORY);
-          }
+          id($id_prefix).clear_paired_devices(devices_to_wipe);
 
 ota:
   - platform: esphome
@@ -245,7 +230,7 @@ cover:
     name: "Door"
     on_closed:
       - switch.turn_off: ${id_prefix}_status_door
-    on_open:
+    on_opened:
       - switch.turn_on: ${id_prefix}_status_door
 
 light:

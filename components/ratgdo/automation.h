@@ -5,19 +5,17 @@
 #include "esphome/core/component.h"
 #include "ratgdo.h"
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo {
 
-    class SyncFailed : public Trigger<> {
-    public:
-        explicit SyncFailed(RATGDOComponent* parent)
-        {
-            parent->subscribe_sync_failed([this](bool state) {
-                if (state)
-                    this->trigger();
-            });
-        }
-    };
+class SyncFailed : public Trigger<> {
+public:
+    explicit SyncFailed(RATGDOComponent* parent)
+    {
+        parent->subscribe_sync_failed([this](bool state) {
+            if (state)
+                this->trigger();
+        });
+    }
+};
 
-}
-}
+} // namespace esphome::ratgdo

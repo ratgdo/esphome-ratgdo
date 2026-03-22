@@ -5,7 +5,6 @@ substitutions:
   uart_tx_pin: D1
   uart_rx_pin: D2
   input_obst_pin: D7
-  obst_sleep_low: true
   status_door_pin: D0
   status_obstruction_pin: D8
   dry_contact_open_pin: D5
@@ -18,6 +17,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
+  min_version: 2026.2.0
   project:
     name: ratgdo.v25board_esp32_secplus2
     version: "2.5"
@@ -33,8 +33,15 @@ dashboard_import:
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
     files: [base.yaml]
     refresh: 1s
+  # remote_package: !include
+  #   file: base.yaml
+
+ratgdo:
+  id: ${id_prefix}
+  obst_sleep_low: true
 
 # Sync time with Home Assistant.
 time:
@@ -45,6 +52,9 @@ api:
   id: api_server
 
 improv_serial:
+
+esp32_improv:
+  authorizer: none
 
 wifi:
   ap:
