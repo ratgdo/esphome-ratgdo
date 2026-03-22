@@ -1,5 +1,6 @@
 #include "ratgdo_sensor.h"
 #include "../ratgdo_state.h"
+#include "esphome/core/application.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
@@ -95,9 +96,16 @@ void RATGDOSensor::dump_config()
 }
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
+static const uint32_t DISTANCE_POLL_INTERVAL_MS = 50;
+
 void RATGDOSensor::loop()
 {
     if (this->ratgdo_sensor_type_ == RATGDOSensorType::RATGDO_DISTANCE) {
+        uint32_t now = App.get_loop_component_start_time();
+        if (now - this->last_distance_poll_ms_ < DISTANCE_POLL_INTERVAL_MS)
+            return;
+        this->last_distance_poll_ms_ = now;
+
         VL53L4CX_MultiRangingData_t distanceData;
         VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
         uint8_t dataReady = 0;
