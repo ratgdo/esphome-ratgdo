@@ -240,6 +240,19 @@ public:
     void set_door_state_expiry();
     void cancel_door_state_expiry();
 
+    // Register a one-shot door state callback with automatic expiry.
+    // Wraps the callback to cancel expiry on fire, registers it, and
+    // sets the expiry timeout. Callers just provide the action logic.
+    template <typename F>
+    void on_door_state(F&& callback)
+    {
+        this->on_door_state_([this, callback](DoorState s) {
+            this->cancel_door_state_expiry();
+            callback(s);
+        });
+        this->set_door_state_expiry();
+    }
+
     // children subscriptions — type-safe templates (no std::function)
     // Callbacks must be trivially copyable and fit in Callback storage
     // (3 * sizeof(void*)), e.g. [this] or [this, f] lambdas.

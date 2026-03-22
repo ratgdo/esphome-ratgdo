@@ -100,6 +100,16 @@ namespace secplus1 {
         void set_door_state_expiry();
         void cancel_door_state_expiry();
 
+        template <typename F>
+        void on_door_state(F&& callback)
+        {
+            this->on_door_state_([this, callback](DoorState s) {
+                this->cancel_door_state_expiry();
+                callback(s);
+            });
+            this->set_door_state_expiry();
+        }
+
         Result call(Args args);
 
         const Traits& traits() const { return this->traits_; }

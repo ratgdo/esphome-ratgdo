@@ -599,15 +599,13 @@ void RATGDOComponent::door_close()
     if (*this->door_state == DoorState::OPENING) {
         // have to stop door first, otherwise close command is ignored
         this->door_action(DoorAction::STOP);
-        this->on_door_state_([this](DoorState s) {
-            this->cancel_door_state_expiry();
+        this->on_door_state([this](DoorState s) {
             if (s == DoorState::STOPPED) {
                 this->door_action(DoorAction::CLOSE);
             } else {
                 ESP_LOGW(TAG, "Door did not stop, ignoring close command");
             }
         });
-        this->set_door_state_expiry();
         return;
     }
 
@@ -664,13 +662,11 @@ void RATGDOComponent::door_move_to_position(float position)
 {
     if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
         this->door_action(DoorAction::STOP);
-        this->on_door_state_([this, position](DoorState s) {
-            this->cancel_door_state_expiry();
+        this->on_door_state([this, position](DoorState s) {
             if (s == DoorState::STOPPED) {
                 this->door_move_to_position(position);
             }
         });
-        this->set_door_state_expiry();
         return;
     }
 

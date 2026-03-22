@@ -182,23 +182,19 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
                 // When the outer callback fires and registers an inner callback,
-                // set_door_state_expiry() replaces the outer's expiry with a new
-                // one for the inner callback (same timeout ID = replace, not add).
-                this->on_door_state_([this](DoorState s) {
-                    this->cancel_door_state_expiry();
+                // on_door_state() replaces the outer's expiry with a new one for
+                // the inner callback (same timeout ID = replace, not add).
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::CLOSING) {
                         // this changes direction of the door on some openers, on others it stops it
                         this->toggle_door();
-                        this->on_door_state_([this](DoorState s) {
-                            this->cancel_door_state_expiry();
+                        this->on_door_state([this](DoorState s) {
                             if (s == DoorState::STOPPED) {
                                 this->toggle_door();
                             }
                         });
-                        this->set_door_state_expiry();
                     }
                 });
-                this->set_door_state_expiry();
             }
         } else if (action == DoorAction::CLOSE) {
             if (this->door_state == DoorState::OPEN) {
@@ -206,13 +202,11 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::OPENING) {
                 this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
-                this->on_door_state_([this](DoorState s) {
-                    this->cancel_door_state_expiry();
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::STOPPED) {
                         this->toggle_door();
                     }
                 });
-                this->set_door_state_expiry();
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door();
             }
@@ -223,13 +217,11 @@ namespace secplus1 {
                 this->toggle_door(); // this switches to opening
 
                 // another toggle needed to stop
-                this->on_door_state_([this](DoorState s) {
-                    this->cancel_door_state_expiry();
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::OPENING) {
                         this->toggle_door();
                     }
                 });
-                this->set_door_state_expiry();
             }
         }
     }
