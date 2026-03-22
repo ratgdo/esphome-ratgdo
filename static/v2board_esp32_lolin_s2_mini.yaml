@@ -27,12 +27,12 @@ esp32:
     type: arduino
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp32_lolin_s2_mini.yaml@softserial-killer
+  package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp32_lolin_s2_mini.yaml@main
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: softserial-killer
+    ref: main
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include

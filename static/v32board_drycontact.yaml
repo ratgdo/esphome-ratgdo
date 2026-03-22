@@ -28,12 +28,12 @@ esp32:
     type: arduino
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32board_drycontact.yaml@softserial-killer
+  package_import_url: github://ratgdo/esphome-ratgdo/v32board_drycontact.yaml@main
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: softserial-killer
+    ref: main
     files: [base_drycontact.yaml]
     refresh: 1s
   # remote_package: !include
