@@ -31,3 +31,19 @@ The ESPHome firmware will allow you to open the door to any position after calib
 - [Web Installer](https://ratgdo.github.io/esphome-ratgdo/)
 
 ![Home Assistant Screen Shot](static/hass.png)
+
+## Troubleshooting
+
+### False obstruction events on ESP32 v2.5 boards
+
+Some v2.5 boards using ESP32 D1 Mini controllers may report spurious obstruction events. This is caused by the obstruction sensor "asleep" detection logic being inverted on these boards.
+
+To fix this, add the following to your ESPHome config:
+
+```yaml
+ratgdo:
+  id: ratgdov25
+  obst_sleep_low: true
+```
+
+The `id` must match the `id` of the existing `ratgdo` component in your config (e.g. `ratgdov25` for v2.5 boards). This setting tells the obstruction sensor to treat LOW as the "asleep" state instead of the ESP32 default of HIGH.
