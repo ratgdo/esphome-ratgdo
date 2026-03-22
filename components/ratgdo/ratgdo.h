@@ -237,6 +237,9 @@ public:
 
     using Component::set_timeout;
 
+    void set_door_state_expiry();
+    void cancel_door_state_expiry();
+
     // children subscriptions — type-safe templates (no std::function)
     // Callbacks must be trivially copyable and fit in Callback storage
     // (3 * sizeof(void*)), e.g. [this] or [this, f] lambdas.

@@ -153,6 +153,19 @@ namespace secplus1 {
         }
     }
 
+    void Secplus1::set_door_state_expiry()
+    {
+        this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
+        });
+    }
+
+    void Secplus1::cancel_door_state_expiry()
+    {
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+    }
+
     void Secplus1::door_action(DoorAction action)
     {
         ESP_LOG1(TAG, "Door action: %s, door state: %s", LOG_STR_ARG(DoorAction_to_string(action)), LOG_STR_ARG(DoorState_to_string(this->door_state)));
@@ -169,26 +182,20 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
                 this->on_door_state_([this](DoorState s) {
-                    this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+                    this->cancel_door_state_expiry();
                     if (s == DoorState::CLOSING) {
                         // this changes direction of the door on some openers, on others it stops it
                         this->toggle_door();
                         this->on_door_state_([this](DoorState s) {
-                            this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+                            this->cancel_door_state_expiry();
                             if (s == DoorState::STOPPED) {
                                 this->toggle_door();
                             }
                         });
-                        this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-                            ESP_LOGW(TAG, "Door state callback expired, clearing");
-                            this->on_door_state_.clear();
-                        });
+                        this->set_door_state_expiry();
                     }
                 });
-                this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-                    ESP_LOGW(TAG, "Door state callback expired, clearing");
-                    this->on_door_state_.clear();
-                });
+                this->set_door_state_expiry();
             }
         } else if (action == DoorAction::CLOSE) {
             if (this->door_state == DoorState::OPEN) {
@@ -197,15 +204,12 @@ namespace secplus1 {
                 this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
                 this->on_door_state_([this](DoorState s) {
-                    this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+                    this->cancel_door_state_expiry();
                     if (s == DoorState::STOPPED) {
                         this->toggle_door();
                     }
                 });
-                this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-                    ESP_LOGW(TAG, "Door state callback expired, clearing");
-                    this->on_door_state_.clear();
-                });
+                this->set_door_state_expiry();
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door();
             }
@@ -217,15 +221,12 @@ namespace secplus1 {
 
                 // another toggle needed to stop
                 this->on_door_state_([this](DoorState s) {
-                    this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+                    this->cancel_door_state_expiry();
                     if (s == DoorState::OPENING) {
                         this->toggle_door();
                     }
                 });
-                this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-                    ESP_LOGW(TAG, "Door state callback expired, clearing");
-                    this->on_door_state_.clear();
-                });
+                this->set_door_state_expiry();
             }
         }
     }

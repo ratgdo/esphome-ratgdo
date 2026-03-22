@@ -97,6 +97,8 @@ namespace secplus1 {
         void light_action(LightAction action);
         void lock_action(LockAction action);
         void door_action(DoorAction action);
+        void set_door_state_expiry();
+        void cancel_door_state_expiry();
 
         Result call(Args args);
 

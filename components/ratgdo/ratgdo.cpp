@@ -550,6 +550,19 @@ void RATGDOComponent::sync()
 #endif
 }
 
+void RATGDOComponent::set_door_state_expiry()
+{
+    this->set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+        ESP_LOGW(TAG, "Door state callback expired, clearing");
+        this->on_door_state_.clear();
+    });
+}
+
+void RATGDOComponent::cancel_door_state_expiry()
+{
+    this->cancel_timeout(TIMEOUT_DOOR_STATE_EXPIRY);
+}
+
 void RATGDOComponent::door_open()
 {
     if (*this->door_state == DoorState::OPENING) {
@@ -579,17 +592,14 @@ void RATGDOComponent::door_close()
         // have to stop door first, otherwise close command is ignored
         this->door_action(DoorAction::STOP);
         this->on_door_state_([this](DoorState s) {
-            this->cancel_timeout(TIMEOUT_DOOR_STATE_EXPIRY);
+            this->cancel_door_state_expiry();
             if (s == DoorState::STOPPED) {
                 this->door_action(DoorAction::CLOSE);
             } else {
                 ESP_LOGW(TAG, "Door did not stop, ignoring close command");
             }
         });
-        this->set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-            ESP_LOGW(TAG, "Door state callback expired, clearing");
-            this->on_door_state_.clear();
-        });
+        this->set_door_state_expiry();
         return;
     }
 
@@ -647,15 +657,12 @@ void RATGDOComponent::door_move_to_position(float position)
     if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
         this->door_action(DoorAction::STOP);
         this->on_door_state_([this, position](DoorState s) {
-            this->cancel_timeout(TIMEOUT_DOOR_STATE_EXPIRY);
+            this->cancel_door_state_expiry();
             if (s == DoorState::STOPPED) {
                 this->door_move_to_position(position);
             }
         });
-        this->set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-            ESP_LOGW(TAG, "Door state callback expired, clearing");
-            this->on_door_state_.clear();
-        });
+        this->set_door_state_expiry();
         return;
     }
 
