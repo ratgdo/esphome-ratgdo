@@ -45,6 +45,7 @@ private:
     int rx_pin_ { -1 };
     int baud_ { 9600 };
     int uart_num_ { -1 };
+    int rmt_channel_id_ { 0 };
 
     // 1-byte members packed at the end
     bool inverted_ { true };

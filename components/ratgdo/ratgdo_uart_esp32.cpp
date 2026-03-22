@@ -6,7 +6,7 @@
 #include <driver/uart.h>
 
 #include <driver/rmt_tx.h>
-#include <esp_private/rmt.h>
+#include <esp_private/rmt.h> // for rmt_get_channel_id (used once during init)
 
 #include <driver/gpio.h>
 #include <esp_rom_gpio.h>
@@ -89,6 +89,11 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
 
     ESP_ERROR_CHECK(rmt_enable(this->rmt_chan_handle_));
 
+    // Cache the channel ID for GPIO matrix switching during preamble.
+    // The RMT driver allocates channels dynamically, so we query it once
+    // here rather than relying on the private esp_private/rmt.h API at runtime.
+    ESP_ERROR_CHECK(rmt_get_channel_id(this->rmt_chan_handle_, &this->rmt_channel_id_));
+
     ESP_ERROR_CHECK(uart_set_pin((uart_port_t)this->uart_num_, tx_pin, rx_pin,
         UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
@@ -107,12 +112,8 @@ void RatgdoUART::transmit_secplus2_preamble()
     if (!this->is_initialized_)
         return;
 
-    // Get the actual channel ID allocated by the driver
-    int channel_id = 0;
-    ESP_ERROR_CHECK(rmt_get_channel_id(this->rmt_chan_handle_, &channel_id));
-
     // Switch GPIO matrix from UART TX to RMT output
-    esp_rom_gpio_connect_out_signal(this->tx_pin_, RMT_SIG_OUT0_IDX + channel_id,
+    esp_rom_gpio_connect_out_signal(this->tx_pin_, RMT_SIG_OUT0_IDX + this->rmt_channel_id_,
         false, false);
 
     esp_rom_delay_us(SIGNAL_SETTLE_US);
