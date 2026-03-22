@@ -39,6 +39,10 @@ packages:
   # remote_package: !include
   #   file: base.yaml
 
+ratgdo:
+  id: ${id_prefix}
+  obst_sleep_low: true
+
 # Sync time with Home Assistant.
 time:
   - platform: homeassistant

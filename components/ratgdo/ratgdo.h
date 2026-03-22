@@ -138,6 +138,7 @@ public:
     void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
     void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
     void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
+    void set_obst_sleep_low(bool low) { this->flags_.obst_sleep_low = low; }
 
     // dry contact methods
     void set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_);
@@ -311,11 +312,12 @@ protected:
     // Bool members packed into bitfield
     struct {
         uint8_t obstruction_sensor_detected : 1;
+        uint8_t obst_sleep_low : 1;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
-        uint8_t reserved : 6; // Reserved for future use
+        uint8_t reserved : 5; // Reserved for future use
 #else
-        uint8_t reserved : 7; // Reserved for future use
+        uint8_t reserved : 6; // Reserved for future use
 #endif
     } flags_ { 0 };
 
