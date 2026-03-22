@@ -36,13 +36,18 @@ public:
     void on_shutdown();
 
 private:
+    // Pointers (4 bytes on 32-bit)
+    rmt_channel_handle_t rmt_chan_handle_ { nullptr };
+    rmt_encoder_handle_t rmt_copy_encoder_ { nullptr };
+
+    // 4-byte members
     int tx_pin_ { -1 };
     int rx_pin_ { -1 };
     int baud_ { 9600 };
-    bool inverted_ { true };
     int uart_num_ { -1 };
-    rmt_channel_handle_t rmt_chan_handle_ { nullptr };
-    rmt_encoder_handle_t rmt_copy_encoder_ { nullptr };
+
+    // 1-byte members packed at the end
+    bool inverted_ { true };
     bool is_initialized_ { false };
 };
 
