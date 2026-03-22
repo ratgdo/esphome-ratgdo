@@ -18,7 +18,7 @@ namespace esphome::ratgdo {
 
 static const char* const TAG = "ratgdo_uart";
 
-static constexpr size_t UART_RX_BUFFER_SIZE = 256;
+static constexpr size_t UART_RX_BUFFER_SIZE = 512;
 
 // Security+ 2.0 preamble timing (microseconds, at 1MHz RMT resolution = ticks)
 static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
