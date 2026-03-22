@@ -8,6 +8,10 @@
 
 namespace esphome::ratgdo {
 
+// Security+ 2.0 preamble timing (microseconds)
+static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
+static constexpr uint16_t PREAMBLE_MARK_US = 130;
+
 enum RatgdoUARTConfig {
     RATGDO_UART_8N1 = SWSERIAL_8N1,
     RATGDO_UART_8E1 = SWSERIAL_8E1,
@@ -40,9 +44,9 @@ public:
         if (this->tx_pin_ < 0)
             return;
         ::digitalWrite(this->tx_pin_, HIGH);
-        ::delayMicroseconds(1300);
+        ::delayMicroseconds(PREAMBLE_DURATION_US);
         ::digitalWrite(this->tx_pin_, LOW);
-        ::delayMicroseconds(130);
+        ::delayMicroseconds(PREAMBLE_MARK_US);
     }
 
 private:

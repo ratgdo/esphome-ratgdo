@@ -18,6 +18,10 @@ namespace esphome::ratgdo {
 
 static const char* const TAG = "ratgdo_uart";
 
+// Security+ 2.0 preamble timing (microseconds, at 1MHz RMT resolution = ticks)
+static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
+static constexpr uint16_t PREAMBLE_MARK_US = 130;
+
 RatgdoUART::RatgdoUART() { }
 
 RatgdoUART::~RatgdoUART()
@@ -102,9 +106,9 @@ void RatgdoUART::transmit_secplus2_preamble()
     esp_rom_delay_us(5);
 
     rmt_symbol_word_t symbols[1];
-    symbols[0].duration0 = 1300;
+    symbols[0].duration0 = PREAMBLE_DURATION_US;
     symbols[0].level0 = 1;
-    symbols[0].duration1 = 130;
+    symbols[0].duration1 = PREAMBLE_MARK_US;
     symbols[0].level1 = 0;
 
     rmt_transmit_config_t transmit_config = { };
