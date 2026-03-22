@@ -1,7 +1,9 @@
 
 # ratgdo for ESPHome
 
-[Visit the ratcloud.llc to purchase boards](https://ratcloud.llc)
+[ESPHome](https://esphome.io/) component for [ratgdo](https://ratcloud.llc) — a WiFi control board for garage door openers that works over your local network. Compatible with most residential Chamberlain and LiftMaster openers, with dry contact support for other brands.
+
+Purchase boards at [ratcloud.llc](https://ratcloud.llc).
 
 ## Web Installer
 
