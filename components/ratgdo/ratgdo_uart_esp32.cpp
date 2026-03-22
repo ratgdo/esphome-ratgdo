@@ -78,14 +78,13 @@ void RatgdoUART::transmit_secplus2_preamble()
     gpio_set_level((gpio_num_t)tx_pin_, second_level);
     esp_rom_delay_us(130);
 
-    // Reattach only the TX pin to Hardware UART; leave RX untouched to avoid
-    // desynchronizing the RX state machine (uart_set_pin tears down and rebuilds
-    // every pin it receives, briefly routing RX to a constant-high input which
-    // looks like a false start bit when inversion is enabled).
-    ESP_ERROR_CHECK(uart_set_pin((uart_port_t)uart_num_, tx_pin_,
-        UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-    // UART peripheral inversion (conf0 register) is preserved across
-    // uart_set_pin calls, so no need to re-apply uart_set_line_inverse.
+    // Reattach Hardware UART to the physical pin dynamically
+    ESP_ERROR_CHECK(uart_set_pin((uart_port_t)uart_num_, tx_pin_, rx_pin_,
+        UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
+    if (inverted_) {
+        uart_set_line_inverse((uart_port_t)uart_num_,
+            UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
+    }
 }
 
 void RatgdoUART::write(const uint8_t* data, size_t len)
