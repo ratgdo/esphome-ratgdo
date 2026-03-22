@@ -181,6 +181,9 @@ namespace secplus1 {
                 this->toggle_door();
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
+                // When the outer callback fires and registers an inner callback,
+                // set_door_state_expiry() replaces the outer's expiry with a new
+                // one for the inner callback (same timeout ID = replace, not add).
                 this->on_door_state_([this](DoorState s) {
                     this->cancel_door_state_expiry();
                     if (s == DoorState::CLOSING) {

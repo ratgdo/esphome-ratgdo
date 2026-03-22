@@ -446,6 +446,10 @@ void RATGDOComponent::calculate_presence()
 void RATGDOComponent::presence_change(bool sensor_value)
 {
     if (this->flags_.presence_detect_window_active) {
+        // Arriving and leaving are mutually exclusive — each branch clears the
+        // other state. Sharing TIMEOUT_CLEAR_PRESENCE ensures that switching from
+        // arriving to leaving (or vice versa) cancels the previous clear timeout,
+        // which is correct since the previous state was already cleared above.
         if (sensor_value) {
             this->vehicle_arriving_state = VehicleArrivingState::YES;
             this->vehicle_leaving_state = VehicleLeavingState::NO;
