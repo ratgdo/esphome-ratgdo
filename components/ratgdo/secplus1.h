@@ -4,8 +4,9 @@
 
 #include <queue>
 
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
+#include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
+#include "ratgdo_uart.h"
 
 #include "callbacks.h"
 #include "observable.h"
@@ -89,6 +90,7 @@ namespace secplus1 {
         void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         void loop();
         void dump_config();
+        void on_shutdown() override;
 
         void sync();
 
@@ -142,7 +144,7 @@ namespace secplus1 {
 
         // Larger structures
         std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
-        SoftwareSerial sw_serial_;
+        RatgdoUART uart_;
         OnceCallbacks<void(DoorState)> on_door_state_;
         Traits traits_;
 

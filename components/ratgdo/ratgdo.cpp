@@ -129,6 +129,13 @@ void RATGDOComponent::dump_config()
     this->protocol_->dump_config();
 }
 
+void RATGDOComponent::on_shutdown()
+{
+    if (this->protocol_ != nullptr) {
+        this->protocol_->on_shutdown();
+    }
+}
+
 void RATGDOComponent::received(const DoorState door_state)
 {
     ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
