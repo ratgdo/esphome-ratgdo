@@ -407,6 +407,9 @@ namespace scheduler_ids {
         TIMEOUT_DOOR_ACTION,
         TIMEOUT_MOVE_TO_POSITION,
         TIMEOUT_CLEAR_MOTION,
+        // Shared by RATGDOComponent and Secplus1 — safe because only one
+        // protocol is compiled at a time (#ifdef PROTOCOL_SECPLUSV1) and
+        // both use ratgdo_ as the scheduler owner.
         TIMEOUT_DOOR_STATE_EXPIRY,
         TIMEOUT_PRESENCE_DETECT_WINDOW,
         TIMEOUT_CLEAR_PRESENCE,
