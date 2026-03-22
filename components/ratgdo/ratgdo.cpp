@@ -445,13 +445,13 @@ void RATGDOComponent::presence_change(bool sensor_value)
         if (sensor_value) {
             this->vehicle_arriving_state = VehicleArrivingState::YES;
             this->vehicle_leaving_state = VehicleLeavingState::NO;
-            set_timeout(CLEAR_PRESENCE, [this] {
+            set_timeout(TIMEOUT_CLEAR_PRESENCE, CLEAR_PRESENCE, [this] {
                 this->vehicle_arriving_state = VehicleArrivingState::NO;
             });
         } else {
             this->vehicle_arriving_state = VehicleArrivingState::NO;
             this->vehicle_leaving_state = VehicleLeavingState::YES;
-            set_timeout(CLEAR_PRESENCE, [this] {
+            set_timeout(TIMEOUT_CLEAR_PRESENCE, CLEAR_PRESENCE, [this] {
                 this->vehicle_leaving_state = VehicleLeavingState::NO;
             });
         }
