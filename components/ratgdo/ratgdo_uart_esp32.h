@@ -4,6 +4,7 @@
 
 #ifdef USE_ESP32
 
+#include <driver/rmt_tx.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -29,7 +30,7 @@ public:
     void enableAutoBaud(bool enable);
     int baudRate();
 
-    // Sends the SecPlus 2.0 preamble
+    // Sends the SecPlus 2.0 preamble using RMT
     void transmit_secplus2_preamble();
 
     void on_shutdown();
@@ -40,6 +41,8 @@ private:
     int baud_ { 9600 };
     bool inverted_ { true };
     int uart_num_ { -1 };
+    rmt_channel_handle_t rmt_chan_handle_ { nullptr };
+    rmt_encoder_handle_t rmt_copy_encoder_ { nullptr };
     bool is_initialized_ { false };
 };
 

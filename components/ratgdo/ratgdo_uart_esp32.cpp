@@ -4,7 +4,9 @@
 
 #include "esphome/core/log.h"
 #include <driver/uart.h>
-#include <esp_idf_version.h>
+
+#include <driver/rmt_tx.h>
+#include <esp_private/rmt.h>
 
 #include <driver/gpio.h>
 #include <esp_rom_gpio.h>
@@ -22,6 +24,15 @@ RatgdoUART::~RatgdoUART()
 {
     if (is_initialized_) {
         uart_driver_delete((uart_port_t)uart_num_);
+        if (rmt_copy_encoder_) {
+            rmt_del_encoder(rmt_copy_encoder_);
+            rmt_copy_encoder_ = nullptr;
+        }
+        if (rmt_chan_handle_) {
+            rmt_disable(rmt_chan_handle_);
+            rmt_del_channel(rmt_chan_handle_);
+            rmt_chan_handle_ = nullptr;
+        }
     }
 }
 
@@ -47,6 +58,21 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
         uart_driver_install((uart_port_t)uart_num_, 256, 0, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config((uart_port_t)uart_num_, &uart_config));
 
+    rmt_tx_channel_config_t tx_chan_config = { };
+    tx_chan_config.gpio_num = (gpio_num_t)tx_pin;
+    tx_chan_config.clk_src = RMT_CLK_SRC_DEFAULT;
+    tx_chan_config.resolution_hz = 1000000;
+    tx_chan_config.mem_block_symbols = 64;
+    tx_chan_config.trans_queue_depth = 4;
+    tx_chan_config.flags.invert_out = 0;
+    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &rmt_chan_handle_));
+
+    rmt_copy_encoder_config_t copy_encoder_config = { };
+    ESP_ERROR_CHECK(
+        rmt_new_copy_encoder(&copy_encoder_config, &rmt_copy_encoder_));
+
+    ESP_ERROR_CHECK(rmt_enable(rmt_chan_handle_));
+
     ESP_ERROR_CHECK(uart_set_pin((uart_port_t)uart_num_, tx_pin, rx_pin,
         UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
 
@@ -56,7 +82,8 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     }
 
     is_initialized_ = true;
-    ESP_LOGD(TAG, "Hardware UART initialized on TX=%d RX=%d", tx_pin, rx_pin);
+    ESP_LOGD(TAG, "Hardware UART and RMT initialized on TX=%d RX=%d", tx_pin,
+        rx_pin);
 }
 
 void RatgdoUART::transmit_secplus2_preamble()
@@ -64,27 +91,31 @@ void RatgdoUART::transmit_secplus2_preamble()
     if (!is_initialized_)
         return;
 
-    // Disconnect UART from the pin by routing the generic GPIO matrix
-    esp_rom_gpio_connect_out_signal(tx_pin_, SIG_GPIO_OUT_IDX, false, false);
-    gpio_set_direction((gpio_num_t)tx_pin_, GPIO_MODE_OUTPUT);
+    // Get the actual channel ID allocated by the driver
+    int channel_id = 0;
+    ESP_ERROR_CHECK(rmt_get_channel_id(rmt_chan_handle_, &channel_id));
 
-    // Preamble is ~1.3ms low, followed by 130us high on the physical wire
-    uint32_t first_level = inverted_ ? 1 : 0;
-    uint32_t second_level = inverted_ ? 0 : 1;
+    // Switch GPIO matrix from UART TX to RMT output
+    esp_rom_gpio_connect_out_signal(tx_pin_, RMT_SIG_OUT0_IDX + channel_id,
+        false, false);
 
-    gpio_set_level((gpio_num_t)tx_pin_, first_level);
-    esp_rom_delay_us(1300);
+    esp_rom_delay_us(5);
 
-    gpio_set_level((gpio_num_t)tx_pin_, second_level);
-    esp_rom_delay_us(130);
+    rmt_symbol_word_t symbols[1];
+    symbols[0].duration0 = 1300;
+    symbols[0].level0 = 1;
+    symbols[0].duration1 = 130;
+    symbols[0].level1 = 0;
 
-    // Reattach Hardware UART to the physical pin dynamically
-    ESP_ERROR_CHECK(uart_set_pin((uart_port_t)uart_num_, tx_pin_, rx_pin_,
-        UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE));
-    if (inverted_) {
-        uart_set_line_inverse((uart_port_t)uart_num_,
-            UART_SIGNAL_TXD_INV | UART_SIGNAL_RXD_INV);
-    }
+    rmt_transmit_config_t transmit_config = { };
+    transmit_config.loop_count = 0;
+    rmt_transmit(rmt_chan_handle_, rmt_copy_encoder_, symbols, sizeof(symbols),
+        &transmit_config);
+    rmt_tx_wait_all_done(rmt_chan_handle_, -1);
+
+    // Switch GPIO matrix back to UART TX
+    esp_rom_gpio_connect_out_signal(tx_pin_, U1TXD_OUT_IDX, false, false);
+    esp_rom_delay_us(5);
 }
 
 void RatgdoUART::write(const uint8_t* data, size_t len)
@@ -125,8 +156,8 @@ int RatgdoUART::baudRate() { return baud_; }
 void RatgdoUART::on_shutdown()
 {
     if (is_initialized_) {
-        // Unmap the matrix output signal so that UART peripheral resets do not pull
-        // the hardware line dominant.
+        // Unmap the matrix output signal so that UART peripheral resets do not
+        // pull the hardware line dominant.
         esp_rom_gpio_connect_out_signal(tx_pin_, SIG_GPIO_OUT_IDX, false, false);
         gpio_set_direction((gpio_num_t)tx_pin_, GPIO_MODE_INPUT);
         gpio_set_direction((gpio_num_t)rx_pin_, GPIO_MODE_INPUT);
