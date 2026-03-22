@@ -26,9 +26,9 @@ public:
     void write(uint8_t data);
     int available();
     int read();
-    void enableIntTx(bool enable);
-    void enableAutoBaud(bool enable);
-    int baudRate();
+    void enableIntTx(bool enable) { }
+    void enableAutoBaud(bool enable) { }
+    int baudRate() { return this->baud_; }
 
     // Sends the SecPlus 2.0 preamble using RMT
     void transmit_secplus2_preamble();

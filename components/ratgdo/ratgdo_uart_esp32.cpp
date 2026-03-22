@@ -18,6 +18,8 @@ namespace esphome::ratgdo {
 
 static const char* const TAG = "ratgdo_uart";
 
+static constexpr size_t UART_RX_BUFFER_SIZE = 256;
+
 // Security+ 2.0 preamble timing (microseconds, at 1MHz RMT resolution = ticks)
 static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
 static constexpr uint16_t PREAMBLE_MARK_US = 130;
@@ -59,7 +61,7 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     uart_config.source_clk = UART_SCLK_APB;
 
     ESP_ERROR_CHECK(
-        uart_driver_install((uart_port_t)this->uart_num_, 256, 0, 0, NULL, 0));
+        uart_driver_install((uart_port_t)this->uart_num_, UART_RX_BUFFER_SIZE, 0, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config((uart_port_t)this->uart_num_, &uart_config));
 
     rmt_tx_channel_config_t tx_chan_config = { };
@@ -152,10 +154,6 @@ int RatgdoUART::read()
     }
     return -1;
 }
-
-void RatgdoUART::enableIntTx(bool enable) { }
-void RatgdoUART::enableAutoBaud(bool enable) { }
-int RatgdoUART::baudRate() { return this->baud_; }
 
 void RatgdoUART::on_shutdown()
 {
