@@ -287,7 +287,7 @@ void RATGDOComponent::received(const MotionState motion_state)
     ESP_LOGD(TAG, "Motion: %s", LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
     this->motion_state = motion_state;
     if (motion_state == MotionState::DETECTED) {
-        this->this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000, [this] {
+        this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000, [this] {
             this->motion_state = MotionState::CLEAR;
         });
         if (*this->light_state == LightState::OFF) {
