@@ -242,9 +242,6 @@ public:
     void cancel_door_state_expiry();
 
     // Register a one-shot door state callback with automatic expiry.
-    // Wraps the callback to cancel expiry on fire, registers it, and
-    // sets the expiry timeout. Callers just provide the action logic.
-    // Register a one-shot door state callback with automatic expiry.
     //
     // The user callback runs first because it may re-arm the callback
     // chain by calling on_door_state() again (e.g. secplus1's nested
