@@ -3,6 +3,7 @@
 #ifdef PROTOCOL_SECPLUSV1
 
 #include <queue>
+#include <type_traits>
 
 #include "esphome/core/hal.h"
 #include "esphome/core/optional.h"
@@ -103,9 +104,15 @@ namespace secplus1 {
         template <typename F>
         void on_door_state(F&& callback)
         {
-            this->on_door_state_([this, callback](DoorState s) {
-                this->cancel_door_state_expiry();
-                callback(s);
+            using Cb = std::decay_t<F>;
+            this->on_door_state_([this, cb = Cb(std::forward<F>(callback))](DoorState s) {
+                // Run user callback first — it may register a new on_door_state()
+                // with its own expiry.
+                cb(s);
+                // Only cancel expiry if no new callback was queued during cb().
+                if (!this->on_door_state_.count()) {
+                    this->cancel_door_state_expiry();
+                }
             });
             this->set_door_state_expiry();
         }
