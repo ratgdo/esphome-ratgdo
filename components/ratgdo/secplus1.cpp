@@ -21,7 +21,7 @@ namespace secplus1 {
         this->tx_pin_ = tx_pin;
         this->rx_pin_ = rx_pin;
 
-        this->sw_serial_.begin(1200, SWSERIAL_8E1, rx_pin->get_pin(), tx_pin->get_pin(), true);
+        this->uart_.begin(1200, RATGDO_UART_8E1, rx_pin->get_pin(), tx_pin->get_pin(), true);
 
         this->traits_.set_features(HAS_DOOR_STATUS | HAS_LIGHT_TOGGLE | HAS_LOCK_TOGGLE);
     }
@@ -45,6 +45,11 @@ namespace secplus1 {
     void Secplus1::dump_config()
     {
         ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v1");
+    }
+
+    void Secplus1::on_shutdown()
+    {
+        this->uart_.on_shutdown();
     }
 
     void Secplus1::sync()
@@ -235,12 +240,12 @@ namespace secplus1 {
         static RxPacket rx_packet;
 
         if (!reading_msg) {
-            while (this->sw_serial_.available()) {
-                uint8_t ser_byte = this->sw_serial_.read();
+            while (this->uart_.available()) {
+                uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
 
                 if (ser_byte < 0x30 || ser_byte > 0x3A) {
-                    ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->sw_serial_.baudRate());
+                    ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->uart_.baudRate());
                     byte_count = 0;
                     continue;
                 }
@@ -260,8 +265,8 @@ namespace secplus1 {
             }
         }
         if (reading_msg) {
-            while (this->sw_serial_.available()) {
-                uint8_t ser_byte = this->sw_serial_.read();
+            while (this->uart_.available()) {
+                uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
                 rx_packet[byte_count++] = ser_byte;
                 ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
@@ -456,12 +461,12 @@ namespace secplus1 {
     {
         bool enable_rx = (value == 0x38) || (value == 0x39) || (value == 0x3A);
         if (!enable_rx) {
-            this->sw_serial_.enableIntTx(false);
+            this->uart_.enableIntTx(false);
         }
-        this->sw_serial_.write(value);
+        this->uart_.write(value);
         this->last_tx_ = millis();
         if (!enable_rx) {
-            this->sw_serial_.enableIntTx(true);
+            this->uart_.enableIntTx(true);
         }
         ESP_LOGD(TAG, "[%d] Sent byte: [%02X]", millis(), value);
     }

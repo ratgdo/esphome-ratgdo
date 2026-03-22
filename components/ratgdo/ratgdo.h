@@ -82,6 +82,7 @@ public:
     void setup() override;
     void loop() override;
     void dump_config() override;
+    void on_shutdown() override;
 
     void init_protocol();
 

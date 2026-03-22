@@ -4,7 +4,6 @@
 
 #include "esphome/core/defines.h"
 
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/gpio.h"
 #include "esphome/core/optional.h"
 
@@ -28,7 +27,8 @@ namespace dry_contact {
 
     class DryContact : public Protocol {
     public:
-        void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
+        void setup(RATGDOComponent* ratgdo, Scheduler* scheduler,
+            InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         void loop();
         void dump_config();
 

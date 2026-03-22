@@ -2,8 +2,8 @@
 
 #ifdef PROTOCOL_SECPLUSV2
 
-#include "SoftwareSerial.h" // Using espsoftwareserial https://github.com/plerup/espsoftwareserial
 #include "esphome/core/optional.h"
+#include "ratgdo_uart.h"
 
 #include "callbacks.h"
 #include "common.h"
@@ -94,6 +94,7 @@ namespace secplus2 {
         void setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin);
         void loop();
         void dump_config();
+        void on_shutdown() override;
 
         void sync();
 
@@ -160,7 +161,7 @@ namespace secplus2 {
         single_observable<uint32_t> rolling_code_counter_ { 0 };
         OnceCallbacks<void()> on_command_sent_;
         Traits traits_;
-        SoftwareSerial sw_serial_;
+        RatgdoUART uart_;
 
         // 19-byte array
         WirePacket tx_packet_;
