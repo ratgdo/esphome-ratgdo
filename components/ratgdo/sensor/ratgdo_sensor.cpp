@@ -135,9 +135,11 @@ void RATGDOSensor::loop()
              * in most situations, but daylight and/or really high ceilings can cause long distance
              * measurements to be out of range.
              */
+            if (maxDistance != this->last_distance_) {
+                ESP_LOGI(TAG, "distance changed: %d -> %d (obj=%d)", this->last_distance_, maxDistance, objCount);
+                this->last_distance_ = maxDistance;
+            }
             this->parent_->set_distance_measurement(maxDistance);
-
-            // ESP_LOGD(TAG,"# obj found %d; distance %d",objCount, maxDistance);
 
             if (status == 0) {
                 status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
