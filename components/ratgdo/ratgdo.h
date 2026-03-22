@@ -334,7 +334,7 @@ protected:
 
 void log_subscriber_overflow(const LogString* observable_name, uint32_t max);
 
-inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
+inline uint32_t get_scheduler_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
 {
     if (count == 0) {
         log_subscriber_overflow(observable_name, count);
@@ -347,9 +347,9 @@ inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, co
     return base + counter++;
 }
 
-// Defer IDs using uint32_t ranges to avoid heap allocations
+// Scheduler IDs using uint32_t ranges to avoid heap allocations
 // Bases are auto-generated from counts to prevent ID conflicts
-namespace defer_ids {
+namespace scheduler_ids {
     inline constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
 
     // Multi-subscriber ranges — counts derived from codegen defines
@@ -398,8 +398,19 @@ namespace defer_ids {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+
+        // Named timeout IDs (replacing string-based names)
+        TIMEOUT_DOOR_QUERY_STATE,
+        TIMEOUT_DOOR_ACTION,
+        TIMEOUT_MOVE_TO_POSITION,
+        TIMEOUT_CLEAR_MOTION,
+        TIMEOUT_DOOR_STATE_EXPIRY,
+        TIMEOUT_PRESENCE_DETECT_WINDOW,
+        TIMEOUT_CLEAR_PRESENCE,
+        TIMEOUT_WALL_PANEL_EMULATION,
+        TIMEOUT_SYNC,
     };
-} // namespace defer_ids
+} // namespace scheduler_ids
 
 // Template implementations for subscribe methods.
 // Each wraps the callback in a deferred call so that if the observable
@@ -414,7 +425,7 @@ void RATGDOComponent::subscribe_rolling_code_counter(F&& f)
     auto counter = this->protocol_->call(protocol::GetRollingCodeCounter { });
     if (counter.tag == protocol::Result::Tag::rolling_code_counter) {
         counter.value.rolling_code_counter.value->subscribe([this, f](uint32_t state) {
-            defer(defer_ids::DEFER_ROLLING_CODE, [f, state] { f(state); });
+            defer(scheduler_ids::DEFER_ROLLING_CODE, [f, state] { f(state); });
         });
     }
 }
@@ -423,7 +434,7 @@ template <typename F>
 void RATGDOComponent::subscribe_opening_duration(F&& f)
 {
     this->opening_duration.subscribe([this, f](float state) {
-        defer(defer_ids::DEFER_OPENING_DURATION, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OPENING_DURATION, [f, state] { f(state); });
     });
 }
 
@@ -431,7 +442,7 @@ template <typename F>
 void RATGDOComponent::subscribe_closing_duration(F&& f)
 {
     this->closing_duration.subscribe([this, f](float state) {
-        defer(defer_ids::DEFER_CLOSING_DURATION, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_CLOSING_DURATION, [f, state] { f(state); });
     });
 }
 
@@ -440,7 +451,7 @@ template <typename F>
 void RATGDOComponent::subscribe_closing_delay(F&& f)
 {
     this->closing_delay.subscribe([this, f](uint32_t state) {
-        defer(defer_ids::DEFER_CLOSING_DELAY, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_CLOSING_DELAY, [f, state] { f(state); });
     });
 }
 #endif
@@ -449,7 +460,7 @@ template <typename F>
 void RATGDOComponent::subscribe_openings(F&& f)
 {
     this->openings.subscribe([this, f](uint16_t state) {
-        defer(defer_ids::DEFER_OPENINGS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OPENINGS, [f, state] { f(state); });
     });
 }
 
@@ -457,7 +468,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_devices_total(F&& f)
 {
     this->paired_total.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_TOTAL, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_TOTAL, [f, state] { f(state); });
     });
 }
 
@@ -465,7 +476,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_remotes(F&& f)
 {
     this->paired_remotes.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_REMOTES, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_REMOTES, [f, state] { f(state); });
     });
 }
 
@@ -473,7 +484,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_keypads(F&& f)
 {
     this->paired_keypads.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_KEYPADS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_KEYPADS, [f, state] { f(state); });
     });
 }
 
@@ -481,7 +492,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_wall_controls(F&& f)
 {
     this->paired_wall_controls.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_WALL_CONTROLS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_WALL_CONTROLS, [f, state] { f(state); });
     });
 }
 
@@ -489,14 +500,14 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_accessories(F&& f)
 {
     this->paired_accessories.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_ACCESSORIES, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_ACCESSORIES, [f, state] { f(state); });
     });
 }
 
 template <typename F>
 void RATGDOComponent::subscribe_door_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_STATE_BASE, defer_ids::DEFER_DOOR_STATE_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DOOR_STATE_BASE, scheduler_ids::DEFER_DOOR_STATE_COUNT,
         this->door_state_sub_num_, LOG_STR("door_state"));
     this->door_state.subscribe([this, f, id](DoorState state) {
         defer(id, [this, f, state] { f(state, *this->door_position); });
@@ -510,7 +521,7 @@ template <typename F>
 void RATGDOComponent::subscribe_light_state(F&& f)
 {
     this->light_state.subscribe([this, f](LightState state) {
-        defer(defer_ids::DEFER_LIGHT_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LIGHT_STATE, [f, state] { f(state); });
     });
 }
 
@@ -518,7 +529,7 @@ template <typename F>
 void RATGDOComponent::subscribe_lock_state(F&& f)
 {
     this->lock_state.subscribe([this, f](LockState state) {
-        defer(defer_ids::DEFER_LOCK_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LOCK_STATE, [f, state] { f(state); });
     });
 }
 
@@ -526,7 +537,7 @@ template <typename F>
 void RATGDOComponent::subscribe_obstruction_state(F&& f)
 {
     this->obstruction_state.subscribe([this, f](ObstructionState state) {
-        defer(defer_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
     });
 }
 
@@ -534,7 +545,7 @@ template <typename F>
 void RATGDOComponent::subscribe_motor_state(F&& f)
 {
     this->motor_state.subscribe([this, f](MotorState state) {
-        defer(defer_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
     });
 }
 
@@ -542,7 +553,7 @@ template <typename F>
 void RATGDOComponent::subscribe_button_state(F&& f)
 {
     this->button_state.subscribe([this, f](ButtonState state) {
-        defer(defer_ids::DEFER_BUTTON_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_BUTTON_STATE, [f, state] { f(state); });
     });
 }
 
@@ -550,7 +561,7 @@ template <typename F>
 void RATGDOComponent::subscribe_motion_state(F&& f)
 {
     this->motion_state.subscribe([this, f](MotionState state) {
-        defer(defer_ids::DEFER_MOTION_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_MOTION_STATE, [f, state] { f(state); });
     });
 }
 
@@ -564,14 +575,14 @@ template <typename F>
 void RATGDOComponent::subscribe_learn_state(F&& f)
 {
     this->learn_state.subscribe([this, f](LearnState state) {
-        defer(defer_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
     });
 }
 
 template <typename F>
 void RATGDOComponent::subscribe_door_action_delayed(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_ACTION_DELAYED_BASE, defer_ids::DEFER_DOOR_ACTION_DELAYED_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DOOR_ACTION_DELAYED_BASE, scheduler_ids::DEFER_DOOR_ACTION_DELAYED_COUNT,
         this->door_action_delayed_sub_num_, LOG_STR("door_action_delayed"));
     this->door_action_delayed.subscribe([this, f, id](DoorActionDelayed state) {
         defer(id, [f, state] { f(state); });
@@ -582,7 +593,7 @@ void RATGDOComponent::subscribe_door_action_delayed(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_distance_measurement(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DISTANCE_BASE, defer_ids::DEFER_DISTANCE_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DISTANCE_BASE, scheduler_ids::DEFER_DISTANCE_COUNT,
         this->distance_sub_num_, LOG_STR("distance_measurement"));
     this->last_distance_measurement.subscribe([this, f, id](int16_t state) {
         defer(id, [f, state] { f(state); });
@@ -594,7 +605,7 @@ void RATGDOComponent::subscribe_distance_measurement(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_detected_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_DETECTED_BASE, defer_ids::DEFER_VEHICLE_DETECTED_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_DETECTED_BASE, scheduler_ids::DEFER_VEHICLE_DETECTED_COUNT,
         this->vehicle_detected_sub_num_, LOG_STR("vehicle_detected"));
     this->vehicle_detected_state.subscribe([this, f, id](VehicleDetectedState state) {
         defer(id, [f, state] { f(state); });
@@ -604,7 +615,7 @@ void RATGDOComponent::subscribe_vehicle_detected_state(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_arriving_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_ARRIVING_BASE, defer_ids::DEFER_VEHICLE_ARRIVING_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_ARRIVING_BASE, scheduler_ids::DEFER_VEHICLE_ARRIVING_COUNT,
         this->vehicle_arriving_sub_num_, LOG_STR("vehicle_arriving"));
     this->vehicle_arriving_state.subscribe([this, f, id](VehicleArrivingState state) {
         defer(id, [f, state] { f(state); });
@@ -614,7 +625,7 @@ void RATGDOComponent::subscribe_vehicle_arriving_state(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_leaving_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_LEAVING_BASE, defer_ids::DEFER_VEHICLE_LEAVING_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_LEAVING_BASE, scheduler_ids::DEFER_VEHICLE_LEAVING_COUNT,
         this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
     this->vehicle_leaving_state.subscribe([this, f, id](VehicleLeavingState state) {
         defer(id, [f, state] { f(state); });

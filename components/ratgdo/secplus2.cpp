@@ -15,6 +15,8 @@ extern "C" {
 namespace esphome::ratgdo {
 namespace secplus2 {
 
+    using namespace scheduler_ids;
+
     // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
     // since we write the flash at most every every 1min
     //
@@ -116,7 +118,7 @@ namespace secplus2 {
             if (tries % 3 == 0) {
                 delay *= 1.5;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [this, start, delay, tries]() {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_SYNC, delay, [this, start, delay, tries]() {
                 this->sync_helper(start, delay, tries + 1);
             });
         };
@@ -124,7 +126,7 @@ namespace secplus2 {
 
     void Secplus2::sync()
     {
-        this->scheduler_->cancel_timeout(this->ratgdo_, "sync");
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_SYNC);
         this->sync_helper(millis(), 500, 0);
     }
 

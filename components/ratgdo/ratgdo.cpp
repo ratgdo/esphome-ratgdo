@@ -34,9 +34,10 @@ namespace esphome::ratgdo {
 using namespace protocol;
 
 static const char* const TAG = "ratgdo";
-static const int SYNC_DELAY = 1000;
+static constexpr int SYNC_DELAY = 1000;
+static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
-using namespace defer_ids;
+using namespace scheduler_ids;
 
 void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
 {
@@ -44,8 +45,8 @@ void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
 }
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
-static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+static constexpr int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
+static constexpr int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
 
 // increasing these values increases reliability but also increases detection time
 static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to detect vehicle
@@ -84,14 +85,14 @@ void RATGDOComponent::setup()
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         if (lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
             this->flags_.presence_detect_window_active = true;
-            set_timeout("presence_detect_window", PRESENCE_DETECT_WINDOW, [this] {
+            set_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW, [this] {
                 this->flags_.presence_detect_window_active = false;
             });
         }
 
         if (state == DoorState::CLOSED) {
             this->flags_.presence_detect_window_active = false;
-            cancel_timeout("presence_detect_window");
+            cancel_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW);
         }
 #endif
 
@@ -209,7 +210,7 @@ void RATGDOComponent::received(const DoorState door_state)
             this->door_position = 0.5; // best guess
         }
         this->cancel_position_sync_callbacks();
-        cancel_timeout("door_query_state");
+        cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
     } else if (door_state == DoorState::OPEN) {
         this->door_position = 1.0;
         this->cancel_position_sync_callbacks();
@@ -286,7 +287,7 @@ void RATGDOComponent::received(const MotionState motion_state)
     ESP_LOGD(TAG, "Motion: %s", LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
     this->motion_state = motion_state;
     if (motion_state == MotionState::DETECTED) {
-        this->set_timeout("clear_motion", 3000, [this] {
+        this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000, [this] {
             this->motion_state = MotionState::CLEAR;
         });
         if (*this->light_state == LightState::OFF) {
@@ -559,7 +560,7 @@ void RATGDOComponent::door_open()
 
     if (*this->opening_duration > 0) {
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->opening_duration + 2) * 1000, [this]() {
+        set_timeout(TIMEOUT_DOOR_QUERY_STATE, (*this->opening_duration + 2) * 1000, [this]() {
             if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
                 this->received(DoorState::OPEN); // probably missed a status mesage, assume it's open
                 this->query_status(); // query in case we're wrong and it's stopped
@@ -578,11 +579,16 @@ void RATGDOComponent::door_close()
         // have to stop door first, otherwise close command is ignored
         this->door_action(DoorAction::STOP);
         this->on_door_state_([this](DoorState s) {
+            cancel_timeout(TIMEOUT_DOOR_STATE_EXPIRY);
             if (s == DoorState::STOPPED) {
                 this->door_action(DoorAction::CLOSE);
             } else {
                 ESP_LOGW(TAG, "Door did not stop, ignoring close command");
             }
+        });
+        set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
         });
         return;
     }
@@ -596,7 +602,7 @@ void RATGDOComponent::door_close()
 
     if (*this->closing_duration > 0) {
         // query state in case we don't get a status message
-        set_timeout("door_query_state", (*this->closing_duration + 2) * 1000, [this]() {
+        set_timeout(TIMEOUT_DOOR_QUERY_STATE, (*this->closing_duration + 2) * 1000, [this]() {
             if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
                 this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
                 this->query_status(); // query in case we're wrong and it's stopped
@@ -624,7 +630,7 @@ void RATGDOComponent::door_action(DoorAction action)
 #ifdef RATGDO_USE_CLOSING_DELAY
     if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
         this->door_action_delayed = DoorActionDelayed::YES;
-        set_timeout("door_action", *this->closing_delay * 1000, [this] {
+        set_timeout(TIMEOUT_DOOR_ACTION, *this->closing_delay * 1000, [this] {
             this->door_action_delayed = DoorActionDelayed::NO;
             this->protocol_->door_action(DoorAction::CLOSE);
         });
@@ -641,9 +647,14 @@ void RATGDOComponent::door_move_to_position(float position)
     if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
         this->door_action(DoorAction::STOP);
         this->on_door_state_([this, position](DoorState s) {
+            cancel_timeout(TIMEOUT_DOOR_STATE_EXPIRY);
             if (s == DoorState::STOPPED) {
                 this->door_move_to_position(position);
             }
+        });
+        set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
         });
         return;
     }
@@ -665,7 +676,7 @@ void RATGDOComponent::door_move_to_position(float position)
     ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0);
 
     this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
-    set_timeout("move_to_position", operation_time, [this] {
+    set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time, [this] {
         this->door_action(DoorAction::STOP);
     });
 }
@@ -674,7 +685,7 @@ void RATGDOComponent::cancel_position_sync_callbacks()
 {
     if (this->door_start_moving != 0) {
         ESP_LOGD(TAG, "Cancelling position callbacks");
-        cancel_timeout("move_to_position");
+        cancel_timeout(TIMEOUT_MOVE_TO_POSITION);
         cancel_interval(INTERVAL_POSITION_SYNC);
 
         this->door_start_moving = 0;
