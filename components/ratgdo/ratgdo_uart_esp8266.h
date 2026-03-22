@@ -19,32 +19,35 @@ public:
     void begin(uint32_t baud, RatgdoUARTConfig config, int8_t rxPin, int8_t txPin,
         bool invert)
     {
+        this->rx_pin_ = rxPin;
+        this->tx_pin_ = txPin;
         SoftwareSerial::begin(baud, static_cast<Config>(config), rxPin, txPin, invert);
     }
 
     void on_shutdown()
     {
-        if (m_txPin >= 0) {
-            ::pinMode(m_txPin, INPUT);
+        if (this->tx_pin_ >= 0) {
+            ::pinMode(this->tx_pin_, INPUT);
         }
-        if (m_rxPin >= 0) {
-            ::pinMode(m_rxPin, INPUT);
+        if (this->rx_pin_ >= 0) {
+            ::pinMode(this->rx_pin_, INPUT);
         }
     }
 
     // Fallback for SECPLUS2 preamble on ESP8266
     void transmit_secplus2_preamble()
     {
-        if (m_txPin < 0)
+        if (this->tx_pin_ < 0)
             return;
-        // On ESP8266 SoftwareSerial bit-bangs anyway, so we just use standard
-        // methods. The calling code previously used `tx_pin_->digital_write()`. We
-        // can toggle it natively.
-        ::digitalWrite(m_txPin, HIGH);
+        ::digitalWrite(this->tx_pin_, HIGH);
         ::delayMicroseconds(1300);
-        ::digitalWrite(m_txPin, LOW);
+        ::digitalWrite(this->tx_pin_, LOW);
         ::delayMicroseconds(130);
     }
+
+private:
+    int8_t rx_pin_ { -1 };
+    int8_t tx_pin_ { -1 };
 };
 
 } // namespace esphome::ratgdo
