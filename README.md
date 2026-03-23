@@ -43,13 +43,7 @@ The ESPHome firmware will allow you to open the door to any position after calib
 
 ## ESP32 Framework
 
-ESP32 boards use the **ESP-IDF** framework. The project originally depended on Arduino, but PR [#577](https://github.com/ratgdo/esphome-ratgdo/pull/577) replaced the SoftwareSerial dependency with hardware UART and RMT peripherals, eliminating the need for Arduino on ESP32. Removing the Arduino layer saves RAM and flash since Arduino is built as an IDF component on top of ESP-IDF, and the smaller firmware means faster OTA updates:
-
-| Framework | RAM | Flash |
-|-----------|-----|-------|
-| ESP32 Arduino | 18,840 bytes (5.7%) | 554,743 bytes (30.2%) |
-| ESP32 ESP-IDF | 17,308 bytes (5.3%) | 510,403 bytes (27.8%) |
-| **Savings** | **1,532 bytes** | **44,340 bytes** |
+ESP32 boards use the **ESP-IDF** framework. The project originally depended on Arduino, but PR [#577](https://github.com/ratgdo/esphome-ratgdo/pull/577) replaced the SoftwareSerial dependency with hardware UART and RMT peripherals, eliminating the need for Arduino on ESP32. Removing the Arduino layer saves ~1.5KB RAM and ~44KB flash since Arduino is built as an IDF component on top of ESP-IDF, and the smaller firmware means faster OTA updates.
 
 The **v3.2 Disco** board uses the Arduino framework because its VL53L4CX distance sensor library and Wire I2C library require it.
 
