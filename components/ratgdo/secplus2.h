@@ -167,6 +167,8 @@ namespace secplus2 {
 
         // 4-byte members
         uint32_t transmit_pending_start_ { 0 };
+        uint32_t rx_msg_start_ { 0 };
+        uint32_t rx_last_read_ { 0 };
 
         // Larger structures
         single_observable<uint32_t> rolling_code_counter_ { 0 };
@@ -174,14 +176,17 @@ namespace secplus2 {
         Traits traits_;
         RatgdoUART uart_;
 
-        // 19-byte array
+        // 19-byte arrays
         WirePacket tx_packet_;
+        WirePacket rx_packet_;
 
         // Small members at the end
+        uint16_t rx_byte_count_ { 0 };
         LearnState learn_state_ { LearnState::UNKNOWN };
         struct {
             uint8_t transmit_pending : 1;
-            uint8_t reserved : 7; // Reserved for future use
+            uint8_t rx_reading_msg : 1;
+            uint8_t reserved : 6; // Reserved for future use
         } flags_ { 0 };
     };
 } // namespace secplus2
