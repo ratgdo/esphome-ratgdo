@@ -6,6 +6,7 @@
 
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
@@ -263,19 +264,26 @@ namespace secplus1 {
                 this->last_rx_ = millis();
 
                 if (ser_byte < 0x30 || ser_byte > 0x3A) {
-                    ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->uart_.baudRate());
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Ignoring byte [%s], baud: %d", millis(), format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
                     byte_count = 0;
                     continue;
                 }
                 rx_packet[byte_count++] = ser_byte;
-                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                }
                 reading_msg = true;
 
                 if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
                     rx_packet[byte_count++] = 0;
                     reading_msg = false;
                     byte_count = 0;
-                    ESP_LOG2(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
+                    {
+                        char hex[format_hex_pretty_size(1)];
+                        ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &rx_packet[0], 1));
+                    }
                     return this->decode_packet(rx_packet);
                 }
 
@@ -287,7 +295,10 @@ namespace secplus1 {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
                 rx_packet[byte_count++] = ser_byte;
-                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                }
 
                 if (byte_count == RX_LENGTH) {
                     reading_msg = false;
@@ -301,7 +312,10 @@ namespace secplus1 {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%02X ...]", millis(), rx_packet[0]);
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &rx_packet[0], 1));
+                }
                 reading_msg = false;
                 byte_count = 0;
             }
@@ -312,12 +326,16 @@ namespace secplus1 {
 
     void Secplus1::print_rx_packet(const RxPacket& packet) const
     {
-        ESP_LOG2(TAG, "[%d] Received packet: [%02X %02X]", millis(), packet[0], packet[1]);
+        constexpr size_t hex_size = format_hex_pretty_size(RX_LENGTH);
+        char hex[hex_size];
+        ESP_LOG2(TAG, "[%d] Received packet: [%s]", millis(), format_hex_pretty_to(hex, packet, RX_LENGTH));
     }
 
     void Secplus1::print_tx_packet(const TxPacket& packet) const
     {
-        ESP_LOG2(TAG, "[%d] Sending packet: [%02X %02X]", millis(), packet[0], packet[1]);
+        constexpr size_t hex_size = format_hex_pretty_size(TX_LENGTH);
+        char hex[hex_size];
+        ESP_LOG2(TAG, "[%d] Sending packet: [%s]", millis(), format_hex_pretty_to(hex, packet, TX_LENGTH));
     }
 
     optional<RxCommand> Secplus1::decode_packet(const RxPacket& packet) const
@@ -486,7 +504,10 @@ namespace secplus1 {
         if (!enable_rx) {
             this->uart_.enableIntTx(true);
         }
-        ESP_LOGD(TAG, "[%d] Sent byte: [%02X]", millis(), value);
+        {
+            char hex[format_hex_pretty_size(1)];
+            ESP_LOGD(TAG, "[%d] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &value, 1));
+        }
     }
 
 } // namespace secplus1

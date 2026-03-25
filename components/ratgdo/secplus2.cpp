@@ -5,6 +5,7 @@
 #include "ratgdo.h"
 
 #include "esphome/core/gpio.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
@@ -275,7 +276,10 @@ namespace secplus2 {
                 last_read = millis();
 
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
-                    ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->uart_.baudRate());
+                    {
+                        char hex[format_hex_pretty_size(1)];
+                        ESP_LOG2(TAG, "Ignoring byte (%d): %s, baud: %d", byte_count, format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
+                    }
                     byte_count = 0;
                     continue;
                 }
@@ -326,27 +330,9 @@ namespace secplus2 {
 
     void Secplus2::print_packet(const esphome::LogString* prefix, const WirePacket& packet) const
     {
-        ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
-            LOG_STR_ARG(prefix),
-            packet[0],
-            packet[1],
-            packet[2],
-            packet[3],
-            packet[4],
-            packet[5],
-            packet[6],
-            packet[7],
-            packet[8],
-            packet[9],
-            packet[10],
-            packet[11],
-            packet[12],
-            packet[13],
-            packet[14],
-            packet[15],
-            packet[16],
-            packet[17],
-            packet[18]);
+        constexpr size_t hex_size = format_hex_pretty_size(PACKET_LENGTH);
+        char hex_buf[hex_size];
+        ESP_LOGD(TAG, "%s: [%s]", LOG_STR_ARG(prefix), format_hex_pretty_to(hex_buf, packet, PACKET_LENGTH));
     }
 
     optional<Command> Secplus2::decode_packet(const WirePacket& packet) const
@@ -430,7 +416,12 @@ namespace secplus2 {
 
     void Secplus2::send_command(Command command, IncrementRollingCode increment)
     {
-        ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", LOG_STR_ARG(CommandType_to_string(command.type)), command.byte2, command.byte1, command.nibble);
+        {
+            uint8_t data[] = { command.byte2, command.byte1, command.nibble };
+            constexpr size_t hex_size = format_hex_pretty_size(3);
+            char hex[hex_size];
+            ESP_LOGD(TAG, "Send command: %s, data: %s", LOG_STR_ARG(CommandType_to_string(command.type)), format_hex_pretty_to(hex, data, 3));
+        }
         if (!this->flags_.transmit_pending) { // have an untransmitted packet
             this->encode_packet(command, this->tx_packet_);
             if (increment == IncrementRollingCode::YES) {
