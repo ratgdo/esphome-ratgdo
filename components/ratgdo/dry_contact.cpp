@@ -102,14 +102,14 @@ namespace dry_contact {
 
         ESP_LOG1(TAG, "Door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
 
-        if (action == DoorAction::OPEN) {
+        if (action == DoorAction::OPEN && this->discrete_open_pin_ != nullptr) {
             this->discrete_open_pin_->digital_write(1);
             this->ratgdo_->set_timeout(500, [this] {
                 this->discrete_open_pin_->digital_write(0);
             });
         }
 
-        if (action == DoorAction::CLOSE) {
+        if (action == DoorAction::CLOSE && this->discrete_close_pin_ != nullptr) {
             this->discrete_close_pin_->digital_write(1);
             this->ratgdo_->set_timeout(500, [this] {
                 this->discrete_close_pin_->digital_write(0);
