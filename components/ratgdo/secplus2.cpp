@@ -264,64 +264,58 @@ namespace secplus2 {
 
     optional<Command> Secplus2::read_command()
     {
-        static bool reading_msg = false;
-        static uint32_t msg_start = 0;
-        static uint16_t byte_count = 0;
-        static WirePacket rx_packet;
-        static uint32_t last_read = 0;
-
-        if (!reading_msg) {
+        if (!this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
-                last_read = millis();
+                this->rx_last_read_ = millis();
 
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
                     {
                         char hex[format_hex_pretty_size(1)];
-                        ESP_LOG2(TAG, "Ignoring byte (%d): %s, baud: %d", byte_count, format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
+                        ESP_LOG2(TAG, "Ignoring byte (%d): %s, baud: %d", this->rx_byte_count_, format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
                     }
-                    byte_count = 0;
+                    this->rx_byte_count_ = 0;
                     continue;
                 }
-                msg_start = ((msg_start << 8) | ser_byte) & 0xffffff;
-                byte_count++;
+                this->rx_msg_start_ = ((this->rx_msg_start_ << 8) | ser_byte) & 0xffffff;
+                this->rx_byte_count_++;
 
                 // if we are at the start of a message, capture the next 16 bytes
-                if (msg_start == 0x550100) {
+                if (this->rx_msg_start_ == 0x550100) {
                     ESP_LOG1(TAG, "Baud: %d", this->uart_.baudRate());
-                    rx_packet[0] = 0x55;
-                    rx_packet[1] = 0x01;
-                    rx_packet[2] = 0x00;
-                    byte_count = 3;
+                    this->rx_packet_[0] = 0x55;
+                    this->rx_packet_[1] = 0x01;
+                    this->rx_packet_[2] = 0x00;
+                    this->rx_byte_count_ = 3;
 
-                    reading_msg = true;
+                    this->flags_.rx_reading_msg = true;
                     break;
                 }
             }
         }
-        if (reading_msg) {
+        if (this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
-                last_read = millis();
-                rx_packet[byte_count] = ser_byte;
-                byte_count++;
-                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", byte_count, ser_byte, this->uart_.baudRate());
+                this->rx_last_read_ = millis();
+                this->rx_packet_[this->rx_byte_count_] = ser_byte;
+                this->rx_byte_count_++;
+                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", this->rx_byte_count_, ser_byte, this->uart_.baudRate());
 
-                if (byte_count == PACKET_LENGTH) {
-                    reading_msg = false;
-                    byte_count = 0;
-                    this->print_packet(LOG_STR("Received packet"), rx_packet);
-                    return this->decode_packet(rx_packet);
+                if (this->rx_byte_count_ == PACKET_LENGTH) {
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
+                    this->print_packet(LOG_STR("Received packet"), this->rx_packet_);
+                    return this->decode_packet(this->rx_packet_);
                 }
             }
 
-            if (millis() - last_read > 100) {
+            if (millis() - this->rx_last_read_ > 100) {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
-                reading_msg = false;
-                byte_count = 0;
+                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", this->rx_byte_count_);
+                this->flags_.rx_reading_msg = false;
+                this->rx_byte_count_ = 0;
             }
         }
 
