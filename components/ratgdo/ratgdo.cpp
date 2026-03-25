@@ -121,6 +121,10 @@ void RATGDOComponent::init_protocol()
 
 void RATGDOComponent::loop()
 {
+    // obstruction_loop() must run before protocol_->loop() because it uses
+    // App.get_loop_component_start_time() and protocol_->loop() may block
+    // for up to 1.3ms (secplus2 transmit collision wait), which would make
+    // the cached timestamp stale.
     this->obstruction_loop();
     this->protocol_->loop();
 }
@@ -476,9 +480,12 @@ Result RATGDOComponent::call_protocol(Args args)
 
 void RATGDOComponent::obstruction_loop()
 {
-    long current_millis = millis();
-    static unsigned long last_millis = 0;
-    static unsigned long last_asleep = 0;
+    // Safe to use cached loop timestamp here because obstruction_loop()
+    // runs before protocol_->loop() which contains the 1.3ms blocking
+    // transmit in secplus2. The 50ms CHECK_PERIOD has ample margin.
+    const uint32_t current_millis = App.get_loop_component_start_time();
+    static uint32_t last_millis = 0;
+    static uint32_t last_asleep = 0;
 
     // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
     // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
@@ -486,8 +493,8 @@ void RATGDOComponent::obstruction_loop()
 
     // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
 
-    const long CHECK_PERIOD = 50;
-    const long PULSES_LOWER_LIMIT = 3;
+    constexpr uint32_t CHECK_PERIOD = 50;
+    constexpr int PULSES_LOWER_LIMIT = 3;
 
     if (current_millis - last_millis > CHECK_PERIOD) {
         // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
