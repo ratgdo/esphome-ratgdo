@@ -63,8 +63,8 @@ namespace dry_contact {
         // Pointers first (4-byte aligned)
         InternalGPIOPin* tx_pin_;
         InternalGPIOPin* rx_pin_;
-        InternalGPIOPin* discrete_open_pin_;
-        InternalGPIOPin* discrete_close_pin_;
+        InternalGPIOPin* discrete_open_pin_ { nullptr };
+        InternalGPIOPin* discrete_close_pin_ { nullptr };
         RATGDOComponent* ratgdo_;
         Scheduler* scheduler_;
 
