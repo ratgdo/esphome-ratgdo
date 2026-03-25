@@ -505,8 +505,9 @@ namespace secplus1 {
             this->uart_.enableIntTx(true);
         }
         {
+            uint8_t byte_val = static_cast<uint8_t>(value);
             char hex[format_hex_pretty_size(1)];
-            ESP_LOGD(TAG, "[%d] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &value, 1));
+            ESP_LOGD(TAG, "[%d] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &byte_val, 1));
         }
     }
 
