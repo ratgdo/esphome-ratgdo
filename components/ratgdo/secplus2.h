@@ -124,6 +124,17 @@ namespace secplus2 {
         template <typename F>
         void send_command(Command cmd, IncrementRollingCode increment, F&& on_sent)
         {
+            // Only register the callback if the command will be accepted.
+            // If transmit_pending is set the command will be dropped, and
+            // a stale callback would fire when the previous pending packet
+            // transmits -- executing logic (e.g. the second phase of a
+            // door_command) at the wrong time.
+            //
+            // Register before send_command() because transmit_packet() may
+            // succeed immediately and call on_command_sent_.trigger() inline.
+            if (this->flags_.transmit_pending) {
+                return;
+            }
             this->on_command_sent_(std::forward<F>(on_sent));
             this->send_command(cmd, increment);
         }
