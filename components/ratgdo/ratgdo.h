@@ -64,7 +64,7 @@ const float DOOR_DELTA_UNKNOWN = -2.0;
 const uint8_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
 struct RATGDOStore {
-    int obstruction_low_count = 0; // count obstruction low pulses
+    volatile uint32_t obstruction_low_count = 0; // count obstruction low pulses
 
     static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg)
     {
