@@ -490,7 +490,7 @@ void RATGDOComponent::obstruction_loop()
     // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
 
     constexpr uint32_t CHECK_PERIOD = 50;
-    constexpr int PULSES_LOWER_LIMIT = 3;
+    constexpr uint32_t PULSES_LOWER_LIMIT = 3;
 
     if (current_millis - last_millis > CHECK_PERIOD) {
         // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
