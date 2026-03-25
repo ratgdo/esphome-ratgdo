@@ -253,12 +253,7 @@ namespace secplus1 {
 
     optional<RxCommand> Secplus1::read_command()
     {
-        static bool reading_msg = false;
-        static uint32_t msg_start = 0;
-        static uint16_t byte_count = 0;
-        static RxPacket rx_packet;
-
-        if (!reading_msg) {
+        if (!this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
@@ -266,45 +261,45 @@ namespace secplus1 {
                 if (ser_byte < 0x30 || ser_byte > 0x3A) {
                     char hex[format_hex_pretty_size(1)];
                     ESP_LOG2(TAG, "[%d] Ignoring byte [%s], baud: %d", millis(), format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
-                    byte_count = 0;
+                    this->rx_byte_count_ = 0;
                     continue;
                 }
-                rx_packet[byte_count++] = ser_byte;
+                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
                 {
                     char hex[format_hex_pretty_size(1)];
                     ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
                 }
-                reading_msg = true;
+                this->flags_.rx_reading_msg = true;
 
                 if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
-                    rx_packet[byte_count++] = 0;
-                    reading_msg = false;
-                    byte_count = 0;
+                    this->rx_packet_[this->rx_byte_count_++] = 0;
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
                     {
                         char hex[format_hex_pretty_size(1)];
-                        ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &rx_packet[0], 1));
+                        ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
                     }
-                    return this->decode_packet(rx_packet);
+                    return this->decode_packet(this->rx_packet_);
                 }
 
                 break;
             }
         }
-        if (reading_msg) {
+        if (this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
-                rx_packet[byte_count++] = ser_byte;
+                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
                 {
                     char hex[format_hex_pretty_size(1)];
                     ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
                 }
 
-                if (byte_count == RX_LENGTH) {
-                    reading_msg = false;
-                    byte_count = 0;
-                    this->print_rx_packet(rx_packet);
-                    return this->decode_packet(rx_packet);
+                if (this->rx_byte_count_ == RX_LENGTH) {
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
+                    this->print_rx_packet(this->rx_packet_);
+                    return this->decode_packet(this->rx_packet_);
                 }
             }
 
@@ -314,10 +309,10 @@ namespace secplus1 {
                 // discard it so we can read the following packet correctly
                 {
                     char hex[format_hex_pretty_size(1)];
-                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &rx_packet[0], 1));
+                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
                 }
-                reading_msg = false;
-                byte_count = 0;
+                this->flags_.rx_reading_msg = false;
+                this->rx_byte_count_ = 0;
             }
         }
 
