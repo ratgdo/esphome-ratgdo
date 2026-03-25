@@ -310,7 +310,7 @@ namespace secplus2 {
                 if (byte_count == PACKET_LENGTH) {
                     reading_msg = false;
                     byte_count = 0;
-                    this->print_packet(LOG_STR("Received packet: "), rx_packet);
+                    this->print_packet(LOG_STR("Received packet"), rx_packet);
                     return this->decode_packet(rx_packet);
                 }
             }
