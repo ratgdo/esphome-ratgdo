@@ -84,10 +84,8 @@ void RATGDOComponent::setup()
     ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
 
     this->subscribe_door_state([this](DoorState state, float position) {
-        static DoorState lastState = DoorState::UNKNOWN;
-
 #ifdef RATGDO_USE_VEHICLE_SENSORS
-        if (lastState != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
+        if (this->last_door_state_for_presence_ != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
             this->flags_.presence_detect_window_active = true;
             this->set_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW, [this] {
                 this->flags_.presence_detect_window_active = false;
@@ -98,9 +96,9 @@ void RATGDOComponent::setup()
             this->flags_.presence_detect_window_active = false;
             this->cancel_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW);
         }
-#endif
 
-        lastState = state;
+        this->last_door_state_for_presence_ = state;
+#endif
     });
 }
 
@@ -421,26 +419,24 @@ void RATGDOComponent::set_distance_measurement(int16_t distance)
 void RATGDOComponent::calculate_presence()
 {
     int percent = this->in_range.count() * 100 / this->in_range.size();
-    static int last_percent = -1;
-    static int off_counter = 0;
 
     if (percent >= PRESENCE_DETECTION_ON_THRESHOLD)
         this->vehicle_detected_state = VehicleDetectedState::YES;
 
     if (percent == 0 && *this->vehicle_detected_state == VehicleDetectedState::YES) {
-        off_counter++;
-        ESP_LOGD(TAG, "Off counter: %d", off_counter);
+        this->presence_off_counter_++;
+        ESP_LOGD(TAG, "Off counter: %d", this->presence_off_counter_);
 
-        if (off_counter / this->in_range.size() >= PRESENCE_DETECTION_OFF_DEBOUNCE) {
-            off_counter = 0;
+        if (this->presence_off_counter_ / this->in_range.size() >= PRESENCE_DETECTION_OFF_DEBOUNCE) {
+            this->presence_off_counter_ = 0;
             this->vehicle_detected_state = VehicleDetectedState::NO;
         }
     }
 
-    if (percent != last_percent) {
+    if (percent != this->last_presence_percent_) {
         ESP_LOGD(TAG, "pct_in_range: %d", percent);
-        last_percent = percent;
-        off_counter = 0;
+        this->last_presence_percent_ = percent;
+        this->presence_off_counter_ = 0;
     }
     // ESP_LOGD(TAG, "in_range: %s", this->in_range.to_string().c_str());
 }
