@@ -167,6 +167,10 @@ namespace secplus1 {
         OnceCallbacks<void(DoorState)> on_door_state_;
         Traits traits_;
 
+        // rx parsing state
+        RxPacket rx_packet_;
+        uint16_t rx_byte_count_ { 0 };
+
         // Group all 1-byte members at the end to minimize padding
         LightState light_state { LightState::UNKNOWN };
         LockState lock_state { LockState::UNKNOWN };
@@ -179,7 +183,8 @@ namespace secplus1 {
             uint8_t door_moving : 1;
             uint8_t wall_panel_starting : 1;
             uint8_t is_0x37_panel : 1;
-            uint8_t reserved : 5; // Reserved for future use
+            uint8_t rx_reading_msg : 1;
+            uint8_t reserved : 4; // Reserved for future use
         } flags_ { 0 };
     };
 
