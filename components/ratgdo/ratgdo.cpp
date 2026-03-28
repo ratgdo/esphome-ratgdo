@@ -529,17 +529,17 @@ void RATGDOComponent::obstruction_loop()
 
 void RATGDOComponent::query_status()
 {
-    this->protocol_->call(QueryStatus {});
+    this->protocol_->call(QueryStatus { });
 }
 
 void RATGDOComponent::query_openings()
 {
-    this->protocol_->call(QueryOpenings {});
+    this->protocol_->call(QueryOpenings { });
 }
 
 void RATGDOComponent::query_paired_devices()
 {
-    this->protocol_->call(QueryPairedDevicesAll {});
+    this->protocol_->call(QueryPairedDevicesAll { });
 }
 
 void RATGDOComponent::query_paired_devices(PairedDevice kind)
@@ -757,12 +757,12 @@ void RATGDOComponent::lock_toggle()
 // Learn functions
 void RATGDOComponent::activate_learn()
 {
-    this->protocol_->call(ActivateLearn {});
+    this->protocol_->call(ActivateLearn { });
 }
 
 void RATGDOComponent::inactivate_learn()
 {
-    this->protocol_->call(InactivateLearn {});
+    this->protocol_->call(InactivateLearn { });
 }
 
 // Subscribe implementations are now templates in ratgdo.h
