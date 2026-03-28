@@ -45,7 +45,8 @@ using namespace scheduler_ids;
 
 void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
 {
-    ESP_LOGE(TAG, "Too many subscribers for %s (max %d)", LOG_STR_ARG(observable_name), (int)max);
+    ESP_LOGE(TAG, "Too many subscribers for %s (max %d)",
+        LOG_STR_ARG(observable_name), (int)max);
 }
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
@@ -53,9 +54,12 @@ static constexpr int CLEAR_PRESENCE = 60000; // how long to keep arriving/leavin
 static constexpr int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
 static constexpr int PRESENCE_DETECT_WINDOW_AFTER_CLOSE = 15000; // how long to keep presence window active after door reaches closed
 
-// increasing these values increases reliability but also increases detection time
-static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to detect vehicle
-static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations that must be 0 before clearing vehicle detected state
+// increasing these values increases reliability but also increases detection
+// time
+static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to
+                                                          // detect vehicle
+static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations that must be 0
+                                                          // before clearing vehicle detected state
 #endif
 
 void RATGDOComponent::setup()
@@ -72,9 +76,12 @@ void RATGDOComponent::setup()
 #else
     this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
 #endif
-    this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction, &this->isr_store_, gpio::INTERRUPT_FALLING_EDGE);
+    this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction,
+        &this->isr_store_,
+        gpio::INTERRUPT_FALLING_EDGE);
 
-    this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_, this->output_gdo_pin_);
+    this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_,
+        this->output_gdo_pin_);
 
     // many things happening at startup, use some delay for sync
     this->set_timeout(SYNC_DELAY, [this] { this->sync(); });
@@ -88,15 +95,15 @@ void RATGDOComponent::setup()
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         if (this->last_door_state_for_presence_ != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
             this->flags_.presence_detect_window_active = true;
-            this->set_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW, [this] {
-                this->flags_.presence_detect_window_active = false;
-            });
+            this->set_timeout(
+                TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW,
+                [this] { this->flags_.presence_detect_window_active = false; });
         }
 
         if (state == DoorState::CLOSED) {
-            this->set_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW_AFTER_CLOSE, [this] {
-                this->flags_.presence_detect_window_active = false;
-            });
+            this->set_timeout(
+                TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW_AFTER_CLOSE,
+                [this] { this->flags_.presence_detect_window_active = false; });
         }
 
         this->last_door_state_for_presence_ = state;
@@ -241,7 +248,8 @@ void RATGDOComponent::received(const DoorState door_state)
 
 void RATGDOComponent::received(const LearnState learn_state)
 {
-    ESP_LOGD(TAG, "Learn state=%s", LOG_STR_ARG(LearnState_to_string(learn_state)));
+    ESP_LOGD(TAG, "Learn state=%s",
+        LOG_STR_ARG(LearnState_to_string(learn_state)));
 
     if (*this->learn_state == learn_state) {
         return;
@@ -256,7 +264,8 @@ void RATGDOComponent::received(const LearnState learn_state)
 
 void RATGDOComponent::received(const LightState light_state)
 {
-    ESP_LOGD(TAG, "Light state=%s", LOG_STR_ARG(LightState_to_string(light_state)));
+    ESP_LOGD(TAG, "Light state=%s",
+        LOG_STR_ARG(LightState_to_string(light_state)));
     this->light_state = light_state;
 }
 
@@ -269,7 +278,8 @@ void RATGDOComponent::received(const LockState lock_state)
 void RATGDOComponent::received(const ObstructionState obstruction_state)
 {
     if (!this->flags_.obstruction_sensor_detected) {
-        ESP_LOGD(TAG, "Obstruction: state=%s", LOG_STR_ARG(ObstructionState_to_string(*this->obstruction_state)));
+        ESP_LOGD(TAG, "Obstruction: state=%s",
+            LOG_STR_ARG(ObstructionState_to_string(*this->obstruction_state)));
 
         this->obstruction_state = obstruction_state;
         // This isn't very fast to update, but its still better
@@ -280,24 +290,26 @@ void RATGDOComponent::received(const ObstructionState obstruction_state)
 
 void RATGDOComponent::received(const MotorState motor_state)
 {
-    ESP_LOGD(TAG, "Motor: state=%s", LOG_STR_ARG(MotorState_to_string(*this->motor_state)));
+    ESP_LOGD(TAG, "Motor: state=%s",
+        LOG_STR_ARG(MotorState_to_string(*this->motor_state)));
     this->motor_state = motor_state;
 }
 
 void RATGDOComponent::received(const ButtonState button_state)
 {
-    ESP_LOGD(TAG, "Button state=%s", LOG_STR_ARG(ButtonState_to_string(*this->button_state)));
+    ESP_LOGD(TAG, "Button state=%s",
+        LOG_STR_ARG(ButtonState_to_string(*this->button_state)));
     this->button_state = button_state;
 }
 
 void RATGDOComponent::received(const MotionState motion_state)
 {
-    ESP_LOGD(TAG, "Motion: %s", LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
+    ESP_LOGD(TAG, "Motion: %s",
+        LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
     this->motion_state = motion_state;
     if (motion_state == MotionState::DETECTED) {
-        this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000, [this] {
-            this->motion_state = MotionState::CLEAR;
-        });
+        this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000,
+            [this] { this->motion_state = MotionState::CLEAR; });
         if (*this->light_state == LightState::OFF) {
             this->query_status();
         }
@@ -330,7 +342,8 @@ void RATGDOComponent::received(const Openings openings)
 
 void RATGDOComponent::received(const PairedDeviceCount pdc)
 {
-    ESP_LOGD(TAG, "Paired device count, kind=%s count=%d", LOG_STR_ARG(PairedDevice_to_string(pdc.kind)), pdc.count);
+    ESP_LOGD(TAG, "Paired device count, kind=%s count=%d",
+        LOG_STR_ARG(PairedDevice_to_string(pdc.kind)), pdc.count);
 
     if (pdc.kind == PairedDevice::ALL) {
         this->paired_total = pdc.count;
@@ -352,24 +365,31 @@ void RATGDOComponent::received(const TimeToClose ttc)
 
 void RATGDOComponent::received(const BatteryState battery_state)
 {
-    ESP_LOGD(TAG, "Battery state=%s", LOG_STR_ARG(BatteryState_to_string(battery_state)));
+    ESP_LOGD(TAG, "Battery state=%s",
+        LOG_STR_ARG(BatteryState_to_string(battery_state)));
 }
 
 void RATGDOComponent::schedule_door_position_sync(float update_period)
 {
-    ESP_LOG1(TAG, "Schedule position sync: delta %f, start position: %f, start moving: %d",
-        this->door_move_delta, this->door_start_position, this->door_start_moving);
-    auto duration = this->door_move_delta > 0 ? *this->opening_duration : *this->closing_duration;
+    ESP_LOG1(
+        TAG,
+        "Schedule position sync: delta %f, start position: %f, start moving: %d",
+        this->door_move_delta, this->door_start_position,
+        this->door_start_moving);
+    auto duration = this->door_move_delta > 0 ? *this->opening_duration
+                                              : *this->closing_duration;
     if (duration == 0) {
         return;
     }
-    this->position_sync_remaining_ = std::max(static_cast<uint16_t>(1000 * duration / update_period), static_cast<uint16_t>(1));
-    set_interval(INTERVAL_POSITION_SYNC, static_cast<uint32_t>(update_period), [this]() {
-        this->door_position_update();
-        if (--this->position_sync_remaining_ == 0) {
-            cancel_interval(INTERVAL_POSITION_SYNC);
-        }
-    });
+    this->position_sync_remaining_ = std::max(static_cast<uint16_t>(1000 * duration / update_period),
+        static_cast<uint16_t>(1));
+    set_interval(INTERVAL_POSITION_SYNC, static_cast<uint32_t>(update_period),
+        [this]() {
+            this->door_position_update();
+            if (--this->position_sync_remaining_ == 0) {
+                cancel_interval(INTERVAL_POSITION_SYNC);
+            }
+        });
 }
 
 void RATGDOComponent::door_position_update()
@@ -378,7 +398,8 @@ void RATGDOComponent::door_position_update()
         return;
     }
     auto now = millis();
-    auto duration = this->door_move_delta > 0 ? *this->opening_duration : -*this->closing_duration;
+    auto duration = this->door_move_delta > 0 ? *this->opening_duration
+                                              : -*this->closing_duration;
     if (duration == 0) {
         return;
     }
@@ -491,19 +512,22 @@ void RATGDOComponent::obstruction_loop()
     static uint32_t last_millis = 0;
     static uint32_t last_asleep = 0;
 
-    // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms), obstructed (HIGH), asleep (LOW)
-    // the transitions between awake and asleep are tricky because the voltage drops slowly when falling asleep
-    // and is high without pulses when waking up
+    // the obstruction sensor has 3 states: clear (HIGH with LOW pulse every 7ms),
+    // obstructed (HIGH), asleep (LOW) the transitions between awake and asleep
+    // are tricky because the voltage drops slowly when falling asleep and is high
+    // without pulses when waking up
 
-    // If at least 3 low pulses are counted within 50ms, the door is awake, not obstructed and we don't have to check anything else
+    // If at least 3 low pulses are counted within 50ms, the door is awake, not
+    // obstructed and we don't have to check anything else
 
     constexpr uint32_t CHECK_PERIOD = 50;
     constexpr uint32_t PULSES_LOWER_LIMIT = 3;
 
     if (current_millis - last_millis > CHECK_PERIOD) {
-        // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep: %ld",
-        //     current_millis, this->isr_store_.obstruction_low_count, PULSES_LOWER_LIMIT,
-        //     current_millis - last_asleep
+        // ESP_LOGD(TAG, "%ld: Obstruction count: %d, expected: %d, since asleep:
+        // %ld",
+        //     current_millis, this->isr_store_.obstruction_low_count,
+        //     PULSES_LOWER_LIMIT, current_millis - last_asleep
         // );
 
         // check to see if we got more then PULSES_LOWER_LIMIT pulses
@@ -516,7 +540,8 @@ void RATGDOComponent::obstruction_loop()
                 // asleep
                 last_asleep = current_millis;
             } else {
-                // if the line is high and was last asleep more than 700ms ago, then there is an obstruction present
+                // if the line is high and was last asleep more than 700ms ago, then
+                // there is an obstruction present
                 if (current_millis - last_asleep > 700) {
                     this->obstruction_state = ObstructionState::OBSTRUCTED;
                 }
@@ -527,10 +552,7 @@ void RATGDOComponent::obstruction_loop()
     }
 }
 
-void RATGDOComponent::query_status()
-{
-    this->protocol_->call(QueryStatus { });
-}
+void RATGDOComponent::query_status() { this->protocol_->call(QueryStatus { }); }
 
 void RATGDOComponent::query_openings()
 {
@@ -567,10 +589,11 @@ void RATGDOComponent::sync()
 
 void RATGDOComponent::set_door_state_expiry()
 {
-    this->set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
-        ESP_LOGW(TAG, "Door state callback expired, clearing");
-        this->on_door_state_.clear();
-    });
+    this->set_timeout(TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT,
+        [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
+        });
 }
 
 void RATGDOComponent::cancel_door_state_expiry()
@@ -588,12 +611,15 @@ void RATGDOComponent::door_open()
 
     if (*this->opening_duration > 0) {
         // query state in case we don't get a status message
-        this->set_timeout(TIMEOUT_DOOR_QUERY_STATE, (*this->opening_duration + 2) * 1000, [this]() {
-            if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
-                this->received(DoorState::OPEN); // probably missed a status mesage, assume it's open
-                this->query_status(); // query in case we're wrong and it's stopped
-            }
-        });
+        this->set_timeout(
+            TIMEOUT_DOOR_QUERY_STATE, (*this->opening_duration + 2) * 1000,
+            [this]() {
+                if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
+                    this->received(DoorState::OPEN); // probably missed a status mesage,
+                                                     // assume it's open
+                    this->query_status(); // query in case we're wrong and it's stopped
+                }
+            });
     }
 }
 
@@ -625,12 +651,15 @@ void RATGDOComponent::door_close()
 
     if (*this->closing_duration > 0) {
         // query state in case we don't get a status message
-        this->set_timeout(TIMEOUT_DOOR_QUERY_STATE, (*this->closing_duration + 2) * 1000, [this]() {
-            if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
-                this->received(DoorState::CLOSED); // probably missed a status mesage, assume it's closed
-                this->query_status(); // query in case we're wrong and it's stopped
-            }
-        });
+        this->set_timeout(
+            TIMEOUT_DOOR_QUERY_STATE, (*this->closing_duration + 2) * 1000,
+            [this]() {
+                if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
+                    this->received(DoorState::CLOSED); // probably missed a status
+                                                       // mesage, assume it's closed
+                    this->query_status(); // query in case we're wrong and it's stopped
+                }
+            });
     }
 }
 
@@ -643,10 +672,7 @@ void RATGDOComponent::door_stop()
     this->door_action(DoorAction::STOP);
 }
 
-void RATGDOComponent::door_toggle()
-{
-    this->door_action(DoorAction::TOGGLE);
-}
+void RATGDOComponent::door_toggle() { this->door_action(DoorAction::TOGGLE); }
 
 void RATGDOComponent::door_action(DoorAction action)
 {
@@ -691,12 +717,12 @@ void RATGDOComponent::door_move_to_position(float position)
 
     auto operation_time = 1000 * duration * delta;
     this->door_move_delta = delta;
-    ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position, operation_time / 1000.0);
+    ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position,
+        operation_time / 1000.0);
 
     this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
-    this->set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time, [this] {
-        this->door_action(DoorAction::STOP);
-    });
+    this->set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time,
+        [this] { this->door_action(DoorAction::STOP); });
 }
 
 void RATGDOComponent::cancel_position_sync_callbacks()
@@ -768,7 +794,8 @@ void RATGDOComponent::inactivate_learn()
 // Subscribe implementations are now templates in ratgdo.h
 
 // dry contact methods
-void RATGDOComponent::set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor)
+void RATGDOComponent::set_dry_contact_open_sensor(
+    esphome::binary_sensor::BinarySensor* dry_contact_open_sensor)
 {
     dry_contact_open_sensor_ = dry_contact_open_sensor;
     dry_contact_open_sensor_->add_on_state_callback([this](bool sensor_value) {
@@ -777,7 +804,8 @@ void RATGDOComponent::set_dry_contact_open_sensor(esphome::binary_sensor::Binary
     });
 }
 
-void RATGDOComponent::set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor)
+void RATGDOComponent::set_dry_contact_close_sensor(
+    esphome::binary_sensor::BinarySensor* dry_contact_close_sensor)
 {
     dry_contact_close_sensor_ = dry_contact_close_sensor;
     dry_contact_close_sensor_->add_on_state_callback([this](bool sensor_value) {
