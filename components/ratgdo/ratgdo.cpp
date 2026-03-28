@@ -51,6 +51,7 @@ void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
 #ifdef RATGDO_USE_VEHICLE_SENSORS
 static constexpr int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
 static constexpr int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+static constexpr int PRESENCE_DETECT_WINDOW_AFTER_CLOSE = 15000; // how long to keep presence window active after door reaches closed
 
 // increasing these values increases reliability but also increases detection time
 static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to detect vehicle
@@ -93,8 +94,9 @@ void RATGDOComponent::setup()
         }
 
         if (state == DoorState::CLOSED) {
-            this->flags_.presence_detect_window_active = false;
-            this->cancel_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW);
+            this->set_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW, PRESENCE_DETECT_WINDOW_AFTER_CLOSE, [this] {
+                this->flags_.presence_detect_window_active = false;
+            });
         }
 
         this->last_door_state_for_presence_ = state;
@@ -521,17 +523,17 @@ void RATGDOComponent::obstruction_loop()
 
 void RATGDOComponent::query_status()
 {
-    this->protocol_->call(QueryStatus { });
+    this->protocol_->call(QueryStatus {});
 }
 
 void RATGDOComponent::query_openings()
 {
-    this->protocol_->call(QueryOpenings { });
+    this->protocol_->call(QueryOpenings {});
 }
 
 void RATGDOComponent::query_paired_devices()
 {
-    this->protocol_->call(QueryPairedDevicesAll { });
+    this->protocol_->call(QueryPairedDevicesAll {});
 }
 
 void RATGDOComponent::query_paired_devices(PairedDevice kind)
@@ -749,12 +751,12 @@ void RATGDOComponent::lock_toggle()
 // Learn functions
 void RATGDOComponent::activate_learn()
 {
-    this->protocol_->call(ActivateLearn { });
+    this->protocol_->call(ActivateLearn {});
 }
 
 void RATGDOComponent::inactivate_learn()
 {
-    this->protocol_->call(InactivateLearn { });
+    this->protocol_->call(InactivateLearn {});
 }
 
 // Subscribe implementations are now templates in ratgdo.h
