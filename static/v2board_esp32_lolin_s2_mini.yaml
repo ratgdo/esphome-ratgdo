@@ -22,9 +22,9 @@ esphome:
     version: "2.0"
 
 esp32:
-  board: lolin_s2_mini
+  variant: esp32s2
   framework:
-    type: arduino
+    type: esp-idf
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v2board_esp32_lolin_s2_mini.yaml@main
@@ -32,8 +32,11 @@ dashboard_import:
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
     files: [base.yaml]
     refresh: 1s
+  # remote_package: !include
+  #   file: base.yaml
 
 # Sync time with Home Assistant.
 time:

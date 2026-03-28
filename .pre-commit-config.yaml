@@ -8,7 +8,7 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-added-large-files
 - repo: https://github.com/pre-commit/mirrors-clang-format
-  rev: v21.1.2
+  rev: v22.1.1
   hooks:
   - id: clang-format
     types_or:
@@ -16,11 +16,9 @@ repos:
      - "c"
      - "cuda"
     args: [-style=Webkit, -i]
-- repo: https://github.com/PyCQA/isort
-  rev: 7.0.0
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.7
   hooks:
-    - id: isort
-- repo: https://github.com/psf/black-pre-commit-mirror
-  rev: 25.9.0
-  hooks:
-    - id: black
+    - id: ruff
+      args: [--fix]
+    - id: ruff-format

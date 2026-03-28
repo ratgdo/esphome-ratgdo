@@ -3,9 +3,8 @@
 
 import json
 import os
-import sys
-import tempfile
 from pathlib import Path
+import sys
 from unittest import mock
 
 import pytest
@@ -130,9 +129,11 @@ external_components:
 
         # Mock the project root to be tmp_path
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}),
+        ):
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "type: local" in updated_content
@@ -155,9 +156,11 @@ packages:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}),
+        ):
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "packages:" in updated_content
@@ -176,9 +179,11 @@ dashboard_import:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-branch"}),
+        ):
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "dashboard_import:" not in updated_content
@@ -208,9 +213,11 @@ packages:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-mixed"}):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/test-mixed"}),
+        ):
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         # Check external_components
@@ -247,11 +254,11 @@ button:
         yaml_file.write_text(yaml_content)
 
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(
-                os.environ, {"GITHUB_REF": "refs/heads/preserve-tags"}
-            ):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/preserve-tags"}),
+        ):
+            update_refs_for_ci.main()
 
         updated_content = yaml_file.read_text()
         assert "type: local" in updated_content
@@ -271,9 +278,11 @@ packages:
         original_mtime = yaml_file.stat().st_mtime
 
         os.chdir(tmp_path)
-        with mock.patch.object(Path, "absolute", return_value=tmp_path):
-            with mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/no-changes"}):
-                update_refs_for_ci.main()
+        with (
+            mock.patch.object(Path, "absolute", return_value=tmp_path),
+            mock.patch.dict(os.environ, {"GITHUB_REF": "refs/heads/no-changes"}),
+        ):
+            update_refs_for_ci.main()
 
         # File should not be modified
         assert yaml_file.stat().st_mtime == original_mtime

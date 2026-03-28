@@ -17,6 +17,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
+  min_version: 2026.2.0
   project:
     name: ratgdo.v32board_drycontact
     version: "32.0"
@@ -24,7 +25,7 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v32board_drycontact.yaml@main
@@ -60,6 +61,9 @@ api:
   id: api_server
 
 improv_serial:
+
+esp32_improv:
+  authorizer: none
 
 wifi:
   ap:

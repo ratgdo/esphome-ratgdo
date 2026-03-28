@@ -17,6 +17,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
+  min_version: 2026.2.0
   project:
     name: ratgdo.v25board_esp32_secplus2
     version: "2.5"
@@ -24,7 +25,7 @@ esphome:
 esp32:
   board: wemos_d1_mini32
   framework:
-    type: arduino
+    type: esp-idf
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v25board_esp32_d1_mini.yaml@main
@@ -32,8 +33,15 @@ dashboard_import:
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
+    ref: main
     files: [base.yaml]
     refresh: 1s
+  # remote_package: !include
+  #   file: base.yaml
+
+ratgdo:
+  id: ${id_prefix}
+  obst_sleep_low: true
 
 # Sync time with Home Assistant.
 time:
@@ -44,6 +52,9 @@ api:
   id: api_server
 
 improv_serial:
+
+esp32_improv:
+  authorizer: none
 
 wifi:
   ap:

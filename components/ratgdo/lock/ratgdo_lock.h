@@ -5,17 +5,15 @@
 #include "esphome/components/lock/lock.h"
 #include "esphome/core/component.h"
 
-namespace esphome {
-namespace ratgdo {
+namespace esphome::ratgdo {
 
-    class RATGDOLock : public lock::Lock, public RATGDOClient, public Component {
-    public:
-        void dump_config() override;
-        void setup() override;
+class RATGDOLock : public lock::Lock, public RATGDOClient, public Component {
+public:
+    void dump_config() override;
+    void setup() override;
 
-        void on_lock_state(LockState state);
-        void control(const lock::LockCall& call) override;
-    };
+    void on_lock_state(LockState state);
+    void control(const lock::LockCall& call) override;
+};
 
-} // namespace ratgdo
-} // namespace esphome
+} // namespace esphome::ratgdo
