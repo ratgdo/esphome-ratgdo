@@ -40,6 +40,7 @@ namespace ratgdo {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     static const int CLEAR_PRESENCE = 60000; // how long to keep arriving/leaving active
     static const int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
+    static const int PRESENCE_DETECT_WINDOW_AFTER_CLOSE = 15000; // how long to keep presence window active after door reaches closed
 
     // increasing these values increases reliability but also increases detection time
     static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to detect vehicle
@@ -84,8 +85,10 @@ namespace ratgdo {
             }
 
             if (state == DoorState::CLOSED) {
-                this->flags_.presence_detect_window_active = false;
-                cancel_timeout("presence_detect_window");
+                set_timeout("presence_detect_window", PRESENCE_DETECT_WINDOW_AFTER_CLOSE, [this] {
+                    this->flags_.presence_detect_window_active = false;
+                    cancel_timeout("presence_detect_window");
+                });
             }
 #endif
 
@@ -429,13 +432,13 @@ namespace ratgdo {
             if (sensor_value) {
                 this->vehicle_arriving_state = VehicleArrivingState::YES;
                 this->vehicle_leaving_state = VehicleLeavingState::NO;
-                set_timeout(CLEAR_PRESENCE, [this] {
+                set_timeout("clear_presence", CLEAR_PRESENCE, [this] {
                     this->vehicle_arriving_state = VehicleArrivingState::NO;
                 });
             } else {
                 this->vehicle_arriving_state = VehicleArrivingState::NO;
                 this->vehicle_leaving_state = VehicleLeavingState::YES;
-                set_timeout(CLEAR_PRESENCE, [this] {
+                set_timeout("clear_presence", CLEAR_PRESENCE, [this] {
                     this->vehicle_leaving_state = VehicleLeavingState::NO;
                 });
             }
