@@ -465,6 +465,12 @@ void RATGDOComponent::presence_change(bool sensor_value)
                 this->vehicle_leaving_state = VehicleLeavingState::NO;
             });
         }
+        // if the door is closed, clear the presence detect window since a vehicle
+        // can't be arriving or leaving with the door shut
+        if (*this->door_state == DoorState::CLOSED) {
+            this->flags_.presence_detect_window_active = false;
+            this->cancel_timeout(TIMEOUT_PRESENCE_DETECT_WINDOW);
+        }
     }
 }
 #endif
