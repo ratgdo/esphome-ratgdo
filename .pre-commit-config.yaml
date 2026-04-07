@@ -17,7 +17,7 @@ repos:
      - "cuda"
     args: [-style=Webkit, -i]
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.15.8
+  rev: v0.15.9
   hooks:
     - id: ruff
       args: [--fix]
