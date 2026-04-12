@@ -211,13 +211,17 @@ void RATGDOComponent::received(const DoorState door_state)
             this->cancel_position_sync_callbacks();
             this->door_move_delta = DOOR_DELTA_UNKNOWN;
         }
-        this->door_start_moving = millis();
-        this->door_start_position = *this->door_position;
-        if (this->door_move_delta == DOOR_DELTA_UNKNOWN) {
-            this->door_move_delta = 0.0 - this->door_start_position;
-        }
-        if (*this->closing_duration != 0) {
-            this->schedule_door_position_sync();
+        if (this->motor_state.has_observer() && *this->motor_state != MotorState::ON) {
+            ESP_LOGD(TAG, "Door started closing, but motor is off. Waiting for motor...");
+        } else {
+            this->door_start_moving = millis();
+            this->door_start_position = *this->door_position;
+            if (this->door_move_delta == DOOR_DELTA_UNKNOWN) {
+                this->door_move_delta = 0.0 - this->door_start_position;
+            }
+            if (*this->closing_duration != 0) {
+                this->schedule_door_position_sync();
+            }
         }
     } else if (door_state == DoorState::STOPPED) {
         this->door_position_update();
@@ -291,8 +295,23 @@ void RATGDOComponent::received(const ObstructionState obstruction_state)
 void RATGDOComponent::received(const MotorState motor_state)
 {
     ESP_LOGD(TAG, "Motor: state=%s",
-        LOG_STR_ARG(MotorState_to_string(*this->motor_state)));
+        LOG_STR_ARG(MotorState_to_string(motor_state)));
+
+    auto prev_motor_state = *this->motor_state;
     this->motor_state = motor_state;
+
+    if (this->motor_state.has_observer() && prev_motor_state != MotorState::ON && motor_state == MotorState::ON) {
+        if (*this->door_state == DoorState::CLOSING && this->door_start_moving == 0) {
+            this->door_start_moving = millis();
+            this->door_start_position = *this->door_position;
+            if (this->door_move_delta == DOOR_DELTA_UNKNOWN) {
+                this->door_move_delta = 0.0 - this->door_start_position;
+            }
+            if (*this->closing_duration != 0) {
+                this->schedule_door_position_sync();
+            }
+        }
+    }
 }
 
 void RATGDOComponent::received(const ButtonState button_state)

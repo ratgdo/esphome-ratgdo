@@ -152,6 +152,8 @@ public:
         this->observer_ = Callback<T>::create(std::forward<F>(observer));
     }
 
+    bool has_observer() const { return static_cast<bool>(this->observer_); }
+
     void notify() const
     {
         if (this->observer_) {
