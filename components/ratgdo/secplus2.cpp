@@ -4,6 +4,7 @@
 #include "secplus2.h"
 #include "ratgdo.h"
 
+#include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
@@ -42,7 +43,8 @@ namespace secplus2 {
         this->uart_.enableAutoBaud(true);
 
         this->traits_.set_features(Traits::all());
-        this->reset_status_watchdog();
+        this->last_status_ms_ = App.get_loop_component_start_time();
+        this->start_status_watchdog();
     }
 
     void Secplus2::loop()
@@ -132,12 +134,16 @@ namespace secplus2 {
         this->sync_helper(millis(), 500, 0);
     }
 
-    void Secplus2::reset_status_watchdog()
+    void Secplus2::start_status_watchdog()
     {
-        this->ratgdo_->set_timeout(TIMEOUT_STATUS_WATCHDOG, STATUS_WATCHDOG_TIMEOUT, [this]() {
-            ESP_LOGW(TAG, "No status received in 11 minutes, querying status");
-            this->query_status();
-            this->reset_status_watchdog();
+        this->ratgdo_->set_interval(INTERVAL_STATUS_WATCHDOG, STATUS_WATCHDOG_POLL, [this]() {
+            // Rollover-safe: unsigned subtraction wraps correctly across millis() overflow.
+            const uint32_t now = App.get_loop_component_start_time();
+            if (static_cast<uint32_t>(now - this->last_status_ms_) > STATUS_WATCHDOG_TIMEOUT) {
+                ESP_LOGW(TAG, "No status received in 11 minutes, querying status");
+                this->query_status();
+                this->last_status_ms_ = now;
+            }
         });
     }
 
@@ -376,7 +382,7 @@ namespace secplus2 {
         ESP_LOG1(TAG, "Handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
 
         if (cmd.type == CommandType::STATUS) {
-            this->reset_status_watchdog();
+            this->last_status_ms_ = App.get_loop_component_start_time();
             this->ratgdo_->received(to_DoorState(cmd.nibble, DoorState::UNKNOWN));
             this->ratgdo_->received(to_LightState((cmd.byte2 >> 1) & 1, LightState::UNKNOWN));
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));

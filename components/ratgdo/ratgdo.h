@@ -458,7 +458,7 @@ namespace scheduler_ids {
         TIMEOUT_CLEAR_PRESENCE,
         TIMEOUT_WALL_PANEL_EMULATION,
         TIMEOUT_SYNC,
-        TIMEOUT_STATUS_WATCHDOG,
+        INTERVAL_STATUS_WATCHDOG,
     };
 } // namespace scheduler_ids
 
