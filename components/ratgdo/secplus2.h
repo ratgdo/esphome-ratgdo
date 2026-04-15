@@ -26,6 +26,7 @@ namespace secplus2 {
     using namespace esphome::ratgdo::protocol;
 
     static const uint8_t PACKET_LENGTH = 19;
+    static constexpr uint32_t STATUS_WATCHDOG_TIMEOUT = 660000; // 11 min. status updates are normally every ~5 min
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     ENUM_SPARSE(CommandType, uint16_t,
@@ -155,6 +156,7 @@ namespace secplus2 {
         optional<Command> decode_packet(const WirePacket& packet) const;
 
         void sync_helper(uint32_t start, uint32_t delay, uint8_t tries);
+        void reset_status_watchdog();
 
         // 8-byte member first (may require 8-byte alignment on some 32-bit systems)
         uint64_t client_id_ { 0x539 };

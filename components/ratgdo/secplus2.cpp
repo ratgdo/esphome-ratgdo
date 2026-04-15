@@ -42,6 +42,7 @@ namespace secplus2 {
         this->uart_.enableAutoBaud(true);
 
         this->traits_.set_features(Traits::all());
+        this->reset_status_watchdog();
     }
 
     void Secplus2::loop()
@@ -129,6 +130,15 @@ namespace secplus2 {
     {
         this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_SYNC);
         this->sync_helper(millis(), 500, 0);
+    }
+
+    void Secplus2::reset_status_watchdog()
+    {
+        this->ratgdo_->set_timeout(TIMEOUT_STATUS_WATCHDOG, STATUS_WATCHDOG_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "No status received in 11 minutes, querying status");
+            this->query_status();
+            this->reset_status_watchdog();
+        });
     }
 
     void Secplus2::light_action(LightAction action)
@@ -366,7 +376,7 @@ namespace secplus2 {
         ESP_LOG1(TAG, "Handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
 
         if (cmd.type == CommandType::STATUS) {
-
+            this->reset_status_watchdog();
             this->ratgdo_->received(to_DoorState(cmd.nibble, DoorState::UNKNOWN));
             this->ratgdo_->received(to_LightState((cmd.byte2 >> 1) & 1, LightState::UNKNOWN));
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));
