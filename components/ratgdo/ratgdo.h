@@ -238,6 +238,8 @@ public:
     void query_openings();
     void sync();
 
+    using Component::cancel_interval;
+    using Component::set_interval;
     using Component::set_timeout;
 
     void set_door_state_expiry();
