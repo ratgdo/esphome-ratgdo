@@ -461,6 +461,7 @@ namespace scheduler_ids {
         TIMEOUT_WALL_PANEL_EMULATION,
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
+        INTERVAL_PING,
     };
 } // namespace scheduler_ids
 

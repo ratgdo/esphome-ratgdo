@@ -28,6 +28,7 @@ namespace secplus2 {
     static const uint8_t PACKET_LENGTH = 19;
     static constexpr uint32_t STATUS_WATCHDOG_TIMEOUT = 360000; // 6 min. status updates are normally every ~5 min
     static constexpr uint32_t STATUS_WATCHDOG_POLL = 60000; // check once per minute
+    static constexpr uint32_t PING_INTERVAL = 21600000; // 6 hours
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     ENUM_SPARSE(CommandType, uint16_t,

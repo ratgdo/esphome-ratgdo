@@ -45,6 +45,11 @@ namespace secplus2 {
         this->traits_.set_features(Traits::all());
         this->last_status_ms_ = App.get_loop_component_start_time();
         this->start_status_watchdog();
+
+        this->ratgdo_->set_interval(INTERVAL_PING, PING_INTERVAL, [this]() {
+            ESP_LOGD(TAG, "Sending PING command");
+            this->send_command(Command(CommandType::PING));
+        });
     }
 
     void Secplus2::loop()
