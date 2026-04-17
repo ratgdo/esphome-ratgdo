@@ -5,6 +5,7 @@
 #ifdef USE_ESP32
 
 #include <driver/rmt_tx.h>
+#include <driver/uart.h>
 #include <driver/uart_select.h>
 #include <freertos/FreeRTOS.h>
 #include <stddef.h>

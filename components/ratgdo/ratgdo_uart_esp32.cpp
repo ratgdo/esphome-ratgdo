@@ -78,8 +78,8 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
 
     // Wake the main loop from the UART rx ISR so bytes are consumed on the
     // next tick instead of waiting for the scheduler.
-    uart_set_select_notif_callback((uart_port_t)this->uart_num_,
-        &RatgdoUART::uart_rx_isr_callback);
+    ESP_ERROR_CHECK(uart_set_select_notif_callback((uart_port_t)this->uart_num_,
+        &RatgdoUART::uart_rx_isr_callback));
 
     rmt_tx_channel_config_t tx_chan_config = { };
     tx_chan_config.gpio_num = (gpio_num_t)tx_pin;
@@ -181,6 +181,7 @@ int RatgdoUART::read()
 void IRAM_ATTR RatgdoUART::uart_rx_isr_callback(uart_port_t uart_num,
     uart_select_notif_t uart_select_notif, BaseType_t* task_woken)
 {
+    (void)uart_num;
     if (uart_select_notif == UART_SELECT_READ_NOTIF) {
         App.wake_loop_isrsafe(task_woken);
     }
