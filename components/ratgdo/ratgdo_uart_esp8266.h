@@ -6,7 +6,13 @@
 
 #include "SoftwareSerial.h"
 
+#include "esphome/core/application.h"
+#include "esphome/core/hal.h"
+
 namespace esphome::ratgdo {
+
+// Placed in IRAM because plerup's rxBitISR may fire during flash writes.
+inline void IRAM_ATTR ratgdo_wake_main_loop_from_isr() { App.wake_loop_threadsafe(); }
 
 // Security+ 2.0 preamble timing (microseconds)
 static constexpr uint16_t PREAMBLE_DURATION_US = 1300;
@@ -26,6 +32,8 @@ public:
         this->rx_pin_ = rxPin;
         this->tx_pin_ = txPin;
         SoftwareSerial::begin(baud, static_cast<Config>(config), rxPin, txPin, invert);
+        // Wake the main loop on incoming bytes instead of polling each tick.
+        this->onReceive(ratgdo_wake_main_loop_from_isr);
     }
 
     void on_shutdown()
