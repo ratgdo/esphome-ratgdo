@@ -26,7 +26,7 @@ namespace secplus2 {
     using namespace esphome::ratgdo::protocol;
 
     static const uint8_t PACKET_LENGTH = 19;
-    static constexpr uint32_t STATUS_WATCHDOG_TIMEOUT = 660000; // 11 min. status updates are normally every ~5 min
+    static constexpr uint32_t STATUS_WATCHDOG_TIMEOUT = 360000; // 6 min. status updates are normally every ~5 min
     static constexpr uint32_t STATUS_WATCHDOG_POLL = 60000; // check once per minute
     typedef uint8_t WirePacket[PACKET_LENGTH];
 

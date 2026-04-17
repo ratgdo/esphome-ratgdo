@@ -140,7 +140,7 @@ namespace secplus2 {
             // Rollover-safe: unsigned subtraction wraps correctly across millis() overflow.
             const uint32_t now = App.get_loop_component_start_time();
             if (static_cast<uint32_t>(now - this->last_status_ms_) > STATUS_WATCHDOG_TIMEOUT) {
-                ESP_LOGW(TAG, "No status received in 11 minutes, querying status");
+                ESP_LOGW(TAG, "No status received in 6 minutes, querying status");
                 this->query_status();
                 this->last_status_ms_ = now;
             }
