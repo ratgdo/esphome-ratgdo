@@ -5,6 +5,8 @@
 #ifdef USE_ESP32
 
 #include <driver/rmt_tx.h>
+#include <driver/uart_select.h>
+#include <freertos/FreeRTOS.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -34,6 +36,9 @@ public:
     void transmit_secplus2_preamble();
 
     void on_shutdown();
+
+    static void uart_rx_isr_callback(uart_port_t uart_num,
+        uart_select_notif_t uart_select_notif, BaseType_t* task_woken);
 
 private:
     // Pointers (4 bytes on 32-bit)

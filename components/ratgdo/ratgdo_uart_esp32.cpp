@@ -2,6 +2,8 @@
 
 #ifdef USE_ESP32
 
+#include "esphome/core/application.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 #include <driver/uart.h>
 
@@ -73,6 +75,11 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     ESP_ERROR_CHECK(
         uart_driver_install((uart_port_t)this->uart_num_, UART_RX_BUFFER_SIZE, 0, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config((uart_port_t)this->uart_num_, &uart_config));
+
+    // Wake the main loop from the UART rx ISR so bytes are consumed on the
+    // next tick instead of waiting for the scheduler.
+    uart_set_select_notif_callback((uart_port_t)this->uart_num_,
+        &RatgdoUART::uart_rx_isr_callback);
 
     rmt_tx_channel_config_t tx_chan_config = { };
     tx_chan_config.gpio_num = (gpio_num_t)tx_pin;
@@ -169,6 +176,14 @@ int RatgdoUART::read()
         return data;
     }
     return -1;
+}
+
+void IRAM_ATTR RatgdoUART::uart_rx_isr_callback(uart_port_t uart_num,
+    uart_select_notif_t uart_select_notif, BaseType_t* task_woken)
+{
+    if (uart_select_notif == UART_SELECT_READ_NOTIF) {
+        App.wake_loop_isrsafe(task_woken);
+    }
 }
 
 void RatgdoUART::on_shutdown()
