@@ -315,6 +315,17 @@ namespace secplus2 {
                 this->rx_last_read_ = millis();
                 this->rx_packet_[this->rx_byte_count_] = ser_byte;
                 this->rx_byte_count_++;
+
+                this->rx_msg_start_ = ((this->rx_msg_start_ << 8) | ser_byte) & 0xffffff;
+                if (this->rx_msg_start_ == 0x550100) {
+                    ESP_LOGD(TAG, "Sync sequence found mid-packet. Discarding %d bytes and restarting.", this->rx_byte_count_ - 3);
+                    this->rx_packet_[0] = 0x55;
+                    this->rx_packet_[1] = 0x01;
+                    this->rx_packet_[2] = 0x00;
+                    this->rx_byte_count_ = 3;
+                    continue;
+                }
+
                 // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", this->rx_byte_count_, ser_byte, this->uart_.baudRate());
 
                 if (this->rx_byte_count_ == PACKET_LENGTH) {
