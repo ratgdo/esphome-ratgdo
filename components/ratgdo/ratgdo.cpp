@@ -644,7 +644,11 @@ void RATGDOComponent::door_close()
 
     if (this->flags_.obstruction_sensor_detected) {
         this->door_action(DoorAction::CLOSE);
-    } else if (*this->door_state == DoorState::OPEN) {
+    } else if (*this->door_state == DoorState::OPEN || *this->door_state == DoorState::STOPPED) {
+        // ROW openers without obstruction sensors ignore explicit CLOSE commands.
+        // As a compromise, when STOPPED we fallback to TOGGLE. The GDO will typically
+        // reverse its last direction, so we cannot guarantee it will actually
+        // close instead of opening, but it is better than silently failing.
         ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
         this->door_action(DoorAction::TOGGLE);
     }
@@ -679,9 +683,9 @@ void RATGDOComponent::door_action(DoorAction action)
 #ifdef RATGDO_USE_CLOSING_DELAY
     if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
         this->door_action_delayed = DoorActionDelayed::YES;
-        this->set_timeout(TIMEOUT_DOOR_ACTION, *this->closing_delay * 1000, [this] {
+        this->set_timeout(TIMEOUT_DOOR_ACTION, *this->closing_delay * 1000, [this, action] {
             this->door_action_delayed = DoorActionDelayed::NO;
-            this->protocol_->door_action(DoorAction::CLOSE);
+            this->protocol_->door_action(action);
         });
     } else {
         this->protocol_->door_action(action);
