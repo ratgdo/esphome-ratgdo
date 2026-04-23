@@ -161,8 +161,14 @@ int RatgdoUART::available()
 {
     if (!this->is_initialized_)
         return 0;
+
     size_t length = 0;
     uart_get_buffered_data_len((uart_port_t)this->uart_num_, &length);
+
+    if (length >= UART_RX_BUFFER_SIZE) {
+        ESP_LOGD(TAG, "UART buffer overflow detected!");
+    }
+
     return length;
 }
 

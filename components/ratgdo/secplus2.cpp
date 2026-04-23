@@ -4,6 +4,7 @@
 #include "secplus2.h"
 #include "ratgdo.h"
 
+#include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
@@ -42,6 +43,8 @@ namespace secplus2 {
         this->uart_.enableAutoBaud(true);
 
         this->traits_.set_features(Traits::all());
+        this->last_status_ms_ = App.get_loop_component_start_time();
+        this->start_status_watchdog();
     }
 
     void Secplus2::loop()
@@ -129,6 +132,19 @@ namespace secplus2 {
     {
         this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_SYNC);
         this->sync_helper(millis(), 500, 0);
+    }
+
+    void Secplus2::start_status_watchdog()
+    {
+        this->ratgdo_->set_interval(INTERVAL_STATUS_WATCHDOG, STATUS_WATCHDOG_POLL, [this]() {
+            // Rollover-safe: unsigned subtraction wraps correctly across millis() overflow.
+            const uint32_t now = App.get_loop_component_start_time();
+            if (static_cast<uint32_t>(now - this->last_status_ms_) > STATUS_WATCHDOG_TIMEOUT) {
+                ESP_LOGW(TAG, "No status received in 6 minutes, querying status");
+                this->query_status();
+                this->last_status_ms_ = now;
+            }
+        });
     }
 
     void Secplus2::light_action(LightAction action)
@@ -299,6 +315,17 @@ namespace secplus2 {
                 this->rx_last_read_ = millis();
                 this->rx_packet_[this->rx_byte_count_] = ser_byte;
                 this->rx_byte_count_++;
+
+                this->rx_msg_start_ = ((this->rx_msg_start_ << 8) | ser_byte) & 0xffffff;
+                if (this->rx_msg_start_ == 0x550100) {
+                    ESP_LOGD(TAG, "Sync sequence found mid-packet. Discarding %d bytes and restarting.", this->rx_byte_count_ - 3);
+                    this->rx_packet_[0] = 0x55;
+                    this->rx_packet_[1] = 0x01;
+                    this->rx_packet_[2] = 0x00;
+                    this->rx_byte_count_ = 3;
+                    continue;
+                }
+
                 // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", this->rx_byte_count_, ser_byte, this->uart_.baudRate());
 
                 if (this->rx_byte_count_ == PACKET_LENGTH) {
@@ -366,7 +393,7 @@ namespace secplus2 {
         ESP_LOG1(TAG, "Handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
 
         if (cmd.type == CommandType::STATUS) {
-
+            this->last_status_ms_ = App.get_loop_component_start_time();
             this->ratgdo_->received(to_DoorState(cmd.nibble, DoorState::UNKNOWN));
             this->ratgdo_->received(to_LightState((cmd.byte2 >> 1) & 1, LightState::UNKNOWN));
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));

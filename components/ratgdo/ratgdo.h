@@ -238,6 +238,8 @@ public:
     void query_openings();
     void sync();
 
+    using Component::cancel_interval;
+    using Component::set_interval;
     using Component::set_timeout;
 
     void set_door_state_expiry();
@@ -458,6 +460,7 @@ namespace scheduler_ids {
         TIMEOUT_CLEAR_PRESENCE,
         TIMEOUT_WALL_PANEL_EMULATION,
         TIMEOUT_SYNC,
+        INTERVAL_STATUS_WATCHDOG,
     };
 } // namespace scheduler_ids
 
