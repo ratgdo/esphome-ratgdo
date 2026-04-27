@@ -60,6 +60,7 @@ static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage 
                                                           // detect vehicle
 static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations that must be 0
                                                           // before clearing vehicle detected state
+static constexpr int PRESENCE_OBSTRUCTION_TIMEOUT = 15000; // How long after an obstruction event to fast-track departure
 #endif
 
 void RATGDOComponent::setup()
@@ -487,7 +488,7 @@ void RATGDOComponent::calculate_presence()
         }
 
         // Obstruction discount
-        if (millis() - this->last_obstruction_time_ < 15000) {
+        if (millis() - this->last_obstruction_time_ < PRESENCE_OBSTRUCTION_TIMEOUT) {
             required_samples = std::max(15, required_samples / 3);
         }
 
