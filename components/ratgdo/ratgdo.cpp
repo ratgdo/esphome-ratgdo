@@ -495,6 +495,7 @@ void RATGDOComponent::calculate_presence()
         if (this->consecutive_out_of_range_ >= required_samples) {
             this->consecutive_out_of_range_ = 0;
             this->vehicle_detected_state = VehicleDetectedState::NO;
+            this->in_range.reset();
         }
     }
     // ESP_LOGD(TAG, "in_range: %s", this->in_range.to_string().c_str());
