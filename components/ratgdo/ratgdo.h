@@ -376,6 +376,9 @@ protected:
     uint8_t vehicle_leaving_sub_num_ { 0 };
     int last_presence_percent_ { -1 };
     int presence_off_counter_ { 0 };
+    uint32_t last_obstruction_time_ { 0 };
+    int noise_floor_ { 0 };
+    int consecutive_out_of_range_ { 0 };
     DoorState last_door_state_for_presence_ { DoorState::UNKNOWN };
 #endif
 }; // RATGDOComponent
