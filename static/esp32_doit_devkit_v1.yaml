@@ -1,0 +1,75 @@
+---
+substitutions:
+  id_prefix: ratgdo32
+  friendly_name: "ratgdo32"
+  uart_tx_pin: GPIO17
+  uart_rx_pin: GPIO16
+  input_obst_pin: GPIO19
+  status_door_pin: GPIO26
+  status_obstruction_pin: GPIO25
+  dry_contact_open_pin: GPIO13
+  dry_contact_close_pin: GPIO14
+  dry_contact_light_pin: GPIO27
+
+web_server:
+  local: true
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  min_version: 2026.4.0
+  project:
+    name: ratgdo.esp32_doit_devkit_v1
+    version: "1.0"
+
+esp32:
+  board: esp32doit-devkit-v1
+  framework:
+    type: esp-idf
+
+dashboard_import:
+  package_import_url: github://eborchardt/esphome-ratgdo/esp32_doit_devkit_v1.yaml@main
+
+packages:
+  remote_package:
+    url: https://github.com/eborchardt/esphome-ratgdo
+    ref: main
+    files: [base.yaml]
+    refresh: 1s
+  # remote_package: !include
+  #   file: base.yaml
+
+switch:
+  - platform: ratgdo
+    id: ${id_prefix}_led
+    type: led
+    pin: GPIO2
+    name: "LED"
+    entity_category: config
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 120s
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+improv_serial:
+
+esp32_improv:
+  authorizer: none
+
+wifi:
+  ap:
+    ssid: "ratgdo"
+
+captive_portal:
+
+logger:
