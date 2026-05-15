@@ -43,7 +43,9 @@ switch:
   - platform: ratgdo
     id: ${id_prefix}_led
     type: led
-    pin: GPIO2
+    pin:
+      number: GPIO2
+      ignore_strapping_warning: true
     name: "LED"
     entity_category: config
 
