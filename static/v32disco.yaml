@@ -122,6 +122,10 @@ switch:
     pin: GPIO23
     name: "LASER"
     entity_category: config
+    # Set vehicle_auto_control: false to stop the firmware from toggling
+    # the LASER on vehicle_arriving, leaving control entirely to Home
+    # Assistant or other automations (see issue #470).
+    vehicle_auto_control: true
 
 sensor:
   - platform: wifi_signal

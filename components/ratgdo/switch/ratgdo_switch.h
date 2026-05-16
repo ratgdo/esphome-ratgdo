@@ -21,10 +21,12 @@ public:
 
     void write_state(bool state) override;
     void set_pin(GPIOPin* pin) { pin_ = pin; }
+    void set_vehicle_auto_control(bool enabled) { vehicle_auto_control_ = enabled; }
 
 protected:
     SwitchType switch_type_;
     GPIOPin* pin_;
+    bool vehicle_auto_control_ { true };
 };
 
 } // namespace esphome::ratgdo
