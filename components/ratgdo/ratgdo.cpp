@@ -60,6 +60,7 @@ static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage 
                                                           // detect vehicle
 static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations that must be 0
                                                           // before clearing vehicle detected state
+static constexpr int PRESENCE_OBSTRUCTION_TIMEOUT = 15000; // How long after an obstruction event to fast-track departure
 #endif
 
 void RATGDOComponent::setup()
@@ -91,8 +92,27 @@ void RATGDOComponent::setup()
     ESP_LOGD(TAG, "|__|__|__|__| |_| |_____|____/|_____|");
     ESP_LOGD(TAG, "https://paulwieland.github.io/ratgdo/");
 
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    this->subscribe_obstruction_state([this](ObstructionState state) {
+        if (state == ObstructionState::OBSTRUCTED) {
+            this->last_obstruction_time_ = millis();
+        }
+    });
+#endif
+
     this->subscribe_door_state([this](DoorState state, float position) {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
+        if (this->last_door_state_for_presence_ == DoorState::CLOSED && state == DoorState::OPENING) {
+            int transitions = 0;
+            for (int i = 0; i < this->in_range.size() - 1; i++) {
+                if (this->in_range.test(i) != this->in_range.test(i + 1)) {
+                    transitions++;
+                }
+            }
+            this->noise_floor_ = transitions;
+            ESP_LOGD(TAG, "Pre-movement SNR: %d transitions", this->noise_floor_);
+        }
+
         if (this->last_door_state_for_presence_ != DoorState::UNKNOWN && state != DoorState::CLOSED && !this->flags_.presence_detect_window_active) {
             this->flags_.presence_detect_window_active = true;
             this->set_timeout(
@@ -443,23 +463,40 @@ void RATGDOComponent::calculate_presence()
 {
     int percent = this->in_range.count() * 100 / this->in_range.size();
 
-    if (percent >= PRESENCE_DETECTION_ON_THRESHOLD)
-        this->vehicle_detected_state = VehicleDetectedState::YES;
-
-    if (percent == 0 && *this->vehicle_detected_state == VehicleDetectedState::YES) {
-        this->presence_off_counter_++;
-        ESP_LOGD(TAG, "Off counter: %d", this->presence_off_counter_);
-
-        if (this->presence_off_counter_ / this->in_range.size() >= PRESENCE_DETECTION_OFF_DEBOUNCE) {
-            this->presence_off_counter_ = 0;
-            this->vehicle_detected_state = VehicleDetectedState::NO;
-        }
-    }
-
     if (percent != this->last_presence_percent_) {
         ESP_LOGD(TAG, "pct_in_range: %d", percent);
         this->last_presence_percent_ = percent;
-        this->presence_off_counter_ = 0;
+    }
+
+    if (percent >= PRESENCE_DETECTION_ON_THRESHOLD) {
+        this->vehicle_detected_state = VehicleDetectedState::YES;
+    }
+
+    if (!this->in_range.test(0)) {
+        this->consecutive_out_of_range_++;
+    } else {
+        this->consecutive_out_of_range_ = 0;
+    }
+
+    if (*this->vehicle_detected_state == VehicleDetectedState::YES) {
+        int required_samples = 256; // 1 window by default
+
+        if (this->noise_floor_ <= 2) {
+            required_samples = 60; // Extremely smooth historical signal, lower required samples
+        } else if (this->noise_floor_ >= 10) {
+            required_samples = 768; // Jittery historical signal: raise required samples
+        }
+
+        // Obstruction discount
+        if (millis() - this->last_obstruction_time_ < PRESENCE_OBSTRUCTION_TIMEOUT) {
+            required_samples = std::max(15, required_samples / 3);
+        }
+
+        if (this->consecutive_out_of_range_ >= required_samples) {
+            this->consecutive_out_of_range_ = 0;
+            this->vehicle_detected_state = VehicleDetectedState::NO;
+            this->in_range.reset();
+        }
     }
     // ESP_LOGD(TAG, "in_range: %s", this->in_range.to_string().c_str());
 }
