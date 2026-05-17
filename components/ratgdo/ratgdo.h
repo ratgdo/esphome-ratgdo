@@ -189,6 +189,8 @@ public:
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     void calculate_presence();
     void presence_change(bool sensor_value);
+    void set_presence_on_threshold(uint8_t pct) { this->presence_on_threshold_ = pct; }
+    void set_presence_off_debounce(uint8_t debounce) { this->presence_off_debounce_ = debounce; }
 #endif
 
     // light
@@ -376,6 +378,8 @@ protected:
     uint8_t vehicle_leaving_sub_num_ { 0 };
     int last_presence_percent_ { -1 };
     int presence_off_counter_ { 0 };
+    uint8_t presence_on_threshold_ { 5 };
+    uint8_t presence_off_debounce_ { 2 };
     DoorState last_door_state_for_presence_ { DoorState::UNKNOWN };
 #endif
 }; // RATGDOComponent

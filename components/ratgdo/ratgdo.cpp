@@ -54,12 +54,9 @@ static constexpr int CLEAR_PRESENCE = 60000; // how long to keep arriving/leavin
 static constexpr int PRESENCE_DETECT_WINDOW = 300000; // how long to calculate presence after door state change
 static constexpr int PRESENCE_DETECT_WINDOW_AFTER_CLOSE = 15000; // how long to keep presence window active after door reaches closed
 
-// increasing these values increases reliability but also increases detection
-// time
-static constexpr int PRESENCE_DETECTION_ON_THRESHOLD = 5; // Minimum percentage of valid bitset::in_range samples required to
-                                                          // detect vehicle
-static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of consecutive bitset::in_range iterations that must be 0
-                                                          // before clearing vehicle detected state
+// Defaults for the runtime-tunable thresholds (overridable via YAML
+// `presence_on_threshold` / `presence_off_debounce`). Increasing the values
+// increases reliability but also increases detection time.
 #endif
 
 void RATGDOComponent::setup()
@@ -443,14 +440,14 @@ void RATGDOComponent::calculate_presence()
 {
     int percent = this->in_range.count() * 100 / this->in_range.size();
 
-    if (percent >= PRESENCE_DETECTION_ON_THRESHOLD)
+    if (percent >= this->presence_on_threshold_)
         this->vehicle_detected_state = VehicleDetectedState::YES;
 
     if (percent == 0 && *this->vehicle_detected_state == VehicleDetectedState::YES) {
         this->presence_off_counter_++;
         ESP_LOGD(TAG, "Off counter: %d", this->presence_off_counter_);
 
-        if (this->presence_off_counter_ / this->in_range.size() >= PRESENCE_DETECTION_OFF_DEBOUNCE) {
+        if (this->presence_off_counter_ / this->in_range.size() >= this->presence_off_debounce_) {
             this->presence_off_counter_ = 0;
             this->vehicle_detected_state = VehicleDetectedState::NO;
         }

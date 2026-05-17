@@ -107,6 +107,9 @@ CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
 
+CONF_PRESENCE_ON_THRESHOLD = "presence_on_threshold"
+CONF_PRESENCE_OFF_DEBOUNCE = "presence_off_debounce"
+
 
 def validate_protocol(config):
     if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (
@@ -160,6 +163,12 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(
                 binary_sensor.BinarySensor
             ),
+            cv.Optional(CONF_PRESENCE_ON_THRESHOLD, default=5): cv.int_range(
+                min=1, max=100
+            ),
+            cv.Optional(CONF_PRESENCE_OFF_DEBOUNCE, default=2): cv.int_range(
+                min=1, max=10
+            ),
         }
     ).extend(cv.COMPONENT_SCHEMA),
     validate_protocol,
@@ -189,6 +198,9 @@ async def to_code(config):
         cg.add(var.set_input_obst_pin(pin))
 
     cg.add(var.set_obst_sleep_low(config[CONF_OBST_SLEEP_LOW]))
+
+    cg.add(var.set_presence_on_threshold(config[CONF_PRESENCE_ON_THRESHOLD]))
+    cg.add(var.set_presence_off_debounce(config[CONF_PRESENCE_OFF_DEBOUNCE]))
 
     if config.get(CONF_DRY_CONTACT_OPEN_SENSOR):
         dry_contact_open_sensor = await cg.get_variable(
