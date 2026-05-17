@@ -30,8 +30,8 @@ void RATGDOCover::on_door_state(DoorState state, float position)
     bool save_to_flash = true;
     switch (state) {
     case DoorState::OPEN:
-        this->position = COVER_OPEN;
         this->current_operation = COVER_OPERATION_IDLE;
+        this->position = position;
         break;
     case DoorState::CLOSED:
         this->position = COVER_CLOSED;
