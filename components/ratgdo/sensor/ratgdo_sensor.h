@@ -38,6 +38,8 @@ protected:
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     VL53L4CX distance_sensor_;
+    uint32_t last_distance_poll_ms_ { 0 };
+    int16_t last_distance_ { -1 };
 #endif
 };
 
