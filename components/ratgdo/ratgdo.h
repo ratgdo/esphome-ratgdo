@@ -14,9 +14,11 @@
 #pragma once
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#include "esphome/components/sensor/sensor.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/preferences.h"
 
 #include <bitset>
@@ -71,6 +73,19 @@ struct RATGDOStore {
         arg->obstruction_low_count++;
     }
 };
+
+#ifdef RATGDO_USE_ENCODER
+// Calibration data persisted in NVS.
+// int16_t is sufficient: typical travel is 12-18 pulses so even with decades
+// of floating-bound drift the values stay well within ±32767.
+struct RATGDOEncoderSettings {
+    int16_t min;
+    int16_t max;
+    int16_t last;
+    bool min_calibrated;
+    bool max_calibrated;
+};
+#endif
 
 using protocol::Args;
 using protocol::Result;
@@ -147,6 +162,15 @@ public:
     void set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_);
     void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
     void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
+
+#ifdef RATGDO_USE_ENCODER
+    // encoder methods
+    void set_encoder_sensor(esphome::sensor::Sensor* s);
+    void set_reverse_encoder(bool r) { this->flags_.reverse_encoder = r; }
+    void reset_encoder_calibration();
+    void on_encoder_update(int16_t raw);
+    void check_encoder_stopped();
+#endif
 
     Result call_protocol(Args args);
 
@@ -358,11 +382,23 @@ protected:
         uint8_t obst_sleep_low : 1;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
-        uint8_t reserved : 5; // Reserved for future use
-#else
-        uint8_t reserved : 6; // Reserved for future use
 #endif
+#ifdef RATGDO_USE_ENCODER
+        uint8_t reverse_encoder : 1;
+#endif
+        uint8_t reserved : 4; // Reserved for future use
     } flags_ { 0 };
+
+#ifdef RATGDO_USE_ENCODER
+    esphome::sensor::Sensor* encoder_sensor_ { nullptr };
+    ESPPreferenceObject encoder_pref_;
+    int16_t enc_min_ { 0 };
+    int16_t enc_max_ { 0 };
+    int16_t enc_last_ { 0 };
+    bool enc_min_cal_ { false };
+    bool enc_max_cal_ { false };
+    bool enc_first_update_ { true };
+#endif
 
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
@@ -461,6 +497,7 @@ namespace scheduler_ids {
         TIMEOUT_WALL_PANEL_EMULATION,
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
+        TIMEOUT_ENCODER_STOPPED,
     };
 } // namespace scheduler_ids
 

@@ -27,7 +27,9 @@
 
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
+#include "esphome/core/preferences.h"
 
 namespace esphome::ratgdo {
 
@@ -579,11 +581,42 @@ void RATGDOComponent::sync()
     this->protocol_->sync();
 
     // dry contact protocol:
-    // needed to trigger the intial state of the limit switch sensors
+    // needed to trigger the initial state of the limit switch sensors
     // ideally this would be in drycontact::sync
 #ifdef PROTOCOL_DRYCONTACT
-    this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
-    this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+#ifdef RATGDO_USE_ENCODER
+    if (this->encoder_sensor_ != nullptr) {
+        // Encoder mode: derive door state from saved calibration, no limit switches.
+        if (this->enc_min_cal_ && this->enc_max_cal_ && this->enc_max_ != this->enc_min_) {
+            int16_t range = static_cast<int16_t>(std::abs(this->enc_max_ - this->enc_min_));
+            int16_t target_closed = this->flags_.reverse_encoder ? this->enc_max_ : this->enc_min_;
+            int16_t target_open = this->flags_.reverse_encoder ? this->enc_min_ : this->enc_max_;
+            int16_t dist_closed = static_cast<int16_t>(std::abs(this->enc_last_ - target_closed));
+            int16_t dist_open = static_cast<int16_t>(std::abs(this->enc_last_ - target_open));
+            (void)range;
+            float pos = (float)(this->enc_last_ - this->enc_min_) / (float)(this->enc_max_ - this->enc_min_);
+            if (this->flags_.reverse_encoder)
+                pos = 1.0f - pos;
+            this->door_position = clamp(pos, 0.0f, 1.0f);
+            if (dist_closed <= 1 && dist_closed <= dist_open) {
+                this->received(DoorState::CLOSED);
+            } else if (dist_open <= 1 && dist_open < dist_closed) {
+                this->received(DoorState::OPEN);
+            } else {
+                this->received(DoorState::STOPPED);
+            }
+        } else {
+            ESP_LOGD(TAG, "Encoder not yet calibrated; door state unknown");
+        }
+        return; // skip limit-switch path
+    }
+#endif
+    if (this->dry_contact_open_sensor_ != nullptr) {
+        this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
+    }
+    if (this->dry_contact_close_sensor_ != nullptr) {
+        this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+    }
 #endif
 }
 
@@ -817,5 +850,153 @@ void RATGDOComponent::set_dry_contact_close_sensor(
         this->door_position = 0.0;
     });
 }
+
+#ifdef RATGDO_USE_ENCODER
+void RATGDOComponent::set_encoder_sensor(esphome::sensor::Sensor* s)
+{
+    encoder_sensor_ = s;
+    encoder_pref_ = global_preferences->make_preference<RATGDOEncoderSettings>(fnv1_hash("ratgdo_encoder"));
+    RATGDOEncoderSettings saved;
+    if (encoder_pref_.load(&saved)) {
+        enc_min_ = saved.min;
+        enc_max_ = saved.max;
+        enc_last_ = saved.last;
+        enc_min_cal_ = saved.min_calibrated;
+        enc_max_cal_ = saved.max_calibrated;
+        ESP_LOGD(TAG, "Encoder: loaded cal min=%d max=%d last=%d min_cal=%d max_cal=%d",
+            enc_min_, enc_max_, enc_last_, enc_min_cal_, enc_max_cal_);
+    } else {
+        ESP_LOGD(TAG, "Encoder: no saved calibration");
+    }
+    s->add_on_state_callback([this](float v) {
+        this->on_encoder_update(static_cast<int16_t>(v));
+    });
+}
+
+void RATGDOComponent::on_encoder_update(int16_t raw)
+{
+    if (enc_first_update_) {
+        enc_first_update_ = false;
+        // Power-loss door movement detection: if the very first pulse after boot
+        // moves beyond a calibrated boundary, the door was physically moved while
+        // the board was powered off. Clear calibration and re-learn.
+        bool contradiction = false;
+        if (!flags_.reverse_encoder) {
+            if (enc_min_cal_ && raw < enc_min_)
+                contradiction = true;
+            if (enc_max_cal_ && raw > enc_max_)
+                contradiction = true;
+        } else {
+            if (enc_min_cal_ && raw > enc_min_)
+                contradiction = true;
+            if (enc_max_cal_ && raw < enc_max_)
+                contradiction = true;
+        }
+        if (contradiction) {
+            ESP_LOGW(TAG, "Encoder moved while powered off; clearing calibration");
+            reset_encoder_calibration();
+        }
+        enc_last_ = raw;
+        return; // first update is a boot-state broadcast, not real movement
+    }
+
+    int16_t delta = static_cast<int16_t>(raw - enc_last_);
+    enc_last_ = raw;
+
+    if (delta == 0)
+        return;
+
+    // Compute and publish 0.0-1.0 position when fully calibrated
+    if (enc_min_cal_ && enc_max_cal_ && enc_max_ != enc_min_) {
+        float pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
+        if (flags_.reverse_encoder)
+            pos = 1.0f - pos;
+        this->door_position = clamp(pos, 0.0f, 1.0f);
+    }
+
+    // Re-arm the stopped watchdog for 1 second after the last pulse
+    set_timeout(scheduler_ids::TIMEOUT_ENCODER_STOPPED, 1000,
+        [this] { this->check_encoder_stopped(); });
+}
+
+void RATGDOComponent::check_encoder_stopped()
+{
+    bool update_pref = false;
+
+    // If not calibrated at all, just snap to CLOSED on the first stop.
+    // This starts the calibration sequence.
+    if (!enc_min_cal_) {
+        if (!flags_.reverse_encoder)
+            enc_min_ = enc_last_;
+        else
+            enc_max_ = enc_last_;
+        enc_min_cal_ = true;
+        update_pref = true;
+        this->received(DoorState::CLOSED);
+        ESP_LOGD(TAG, "Encoder: initial CLOSED boundary set to %d", enc_last_);
+    } else if (!enc_max_cal_) {
+        if (!flags_.reverse_encoder)
+            enc_max_ = enc_last_;
+        else
+            enc_min_ = enc_last_;
+        enc_max_cal_ = true;
+        update_pref = true;
+        this->received(DoorState::OPEN);
+        ESP_LOGD(TAG, "Encoder: initial OPEN boundary set to %d", enc_last_);
+    } else {
+        // Both boundaries calibrated. Check if we stopped within 1 pulse of a limit.
+        int16_t target_closed = flags_.reverse_encoder ? enc_max_ : enc_min_;
+        int16_t target_open = flags_.reverse_encoder ? enc_min_ : enc_max_;
+        int16_t dist_closed = static_cast<int16_t>(std::abs(enc_last_ - target_closed));
+        int16_t dist_open = static_cast<int16_t>(std::abs(enc_last_ - target_open));
+
+        if (dist_closed <= 1 && dist_closed <= dist_open) {
+            // Snap CLOSED boundary to actual stop position (floating bounds)
+            if (!flags_.reverse_encoder)
+                enc_min_ = enc_last_;
+            else
+                enc_max_ = enc_last_;
+            update_pref = true;
+            this->received(DoorState::CLOSED);
+            ESP_LOGD(TAG, "Encoder: CLOSED boundary snapped to %d", enc_last_);
+        } else if (dist_open <= 1 && dist_open < dist_closed) {
+            // Snap OPEN boundary to actual stop position (floating bounds)
+            if (!flags_.reverse_encoder)
+                enc_max_ = enc_last_;
+            else
+                enc_min_ = enc_last_;
+            update_pref = true;
+            this->received(DoorState::OPEN);
+            ESP_LOGD(TAG, "Encoder: OPEN boundary snapped to %d", enc_last_);
+        } else {
+            this->received(DoorState::STOPPED);
+        }
+    }
+
+    if (update_pref) {
+        RATGDOEncoderSettings s;
+        s.min = enc_min_;
+        s.max = enc_max_;
+        s.last = enc_last_;
+        s.min_calibrated = enc_min_cal_;
+        s.max_calibrated = enc_max_cal_;
+        encoder_pref_.save(&s);
+    }
+}
+
+void RATGDOComponent::reset_encoder_calibration()
+{
+    enc_min_ = enc_max_ = 0;
+    enc_min_cal_ = enc_max_cal_ = false;
+    RATGDOEncoderSettings s;
+    s.min = 0;
+    s.max = 0;
+    s.last = enc_last_;
+    s.min_calibrated = false;
+    s.max_calibrated = false;
+    encoder_pref_.save(&s);
+    ESP_LOGI(TAG, "Encoder calibration cleared; will re-learn on next full open/close cycle");
+}
+#endif
 
 } // namespace esphome::ratgdo
