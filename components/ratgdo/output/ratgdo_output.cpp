@@ -11,8 +11,6 @@ void RATGDOOutput::setup()
     ESP_LOGD(TAG, "Output was setup");
 
     if (this->output_type_ == OutputType::RATGDO_BEEPER) {
-        this->beeper_->add_on_finished_playback_callback([this] { this->finished_playback(); });
-
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         this->parent_->subscribe_vehicle_arriving_state([this](VehicleArrivingState state) {
             if (state == VehicleArrivingState::YES) {
@@ -30,6 +28,18 @@ void RATGDOOutput::setup()
             }
         });
     }
+}
+
+void RATGDOOutput::loop()
+{
+    if (this->output_type_ != OutputType::RATGDO_BEEPER) {
+        return;
+    }
+    bool playing = this->beeper_->is_playing();
+    if (this->was_playing_ && !playing) {
+        this->finished_playback();
+    }
+    this->was_playing_ = playing;
 }
 
 void RATGDOOutput::play()

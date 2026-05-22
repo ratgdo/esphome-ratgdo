@@ -13,6 +13,7 @@ enum OutputType {
 class RATGDOOutput : public RATGDOClient, public Component {
 public:
     void setup() override;
+    void loop() override;
     void play();
     void finished_playback();
     void dump_config() override;
@@ -25,6 +26,7 @@ protected:
     rtttl::Rtttl* beeper_;
     std::string rtttlSong_;
     bool repeat_;
+    bool was_playing_ { false };
 };
 
 } // namespace esphome::ratgdo
