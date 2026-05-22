@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from esphome import automation, pins
 import esphome.codegen as cg
-from esphome.components import binary_sensor
+from esphome.components import binary_sensor, sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 from esphome.core import CORE
@@ -123,25 +123,42 @@ def FILTER_SOURCE_FILES() -> list[str]:
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
+CONF_ENCODER_SENSOR = "encoder_sensor"
 
 
 def validate_protocol(config):
-    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (
-        CONF_DRY_CONTACT_CLOSE_SENSOR not in config
-        or CONF_DRY_CONTACT_OPEN_SENSOR not in config
-    ):
-        raise cv.Invalid(
-            "dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact"
-        )
-    if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (
-        CONF_DRY_CONTACT_CLOSE_SENSOR in config
-        or CONF_DRY_CONTACT_OPEN_SENSOR in config
-    ):
-        raise cv.Invalid(
-            "dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact"
-        )
-    #    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
-    #        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
+    is_dry = config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT
+    has_open = CONF_DRY_CONTACT_OPEN_SENSOR in config
+    has_close = CONF_DRY_CONTACT_CLOSE_SENSOR in config
+    has_encoder = CONF_ENCODER_SENSOR in config
+
+    if is_dry:
+        has_limits = has_open and has_close
+        if not has_limits and not has_encoder:
+            raise cv.Invalid(
+                "drycontact protocol requires either both "
+                "dry_contact_open_sensor and dry_contact_close_sensor, "
+                "or encoder_sensor"
+            )
+        if has_limits and has_encoder:
+            raise cv.Invalid(
+                "drycontact protocol cannot use both limit switch sensors "
+                "and encoder_sensor simultaneously"
+            )
+        if (has_open and not has_close) or (has_close and not has_open):
+            raise cv.Invalid(
+                "dry_contact_open_sensor and dry_contact_close_sensor must both be defined"
+            )
+    else:
+        if has_encoder:
+            raise cv.Invalid(
+                "encoder_sensor is only supported with protocol: drycontact"
+            )
+        if has_open or has_close:
+            raise cv.Invalid(
+                "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
+                "when using protocol drycontact"
+            )
     return config
 
 
@@ -177,6 +194,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(
                 binary_sensor.BinarySensor
             ),
+            cv.Optional(CONF_ENCODER_SENSOR): cv.use_id(sensor.Sensor),
         }
     ).extend(cv.COMPONENT_SCHEMA),
     validate_protocol,
@@ -218,6 +236,11 @@ async def to_code(config):
             config[CONF_DRY_CONTACT_CLOSE_SENSOR]
         )
         cg.add(var.set_dry_contact_close_sensor(dry_contact_close_sensor))
+
+    if config.get(CONF_ENCODER_SENSOR):
+        encoder_sensor = await cg.get_variable(config[CONF_ENCODER_SENSOR])
+        cg.add(var.set_encoder_sensor(encoder_sensor))
+        cg.add_build_flag("-DRATGDO_USE_ENCODER")
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)
