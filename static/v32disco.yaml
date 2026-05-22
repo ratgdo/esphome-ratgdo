@@ -106,6 +106,10 @@ output:
 rtttl:
   - id: ${id_prefix}_rtttl
     output: ${id_prefix}_ledc
+    on_finished_playback:
+      then:
+        lambda: !lambda |-
+          id(${id_prefix}_beeper).finished_playback();
 
 switch:
   - platform: ratgdo
