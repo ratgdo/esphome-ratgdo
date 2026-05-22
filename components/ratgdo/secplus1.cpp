@@ -80,6 +80,10 @@ namespace secplus1 {
         } else if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
             ESP_LOGD(TAG, "Looking for security+ 1.0 wall panel...");
 
+#ifdef FORCE_EMULATIION
+            ESP_LOGD(TAG, "Forced wall panel emulation mode.");
+            this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
+#else
             if (this->door_state != DoorState::UNKNOWN || this->light_state != LightState::UNKNOWN) {
                 ESP_LOG1(TAG, "Wall panel detected");
                 return;
@@ -88,6 +92,8 @@ namespace secplus1 {
                 ESP_LOGD(TAG, "No wall panel detected. Switching to emulation mode.");
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
+#endif
+
             this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION, 2000, [this] {
                 this->wall_panel_emulation();
             });

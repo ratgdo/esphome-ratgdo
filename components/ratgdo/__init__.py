@@ -103,6 +103,8 @@ PROTOCOL_SECPLUSV2 = "secplusv2"
 PROTOCOL_DRYCONTACT = "drycontact"
 SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
+CONF_FORCE_EMULATE = "force_emulate"
+
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
@@ -152,6 +154,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): cv.All(
                 vol.In(SUPPORTED_PROTOCOLS)
             ),
+            cv.Optional(CONF_FORCE_EMULATE, default=False): cv.boolean,
             # cv.Inclusive(CONF_DRY_CONTACT_OPEN_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
             # cv.Inclusive(CONF_DRY_CONTACT_CLOSE_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
             cv.Optional(CONF_DRY_CONTACT_OPEN_SENSOR): cv.use_id(
@@ -235,6 +238,10 @@ async def to_code(config):
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
         cg.add_build_flag("-DPROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
+
+    if config.get(CONF_FORCE_EMULATE):
+        cg.add_build_flag("-DFORCE_EMULATIION")
+
 
     # RATGDOComponent::setup() subscribes to door_state
     subscribe_door_state()
