@@ -38,6 +38,9 @@ async def to_code(config):
     rtttl = await cg.get_variable(config[CONF_RTTTL])
     cg.add(var.set_rtttl(rtttl))
     cg.add(var.set_song(config[CONF_SONG]))
+    # ESPHome 2026.5+ gates Rtttl::add_on_finished_playback_callback behind
+    # this define, set only when YAML configures `on_finished_playback:`.
+    cg.add_define("USE_RTTTL_FINISHED_PLAYBACK_CALLBACK")
     await register_ratgdo_child(var, config)
     subscribe_vehicle_arriving()
     subscribe_door_action_delayed()
