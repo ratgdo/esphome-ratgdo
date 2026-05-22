@@ -103,6 +103,23 @@ PROTOCOL_SECPLUSV2 = "secplusv2"
 PROTOCOL_DRYCONTACT = "drycontact"
 SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
+_PROTOCOL_SOURCE_FILES = {
+    PROTOCOL_SECPLUSV1: "secplus1.cpp",
+    PROTOCOL_SECPLUSV2: "secplus2.cpp",
+    PROTOCOL_DRYCONTACT: "dry_contact.cpp",
+}
+
+
+def FILTER_SOURCE_FILES() -> list[str]:
+    """Exclude protocol implementations that are not selected in YAML."""
+    selected = CORE.config.get(DOMAIN, {}).get(CONF_PROTOCOL, PROTOCOL_SECPLUSV2)
+    return [
+        source
+        for protocol, source in _PROTOCOL_SOURCE_FILES.items()
+        if protocol != selected
+    ]
+
+
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
