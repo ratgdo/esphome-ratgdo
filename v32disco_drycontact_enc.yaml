@@ -60,6 +60,53 @@ logger:
   logs:
     sensor: NONE
 
+binary_sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_detected
+    type: vehicle_detected
+    name: "Vehicle detected"
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_arriving
+    type: vehicle_arriving
+    name: "Vehicle arriving"
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_leaving
+    type: vehicle_leaving
+    name: "Vehicle leaving"
+
+number:
+  - platform: ratgdo
+    id: ${id_prefix}_target_distance_measurement
+    type: target_distance_measurement
+    entity_category: config
+    name: "Vehicle distance target"
+    mode: box
+    unit_of_measurement: "mm"
+  - platform: ratgdo
+    id: ${id_prefix}_closing_delay
+    type: closing_delay
+    entity_category: config
+    name: "Closing Delay"
+    unit_of_measurement: "s"
+
+output:
+  - platform: ledc
+    pin: GPIO33
+    id: ${id_prefix}_ledc
+  - platform: ratgdo
+    id: ${id_prefix}_beeper
+    type: beeper
+    rtttl: ${id_prefix}_rtttl
+    song: "alert:d=8,o=5,b=120:a,p,a,p,a,p,4b,p"
+
+rtttl:
+  - id: ${id_prefix}_rtttl
+    output: ${id_prefix}_ledc
+    on_finished_playback:
+      then:
+        lambda: !lambda |-
+          id(${id_prefix}_beeper).finished_playback();
+
 switch:
   - platform: ratgdo
     id: ${id_prefix}_led
@@ -69,11 +116,33 @@ switch:
       ignore_strapping_warning: true
     name: "LED"
     entity_category: config
+  - platform: ratgdo
+    id: ${id_prefix}_laser
+    type: led
+    pin: GPIO23
+    name: "LASER"
+    entity_category: config
 
 sensor:
   - platform: wifi_signal
     name: "WiFi Signal"
     update_interval: 120s
+  - platform: ratgdo
+    id: ${id_prefix}_vehicle_distance_actual
+    type: distance
+    name: "Vehicle distance actual"
+    unit_of_measurement: "mm"
+    internal: true
+    filters:
+      - throttle: 1ms
+      - heartbeat: 1ms
+  - platform: copy
+    source_id: ${id_prefix}_vehicle_distance_actual
+    name: Vehicle distance actual filtered
+    filters:
+      - min:
+          window_size: 5000
+          send_every: 5000
   - platform: adc
     pin: GPIO34
     name: "Voltage"
