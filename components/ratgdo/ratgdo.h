@@ -170,6 +170,8 @@ public:
     void reset_encoder_calibration();
     void on_encoder_update(int16_t raw);
     void check_encoder_stopped();
+    void recalculate_encoder_state();
+    void encoder_apply_state(int16_t raw);
 #endif
 
     Result call_protocol(Args args);
@@ -398,6 +400,7 @@ protected:
     bool enc_min_cal_ { false };
     bool enc_max_cal_ { false };
     bool enc_first_update_ { true };
+    int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
 #endif
 
     // Subscriber counters for defer name allocation

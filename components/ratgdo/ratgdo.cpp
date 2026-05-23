@@ -156,13 +156,13 @@ void RATGDOComponent::on_shutdown()
 
 void RATGDOComponent::received(const DoorState door_state)
 {
-    ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
-
     auto prev_door_state = *this->door_state;
 
     if (prev_door_state == door_state) {
         return;
     }
+
+    ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
 
     // opening duration calibration
     if (*this->opening_duration == 0) {
@@ -906,12 +906,27 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
     if (delta == 0)
         return;
 
-    // Compute and publish 0.0-1.0 position when fully calibrated
     if (enc_min_cal_ && enc_max_cal_ && enc_max_ != enc_min_) {
-        float pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
-        if (flags_.reverse_encoder)
-            pos = 1.0f - pos;
+        int16_t dist_closed = static_cast<int16_t>(std::abs(raw - enc_min_));
+        int16_t dist_open = static_cast<int16_t>(std::abs(raw - enc_max_));
+        float pos;
+        if (dist_closed <= 1 && dist_closed <= dist_open) {
+            pos = flags_.reverse_encoder ? 1.0f : 0.0f;
+        } else if (dist_open <= 1 && dist_open < dist_closed) {
+            pos = flags_.reverse_encoder ? 0.0f : 1.0f;
+        } else {
+            pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
+            if (flags_.reverse_encoder)
+                pos = 1.0f - pos;
+        }
         this->door_position = clamp(pos, 0.0f, 1.0f);
+
+        DoorState in_motion = (enc_last_dir_ > 0)
+            ? (flags_.reverse_encoder ? DoorState::CLOSING : DoorState::OPENING)
+            : (flags_.reverse_encoder ? DoorState::OPENING : DoorState::CLOSING);
+        if (*this->door_state != in_motion) {
+            this->received(in_motion);
+        }
     }
 
     // Re-arm the stopped watchdog for 1 second after the last pulse
