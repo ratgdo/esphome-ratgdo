@@ -91,11 +91,12 @@ namespace dry_contact {
 
     void DryContact::door_action(DoorAction action)
     {
-        if (action == DoorAction::OPEN && this->limits_.open_limit_reached) {
+        auto current_state = *this->ratgdo_->door_state;
+        if (action == DoorAction::OPEN && current_state == DoorState::OPEN) {
             ESP_LOGW(TAG, "The door is already fully open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
             return;
         }
-        if (action == DoorAction::CLOSE && this->limits_.close_limit_reached) {
+        if (action == DoorAction::CLOSE && current_state == DoorState::CLOSED) {
             ESP_LOGW(TAG, "The door is already fully closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
             return;
         }
