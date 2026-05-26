@@ -502,6 +502,7 @@ namespace scheduler_ids {
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
         TIMEOUT_ENCODER_STOPPED,
+        TIMEOUT_ENC_DIR_CORRECTION,
     };
 } // namespace scheduler_ids
 
