@@ -605,7 +605,7 @@ void RATGDOComponent::sync()
 #ifdef RATGDO_USE_ENCODER
     if (this->encoder_sensor_ != nullptr) {
         // Encoder mode: derive door state from saved calibration, no limit switches.
-        if (this->enc_min_cal_ && this->enc_max_cal_ && this->enc_max_ != this->enc_min_) {
+        if (this->flags_.enc_min_cal && this->flags_.enc_max_cal && this->enc_max_ != this->enc_min_) {
             int16_t range = static_cast<int16_t>(std::abs(this->enc_max_ - this->enc_min_));
             int16_t target_closed = this->flags_.reverse_encoder ? this->enc_max_ : this->enc_min_;
             int16_t target_open = this->flags_.reverse_encoder ? this->enc_min_ : this->enc_max_;
@@ -807,7 +807,12 @@ void RATGDOComponent::door_move_to_position(float position)
 #endif
     this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
     this->set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time,
-        [this] { this->door_action(DoorAction::STOP); });
+        [this] {
+#ifdef RATGDO_USE_ENCODER
+            flags_.enc_position_stop_pending = true;
+#endif
+            this->door_action(DoorAction::STOP);
+        });
 }
 
 void RATGDOComponent::cancel_position_sync_callbacks()
@@ -908,16 +913,17 @@ void RATGDOComponent::set_dry_contact_close_sensor(
 void RATGDOComponent::set_encoder_sensor(esphome::sensor::Sensor* s)
 {
     encoder_sensor_ = s;
+    flags_.enc_first_update = 1; // flags_ zero-inits; set explicitly to match old { true } initialiser
     encoder_pref_ = global_preferences->make_preference<RATGDOEncoderSettings>(fnv1_hash("ratgdo_encoder"));
     RATGDOEncoderSettings saved;
     if (encoder_pref_.load(&saved)) {
         enc_min_ = saved.min;
         enc_max_ = saved.max;
         enc_last_ = saved.last;
-        enc_min_cal_ = saved.min_calibrated;
-        enc_max_cal_ = saved.max_calibrated;
+        flags_.enc_min_cal = saved.min_calibrated;
+        flags_.enc_max_cal = saved.max_calibrated;
         ESP_LOGD(TAG, "Encoder: loaded cal min=%d max=%d last=%d min_cal=%d max_cal=%d",
-            enc_min_, enc_max_, enc_last_, enc_min_cal_, enc_max_cal_);
+            enc_min_, enc_max_, enc_last_, flags_.enc_min_cal, flags_.enc_max_cal);
     } else {
         ESP_LOGD(TAG, "Encoder: no saved calibration");
     }
@@ -928,21 +934,21 @@ void RATGDOComponent::set_encoder_sensor(esphome::sensor::Sensor* s)
 
 void RATGDOComponent::on_encoder_update(int16_t raw)
 {
-    if (enc_first_update_) {
-        enc_first_update_ = false;
+    if (flags_.enc_first_update) {
+        flags_.enc_first_update = false;
         // Power-loss door movement detection: if the very first pulse after boot
         // moves beyond a calibrated boundary, the door was physically moved while
         // the board was powered off. Clear calibration and re-learn.
         bool contradiction = false;
         if (!flags_.reverse_encoder) {
-            if (enc_min_cal_ && raw < enc_min_)
+            if (flags_.enc_min_cal && raw < enc_min_)
                 contradiction = true;
-            if (enc_max_cal_ && raw > enc_max_)
+            if (flags_.enc_max_cal && raw > enc_max_)
                 contradiction = true;
         } else {
-            if (enc_min_cal_ && raw > enc_min_)
+            if (flags_.enc_min_cal && raw > enc_min_)
                 contradiction = true;
-            if (enc_max_cal_ && raw < enc_max_)
+            if (flags_.enc_max_cal && raw < enc_max_)
                 contradiction = true;
         }
         if (contradiction) {
@@ -964,7 +970,7 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
 
     ESP_LOGD(TAG, "Encoder: step=%d min=%d max=%d", raw, enc_min_, enc_max_);
 
-    if (enc_min_cal_ && enc_max_cal_ && enc_max_ != enc_min_) {
+    if (flags_.enc_min_cal && flags_.enc_max_cal && enc_max_ != enc_min_) {
         int16_t dist_closed = static_cast<int16_t>(std::abs(raw - enc_min_));
         int16_t dist_open = static_cast<int16_t>(std::abs(raw - enc_max_));
         float pos;
@@ -1037,34 +1043,43 @@ void RATGDOComponent::check_encoder_stopped()
         ? (flags_.reverse_encoder ? DoorState::OPEN : DoorState::CLOSED)
         : (flags_.reverse_encoder ? DoorState::CLOSED : DoorState::OPEN);
 
-    if ((!enc_min_cal_ && decreasing) || (!enc_max_cal_ && !decreasing)) {
+    if ((!flags_.enc_min_cal && decreasing) || (!flags_.enc_max_cal && !decreasing)) {
         // First time seeing this boundary direction — calibrate it.
         if (decreasing) {
             enc_min_ = enc_last_;
-            enc_min_cal_ = true;
+            flags_.enc_min_cal = true;
         } else {
             enc_max_ = enc_last_;
-            enc_max_cal_ = true;
+            flags_.enc_max_cal = true;
         }
         update_pref = true;
         this->received(boundary_state);
         ESP_LOGD(TAG, "Encoder: initial %s boundary set to %d",
             decreasing ? "lower(min)" : "upper(max)", enc_last_);
-    } else if (!enc_min_cal_ || !enc_max_cal_) {
+    } else if (!flags_.enc_min_cal || !flags_.enc_max_cal) {
         // Hit the same direction twice before the other end was seen — update this end.
         if (decreasing) {
             enc_min_ = enc_last_;
-            enc_min_cal_ = true;
+            flags_.enc_min_cal = true;
         } else {
             enc_max_ = enc_last_;
-            enc_max_cal_ = true;
+            flags_.enc_max_cal = true;
         }
         update_pref = true;
         this->received(boundary_state);
         ESP_LOGD(TAG, "Encoder: re-set %s boundary to %d",
             decreasing ? "lower(min)" : "upper(max)", enc_last_);
     } else {
-        // Both boundaries calibrated. Check if we stopped within 1 pulse of a limit.
+        // Both boundaries calibrated. If this stop was triggered by TIMEOUT_MOVE_TO_POSITION
+        // (a mid-travel position command) the door may have landed within 1 step of a
+        // boundary purely by coincidence. Skip snap/extension so we don't corrupt calibration.
+        if (flags_.enc_position_stop_pending) {
+            flags_.enc_position_stop_pending = false;
+            this->received(DoorState::STOPPED);
+            return;
+        }
+
+        // Check if we stopped within 1 pulse of a limit.
         int16_t target_closed = flags_.reverse_encoder ? enc_max_ : enc_min_;
         int16_t target_open = flags_.reverse_encoder ? enc_min_ : enc_max_;
         int16_t dist_closed = static_cast<int16_t>(std::abs(enc_last_ - target_closed));
@@ -1112,8 +1127,8 @@ void RATGDOComponent::check_encoder_stopped()
         s.min = enc_min_;
         s.max = enc_max_;
         s.last = enc_last_;
-        s.min_calibrated = enc_min_cal_;
-        s.max_calibrated = enc_max_cal_;
+        s.min_calibrated = flags_.enc_min_cal;
+        s.max_calibrated = flags_.enc_max_cal;
         encoder_pref_.save(&s);
     }
 }
@@ -1121,7 +1136,7 @@ void RATGDOComponent::check_encoder_stopped()
 void RATGDOComponent::reset_encoder_calibration()
 {
     enc_min_ = enc_max_ = 0;
-    enc_min_cal_ = enc_max_cal_ = false;
+    flags_.enc_min_cal = flags_.enc_max_cal = false;
     RATGDOEncoderSettings s;
     s.min = 0;
     s.max = 0;
@@ -1158,7 +1173,7 @@ void RATGDOComponent::encoder_apply_state(int16_t raw)
 
 void RATGDOComponent::recalculate_encoder_state()
 {
-    if (enc_min_cal_ && enc_max_cal_ && enc_max_ != enc_min_)
+    if (flags_.enc_min_cal && flags_.enc_max_cal && enc_max_ != enc_min_)
         encoder_apply_state(enc_last_);
 }
 #endif

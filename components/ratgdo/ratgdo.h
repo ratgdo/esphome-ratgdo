@@ -387,8 +387,11 @@ protected:
 #endif
 #ifdef RATGDO_USE_ENCODER
         uint8_t reverse_encoder : 1;
+        uint8_t enc_min_cal : 1;
+        uint8_t enc_max_cal : 1;
+        uint8_t enc_first_update : 1; // set in set_encoder_sensor(); flags_ zero-inits to 0
+        uint8_t enc_position_stop_pending : 1;
 #endif
-        uint8_t reserved : 4; // Reserved for future use
     } flags_ { 0 };
 
 #ifdef RATGDO_USE_ENCODER
@@ -397,9 +400,6 @@ protected:
     int16_t enc_min_ { 0 };
     int16_t enc_max_ { 0 };
     int16_t enc_last_ { 0 };
-    bool enc_min_cal_ { false };
-    bool enc_max_cal_ { false };
-    bool enc_first_update_ { true };
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
 #endif
