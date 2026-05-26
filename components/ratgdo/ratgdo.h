@@ -401,6 +401,7 @@ protected:
     bool enc_max_cal_ { false };
     bool enc_first_update_ { true };
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
+    int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
 #endif
 
     // Subscriber counters for defer name allocation
