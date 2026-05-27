@@ -27,6 +27,16 @@ ratgdo:
   output_gdo_pin: ${uart_tx_pin}
   input_gdo_pin: ${uart_rx_pin}
   input_obst_pin: ${input_obst_pin}
+  dry_contact_open_pin:
+    number: ${dry_contact_open_pin}
+    mode:
+      input: true
+      pullup: true
+  dry_contact_close_pin:
+    number: ${dry_contact_close_pin}
+    mode:
+      input: true
+      pullup: true
   encoder_sensor: ${id_prefix}_encoder
   discrete_open_pin: ${discrete_open_pin}
   discrete_close_pin: ${discrete_close_pin}
@@ -44,26 +54,6 @@ binary_sensor:
     id: ${id_prefix}_obstruction
     name: "Obstruction"
     device_class: problem
-
-sensor:
-  - platform: rotary_encoder
-    id: ${id_prefix}_encoder
-    name: "Encoder"
-    pin_a:
-      number: ${dry_contact_open_pin}
-      inverted: false
-      mode:
-        input: true
-        pullup: true
-    pin_b:
-      number: ${dry_contact_close_pin}
-      inverted: false
-      mode:
-        input: true
-        pullup: true
-    publish_initial_value: true
-    restore_mode: RESTORE_DEFAULT_ZERO
-    entity_category: diagnostic
 
 number:
   - platform: ratgdo
@@ -85,6 +75,15 @@ cover:
     id: ${id_prefix}_garage_door
     device_class: garage
     name: "Door"
+
+sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_encoder
+    type: encoder
+    name: "Encoder"
+    unit_of_measurement: "steps"
+    accuracy_decimals: 0
+    entity_category: diagnostic
 
 switch:
   - platform: ratgdo
