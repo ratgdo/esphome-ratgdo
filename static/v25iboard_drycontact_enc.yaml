@@ -1,0 +1,61 @@
+---
+substitutions:
+  id_prefix: ratgdov25i
+  friendly_name: "ratgdov2.5i"
+  uart_tx_pin: D1
+  uart_rx_pin: D2
+  input_obst_pin: D7
+  dry_contact_open_pin: D5
+  dry_contact_close_pin: D6
+  discrete_open_pin: D0
+  discrete_close_pin: D8
+
+web_server:
+  local: true
+
+esphome:
+  name: ${id_prefix}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: ratgdo.v25iboard_drycontact_enc
+    version: "2.5i"
+
+esp8266:
+  board: d1_mini
+  restore_from_flash: true
+
+dashboard_import:
+  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard_drycontact_enc.yaml@main
+
+packages:
+  # remote_package:
+  #   url: https://github.com/ratgdo/esphome-ratgdo
+  #   ref: main
+  #   files: [base_drycontact_enc.yaml]
+  #   refresh: 1s
+  remote_package: !include
+    file: base_drycontact_enc.yaml
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 120s
+
+# Sync time with Home Assistant.
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+
+api:
+  id: api_server
+
+improv_serial:
+
+wifi:
+  ap:
+    ssid: "ratgdo"
+
+captive_portal:
+
+logger:
