@@ -13,6 +13,9 @@
 
 #pragma once
 
+// Set to 0 to disable the wrong-direction stop-and-retry logic
+#define ENC_DIRECTION_CORRECTION_ENABLED 1
+
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/core/component.h"
@@ -72,6 +75,14 @@ struct RATGDOStore {
     {
         arg->obstruction_low_count++;
     }
+
+#ifdef RATGDO_USE_ENCODER
+    volatile int16_t enc_delta { 0 };
+    volatile uint8_t enc_prev_state { 0 };
+    ISRInternalGPIOPin enc_pin_a;
+    ISRInternalGPIOPin enc_pin_b;
+    static void IRAM_ATTR HOT isr_encoder(RATGDOStore* arg);
+#endif
 };
 
 #ifdef RATGDO_USE_ENCODER
@@ -172,6 +183,8 @@ public:
     void check_encoder_stopped();
     void recalculate_encoder_state();
     void encoder_apply_state(int16_t raw);
+    void set_dry_contact_open_pin(InternalGPIOPin* pin) { enc_pin_a_ = pin; }
+    void set_dry_contact_close_pin(InternalGPIOPin* pin) { enc_pin_b_ = pin; }
 #endif
 
     Result call_protocol(Args args);
@@ -402,6 +415,10 @@ protected:
     int16_t enc_last_ { 0 };
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
+    bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
+    int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close
+    InternalGPIOPin* enc_pin_a_ { nullptr };
+    InternalGPIOPin* enc_pin_b_ { nullptr };
 #endif
 
     // Subscriber counters for defer name allocation
@@ -502,7 +519,6 @@ namespace scheduler_ids {
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
         TIMEOUT_ENCODER_STOPPED,
-        TIMEOUT_ENC_DIR_CORRECTION,
     };
 } // namespace scheduler_ids
 

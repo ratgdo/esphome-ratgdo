@@ -59,6 +59,11 @@ void RATGDOSensor::setup()
 #endif
 #endif
         break;
+    case RATGDOSensorType::RATGDO_ENCODER:
+#ifdef RATGDO_USE_ENCODER
+        this->parent_->set_encoder_sensor(this);
+#endif
+        break;
     default:
         break;
     }
@@ -88,6 +93,9 @@ void RATGDOSensor::dump_config()
         break;
     case RATGDOSensorType::RATGDO_DISTANCE:
         ESP_LOGCONFIG(TAG, "  Type: Distance");
+        break;
+    case RATGDOSensorType::RATGDO_ENCODER:
+        ESP_LOGCONFIG(TAG, "  Type: Encoder");
         break;
     default:
         break;
