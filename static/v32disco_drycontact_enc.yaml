@@ -59,6 +59,7 @@ wifi:
 logger:
   logs:
     sensor: NONE
+
 binary_sensor:
   - platform: ratgdo
     id: ${id_prefix}_vehicle_detected
