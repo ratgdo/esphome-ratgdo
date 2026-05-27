@@ -89,7 +89,7 @@ switch:
   - platform: ratgdo
     id: ${id_prefix}_reverse_encoder
     type: reverse_encoder
-    name: "Reverse Encoder"
+    name: "Encoder Reverse"
     entity_category: config
 
 button:
@@ -111,7 +111,7 @@ button:
 
   - platform: template
     id: ${id_prefix}_reset_calibration
-    name: "Reset Encoder Calibration"
+    name: "Encoder Calibration Reset"
     entity_category: config
     on_press:
       then:
