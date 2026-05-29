@@ -13,8 +13,7 @@
 
 #pragma once
 
-// Set to 0 to disable the wrong-direction stop-and-retry logic
-#define ENC_DIRECTION_CORRECTION_ENABLED 1
+#define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/sensor/sensor.h"
@@ -79,6 +78,13 @@ struct RATGDOStore {
 #ifdef RATGDO_USE_ENCODER
     volatile int16_t enc_delta { 0 };
     volatile uint8_t enc_prev_state { 0 };
+    // Signed net accumulator for ISR-level step filtering.
+    // Accumulates +1/-1 per valid quadrature transition; emits a verified step
+    // to enc_delta when the sum reaches ±4. Using a net sum (rather than a
+    // consecutive-count reset-on-reversal) means a single stray wrong-direction
+    // transition from reed switch bounce delays the next emission by 2 counts
+    // instead of resetting the whole streak.
+    volatile int8_t enc_cycle_count { 0 };
     ISRInternalGPIOPin enc_pin_a;
     ISRInternalGPIOPin enc_pin_b;
     static void IRAM_ATTR HOT isr_encoder(RATGDOStore* arg);
@@ -414,6 +420,8 @@ protected:
     int16_t enc_max_ { 0 };
     int16_t enc_last_ { 0 };
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
+    int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
+    int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
     bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
     int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close

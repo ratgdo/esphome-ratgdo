@@ -65,9 +65,13 @@ static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of conse
 #endif
 
 #ifdef RATGDO_USE_ENCODER
-// Maximum expected gap between encoder pulses during door travel, plus a safety
-// margin. If no pulse arrives within this window the door is declared stopped.
-static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 1500;
+
+static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 1500; // Maximum expected gap between encoder pulses during door travel,
+                                                          // plus a safety margin. If no pulse arrives within this window the
+                                                          // door is declared stopped.
+
+static constexpr int8_t ENC_DIRECTION_CHANGE_THRESHOLD = 3; // Number of consecutive encoder steps in the opposite direction
+                                                            // required to confirm a real direction reversal mid-travel.
 #endif
 
 void RATGDOComponent::setup()
@@ -1012,8 +1016,25 @@ void IRAM_ATTR HOT RATGDOStore::isr_encoder(RATGDOStore* arg)
     bool a = arg->enc_pin_a.digital_read();
     bool b = arg->enc_pin_b.digital_read();
     uint8_t curr = (static_cast<uint8_t>(a) << 1) | static_cast<uint8_t>(b);
-    arg->enc_delta += ENC_TABLE[(arg->enc_prev_state << 2) | curr];
+    int8_t step = ENC_TABLE[(arg->enc_prev_state << 2) | curr];
     arg->enc_prev_state = curr;
+
+    if (step == 0)
+        return; // invalid/skip-2 transition; update prev_state but don't count
+
+    // Net running sum: accumulate signed steps and emit when the dominant
+    // direction has built up 4 net counts. This tolerates an occasional
+    // wrong-direction transition (reed switch bounce, magnetic asymmetry)
+    // without resetting the streak — a stray -1 among +1s just costs 2
+    // counts of delay rather than a full reset to zero.
+    arg->enc_cycle_count += step;
+    if (arg->enc_cycle_count >= 4) {
+        arg->enc_delta += 1;
+        arg->enc_cycle_count = 0;
+    } else if (arg->enc_cycle_count <= -4) {
+        arg->enc_delta -= 1;
+        arg->enc_cycle_count = 0;
+    }
 }
 
 void RATGDOComponent::set_encoder_sensor(esphome::sensor::Sensor* s)
@@ -1048,6 +1069,23 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
     // Track direction so check_encoder_stopped knows which boundary we hit.
     enc_last_dir_ = (delta > 0) ? 1 : -1;
 
+    // Latch the travel direction from the first step of each move.
+    // Subsequent steps opposite to the dominant direction are counted; only after
+    // ENC_DIRECTION_CHANGE_THRESHOLD consecutive opposite steps is enc_travel_dir_
+    // updated, filtering oscillations from a magnet hovering at the reed-switch
+    // threshold (which can happen at a limit or mid-travel).
+    if (enc_travel_dir_ == 0) {
+        enc_travel_dir_ = enc_last_dir_; // first step of a new move
+        enc_reverse_count_ = 0;
+    } else if (enc_last_dir_ != enc_travel_dir_) {
+        if (++enc_reverse_count_ >= ENC_DIRECTION_CHANGE_THRESHOLD) {
+            enc_travel_dir_ = enc_last_dir_; // confirmed real reversal
+            enc_reverse_count_ = 0;
+        }
+    } else {
+        enc_reverse_count_ = 0; // step agrees with dominant direction; reset counter
+    }
+
     ESP_LOGD(TAG, "Encoder: step=%d min=%d max=%d", raw, enc_min_, enc_max_);
 
     if (flags_.enc_min_cal && flags_.enc_max_cal && enc_max_ != enc_min_) {
@@ -1065,17 +1103,23 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
         }
         this->door_position = clamp(pos, 0.0f, 1.0f);
 
-        DoorState in_motion = (enc_last_dir_ > 0)
+        // Derive in_motion from enc_travel_dir_ (the confirmed dominant direction)
+        // rather than enc_last_dir_ so that oscillation noise does not flip the
+        // reported door state or cancel the move-to-position timer.
+        // enc_travel_dir_ only changes after ENC_DIRECTION_CHANGE_THRESHOLD
+        // consecutive opposite steps.
+        int8_t effective_dir = (enc_travel_dir_ != 0) ? enc_travel_dir_ : enc_last_dir_;
+        DoorState in_motion = (effective_dir > 0)
             ? (flags_.reverse_encoder ? DoorState::CLOSING : DoorState::OPENING)
             : (flags_.reverse_encoder ? DoorState::OPENING : DoorState::CLOSING);
         if (*this->door_state != in_motion) {
             // Check if the door moved in the opposite direction from what was commanded.
 #if ENC_DIRECTION_CORRECTION_ENABLED
             if (enc_intended_dir_ != 0) {
-                int8_t intended = enc_intended_dir_;
-                enc_intended_dir_ = 0; // clear immediately; inertia ticks must not re-trigger
-                bool correct = (in_motion == DoorState::OPENING) == (intended > 0);
+                bool correct = (in_motion == DoorState::OPENING) == (enc_intended_dir_ > 0);
                 if (!correct) {
+                    int8_t intended = enc_intended_dir_;
+                    enc_intended_dir_ = 0; // clear — correction is firing
                     ESP_LOGD(TAG, "Wrong direction detected (wanted %s, got %s); stopping to correct",
                         intended > 0 ? "open" : "close",
                         in_motion == DoorState::OPENING ? "opening" : "closing");
@@ -1089,6 +1133,10 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
                     enc_dir_correction_pending_ = true;
                     enc_dir_correction_intended_ = intended;
                 }
+                // If correct direction: do NOT clear enc_intended_dir_ here.
+                // It stays set so a mid-travel reversal (confirmed after
+                // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
+                // the correction. received(DoorState) clears it when the move ends.
             }
 #endif // ENC_DIRECTION_CORRECTION_ENABLED
             this->received(in_motion);
@@ -1102,13 +1150,16 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
 
 void RATGDOComponent::check_encoder_stopped()
 {
-    ESP_LOGI(TAG, "Encoder stopped: step=%d min=%d max=%d dir=%d", enc_last_, enc_min_, enc_max_, enc_last_dir_);
+    ESP_LOGI(TAG, "Encoder stopped: step=%d min=%d max=%d dir=%d", enc_last_, enc_min_, enc_max_, enc_travel_dir_);
     bool update_pref = false;
 
-    // enc_min_ always holds the lower step count; enc_max_ always holds the higher step count.
-    // Use enc_last_dir_ to pick which variable to write, regardless of reverse_encoder.
-    // reverse_encoder only controls which variable maps to CLOSED vs OPEN.
-    const bool decreasing = (enc_last_dir_ < 0);
+    // Use the latched travel direction rather than enc_last_dir_ so that
+    // magnet-hover oscillations at a limit do not corrupt boundary classification.
+    const bool decreasing = (enc_travel_dir_ < 0);
+
+    // Clear enc_travel_dir_ now so the next move starts with a fresh latch.
+    enc_travel_dir_ = 0;
+    enc_reverse_count_ = 0;
     const DoorState boundary_state = decreasing
         ? (flags_.reverse_encoder ? DoorState::OPEN : DoorState::CLOSED)
         : (flags_.reverse_encoder ? DoorState::CLOSED : DoorState::OPEN);
@@ -1219,6 +1270,8 @@ void RATGDOComponent::reset_encoder_calibration()
 {
     enc_min_ = enc_max_ = enc_last_ = 0;
     flags_.enc_min_cal = flags_.enc_max_cal = false;
+    enc_travel_dir_ = 0;
+    enc_reverse_count_ = 0;
     RATGDOEncoderSettings s;
     s.min = 0;
     s.max = 0;
