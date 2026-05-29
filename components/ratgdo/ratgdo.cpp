@@ -66,7 +66,7 @@ static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of conse
 
 #ifdef RATGDO_USE_ENCODER
 
-static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 1500; // Maximum expected gap between encoder pulses during door travel,
+static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 2000; // Maximum expected gap between encoder pulses during door travel,
                                                           // plus a safety margin. If no pulse arrives within this window the
                                                           // door is declared stopped.
 
