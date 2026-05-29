@@ -84,8 +84,7 @@ struct RATGDOStore {
     // Accumulates +1/-1 per valid quadrature transition; emits a verified step
     // to enc_delta when the sum reaches ±4. Using a net sum (rather than a
     // consecutive-count reset-on-reversal) means a single stray wrong-direction
-    // transition from reed switch bounce delays the next emission by 2 counts
-    // instead of resetting the whole streak.
+    // transition from noise delays the next emission by 2 counts
     volatile int8_t enc_cycle_count { 0 };
     ISRInternalGPIOPin enc_pin_a;
     ISRInternalGPIOPin enc_pin_b;

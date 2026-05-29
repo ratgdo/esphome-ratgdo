@@ -70,7 +70,7 @@ static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 1500; // Maximum expected ga
                                                           // plus a safety margin. If no pulse arrives within this window the
                                                           // door is declared stopped.
 
-static constexpr int8_t ENC_DIRECTION_CHANGE_THRESHOLD = 3; // Number of consecutive encoder steps in the opposite direction
+static constexpr int8_t ENC_DIRECTION_CHANGE_THRESHOLD = 3; // Number of consecutive ISR pulses in the opposite direction
                                                             // required to confirm a real direction reversal mid-travel.
 #endif
 
@@ -1024,9 +1024,7 @@ void IRAM_ATTR HOT RATGDOStore::isr_encoder(RATGDOStore* arg)
 
     // Net running sum: accumulate signed steps and emit when the dominant
     // direction has built up 4 net counts. This tolerates an occasional
-    // wrong-direction transition (reed switch bounce, magnetic asymmetry)
-    // without resetting the streak — a stray -1 among +1s just costs 2
-    // counts of delay rather than a full reset to zero.
+    // wrong-direction transition from noise.
     arg->enc_cycle_count += step;
     if (arg->enc_cycle_count >= 4) {
         arg->enc_delta += 1;
@@ -1072,8 +1070,7 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
     // Latch the travel direction from the first step of each move.
     // Subsequent steps opposite to the dominant direction are counted; only after
     // ENC_DIRECTION_CHANGE_THRESHOLD consecutive opposite steps is enc_travel_dir_
-    // updated, filtering oscillations from a magnet hovering at the reed-switch
-    // threshold (which can happen at a limit or mid-travel).
+    // updated, filtering oscillations
     if (enc_travel_dir_ == 0) {
         enc_travel_dir_ = enc_last_dir_; // first step of a new move
         enc_reverse_count_ = 0;
