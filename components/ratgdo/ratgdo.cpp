@@ -1133,7 +1133,7 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
                 // If correct direction: do NOT clear enc_intended_dir_ here.
                 // It stays set so a mid-travel reversal (confirmed after
                 // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
-                // the correction. received(DoorState) clears it when the move ends.
+                // the correction. check_encoder_stopped() clears it when the move ends.
             }
 #endif // ENC_DIRECTION_CORRECTION_ENABLED
             this->received(in_motion);
@@ -1157,6 +1157,9 @@ void RATGDOComponent::check_encoder_stopped()
     // Clear enc_travel_dir_ now so the next move starts with a fresh latch.
     enc_travel_dir_ = 0;
     enc_reverse_count_ = 0;
+    // Clear enc_intended_dir_ so a stale intent from a previous ratgdo command
+    // cannot trigger the wrong-direction correction on a subsequent wall-control command
+    enc_intended_dir_ = 0;
     const DoorState boundary_state = decreasing
         ? (flags_.reverse_encoder ? DoorState::OPEN : DoorState::CLOSED)
         : (flags_.reverse_encoder ? DoorState::CLOSED : DoorState::OPEN);
