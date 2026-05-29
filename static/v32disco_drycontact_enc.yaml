@@ -29,16 +29,16 @@ esp32:
     type: arduino
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32disco_drycontact_enc.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v32disco_drycontact_enc.yaml@ratgdo-encoder
 
 packages:
-  # remote_package:
-  #   url: https://github.com/ratgdo/esphome-ratgdo
-  #   ref: main
-  #   files: [base_drycontact_enc.yaml]
-  #   refresh: 1s
-  remote_package: !include
-    file: base_drycontact_enc.yaml
+  remote_package:
+    url: https://github.com/ratgdo/esphome-ratgdo
+    ref: ratgdo-encoder
+    files: [base_drycontact_enc.yaml]
+    refresh: 1s
+  # remote_package: !include
+  #   file: base_drycontact_enc.yaml
 
 # Sync time with Home Assistant.
 time:
@@ -57,8 +57,17 @@ wifi:
   ap:
 
 logger:
+  level: VERBOSE
   logs:
     sensor: NONE
+    ratgdo.sensor: NONE
+    vl53l4cx: NONE
+    wifi: NONE
+    mdns: NONE
+    ota: NONE
+    web_server: NONE
+    api: NONE
+    api.connection: INFO
 
 binary_sensor:
   - platform: ratgdo
