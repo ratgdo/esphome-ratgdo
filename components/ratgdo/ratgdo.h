@@ -16,7 +16,9 @@
 #define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#ifdef RATGDO_USE_ENCODER
 #include "esphome/components/sensor/sensor.h"
+#endif
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
