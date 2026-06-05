@@ -109,7 +109,7 @@ namespace secplus2 {
             return;
         }
 
-        if (tries == 2 && !synced) { // made a few attempts and no progress
+        if (tries == 2) { // made a few attempts and no progress
             // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
             this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
         }
