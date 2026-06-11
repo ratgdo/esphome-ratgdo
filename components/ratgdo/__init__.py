@@ -169,6 +169,13 @@ def validate_protocol(config):
                 "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
                 "when using protocol drycontact"
             )
+
+    if not has_encoder and (
+        CONF_DRY_CONTACT_OPEN_PIN in config or CONF_DRY_CONTACT_CLOSE_PIN in config
+    ):
+        raise cv.Invalid(
+            "dry_contact_open_pin and dry_contact_close_pin are only valid when using encoder_sensor"
+        )
     return config
 
 
