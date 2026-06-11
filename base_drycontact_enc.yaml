@@ -27,12 +27,12 @@ ratgdo:
   output_gdo_pin: ${uart_tx_pin}
   input_gdo_pin: ${uart_rx_pin}
   input_obst_pin: ${input_obst_pin}
-  dry_contact_open_pin:
+  encoder_pin_a:
     number: ${dry_contact_open_pin}
     mode:
       input: true
       pullup: true
-  dry_contact_close_pin:
+  encoder_pin_b:
     number: ${dry_contact_close_pin}
     mode:
       input: true

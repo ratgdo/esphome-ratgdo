@@ -123,8 +123,8 @@ def FILTER_SOURCE_FILES() -> list[str]:
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
-CONF_DRY_CONTACT_OPEN_PIN = "dry_contact_open_pin"
-CONF_DRY_CONTACT_CLOSE_PIN = "dry_contact_close_pin"
+CONF_ENCODER_PIN_A = "encoder_pin_a"
+CONF_ENCODER_PIN_B = "encoder_pin_b"
 CONF_ENCODER_SENSOR = "encoder_sensor"
 
 
@@ -152,12 +152,12 @@ def validate_protocol(config):
                 "dry_contact_open_sensor and dry_contact_close_sensor must both be defined"
             )
         if has_encoder:
-            has_pin_a = CONF_DRY_CONTACT_OPEN_PIN in config
-            has_pin_b = CONF_DRY_CONTACT_CLOSE_PIN in config
+            has_pin_a = CONF_ENCODER_PIN_A in config
+            has_pin_b = CONF_ENCODER_PIN_B in config
             if not has_pin_a or not has_pin_b:
                 raise cv.Invalid(
-                    "encoder_sensor requires both dry_contact_open_pin and "
-                    "dry_contact_close_pin to be defined in the ratgdo: config"
+                    "encoder_sensor requires both encoder_pin_a and "
+                    "encoder_pin_b to be defined in the ratgdo: config"
                 )
     else:
         if has_encoder:
@@ -171,10 +171,10 @@ def validate_protocol(config):
             )
 
     if not has_encoder and (
-        CONF_DRY_CONTACT_OPEN_PIN in config or CONF_DRY_CONTACT_CLOSE_PIN in config
+        CONF_ENCODER_PIN_A in config or CONF_ENCODER_PIN_B in config
     ):
         raise cv.Invalid(
-            "dry_contact_open_pin and dry_contact_close_pin are only valid when using encoder_sensor"
+            "encoder_pin_a and encoder_pin_b are only valid when using encoder_sensor"
         )
     return config
 
@@ -211,10 +211,8 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(
                 binary_sensor.BinarySensor
             ),
-            cv.Optional(CONF_DRY_CONTACT_OPEN_PIN): pins.internal_gpio_input_pin_schema,
-            cv.Optional(
-                CONF_DRY_CONTACT_CLOSE_PIN
-            ): pins.internal_gpio_input_pin_schema,
+            cv.Optional(CONF_ENCODER_PIN_A): pins.internal_gpio_input_pin_schema,
+            cv.Optional(CONF_ENCODER_PIN_B): pins.internal_gpio_input_pin_schema,
             cv.Optional(CONF_ENCODER_SENSOR): cv.use_id(sensor.Sensor),
         }
     ).extend(cv.COMPONENT_SCHEMA),
@@ -262,12 +260,12 @@ async def to_code(config):
         encoder_sensor = await cg.get_variable(config[CONF_ENCODER_SENSOR])
         cg.add(var.set_encoder_sensor(encoder_sensor))
 
-    if config.get(CONF_DRY_CONTACT_OPEN_PIN):
-        pin = await cg.gpio_pin_expression(config[CONF_DRY_CONTACT_OPEN_PIN])
-        cg.add(var.set_dry_contact_open_pin(pin))
-    if config.get(CONF_DRY_CONTACT_CLOSE_PIN):
-        pin = await cg.gpio_pin_expression(config[CONF_DRY_CONTACT_CLOSE_PIN])
-        cg.add(var.set_dry_contact_close_pin(pin))
+    if config.get(CONF_ENCODER_PIN_A):
+        pin = await cg.gpio_pin_expression(config[CONF_ENCODER_PIN_A])
+        cg.add(var.set_encoder_pin_a(pin))
+    if config.get(CONF_ENCODER_PIN_B):
+        pin = await cg.gpio_pin_expression(config[CONF_ENCODER_PIN_B])
+        cg.add(var.set_encoder_pin_b(pin))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)

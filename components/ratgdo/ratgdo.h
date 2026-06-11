@@ -192,8 +192,8 @@ public:
     void check_encoder_stopped();
     void recalculate_encoder_state();
     void encoder_apply_state(int16_t raw);
-    void set_dry_contact_open_pin(InternalGPIOPin* pin) { enc_pin_a_ = pin; }
-    void set_dry_contact_close_pin(InternalGPIOPin* pin) { enc_pin_b_ = pin; }
+    void set_encoder_pin_a(InternalGPIOPin* pin) { enc_pin_a_ = pin; }
+    void set_encoder_pin_b(InternalGPIOPin* pin) { enc_pin_b_ = pin; }
 #endif
 
     Result call_protocol(Args args);

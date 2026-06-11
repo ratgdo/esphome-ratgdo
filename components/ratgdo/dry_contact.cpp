@@ -91,6 +91,9 @@ namespace dry_contact {
 
     void DryContact::door_action(DoorAction action)
     {
+        // Encoder builds do not have physical limit switches
+        // so `limits_` is never updated. Instead, we rely on the derived `door_state`
+        // which correctly reflects the software-calibrated limits.
 #ifdef RATGDO_USE_ENCODER
         auto current_state = *this->ratgdo_->door_state;
         if (action == DoorAction::OPEN && current_state == DoorState::OPEN) {
