@@ -1,211 +1,210 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>ESPHome ratgdo</title>
-    <meta
-      name="description"
-      content="Install ratgdo on your ESPHome devices."
-    />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="color-scheme" content="dark light" />
-    <meta property="og:title" content="ESPHome ratgdo" />
-    <meta property="og:site_name" content="ESPHome ratgdo" />
-    <meta
-      property="og:url"
-      content="https://ratgdo.github.io/esphome-ratgdo/"
-    />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:description"
-      content="Install RATGTO on your ESPHome devices."
-    />
-    <meta
-      property="og:image"
-      content="https://ratgdo.github.io/esphome-ratgdo/header.png"
-    />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@esphome_ratgdo" />
-    <meta name="twitter:title" content="ESPHome ratgdo" />
-    <meta
-      name="twitter:description"
-      content="Install ratgdo on your ESPHome devices."
-    />
-    <meta
-      name="twitter:image"
-      content="https://ratgdo.github.io/esphome-ratgdo/header.png"
-    />
 
-    <style>
+<head>
+  <meta charset="utf-8" />
+  <title>ESPHome ratgdo</title>
+  <meta name="description" content="Install ratgdo on your ESPHome devices." />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="color-scheme" content="dark light" />
+  <meta property="og:title" content="ESPHome ratgdo" />
+  <meta property="og:site_name" content="ESPHome ratgdo" />
+  <meta property="og:url" content="https://ratgdo.github.io/esphome-ratgdo/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Install RATGTO on your ESPHome devices." />
+  <meta property="og:image" content="https://ratgdo.github.io/esphome-ratgdo/header.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@esphome_ratgdo" />
+  <meta name="twitter:title" content="ESPHome ratgdo" />
+  <meta name="twitter:description" content="Install ratgdo on your ESPHome devices." />
+  <meta name="twitter:image" content="https://ratgdo.github.io/esphome-ratgdo/header.png" />
+
+  <style>
+    body {
+      font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Ubuntu, sans-serif;
+      padding: 0;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    .content {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .header {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1200 / 675;
+      border-radius: 12px;
+    }
+
+    h3 {
+      margin-top: 1.5em;
+    }
+
+    a {
+      color: #03a9f4;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    li {
+      padding: 4px 0;
+    }
+
+    .footer {
+      margin-top: 24px;
+      border-top: 1px solid #ccc;
+      padding-top: 24px;
+      text-align: center;
+    }
+
+    .footer .initiative {
+      font-style: italic;
+      margin-top: 16px;
+    }
+
+    .radios {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .radios label {
+      padding: 4px;
+      cursor: pointer;
+      width: calc(33.3% - 16px);
+      display: block;
+      position: relative;
+    }
+
+    .radios input {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+    }
+
+    .radios img {
+      display: block;
+      width: calc(100% - 8px);
+      border: 4px solid rgba(0, 0, 0, 0);
+      aspect-ratio: 1;
+    }
+
+    input:checked~img,
+    img:has(+ input:checked) {
+      border-color: #58a6ff;
+    }
+
+    @media (prefers-color-scheme: dark) {
       body {
-        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI",
-          Roboto, Ubuntu, sans-serif;
-        padding: 0;
-        margin: 0;
-        line-height: 1.4;
-      }
-      .content {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 12px;
-      }
-      .header {
-        display: block;
-        width: 100%;
-        aspect-ratio: 1200 / 675;
-        border-radius: 12px;
-      }
-      h3 {
-        margin-top: 1.5em;
-      }
-      a {
-        color: #03a9f4;
-      }
-      .hidden {
-        display: none;
-      }
-      li {
-        padding: 4px 0;
-      }
-      .footer {
-        margin-top: 24px;
-        border-top: 1px solid #ccc;
-        padding-top: 24px;
-        text-align: center;
-      }
-      .footer .initiative {
-        font-style: italic;
-        margin-top: 16px;
-      }
-      .radios {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-      .radios label {
-        padding: 4px;
-        cursor: pointer;
-        width: calc(33.3% - 16px);
-        display: block;
-        position: relative;
-      }
-      .radios input {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-      }
-      .radios img {
-        display: block;
-        width: calc(100% - 8px);
-        border: 4px solid rgba(0, 0, 0, 0);
-        aspect-ratio: 1;
-      }
-      input:checked ~ img,
-    img:has(+ input:checked){
-    border-color: #58a6ff;
-      }
-      @media (prefers-color-scheme: dark) {
-        body {
-          background-color: #333;
-          color: #fff;
-        }
-        a {
-          color: #58a6ff;
-        }
-      }
-      @media only screen and (max-width: 450px) {
-        .radios label {
-          width: calc(50% - 16px);
-          max-width: initial;
-        }
-      }
-      .diy::after {
-        content: "DIY";
-        background-color: #f44336;
+        background-color: #333;
         color: #fff;
-        padding: 2px 4px;
-        border-radius: 4px;
-        font-size: 0.8em;
-        position: absolute;
-        bottom: 12px;
-        left: 12px;
-      }
-      body .diy {
-        display: none;
-      }
-      body.show-diy .diy {
-        display: initial;
       }
 
-      div.radios{
-        display: flex;
-    align-items: start;
-        font-size: 75%;
+      a {
+        color: #58a6ff;
       }
-      div.radios label{
-        /* padding: 10px; */
-        width: 32%;
-      }
-      div.radios img{
-        width: 150px;
-        border-radius: 10px;
-      }
-
-    div.radios .note{
-    font-size: 80%;
-    color: #DDD;
-    font-style:italic;
     }
 
-    #wiring_diagram{
-    width: 600px;
-    border-radius: 15px;
+    @media only screen and (max-width: 450px) {
+      .radios label {
+        width: calc(50% - 16px);
+        max-width: initial;
+      }
     }
-    </style>
-    <script
-      type="module"
-      src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"
-    ></script>
-  </head>
-  <body>
-    <div class="content">
-      <img
-        class="header"
-        src="./header.png"
-        alt="ESPHome ratgdo"
-      />
-      <h1>ESPHome ratgdo</h1>
-      <p>
-        In order to install the firmware, first pick your door opener control protocol, then pick your <a href="https://ratcloud.llc/">ratgdo control board</a> version.
-        No programming or other software required.
-      </p>
 
-      <h2>Choose your GDO Control Protocol:</h2>
-      <div class="protocol radios">
-        <label>
-          <img src="./yellow_learn_button.jpg" alt="Security + 2.0, round yellow learn button." />
-          <input type="radio" name="protocol" value="secplusv2" checked />
-          Security + 2.0<br/>
-      round yellow learn button<br/>
-      <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
-        </label>
+    .diy::after {
+      content: "DIY";
+      background-color: #f44336;
+      color: #fff;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+    }
 
-        <label>
-          <img src="./purple_learn_button.jpg" alt="Security + 1.0, purple, orange, or red learn button." />
-          <input type="radio" name="protocol" value="secplusv1" />
-          Security + 1.0<br/>
-      purple, brown, orange or red learn button<br/>
-      <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br/>
-      <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
-        </label>
+    body .diy {
+      display: none;
+    }
 
-        <label>
-          <img src="./dry_contact.jpg" alt="Dry contact control." />
-          <input type="radio" name="protocol" value="drycontact" />
-          Dry Contact control<br/>Requires open &amp; close limit switches
-        </label>
-      </div>
+    body.show-diy .diy {
+      display: initial;
+    }
+
+    div.radios {
+      display: flex;
+      align-items: start;
+      font-size: 75%;
+    }
+
+    div.radios label {
+      /* padding: 10px; */
+      width: 32%;
+    }
+
+    div.radios img {
+      width: 150px;
+      border-radius: 10px;
+    }
+
+    div.radios .note {
+      font-size: 80%;
+      color: #DDD;
+      font-style: italic;
+    }
+
+    #wiring_diagram {
+      width: 600px;
+      border-radius: 15px;
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
+</head>
+
+<body>
+  <div class="content">
+    <img class="header" src="./header.png" alt="ESPHome ratgdo" />
+    <h1>ESPHome ratgdo</h1>
+    <p>
+      In order to install the firmware, first pick your door opener control protocol, then pick your <a
+        href="https://ratcloud.llc/">ratgdo control board</a> version.
+      No programming or other software required.
+    </p>
+
+    <h2>Choose your GDO Control Protocol:</h2>
+    <div class="protocol radios">
+      <label>
+        <img src="./yellow_learn_button.jpg" alt="Security + 2.0, round yellow learn button." />
+        <input type="radio" name="protocol" value="secplusv2" checked />
+        Security + 2.0<br />
+        round yellow learn button<br />
+        <span class="note">excluding models 8500/RJ020 &amp; 8500C/RJ020C</span>
+      </label>
+
+      <label>
+        <img src="./purple_learn_button.jpg" alt="Security + 1.0, purple, orange, or red learn button." />
+        <input type="radio" name="protocol" value="secplusv1" />
+        Security + 1.0<br />
+        purple, brown, orange or red learn button<br />
+        <span class="note">or jackshaft models 8500/RJ020 &amp; 8500C/RJ020C</span><br />
+        <span class="note">Security + 1.0 support is experimental and may not work for all openers/wall panels.</span>
+      </label>
+
+      <label>
+        <img src="./dry_contact.jpg" alt="Dry contact control." />
+        <input type="radio" name="protocol" value="drycontact" />
+        Dry Contact control<br />Requires open &amp; close limit switches
+      </label>
+    </div>
 
     <h2>Choose your ratgdo control board:</h2>
     <div class="hardware radios">
@@ -224,41 +223,55 @@
       <label>
         <img src="./ratgdo_v2.5xi.jpg" alt="v2.5i, v2.52i, v2.53i" />
         <input type="radio" name="hardware" value="v25iboard" />
-        ratgdo v2.5x<br/>
-      v2.5, v2.5i, v2.52i, v2.53i (black PCB)
+        ratgdo v2.5x<br />
+        v2.5, v2.5i, v2.52i, v2.53i (black PCB)
       </label>
     </div>
 
-    <a id="show_legacy_hardware" style="text-decoration: underline;" onclick="toggleLegacy()">Show Legacy Hardware &raquo;</a>
+    <h2>ratgdo encoder?</h2>
+    <div class="encoder radios">
+      <label style="cursor: default;">
+        <img src="./encoder_v1.jpg" alt="ratgdo encoder" />
+        <select id="encoder_dropdown" name="encoder" style="margin-top: 8px; padding: 4px; font-size: 14px; width: 100%; cursor: pointer;">
+          <option value="no" selected>No</option>
+          <option value="yes">Yes</option>
+        </select>
+      </label>
+    </div>
+
+    <a id="show_legacy_hardware" style="text-decoration: underline;" onclick="toggleLegacy()">Show Legacy Hardware
+      &raquo;</a>
 
     <div class="hardware radios" id="legacy_hardware" style="display: none">
-        <label>
-            <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
-            <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
-            ratgdo v2.0<br/>
-            ESP8266 / D1 Mini (white PCB)
-        </label>
+      <label>
+        <img src="./ratgdo_v2.0.jpg" alt="v2.0" />
+        <input type="radio" name="hardware" value="v2board_esp8266_d1_mini" />
+        ratgdo v2.0<br />
+        ESP8266 / D1 Mini (white PCB)
+      </label>
 
-        <label>
-            <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
-            <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
-            ratgdo v2.5<br/>
-            ESP32 (black PCB)
-        </label>
+      <label>
+        <img src="./v25board_esp32_d1_mini.png" alt="v2.5 esp32" />
+        <input type="radio" name="hardware" value="v25board_esp32_d1_mini" />
+        ratgdo v2.5<br />
+        ESP32 (black PCB)
+      </label>
 
-        <label>
-            <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
-            <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
-            ratgdo v2.0<br/>
-            ESP32 (white PCB)
-        </label>
+      <label>
+        <img src="./v2board_esp32_d1_mini.png" alt="v2.0 esp32" />
+        <input type="radio" name="hardware" value="v2board_esp32_d1_mini" />
+        ratgdo v2.0<br />
+        ESP32 (white PCB)
+      </label>
     </div>
 
     <p>
-        <form method="get" action="v32board-esp32/v32board-esp32.ota.bin" id="download_ota_form" style="float: right">
-            <button type="submit" style="padding: 8px 28px; font-size: 14px; border-radius: 4px; color: #fff; background-color: #03a9f4; border: none; box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.12), 0 1px 5px 0 rgba(0,0,0,.2);">Download OTA Firmware</button>
-        </form>
-        <esp-web-install-button></esp-web-install-button>
+    <form method="get" action="v32board-esp32/v32board-esp32.ota.bin" id="download_ota_form" style="float: right">
+      <button type="submit"
+        style="padding: 8px 28px; font-size: 14px; border-radius: 4px; color: #fff; background-color: #03a9f4; border: none; box-shadow: 0 2px 2px 0 rgba(0,0,0,.14), 0 3px 1px -2px rgba(0,0,0,.12), 0 1px 5px 0 rgba(0,0,0,.2);">Download
+        OTA Firmware</button>
+    </form>
+    <esp-web-install-button></esp-web-install-button>
     </p>
 
 
@@ -272,84 +285,118 @@
 
 
     <h3>Drivers</h3>
-    <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you have.</p>
+    <p>If you can't connect to your ratgdo board make sure you have the right driver installed for the type of board you
+      have.</p>
     <ul>
-      <li>ratgdo32 and ratgdo32 disco use a CH9102 USB to Serial chipset. Modern versions of Windows &amp; macOS include the necessary drivers natively. Installing a standalone driver can create a conflict preventing you from connecting to ratgdo32.</li>
-      <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" target="_blank">driver download</a>]</li>
+      <li>ratgdo32 and ratgdo32 disco use a CH9102 USB to Serial chipset. Modern versions of Windows &amp; macOS include
+        the necessary drivers natively. Installing a standalone driver can create a conflict preventing you from
+        connecting to ratgdo32.</li>
+      <li>ratgdo v2.5i uses a CH340 USB to Serial chipset. [<a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html"
+          target="_blank">driver download</a>]</li>
     </ul>
-    <p>Watch the v2.5i driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on YouTube</a>].</p>
+    <p>Watch the v2.5i driver and firmware installation [<a href="https://www.youtube.com/watch?v=9WecAUTC9iI">video on
+        YouTube</a>].</p>
 
-      <h3>Advanced Users</h3>
-      <ul>
-        <li>
-          The device is adoptable in
-          <a
-            href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=5c53de3b_esphome&repository_url=https%3A%2F%2Fgithub.com%2Fesphome%2Fhome-assistant-addon"
-            >the ESPHome dashboard</a
-          >
-        </li>
-        <li>
-          The YAML configuration for additional boards and chips is available on
-          <a href="https://github.com/RATGDO/esphome-ratgdo/tree/main/static">GitHub</a>
-        </li>
-      </ul>
+    <h3>Advanced Users</h3>
+    <ul>
+      <li>
+        The device is adoptable in
+        <a
+          href="https://my.home-assistant.io/redirect/supervisor_addon/?addon=5c53de3b_esphome&repository_url=https%3A%2F%2Fgithub.com%2Fesphome%2Fhome-assistant-addon">the
+          ESPHome dashboard</a>
+      </li>
+      <li>
+        The YAML configuration for additional boards and chips is available on
+        <a href="https://github.com/RATGDO/esphome-ratgdo/tree/main/static">GitHub</a>
+      </li>
+    </ul>
 
-      <div class="footer">
-        <a href="https://esphome.io">ESPHome</a>
-        &mdash; Installer powered by
-        <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
-      </div>
+    <div class="footer">
+      <a href="https://esphome.io">ESPHome</a>
+      &mdash; Installer powered by
+      <a href="https://esphome.github.io/esp-web-tools/">ESP Web Tools</a>.
     </div>
-    <script>
-      function toggleLegacy() {
-          var x = document.querySelector("#legacy_hardware");
-          var y = document.querySelector("#show_legacy_hardware");
-          if (x.style.display === "none") {
-              x.style.display = "flex";
-              y.innerHTML = "hide legacy hardware &raquo;";
-          } else {
-              x.style.display = "none";
-              y.innerHTML = "show legacy hardware &raquo;";
-          }
+  </div>
+  <script>
+    function toggleLegacy() {
+      var x = document.querySelector("#legacy_hardware");
+      var y = document.querySelector("#show_legacy_hardware");
+      if (x.style.display === "none") {
+        x.style.display = "flex";
+        y.innerHTML = "hide legacy hardware &raquo;";
+      } else {
+        x.style.display = "none";
+        y.innerHTML = "show legacy hardware &raquo;";
       }
+    }
 
-      function setOTAFirmwarePath(url) {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.responseType = 'json';
-        xhr.onload = function() {
-            var status = xhr.status;
-            if (status === 200) {
-                document.querySelector("#download_ota_form").action = xhr.response.builds[0].ota.path;
-            }
-        };
-        xhr.send();
+    function setOTAFirmwarePath(url) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', url, true);
+      xhr.responseType = 'json';
+      xhr.onload = function () {
+        var status = xhr.status;
+        if (status === 200) {
+          document.querySelector("#download_ota_form").action = xhr.response.builds[0].ota.path;
+        }
       };
+      xhr.send();
+    };
 
-      document.querySelectorAll('div.radios input').forEach((radio) =>
-        radio.addEventListener("change", () => {
+    document.querySelectorAll('div.radios input, div.radios select').forEach((el) =>
+      el.addEventListener("change", () => {
         const button = document.querySelector("esp-web-install-button");
         var protocol = document.querySelector('input[name="protocol"]:checked').value;
         var hardware = document.querySelector('input[name="hardware"]:checked').value;
+        var encoder_dropdown = document.getElementById('encoder_dropdown');
 
-        var diagram_protocol = protocol.replace("v1","").replace("v2","");
-        var img = document.querySelector("#wiring_diagram");
-        img.onerror = function() {
-            console.log(`img not found: ${this.src}`);
-            this.src = "wiring_diagrams/v25iboard_secplus.png";
+        if (hardware !== 'v32board' && hardware !== 'v32disco') {
+          encoder_dropdown.disabled = true;
+          encoder_dropdown.value = "no";
+        } else {
+          encoder_dropdown.disabled = false;
         }
-        img.src = `wiring_diagrams/${hardware}_${diagram_protocol}.png`;
 
-        if(protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")){
+        var has_encoder = (encoder_dropdown.value === "yes");
+
+        if (has_encoder && (protocol === "secplusv1" || protocol === "secplusv2")) {
+          alert("The ratgdo encoder is currently only supported for Dry Contact. Security + 1.0 & 2.0 support will come soon!");
+          encoder_dropdown.value = "no";
+          has_encoder = false;
+          return;
+        }
+
+        if (protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")) {
           alert("ratgdo version 2.0 only works with Security + 2.0");
           document.querySelector('input[name="protocol"][value="secplusv2"]').checked = true;
           return;
         }
 
-        if(protocol === "secplusv2"){
+        var diagram_hardware = hardware;
+        if (hardware === 'v32board') {
+          diagram_hardware = 'v32disco';
+        }
+        var diagram_protocol = protocol.replace("v1", "").replace("v2", "");
+        if (has_encoder) {
+          diagram_protocol += "_enc";
+        }
+
+        var img = document.querySelector("#wiring_diagram");
+        img.onerror = function () {
+          console.log(`img not found: ${this.src}`);
+          this.onerror = null;
+          this.src = `wiring_diagrams/v25iboard_${diagram_protocol}.png`;
+        }
+        img.src = `wiring_diagrams/${diagram_hardware}_${diagram_protocol}.png`;
+
+        if (protocol === "secplusv2") {
           protocol = "";
-        }else{
+        } else {
           protocol = `_${protocol}`;
+        }
+
+        if (has_encoder) {
+          protocol = `${protocol}_enc`;
         }
 
         button.manifest = `${hardware}${protocol}-manifest.json`;
@@ -357,9 +404,10 @@
       })
     );
 
-      document
-        .querySelector('input[name="protocol"]:checked')
-        .dispatchEvent(new Event("change"));
-    </script>
-  </body>
+    document
+      .querySelector('input[name="protocol"]:checked')
+      .dispatchEvent(new Event("change"));
+  </script>
+</body>
+
 </html>
