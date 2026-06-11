@@ -16,6 +16,9 @@ void RATGDOSwitch::dump_config()
     case SwitchType::RATGDO_LED:
         ESP_LOGCONFIG(TAG, "  Type: LED");
         break;
+    case SwitchType::RATGDO_REVERSE_ENCODER:
+        ESP_LOGCONFIG(TAG, "  Type: Reverse Encoder");
+        break;
     default:
         break;
     }
@@ -37,6 +40,19 @@ void RATGDOSwitch::setup()
         });
 #endif
         break;
+#ifdef RATGDO_USE_ENCODER
+    case SwitchType::RATGDO_REVERSE_ENCODER:
+        this->pref_ = global_preferences->make_preference<bool>(fnv1_hash("ratgdo_reverse_encoder"));
+        {
+            bool stored = false;
+            if (!this->pref_.load(&stored)) {
+                ESP_LOGW(TAG, "Failed to load reverse_encoder preference. Defaulting to false.");
+            }
+            this->parent_->set_reverse_encoder(stored);
+            this->publish_state(stored);
+        }
+        break;
+#endif
     default:
         break;
     }
@@ -56,6 +72,17 @@ void RATGDOSwitch::write_state(bool state)
         this->pin_->digital_write(state);
         this->publish_state(state);
         break;
+#ifdef RATGDO_USE_ENCODER
+    case SwitchType::RATGDO_REVERSE_ENCODER:
+        if (!this->pref_.save(&state)) {
+            ESP_LOGW(TAG, "Failed to save reverse_encoder preference.");
+            return;
+        }
+        this->parent_->set_reverse_encoder(state);
+        this->parent_->recalculate_encoder_state();
+        this->publish_state(state);
+        break;
+#endif
     default:
         break;
     }

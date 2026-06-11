@@ -21,7 +21,8 @@ enum RATGDOSensorType : uint8_t {
     RATGDO_PAIRED_KEYPADS,
     RATGDO_PAIRED_WALL_CONTROLS,
     RATGDO_PAIRED_ACCESSORIES,
-    RATGDO_DISTANCE
+    RATGDO_DISTANCE,
+    RATGDO_ENCODER,
 };
 
 class RATGDOSensor : public sensor::Sensor, public RATGDOClient, public Component {

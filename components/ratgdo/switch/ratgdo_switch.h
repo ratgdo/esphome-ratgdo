@@ -5,12 +5,14 @@
 #include "esphome/components/switch/switch.h"
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
+#include "esphome/core/preferences.h"
 
 namespace esphome::ratgdo {
 
 enum SwitchType {
     RATGDO_LEARN,
-    RATGDO_LED
+    RATGDO_LED,
+    RATGDO_REVERSE_ENCODER,
 };
 
 class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {
@@ -25,6 +27,7 @@ public:
 protected:
     SwitchType switch_type_;
     GPIOPin* pin_;
+    ESPPreferenceObject pref_;
 };
 
 } // namespace esphome::ratgdo

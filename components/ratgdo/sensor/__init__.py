@@ -29,6 +29,7 @@ TYPES = {
     "paired_devices_wall_controls": RATGDOSensorType.RATGDO_PAIRED_WALL_CONTROLS,
     "paired_devices_accessories": RATGDOSensorType.RATGDO_PAIRED_ACCESSORIES,
     "distance": RATGDOSensorType.RATGDO_DISTANCE,
+    "encoder": RATGDOSensorType.RATGDO_ENCODER,
 }
 
 
@@ -69,3 +70,5 @@ async def to_code(config):
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
         subscribe_distance()
+    if config["type"] == "encoder":
+        cg.add_define("RATGDO_USE_ENCODER")

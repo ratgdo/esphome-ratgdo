@@ -52,11 +52,14 @@ void RATGDOSensor::setup()
         this->distance_sensor_.InitSensor(0x59);
         this->distance_sensor_.VL53L4CX_SetDistanceMode(VL53L4CX_DISTANCEMODE_LONG);
         this->distance_sensor_.VL53L4CX_StartMeasurement();
-#ifdef RATGDO_USE_DISTANCE_SENSOR
         this->parent_->subscribe_distance_measurement([this](int16_t value) {
             this->publish_state(value);
         });
 #endif
+        break;
+    case RATGDOSensorType::RATGDO_ENCODER:
+#ifdef RATGDO_USE_ENCODER
+        this->parent_->set_encoder_sensor(this);
 #endif
         break;
     default:
@@ -88,6 +91,9 @@ void RATGDOSensor::dump_config()
         break;
     case RATGDOSensorType::RATGDO_DISTANCE:
         ESP_LOGCONFIG(TAG, "  Type: Distance");
+        break;
+    case RATGDOSensorType::RATGDO_ENCODER:
+        ESP_LOGCONFIG(TAG, "  Type: Encoder");
         break;
     default:
         break;

@@ -1,0 +1,119 @@
+---
+esphome:
+  min_version: 2026.4.0
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/ratgdo/esphome-ratgdo
+      ref: main
+    refresh: 1s
+  # - source:
+  #     type: local
+  #     path: components
+
+safe_mode:
+
+preferences:
+  flash_write_interval: 1min
+
+text_sensor:
+  - platform: version
+    id: ${id_prefix}_firmware_version
+    name: "Firmware Version"
+
+ratgdo:
+  id: ${id_prefix}
+  output_gdo_pin: ${uart_tx_pin}
+  input_gdo_pin: ${uart_rx_pin}
+  input_obst_pin: ${input_obst_pin}
+  encoder_pin_a:
+    number: ${dry_contact_open_pin}
+    mode:
+      input: true
+      pullup: true
+  encoder_pin_b:
+    number: ${dry_contact_close_pin}
+    mode:
+      input: true
+      pullup: true
+  encoder_sensor: ${id_prefix}_encoder
+  discrete_open_pin: ${discrete_open_pin}
+  discrete_close_pin: ${discrete_close_pin}
+  protocol: drycontact
+
+ota:
+  - platform: esphome
+    id: ${id_prefix}_ratgdo_ota
+  - platform: web_server
+    id: ${id_prefix}_ratgdo_ota_ws
+
+binary_sensor:
+  - platform: ratgdo
+    type: obstruction
+    id: ${id_prefix}_obstruction
+    name: "Obstruction"
+    device_class: problem
+
+number:
+  - platform: ratgdo
+    id: ${id_prefix}_opening_duration
+    type: opening_duration
+    entity_category: config
+    name: "Opening duration"
+    unit_of_measurement: "s"
+
+  - platform: ratgdo
+    id: ${id_prefix}_closing_duration
+    type: closing_duration
+    entity_category: config
+    name: "Closing duration"
+    unit_of_measurement: "s"
+
+cover:
+  - platform: ratgdo
+    id: ${id_prefix}_garage_door
+    device_class: garage
+    name: "Door"
+
+sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_encoder
+    type: encoder
+    name: "Encoder"
+    unit_of_measurement: "steps"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+
+switch:
+  - platform: ratgdo
+    id: ${id_prefix}_reverse_encoder
+    type: reverse_encoder
+    name: "Encoder Reverse"
+    entity_category: config
+
+button:
+  - platform: restart
+    id: ${id_prefix}_restart
+    name: "Restart"
+  - platform: safe_mode
+    id: ${id_prefix}_safe_mode
+    name: "Safe mode boot"
+    entity_category: diagnostic
+
+  - platform: template
+    id: ${id_prefix}_toggle_door
+    name: "Toggle door"
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).door_toggle();
+
+  - platform: template
+    id: ${id_prefix}_reset_calibration
+    name: "Encoder Calibration Reset"
+    entity_category: config
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).reset_encoder_calibration();

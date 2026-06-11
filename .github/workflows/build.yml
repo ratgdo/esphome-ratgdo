@@ -88,6 +88,9 @@ jobs:
           - file: v25iboard_drycontact.yaml
             name: V2.5i Board Dry Contact
             manifest_filename: v25iboard_drycontact-manifest.json
+          - file: v25iboard_drycontact_enc.yaml
+            name: V2.5i Board Dry Contact Encoder
+            manifest_filename: v25iboard_drycontact_enc-manifest.json
           - file: v32board.yaml
             name: V32 Board Security+ 2.0
             manifest_filename: v32board-manifest.json
@@ -106,6 +109,12 @@ jobs:
           - file: v32disco_drycontact.yaml
             name: V32 Disco Board Dry Contact
             manifest_filename: v32disco_drycontact-manifest.json
+          - file: v32board_drycontact_enc.yaml
+            name: V32 Board Dry Contact Encoder
+            manifest_filename: v32board_drycontact_enc-manifest.json
+          - file: v32disco_drycontact_enc.yaml
+            name: V32 Disco Board Dry Contact Encoder
+            manifest_filename: v32disco_drycontact_enc-manifest.json
       fail-fast: false
     steps:
       - name: Checkout source code

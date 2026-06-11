@@ -13,10 +13,18 @@
 
 #pragma once
 
+#ifndef ENC_DIRECTION_CORRECTION_ENABLED
+#define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
+#endif
+
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#ifdef RATGDO_USE_ENCODER
+#include "esphome/components/sensor/sensor.h"
+#endif
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/preferences.h"
 
 #include <bitset>
@@ -70,7 +78,34 @@ struct RATGDOStore {
     {
         arg->obstruction_low_count++;
     }
+
+#ifdef RATGDO_USE_ENCODER
+    volatile int16_t enc_delta { 0 };
+    volatile uint8_t enc_prev_state { 0 };
+    // Signed net accumulator for ISR-level step filtering.
+    // Accumulates +1/-1 per valid quadrature transition; emits a verified step
+    // to enc_delta when the sum reaches ±4. Using a net sum (rather than a
+    // consecutive-count reset-on-reversal) means a single stray wrong-direction
+    // transition from noise delays the next emission by 2 counts
+    volatile int8_t enc_cycle_count { 0 };
+    ISRInternalGPIOPin enc_pin_a;
+    ISRInternalGPIOPin enc_pin_b;
+    static void IRAM_ATTR HOT isr_encoder(RATGDOStore* arg);
+#endif
 };
+
+#ifdef RATGDO_USE_ENCODER
+// Calibration data persisted in NVS.
+// int16_t is sufficient: typical travel is 12-18 pulses so even with decades
+// of floating-bound drift the values stay well within ±32767.
+struct __attribute__((packed)) RATGDOEncoderSettings {
+    int16_t min;
+    int16_t max;
+    int16_t last;
+    uint8_t min_calibrated;
+    uint8_t max_calibrated;
+};
+#endif
 
 using protocol::Args;
 using protocol::Result;
@@ -147,6 +182,19 @@ public:
     void set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_);
     void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
     void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
+
+#ifdef RATGDO_USE_ENCODER
+    // encoder methods
+    void set_encoder_sensor(esphome::sensor::Sensor* s);
+    void set_reverse_encoder(bool r) { this->flags_.reverse_encoder = r; }
+    void reset_encoder_calibration();
+    void on_encoder_update(int16_t raw);
+    void check_encoder_stopped();
+    void recalculate_encoder_state();
+    void encoder_apply_state(int16_t raw);
+    void set_encoder_pin_a(InternalGPIOPin* pin) { enc_pin_a_ = pin; }
+    void set_encoder_pin_b(InternalGPIOPin* pin) { enc_pin_b_ = pin; }
+#endif
 
     Result call_protocol(Args args);
 
@@ -358,11 +406,31 @@ protected:
         uint8_t obst_sleep_low : 1;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
-        uint8_t reserved : 5; // Reserved for future use
-#else
-        uint8_t reserved : 6; // Reserved for future use
+#endif
+#ifdef RATGDO_USE_ENCODER
+        uint8_t reverse_encoder : 1;
+        uint8_t enc_min_cal : 1;
+        uint8_t enc_max_cal : 1;
+        uint8_t enc_first_update : 1; // set in set_encoder_sensor(); flags_ zero-inits to 0
+        uint8_t enc_position_stop_pending : 1;
 #endif
     } flags_ { 0 };
+
+#ifdef RATGDO_USE_ENCODER
+    esphome::sensor::Sensor* encoder_sensor_ { nullptr };
+    ESPPreferenceObject encoder_pref_;
+    int16_t enc_min_ { 0 };
+    int16_t enc_max_ { 0 };
+    int16_t enc_last_ { 0 };
+    int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
+    int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
+    int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
+    int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
+    bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
+    int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close
+    InternalGPIOPin* enc_pin_a_ { nullptr };
+    InternalGPIOPin* enc_pin_b_ { nullptr };
+#endif
 
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
@@ -461,6 +529,7 @@ namespace scheduler_ids {
         TIMEOUT_WALL_PANEL_EMULATION,
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
+        TIMEOUT_ENCODER_STOPPED,
     };
 } // namespace scheduler_ids
 

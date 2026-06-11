@@ -27,7 +27,9 @@
 
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
+#include "esphome/core/preferences.h"
 
 namespace esphome::ratgdo {
 
@@ -62,6 +64,16 @@ static constexpr int PRESENCE_DETECTION_OFF_DEBOUNCE = 2; // The number of conse
                                                           // before clearing vehicle detected state
 #endif
 
+#ifdef RATGDO_USE_ENCODER
+
+static constexpr uint32_t ENC_STOPPED_WATCHDOG_MS = 2000; // Maximum expected gap between encoder pulses during door travel,
+                                                          // plus a safety margin. If no pulse arrives within this window the
+                                                          // door is declared stopped.
+
+static constexpr int8_t ENC_DIRECTION_CHANGE_THRESHOLD = 3; // Number of consecutive ISR pulses in the opposite direction
+                                                            // required to confirm a real direction reversal mid-travel.
+#endif
+
 void RATGDOComponent::setup()
 {
     this->output_gdo_pin_->setup();
@@ -82,6 +94,26 @@ void RATGDOComponent::setup()
 
     this->protocol_->setup(this, &App.scheduler, this->input_gdo_pin_,
         this->output_gdo_pin_);
+
+#ifdef RATGDO_USE_ENCODER
+    if (encoder_sensor_ != nullptr && enc_pin_a_ != nullptr) {
+        enc_pin_a_->setup();
+        enc_pin_b_->setup();
+        isr_store_.enc_pin_a = enc_pin_a_->to_isr();
+        isr_store_.enc_pin_b = enc_pin_b_->to_isr();
+        enc_pin_a_->attach_interrupt(RATGDOStore::isr_encoder, &isr_store_, gpio::INTERRUPT_ANY_EDGE);
+        enc_pin_b_->attach_interrupt(RATGDOStore::isr_encoder, &isr_store_, gpio::INTERRUPT_ANY_EDGE);
+        // Initialise prev_state from the actual pin levels so the first ISR fire
+        // gets a valid transition rather than always-from-00.
+        bool pa = enc_pin_a_->digital_read();
+        bool pb = enc_pin_b_->digital_read();
+        {
+            InterruptLock lock;
+            isr_store_.enc_prev_state = (static_cast<uint8_t>(pa) << 1) | static_cast<uint8_t>(pb);
+            isr_store_.enc_delta = 0;
+        }
+    }
+#endif
 
     // many things happening at startup, use some delay for sync
     this->set_timeout(SYNC_DELAY, [this] { this->sync(); });
@@ -134,6 +166,25 @@ void RATGDOComponent::loop()
     // the cached timestamp stale.
     this->obstruction_loop();
     this->protocol_->loop();
+
+#ifdef RATGDO_USE_ENCODER
+    if (encoder_sensor_ != nullptr) {
+        // debounce encoder signals
+        static uint32_t last_enc_drain_ms = 0;
+        uint32_t now_ms = millis();
+        if (now_ms - last_enc_drain_ms >= 100) {
+            last_enc_drain_ms = now_ms;
+            int16_t delta;
+            {
+                InterruptLock lock;
+                delta = isr_store_.enc_delta;
+                isr_store_.enc_delta = 0;
+            }
+            if (delta != 0)
+                on_encoder_update(enc_last_ + delta);
+        }
+    }
+#endif
 }
 
 void RATGDOComponent::dump_config()
@@ -154,13 +205,13 @@ void RATGDOComponent::on_shutdown()
 
 void RATGDOComponent::received(const DoorState door_state)
 {
-    ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
-
     auto prev_door_state = *this->door_state;
 
     if (prev_door_state == door_state) {
         return;
     }
+
+    ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
 
     // opening duration calibration
     if (*this->opening_duration == 0) {
@@ -202,7 +253,10 @@ void RATGDOComponent::received(const DoorState door_state)
             this->door_move_delta = 1.0 - this->door_start_position;
         }
         if (*this->opening_duration != 0) {
-            this->schedule_door_position_sync();
+#ifdef RATGDO_USE_ENCODER
+            if (encoder_sensor_ == nullptr)
+#endif
+                this->schedule_door_position_sync();
         }
     } else if (door_state == DoorState::CLOSING) {
         // door started closing
@@ -217,21 +271,36 @@ void RATGDOComponent::received(const DoorState door_state)
             this->door_move_delta = 0.0 - this->door_start_position;
         }
         if (*this->closing_duration != 0) {
-            this->schedule_door_position_sync();
+#ifdef RATGDO_USE_ENCODER
+            if (encoder_sensor_ == nullptr)
+#endif
+                this->schedule_door_position_sync();
         }
     } else if (door_state == DoorState::STOPPED) {
-        this->door_position_update();
+#ifdef RATGDO_USE_ENCODER
+        if (encoder_sensor_ == nullptr)
+#endif
+            this->door_position_update();
         if (*this->door_position == DOOR_POSITION_UNKNOWN) {
             this->door_position = 0.5; // best guess
         }
         this->cancel_position_sync_callbacks();
         this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
+#ifdef RATGDO_USE_ENCODER
+        enc_intended_dir_ = 0; // intent expires when door comes to rest
+#endif
     } else if (door_state == DoorState::OPEN) {
         this->door_position = 1.0;
         this->cancel_position_sync_callbacks();
+#ifdef RATGDO_USE_ENCODER
+        enc_intended_dir_ = 0; // open intent satisfied
+#endif
     } else if (door_state == DoorState::CLOSED) {
         this->door_position = 0.0;
         this->cancel_position_sync_callbacks();
+#ifdef RATGDO_USE_ENCODER
+        enc_intended_dir_ = 0; // close intent satisfied
+#endif
     }
 
     if (door_state == DoorState::OPEN || door_state == DoorState::CLOSED || door_state == DoorState::STOPPED) {
@@ -579,11 +648,65 @@ void RATGDOComponent::sync()
     this->protocol_->sync();
 
     // dry contact protocol:
-    // needed to trigger the intial state of the limit switch sensors
+    // needed to trigger the initial state of the limit switch sensors
     // ideally this would be in drycontact::sync
 #ifdef PROTOCOL_DRYCONTACT
-    this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
-    this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+#ifdef RATGDO_USE_ENCODER
+    if (this->encoder_sensor_ != nullptr) {
+        // Power-loss detection: if the saved position is outside calibrated bounds,
+        // the door was moved while powered off. Clear calibration and re-learn.
+        if (flags_.enc_first_update) {
+            flags_.enc_first_update = false;
+            bool contradiction = false;
+            if (!flags_.reverse_encoder) {
+                if (flags_.enc_min_cal && enc_last_ < enc_min_)
+                    contradiction = true;
+                if (flags_.enc_max_cal && enc_last_ > enc_max_)
+                    contradiction = true;
+            } else {
+                if (flags_.enc_min_cal && enc_last_ > enc_min_)
+                    contradiction = true;
+                if (flags_.enc_max_cal && enc_last_ < enc_max_)
+                    contradiction = true;
+            }
+            if (contradiction) {
+                ESP_LOGW(TAG, "Encoder moved while powered off; clearing calibration");
+                reset_encoder_calibration();
+            }
+            // Publish the NVS-restored position
+            encoder_sensor_->publish_state(static_cast<float>(enc_last_));
+        }
+        // Encoder mode: derive door state from saved calibration, no limit switches.
+        if (this->flags_.enc_min_cal && this->flags_.enc_max_cal && this->enc_max_ != this->enc_min_) {
+            int16_t range = static_cast<int16_t>(std::abs(this->enc_max_ - this->enc_min_));
+            int16_t target_closed = this->flags_.reverse_encoder ? this->enc_max_ : this->enc_min_;
+            int16_t target_open = this->flags_.reverse_encoder ? this->enc_min_ : this->enc_max_;
+            int16_t dist_closed = static_cast<int16_t>(std::abs(this->enc_last_ - target_closed));
+            int16_t dist_open = static_cast<int16_t>(std::abs(this->enc_last_ - target_open));
+            (void)range;
+            float pos = (float)(this->enc_last_ - this->enc_min_) / (float)(this->enc_max_ - this->enc_min_);
+            if (this->flags_.reverse_encoder)
+                pos = 1.0f - pos;
+            this->door_position = clamp(pos, 0.0f, 1.0f);
+            if (dist_closed <= 1 && dist_closed <= dist_open) {
+                this->received(DoorState::CLOSED);
+            } else if (dist_open <= 1 && dist_open < dist_closed) {
+                this->received(DoorState::OPEN);
+            } else {
+                this->received(DoorState::STOPPED);
+            }
+        } else {
+            ESP_LOGD(TAG, "Encoder not yet calibrated; door state unknown");
+        }
+        return; // skip limit-switch path
+    }
+#endif
+    if (this->dry_contact_open_sensor_ != nullptr) {
+        this->protocol_->set_open_limit(this->dry_contact_open_sensor_->state);
+    }
+    if (this->dry_contact_close_sensor_ != nullptr) {
+        this->protocol_->set_close_limit(this->dry_contact_close_sensor_->state);
+    }
 #endif
 }
 
@@ -607,6 +730,10 @@ void RATGDOComponent::door_open()
         return; // gets ignored by opener
     }
 
+#ifdef RATGDO_USE_ENCODER
+    // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
+    enc_intended_dir_ = 1;
+#endif
     this->door_action(DoorAction::OPEN);
 
     if (*this->opening_duration > 0) {
@@ -614,8 +741,15 @@ void RATGDOComponent::door_open()
         this->set_timeout(
             TIMEOUT_DOOR_QUERY_STATE, (*this->opening_duration + 2) * 1000,
             [this]() {
-                if (*this->door_state != DoorState::OPEN && *this->door_state != DoorState::STOPPED) {
-                    this->received(DoorState::OPEN); // probably missed a status mesage,
+                if (*this->door_state != DoorState::OPEN
+                    && *this->door_state != DoorState::STOPPED
+#ifdef RATGDO_USE_ENCODER
+                    // If the encoder confirmed CLOSED the door did not open silently;
+                    // don't override with a spurious OPEN assumption.
+                    && *this->door_state != DoorState::CLOSED
+#endif
+                ) {
+                    this->received(DoorState::OPEN); // probably missed a status message,
                                                      // assume it's open
                     this->query_status(); // query in case we're wrong and it's stopped
                 }
@@ -626,7 +760,19 @@ void RATGDOComponent::door_open()
 void RATGDOComponent::door_close()
 {
     if (*this->door_state == DoorState::CLOSING) {
-        return; // gets ignored by opener
+        // Door is already heading in the right direction. If the user explicitly
+        // requested CLOSE (e.g., after a partial move_to_position), remember the intent
+        // so we retry once the door comes to rest (the move_to_position timer may
+        // stop it before it reaches fully closed).
+#ifdef RATGDO_USE_ENCODER
+        enc_intended_dir_ = -1;
+        this->on_door_state([this](DoorState s) {
+            if (s == DoorState::STOPPED) {
+                this->door_close();
+            }
+        });
+#endif
+        return;
     }
 
     if (*this->door_state == DoorState::OPENING) {
@@ -642,6 +788,12 @@ void RATGDOComponent::door_close()
         return;
     }
 
+#ifdef RATGDO_USE_ENCODER
+    // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
+    // Set unconditionally here — mirrors door_open() — so the intent is captured regardless
+    // of whether an obstruction sensor is present.
+    enc_intended_dir_ = -1;
+#endif
     if (this->flags_.obstruction_sensor_detected) {
         this->door_action(DoorAction::CLOSE);
     } else if (*this->door_state == DoorState::OPEN || *this->door_state == DoorState::STOPPED) {
@@ -658,9 +810,11 @@ void RATGDOComponent::door_close()
         this->set_timeout(
             TIMEOUT_DOOR_QUERY_STATE, (*this->closing_duration + 2) * 1000,
             [this]() {
-                if (*this->door_state != DoorState::CLOSED && *this->door_state != DoorState::STOPPED) {
+                if (*this->door_state != DoorState::CLOSED
+                    && *this->door_state != DoorState::STOPPED
+                    && *this->door_state != DoorState::OPEN) {
                     this->received(DoorState::CLOSED); // probably missed a status
-                                                       // mesage, assume it's closed
+                                                       // message, assume it's closed
                     this->query_status(); // query in case we're wrong and it's stopped
                 }
             });
@@ -724,9 +878,20 @@ void RATGDOComponent::door_move_to_position(float position)
     ESP_LOGD(TAG, "Moving to position %.2f in %.1fs", position,
         operation_time / 1000.0);
 
+#ifdef RATGDO_USE_ENCODER
+    // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
+    // door_move_to_position calls door_action() directly (not door_open/door_close)
+    // so we must set this here as well.
+    enc_intended_dir_ = (delta > 0) ? 1 : -1;
+#endif
     this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
     this->set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time,
-        [this] { this->door_action(DoorAction::STOP); });
+        [this] {
+#ifdef RATGDO_USE_ENCODER
+            flags_.enc_position_stop_pending = true;
+#endif
+            this->door_action(DoorAction::STOP);
+        });
 }
 
 void RATGDOComponent::cancel_position_sync_callbacks()
@@ -739,6 +904,11 @@ void RATGDOComponent::cancel_position_sync_callbacks()
         this->door_start_moving = 0;
         this->door_start_position = DOOR_POSITION_UNKNOWN;
         this->door_move_delta = DOOR_DELTA_UNKNOWN;
+        // enc_intended_dir_ is intentionally NOT cleared here.
+        // It persists until the direction is confirmed (first correct-direction encoder
+        // tick clears it) or the door reaches the commanded boundary (received(OPEN/CLOSED)).
+        // Clearing it here was wiping intent set by a close/open command that arrived
+        // just before the door came to rest.
     }
 }
 
@@ -817,5 +987,334 @@ void RATGDOComponent::set_dry_contact_close_sensor(
         this->door_position = 0.0;
     });
 }
+
+#ifdef RATGDO_USE_ENCODER
+void IRAM_ATTR HOT RATGDOStore::isr_encoder(RATGDOStore* arg)
+{
+    // Quadrature encoder lookup table
+    // Index = (prev_state << 2) | curr_state, where state = (a << 1) | b
+    // Maps every state transition to +1 (CW) or -1 (CCW)
+    // Invalid transitions (skip-2 states from excessive bounce) map to 0
+    static const int8_t ENC_TABLE[16] = {
+        0,
+        -1,
+        +1,
+        0, // prev=00 → {00,01,10,11}
+        +1,
+        0,
+        0,
+        -1, // prev=01 → {00,01,10,11}
+        -1,
+        0,
+        0,
+        +1, // prev=10 → {00,01,10,11}
+        0,
+        +1,
+        -1,
+        0, // prev=11 → {00,01,10,11}
+    };
+    bool a = arg->enc_pin_a.digital_read();
+    bool b = arg->enc_pin_b.digital_read();
+    uint8_t curr = (static_cast<uint8_t>(a) << 1) | static_cast<uint8_t>(b);
+    int8_t step = ENC_TABLE[(arg->enc_prev_state << 2) | curr];
+    arg->enc_prev_state = curr;
+
+    if (step == 0)
+        return; // invalid/skip-2 transition; update prev_state but don't count
+
+    // Net running sum: accumulate signed steps and emit when the dominant
+    // direction has built up 4 net counts. This tolerates an occasional
+    // wrong-direction transition from noise.
+    arg->enc_cycle_count += step;
+    if (arg->enc_cycle_count >= 4) {
+        arg->enc_delta += 1;
+        arg->enc_cycle_count = 0;
+    } else if (arg->enc_cycle_count <= -4) {
+        arg->enc_delta -= 1;
+        arg->enc_cycle_count = 0;
+    }
+}
+
+void RATGDOComponent::set_encoder_sensor(esphome::sensor::Sensor* s)
+{
+    encoder_sensor_ = s;
+    flags_.enc_first_update = 1; // flags_ zero-inits; set explicitly to match old { true } initialiser
+    encoder_pref_ = global_preferences->make_preference<RATGDOEncoderSettings>(fnv1_hash("ratgdo_encoder"));
+    RATGDOEncoderSettings saved;
+    if (encoder_pref_.load(&saved)) {
+        enc_min_ = saved.min;
+        enc_max_ = saved.max;
+        enc_last_ = saved.last;
+        flags_.enc_min_cal = saved.min_calibrated;
+        flags_.enc_max_cal = saved.max_calibrated;
+        ESP_LOGD(TAG, "Encoder: loaded cal min=%d max=%d last=%d min_cal=%d max_cal=%d",
+            enc_min_, enc_max_, enc_last_, flags_.enc_min_cal, flags_.enc_max_cal);
+    } else {
+        ESP_LOGD(TAG, "Encoder: no saved calibration");
+    }
+}
+
+void RATGDOComponent::on_encoder_update(int16_t raw)
+{
+    int16_t delta = static_cast<int16_t>(raw - enc_last_);
+    enc_last_ = raw;
+
+    if (delta == 0)
+        return;
+
+    encoder_sensor_->publish_state(static_cast<float>(raw));
+
+    // Track direction so check_encoder_stopped knows which boundary we hit.
+    enc_last_dir_ = (delta > 0) ? 1 : -1;
+
+    // Latch the travel direction from the first step of each move.
+    // Subsequent steps opposite to the dominant direction are counted; only after
+    // ENC_DIRECTION_CHANGE_THRESHOLD consecutive opposite steps is enc_travel_dir_
+    // updated, filtering oscillations
+    if (enc_travel_dir_ == 0) {
+        enc_travel_dir_ = enc_last_dir_; // first step of a new move
+        enc_reverse_count_ = 0;
+    } else if (enc_last_dir_ != enc_travel_dir_) {
+        if (++enc_reverse_count_ >= ENC_DIRECTION_CHANGE_THRESHOLD) {
+            enc_travel_dir_ = enc_last_dir_; // confirmed real reversal
+            enc_reverse_count_ = 0;
+        }
+    } else {
+        enc_reverse_count_ = 0; // step agrees with dominant direction; reset counter
+    }
+
+    ESP_LOGD(TAG, "Encoder: step=%d min=%d max=%d", raw, enc_min_, enc_max_);
+
+    if (flags_.enc_min_cal && flags_.enc_max_cal && enc_max_ != enc_min_) {
+        int16_t dist_closed = static_cast<int16_t>(std::abs(raw - enc_min_));
+        int16_t dist_open = static_cast<int16_t>(std::abs(raw - enc_max_));
+        float pos;
+        if (dist_closed <= 1 && dist_closed <= dist_open) {
+            pos = flags_.reverse_encoder ? 1.0f : 0.0f;
+        } else if (dist_open <= 1 && dist_open < dist_closed) {
+            pos = flags_.reverse_encoder ? 0.0f : 1.0f;
+        } else {
+            pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
+            if (flags_.reverse_encoder)
+                pos = 1.0f - pos;
+        }
+        this->door_position = clamp(pos, 0.0f, 1.0f);
+
+        // Derive in_motion from enc_travel_dir_ (the confirmed dominant direction)
+        // rather than enc_last_dir_ so that oscillation noise does not flip the
+        // reported door state or cancel the move-to-position timer.
+        // enc_travel_dir_ only changes after ENC_DIRECTION_CHANGE_THRESHOLD
+        // consecutive opposite steps.
+        int8_t effective_dir = (enc_travel_dir_ != 0) ? enc_travel_dir_ : enc_last_dir_;
+        DoorState in_motion = (effective_dir > 0)
+            ? (flags_.reverse_encoder ? DoorState::CLOSING : DoorState::OPENING)
+            : (flags_.reverse_encoder ? DoorState::OPENING : DoorState::CLOSING);
+        if (*this->door_state != in_motion) {
+            // Check if the door moved in the opposite direction from what was commanded.
+#if ENC_DIRECTION_CORRECTION_ENABLED
+            if (enc_intended_dir_ != 0) {
+                bool correct = (in_motion == DoorState::OPENING) == (enc_intended_dir_ > 0);
+                if (!correct) {
+                    int8_t intended = enc_intended_dir_;
+                    enc_intended_dir_ = 0; // clear — correction is firing
+                    ESP_LOGD(TAG, "Wrong direction detected (wanted %s, got %s); stopping to correct",
+                        intended > 0 ? "open" : "close",
+                        in_motion == DoorState::OPENING ? "opening" : "closing");
+                    this->set_timeout(500, [this] {
+                        this->door_action(DoorAction::STOP);
+                    });
+                    // Cancel the door_open/door_close query-state safety timer so it
+                    // doesn't fire a spurious OPEN/CLOSED state after the correction cycle.
+                    this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
+                    // Defer the retry to check_encoder_stopped()
+                    enc_dir_correction_pending_ = true;
+                    enc_dir_correction_intended_ = intended;
+                }
+                // If correct direction: do NOT clear enc_intended_dir_ here.
+                // It stays set so a mid-travel reversal (confirmed after
+                // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
+                // the correction. check_encoder_stopped() clears it when the move ends.
+            }
+#endif // ENC_DIRECTION_CORRECTION_ENABLED
+            this->received(in_motion);
+        }
+    }
+
+    // Re-arm the stopped watchdog after the last pulse
+    set_timeout(scheduler_ids::TIMEOUT_ENCODER_STOPPED, ENC_STOPPED_WATCHDOG_MS,
+        [this] { this->check_encoder_stopped(); });
+}
+
+void RATGDOComponent::check_encoder_stopped()
+{
+    ESP_LOGI(TAG, "Encoder stopped: step=%d min=%d max=%d dir=%d", enc_last_, enc_min_, enc_max_, enc_travel_dir_);
+    bool update_pref = false;
+
+    // Use the latched travel direction rather than enc_last_dir_ so that
+    // magnet-hover oscillations at a limit do not corrupt boundary classification.
+    const bool decreasing = (enc_travel_dir_ < 0);
+
+    // Clear enc_travel_dir_ now so the next move starts with a fresh latch.
+    enc_travel_dir_ = 0;
+    enc_reverse_count_ = 0;
+    // Clear enc_intended_dir_ so a stale intent from a previous ratgdo command
+    // cannot trigger the wrong-direction correction on a subsequent wall-control command
+    enc_intended_dir_ = 0;
+    const DoorState boundary_state = decreasing
+        ? (flags_.reverse_encoder ? DoorState::OPEN : DoorState::CLOSED)
+        : (flags_.reverse_encoder ? DoorState::CLOSED : DoorState::OPEN);
+
+    if ((!flags_.enc_min_cal && decreasing) || (!flags_.enc_max_cal && !decreasing)) {
+        // First time seeing this boundary direction — calibrate it.
+        if (decreasing) {
+            enc_min_ = enc_last_;
+            flags_.enc_min_cal = true;
+        } else {
+            enc_max_ = enc_last_;
+            flags_.enc_max_cal = true;
+        }
+        update_pref = true;
+        this->received(boundary_state);
+        ESP_LOGD(TAG, "Encoder: initial %s boundary set to %d",
+            decreasing ? "lower(min)" : "upper(max)", enc_last_);
+    } else if (!flags_.enc_min_cal || !flags_.enc_max_cal) {
+        // Hit the same direction twice before the other end was seen — update this end.
+        if (decreasing) {
+            enc_min_ = enc_last_;
+            flags_.enc_min_cal = true;
+        } else {
+            enc_max_ = enc_last_;
+            flags_.enc_max_cal = true;
+        }
+        update_pref = true;
+        this->received(boundary_state);
+        ESP_LOGD(TAG, "Encoder: re-set %s boundary to %d",
+            decreasing ? "lower(min)" : "upper(max)", enc_last_);
+    } else {
+        // Both boundaries calibrated. If this stop was triggered by TIMEOUT_MOVE_TO_POSITION
+        // (a mid-travel position command) the door may have landed within 1 step of a
+        // boundary purely by coincidence. Skip snap/extension so we don't corrupt calibration.
+        if (flags_.enc_position_stop_pending) {
+            flags_.enc_position_stop_pending = false;
+            this->received(DoorState::STOPPED);
+            return;
+        }
+
+        // Check if we stopped within 1 pulse of a limit.
+        int16_t target_closed = flags_.reverse_encoder ? enc_max_ : enc_min_;
+        int16_t target_open = flags_.reverse_encoder ? enc_min_ : enc_max_;
+        int16_t dist_closed = static_cast<int16_t>(std::abs(enc_last_ - target_closed));
+        int16_t dist_open = static_cast<int16_t>(std::abs(enc_last_ - target_open));
+
+        // Check whether the door stopped beyond a known boundary (the boundary was set
+        // from a shorter travel and the door now opens/closes further). Extend the
+        // boundary to the new stopping position so calibration self-corrects over time.
+        const bool beyond_open = !decreasing && (enc_last_ > enc_max_);
+        const bool beyond_closed = decreasing && (enc_last_ < enc_min_);
+
+        if (dist_closed <= 1 && dist_closed <= dist_open && decreasing) {
+            // Snap CLOSED boundary — only when approaching CLOSED (decreasing).
+            // Always update enc_min_ (the lower step variable).
+            enc_min_ = enc_last_;
+            update_pref = true;
+            ESP_LOGI(TAG, "Encoder: CLOSED boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
+            this->received(DoorState::CLOSED);
+        } else if (dist_open <= 1 && dist_open < dist_closed && !decreasing) {
+            // Snap OPEN boundary — only when approaching OPEN (increasing).
+            // Always update enc_max_ (the upper step variable).
+            enc_max_ = enc_last_;
+            update_pref = true;
+            ESP_LOGI(TAG, "Encoder: OPEN boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
+            this->received(DoorState::OPEN);
+        } else if (beyond_open) {
+            // Door stopped past the known OPEN boundary — extend it and snap OPEN.
+            enc_max_ = enc_last_;
+            update_pref = true;
+            ESP_LOGI(TAG, "Encoder: OPEN boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
+            this->received(DoorState::OPEN);
+        } else if (beyond_closed) {
+            // Door stopped past the known CLOSED boundary — extend it and snap CLOSED.
+            enc_min_ = enc_last_;
+            update_pref = true;
+            ESP_LOGI(TAG, "Encoder: CLOSED boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
+            this->received(DoorState::CLOSED);
+        } else {
+            this->received(DoorState::STOPPED);
+        }
+    }
+
+    if (update_pref) {
+        RATGDOEncoderSettings s;
+        s.min = enc_min_;
+        s.max = enc_max_;
+        s.last = enc_last_;
+        s.min_calibrated = flags_.enc_min_cal;
+        s.max_calibrated = flags_.enc_max_cal;
+        encoder_pref_.save(&s);
+    }
+
+    // If a wrong-direction correction was pending, retry the intended action now that
+    // the encoder has confirmed the door has actually stopped.
+    if (enc_dir_correction_pending_) {
+        enc_dir_correction_pending_ = false;
+        int8_t intended = enc_dir_correction_intended_;
+        enc_dir_correction_intended_ = 0;
+        auto action = (intended > 0) ? DoorAction::OPEN : DoorAction::CLOSE;
+        ESP_LOGD(TAG, "Direction correction retry: door stopped, sending %s",
+            intended > 0 ? "OPEN" : "CLOSE");
+        this->door_action(action);
+    }
+}
+
+void RATGDOComponent::reset_encoder_calibration()
+{
+    enc_min_ = enc_max_ = enc_last_ = 0;
+    flags_.enc_min_cal = flags_.enc_max_cal = false;
+    enc_travel_dir_ = 0;
+    enc_reverse_count_ = 0;
+    RATGDOEncoderSettings s;
+    s.min = 0;
+    s.max = 0;
+    s.last = 0;
+    s.min_calibrated = false;
+    s.max_calibrated = false;
+    encoder_pref_.save(&s);
+    if (encoder_sensor_ != nullptr)
+        encoder_sensor_->publish_state(0.0f);
+    ESP_LOGI(TAG, "Encoder calibration and step counter cleared; will re-learn on next full open/close cycle");
+}
+
+void RATGDOComponent::encoder_apply_state(int16_t raw)
+{
+    int16_t target_closed = flags_.reverse_encoder ? enc_max_ : enc_min_;
+    int16_t target_open = flags_.reverse_encoder ? enc_min_ : enc_max_;
+    int16_t dist_closed = static_cast<int16_t>(std::abs(raw - target_closed));
+    int16_t dist_open = static_cast<int16_t>(std::abs(raw - target_open));
+
+    if (enc_max_ != enc_min_) {
+        float pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
+        if (flags_.reverse_encoder)
+            pos = 1.0f - pos;
+        this->door_position = clamp(pos, 0.0f, 1.0f);
+    }
+
+    ESP_LOGI(TAG, "Encoder: step=%d min=%d max=%d dist_closed=%d dist_open=%d reversed=%d",
+        raw, enc_min_, enc_max_, dist_closed, dist_open, flags_.reverse_encoder);
+
+    if (dist_closed <= 1 && dist_closed <= dist_open) {
+        this->received(DoorState::CLOSED);
+    } else if (dist_open <= 1 && dist_open < dist_closed) {
+        this->received(DoorState::OPEN);
+    } else {
+        this->received(DoorState::STOPPED);
+    }
+}
+
+void RATGDOComponent::recalculate_encoder_state()
+{
+    if (flags_.enc_min_cal && flags_.enc_max_cal && enc_max_ != enc_min_)
+        encoder_apply_state(enc_last_);
+}
+#endif
 
 } // namespace esphome::ratgdo
