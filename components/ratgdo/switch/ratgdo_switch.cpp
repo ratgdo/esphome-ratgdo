@@ -45,7 +45,9 @@ void RATGDOSwitch::setup()
         this->pref_ = global_preferences->make_preference<bool>(fnv1_hash("ratgdo_reverse_encoder"));
         {
             bool stored = false;
-            this->pref_.load(&stored);
+            if (!this->pref_.load(&stored)) {
+                ESP_LOGW(TAG, "Failed to load reverse_encoder preference. Defaulting to false.");
+            }
             this->parent_->set_reverse_encoder(stored);
             this->publish_state(stored);
         }
@@ -72,7 +74,9 @@ void RATGDOSwitch::write_state(bool state)
         break;
 #ifdef RATGDO_USE_ENCODER
     case SwitchType::RATGDO_REVERSE_ENCODER:
-        this->pref_.save(&state);
+        if (!this->pref_.save(&state)) {
+            ESP_LOGW(TAG, "Failed to save reverse_encoder preference.");
+        }
         this->parent_->set_reverse_encoder(state);
         this->parent_->recalculate_encoder_state();
         this->publish_state(state);
