@@ -57,17 +57,8 @@ wifi:
   ap:
 
 logger:
-  level: VERBOSE
   logs:
     sensor: NONE
-    ratgdo.sensor: NONE
-    vl53l4cx: NONE
-    wifi: NONE
-    mdns: NONE
-    ota: NONE
-    web_server: NONE
-    api: NONE
-    api.connection: INFO
 
 binary_sensor:
   - platform: ratgdo
