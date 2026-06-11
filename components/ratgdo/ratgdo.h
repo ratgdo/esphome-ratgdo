@@ -98,12 +98,12 @@ struct RATGDOStore {
 // Calibration data persisted in NVS.
 // int16_t is sufficient: typical travel is 12-18 pulses so even with decades
 // of floating-bound drift the values stay well within ±32767.
-struct RATGDOEncoderSettings {
+struct __attribute__((packed)) RATGDOEncoderSettings {
     int16_t min;
     int16_t max;
     int16_t last;
-    bool min_calibrated;
-    bool max_calibrated;
+    uint8_t min_calibrated;
+    uint8_t max_calibrated;
 };
 #endif
 
