@@ -1291,10 +1291,12 @@ void RATGDOComponent::encoder_apply_state(int16_t raw)
     int16_t dist_closed = static_cast<int16_t>(std::abs(raw - target_closed));
     int16_t dist_open = static_cast<int16_t>(std::abs(raw - target_open));
 
-    float pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
-    if (flags_.reverse_encoder)
-        pos = 1.0f - pos;
-    this->door_position = clamp(pos, 0.0f, 1.0f);
+    if (enc_max_ != enc_min_) {
+        float pos = (float)(raw - enc_min_) / (float)(enc_max_ - enc_min_);
+        if (flags_.reverse_encoder)
+            pos = 1.0f - pos;
+        this->door_position = clamp(pos, 0.0f, 1.0f);
+    }
 
     ESP_LOGI(TAG, "Encoder: step=%d min=%d max=%d dist_closed=%d dist_open=%d reversed=%d",
         raw, enc_min_, enc_max_, dist_closed, dist_open, flags_.reverse_encoder);
