@@ -76,6 +76,7 @@ void RATGDOSwitch::write_state(bool state)
     case SwitchType::RATGDO_REVERSE_ENCODER:
         if (!this->pref_.save(&state)) {
             ESP_LOGW(TAG, "Failed to save reverse_encoder preference.");
+            return;
         }
         this->parent_->set_reverse_encoder(state);
         this->parent_->recalculate_encoder_state();
