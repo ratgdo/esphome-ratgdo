@@ -109,6 +109,15 @@ binary_sensor:
 
 
 
+sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_encoder
+    type: encoder
+    name: "Encoder"
+    unit_of_measurement: "steps"
+    accuracy_decimals: 0
+    entity_category: diagnostic
+
 number:
   - platform: ratgdo
     id: ${id_prefix}_rolling_code_counter
