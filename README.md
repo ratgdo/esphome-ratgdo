@@ -48,19 +48,3 @@ Most ESP32 boards use the **ESP-IDF** framework. The project originally depended
 The **v3.2 Disco** board uses the Arduino framework because its VL53L4CX distance sensor library and Wire I2C library require it.
 
 ESP8266 boards continue to use the Arduino framework as ESPHome requires it on that platform.
-
-## Troubleshooting
-
-### False obstruction events on ESP32 v2.5 boards
-
-Some v2.5 boards using ESP32 D1 Mini controllers may report spurious obstruction events. This is caused by the obstruction sensor "asleep" detection logic being inverted on these boards.
-
-To fix this, add the following to your ESPHome config:
-
-```yaml
-ratgdo:
-  id: ratgdov25
-  obst_sleep_low: true
-```
-
-The `id` must match the `id` of the existing `ratgdo` component in your config (e.g. `ratgdov25` for v2.5 boards). This setting tells the obstruction sensor to treat LOW as the "asleep" state instead of the ESP32 default of HIGH.
