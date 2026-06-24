@@ -2,8 +2,12 @@ import esphome.codegen as cg
 from esphome.components import binary_sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.core import CORE
 
 from .. import (
+    CONF_ENCODER_PIN_A,
+    CONF_ENCODER_SENSOR,
+    CONF_RATGDO_ID,
     RATGDO_CLIENT_SCHMEA,
     ratgdo_ns,
     register_ratgdo_child,
@@ -58,6 +62,30 @@ CONFIG_SCHEMA = cv.All(
     .extend(RATGDO_CLIENT_SCHMEA),
     validate_unique_type,
 )
+
+
+def final_validate(config):
+    if config[CONF_TYPE] == "manually_operated":
+        ratgdo_id = config.get(CONF_RATGDO_ID)
+        ratgdo_configs = CORE.config.get("ratgdo", [])
+        if isinstance(ratgdo_configs, dict):
+            ratgdo_configs = [ratgdo_configs]
+
+        has_encoder = False
+        for cfg in ratgdo_configs:
+            if cfg.get(CONF_ID) == ratgdo_id:
+                has_encoder = CONF_ENCODER_SENSOR in cfg or CONF_ENCODER_PIN_A in cfg
+                break
+
+        if not has_encoder:
+            raise cv.Invalid(
+                "The manually_operated binary sensor requires an encoder to be configured "
+                "on the main ratgdo component."
+            )
+    return config
+
+
+FINAL_VALIDATE_SCHEMA = cv.All(final_validate)
 
 
 async def to_code(config):
