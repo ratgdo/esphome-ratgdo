@@ -18,13 +18,6 @@ preferences:
   flash_write_interval: 1min
 
 text_sensor:
-  - platform: ratgdo
-    id: ${id_prefix}_encoder
-    type: encoder
-    name: "Encoder"
-    unit_of_measurement: "steps"
-    accuracy_decimals: 0
-    entity_category: diagnostic
   - platform: version
     id: ${id_prefix}_firmware_version
     name: "Firmware Version"
@@ -92,13 +85,6 @@ binary_sensor:
     id: ${id_prefix}_manually_operated
     name: "Manually Operated"
     device_class: problem
-    entity_category: diagnostic
-  - platform: ratgdo
-    id: ${id_prefix}_encoder
-    type: encoder
-    name: "Encoder"
-    unit_of_measurement: "steps"
-    accuracy_decimals: 0
     entity_category: diagnostic
   - platform: ratgdo
     type: motion

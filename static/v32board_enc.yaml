@@ -38,7 +38,7 @@ packages:
     files: [base_enc.yaml]
     refresh: 1s
   # remote_package: !include
-  #   file: base.yaml
+  #   file: base_enc.yaml
 
 switch:
   - platform: ratgdo
