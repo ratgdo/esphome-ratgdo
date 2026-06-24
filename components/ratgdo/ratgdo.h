@@ -371,6 +371,8 @@ public:
     template <typename F>
     void subscribe_motor_state(F&& f);
     template <typename F>
+    void subscribe_manually_operated_state(F&& f);
+    template <typename F>
     void subscribe_button_state(F&& f);
     template <typename F>
     void subscribe_motion_state(F&& f);
@@ -445,6 +447,7 @@ protected:
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+    uint8_t manually_operated_sub_num_ { 0 };
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     uint8_t distance_sub_num_ { 0 };
 #endif
@@ -504,10 +507,16 @@ namespace scheduler_ids {
 #else
     inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
 #endif
-
+#ifdef RATGDO_USE_ENCODER
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_COUNT = RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS;
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_BASE = DEFER_VEHICLE_END;
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_MANUALLY_OPERATED_BASE + DEFER_MANUALLY_OPERATED_COUNT;
+#else
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_VEHICLE_END;
+#endif
     // Single-subscriber IDs
     enum : uint32_t {
-        DEFER_ROLLING_CODE = DEFER_VEHICLE_END,
+        DEFER_ROLLING_CODE = DEFER_MULTI_END,
         DEFER_OPENING_DURATION,
         DEFER_CLOSING_DURATION,
         DEFER_CLOSING_DELAY,
@@ -677,6 +686,16 @@ void RATGDOComponent::subscribe_motor_state(F&& f)
 {
     this->motor_state.subscribe([this, f](MotorState state) {
         defer(scheduler_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_manually_operated_state(F&& f)
+{
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_MANUALLY_OPERATED_BASE, scheduler_ids::DEFER_MANUALLY_OPERATED_COUNT,
+        this->manually_operated_sub_num_, LOG_STR("manually_operated"));
+    this->manually_operated_state.subscribe([this, f, id](ManuallyOperatedState state) {
+        defer(id, [f, state] { f(state); });
     });
 }
 
