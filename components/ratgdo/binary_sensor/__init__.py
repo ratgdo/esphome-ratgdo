@@ -2,7 +2,7 @@ import esphome.codegen as cg
 from esphome.components import binary_sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
-from esphome.core import CORE
+import esphome.final_validate as fv
 
 from .. import (
     CONF_ENCODER_PIN_A,
@@ -67,7 +67,13 @@ CONFIG_SCHEMA = cv.All(
 def final_validate(config):
     if config[CONF_TYPE] == "manually_operated":
         ratgdo_id = config.get(CONF_RATGDO_ID)
-        ratgdo_configs = CORE.config.get("ratgdo", [])
+        try:
+            full_cfg = fv.full_config.get()
+            ratgdo_configs = full_cfg.get("ratgdo", [])
+        except LookupError:
+            # Fallback if full_config contextvar is somehow not set
+            ratgdo_configs = []
+
         if isinstance(ratgdo_configs, dict):
             ratgdo_configs = [ratgdo_configs]
 
