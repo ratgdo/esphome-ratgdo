@@ -71,8 +71,10 @@ def final_validate(config):
             full_cfg = fv.full_config.get()
             ratgdo_configs = full_cfg.get("ratgdo", [])
         except LookupError:
-            # Fallback if full_config contextvar is somehow not set
-            ratgdo_configs = []
+            raise cv.Invalid(
+                "Internal error: full_config contextvar is unavailable. "
+                "Cannot validate manually_operated sensor without access to the full configuration."
+            )
 
         if isinstance(ratgdo_configs, dict):
             ratgdo_configs = [ratgdo_configs]
