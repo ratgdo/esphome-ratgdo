@@ -224,7 +224,6 @@ void RATGDOComponent::encoder_received(const DoorState door_state)
 {
     this->encoder_door_state_ = door_state;
 
-    auto prev_door_state = *this->door_state;
     auto proto_state = this->protocol_door_state_;
 
     if ((door_state == DoorState::OPENING || door_state == DoorState::CLOSING) && (proto_state == DoorState::OPEN || proto_state == DoorState::CLOSED || proto_state == DoorState::STOPPED)) {
