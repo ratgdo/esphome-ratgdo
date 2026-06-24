@@ -205,6 +205,7 @@ void RATGDOComponent::on_shutdown()
 
 void RATGDOComponent::received(const DoorState door_state)
 {
+#ifdef RATGDO_USE_ENCODER
     this->protocol_door_state_ = door_state;
     this->last_protocol_update_ms_ = millis();
 
@@ -213,10 +214,12 @@ void RATGDOComponent::received(const DoorState door_state)
             this->manually_operated_state = ManuallyOperatedState::NO;
         }
     }
+#endif
 
     this->set_resolved_door_state(door_state);
 }
 
+#ifdef RATGDO_USE_ENCODER
 void RATGDOComponent::encoder_received(const DoorState door_state)
 {
     this->encoder_door_state_ = door_state;
@@ -243,6 +246,7 @@ void RATGDOComponent::encoder_received(const DoorState door_state)
         }
     }
 }
+#endif
 
 void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
 {

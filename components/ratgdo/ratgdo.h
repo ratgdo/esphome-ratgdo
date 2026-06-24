@@ -149,7 +149,9 @@ public:
     observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
     observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };
     observable<DoorActionDelayed, RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS> door_action_delayed { DoorActionDelayed::NO };
+#ifdef RATGDO_USE_ENCODER
     observable<ManuallyOperatedState, RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS> manually_operated_state { ManuallyOperatedState::NO };
+#endif
 
     unsigned long door_start_moving { 0 };
     float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -370,8 +372,10 @@ public:
     void subscribe_obstruction_state(F&& f);
     template <typename F>
     void subscribe_motor_state(F&& f);
+#ifdef RATGDO_USE_ENCODER
     template <typename F>
     void subscribe_manually_operated_state(F&& f);
+#endif
     template <typename F>
     void subscribe_button_state(F&& f);
     template <typename F>
@@ -447,7 +451,9 @@ protected:
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+#ifdef RATGDO_USE_ENCODER
     uint8_t manually_operated_sub_num_ { 0 };
+#endif
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     uint8_t distance_sub_num_ { 0 };
 #endif
@@ -689,6 +695,7 @@ void RATGDOComponent::subscribe_motor_state(F&& f)
     });
 }
 
+#ifdef RATGDO_USE_ENCODER
 template <typename F>
 void RATGDOComponent::subscribe_manually_operated_state(F&& f)
 {
@@ -698,6 +705,7 @@ void RATGDOComponent::subscribe_manually_operated_state(F&& f)
         defer(id, [f, state] { f(state); });
     });
 }
+#endif
 
 template <typename F>
 void RATGDOComponent::subscribe_button_state(F&& f)
