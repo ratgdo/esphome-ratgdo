@@ -203,7 +203,7 @@ void RATGDOComponent::on_shutdown()
     }
 }
 
-void RATGDOComponent::received(const DoorState door_state)
+void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
 {
     auto prev_door_state = *this->door_state;
 
@@ -212,6 +212,29 @@ void RATGDOComponent::received(const DoorState door_state)
     }
 
     ESP_LOGD(TAG, "Door state=%s", LOG_STR_ARG(DoorState_to_string(door_state)));
+
+#ifdef RATGDO_USE_ENCODER
+    // Auto-calibration logic
+#ifndef PROTOCOL_DRYCONTACT
+    if (this->protocol_ != nullptr && encoder_sensor_ != nullptr) {
+        if (door_state == DoorState::OPENING || door_state == DoorState::CLOSING) {
+            if (enc_travel_dir_ != 0) {
+                bool enc_is_opening = (enc_travel_dir_ > 0) ? !flags_.reverse_encoder : flags_.reverse_encoder;
+                bool proto_is_opening = (door_state == DoorState::OPENING);
+                if (enc_is_opening != proto_is_opening) {
+                    flags_.reverse_encoder = !flags_.reverse_encoder;
+                    ESP_LOGI(TAG, "Auto-calibrated encoder direction: reverse_encoder=%d", flags_.reverse_encoder);
+
+                    if (this->encoder_door_state_ == DoorState::OPENING)
+                        this->encoder_door_state_ = DoorState::CLOSING;
+                    else if (this->encoder_door_state_ == DoorState::CLOSING)
+                        this->encoder_door_state_ = DoorState::OPENING;
+                }
+            }
+        }
+    }
+#endif // PROTOCOL_DRYCONTACT
+#endif
 
     // opening duration calibration
     if (*this->opening_duration == 0) {
@@ -1109,7 +1132,7 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
         DoorState in_motion = (effective_dir > 0)
             ? (flags_.reverse_encoder ? DoorState::CLOSING : DoorState::OPENING)
             : (flags_.reverse_encoder ? DoorState::OPENING : DoorState::CLOSING);
-        if (*this->door_state != in_motion) {
+        if (this->encoder_door_state_ != in_motion) {
             // Check if the door moved in the opposite direction from what was commanded.
 #if ENC_DIRECTION_CORRECTION_ENABLED
             if (enc_intended_dir_ != 0) {
@@ -1136,7 +1159,7 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
                 // the correction. check_encoder_stopped() clears it when the move ends.
             }
 #endif // ENC_DIRECTION_CORRECTION_ENABLED
-            this->received(in_motion);
+            this->encoder_received(in_motion);
         }
     }
 
@@ -1174,7 +1197,7 @@ void RATGDOComponent::check_encoder_stopped()
             flags_.enc_max_cal = true;
         }
         update_pref = true;
-        this->received(boundary_state);
+        this->encoder_received(boundary_state);
         ESP_LOGD(TAG, "Encoder: initial %s boundary set to %d",
             decreasing ? "lower(min)" : "upper(max)", enc_last_);
     } else if (!flags_.enc_min_cal || !flags_.enc_max_cal) {
@@ -1187,7 +1210,7 @@ void RATGDOComponent::check_encoder_stopped()
             flags_.enc_max_cal = true;
         }
         update_pref = true;
-        this->received(boundary_state);
+        this->encoder_received(boundary_state);
         ESP_LOGD(TAG, "Encoder: re-set %s boundary to %d",
             decreasing ? "lower(min)" : "upper(max)", enc_last_);
     } else {
@@ -1196,7 +1219,7 @@ void RATGDOComponent::check_encoder_stopped()
         // boundary purely by coincidence. Skip snap/extension so we don't corrupt calibration.
         if (flags_.enc_position_stop_pending) {
             flags_.enc_position_stop_pending = false;
-            this->received(DoorState::STOPPED);
+            this->encoder_received(DoorState::STOPPED);
             return;
         }
 
@@ -1218,28 +1241,28 @@ void RATGDOComponent::check_encoder_stopped()
             enc_min_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: CLOSED boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
-            this->received(DoorState::CLOSED);
+            this->encoder_received(DoorState::CLOSED);
         } else if (dist_open <= 1 && dist_open < dist_closed && !decreasing) {
             // Snap OPEN boundary — only when approaching OPEN (increasing).
             // Always update enc_max_ (the upper step variable).
             enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: OPEN boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
-            this->received(DoorState::OPEN);
+            this->encoder_received(DoorState::OPEN);
         } else if (beyond_open) {
             // Door stopped past the known OPEN boundary — extend it and snap OPEN.
             enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: OPEN boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
-            this->received(DoorState::OPEN);
+            this->encoder_received(DoorState::OPEN);
         } else if (beyond_closed) {
             // Door stopped past the known CLOSED boundary — extend it and snap CLOSED.
             enc_min_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: CLOSED boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
-            this->received(DoorState::CLOSED);
+            this->encoder_received(DoorState::CLOSED);
         } else {
-            this->received(DoorState::STOPPED);
+            this->encoder_received(DoorState::STOPPED);
         }
     }
 

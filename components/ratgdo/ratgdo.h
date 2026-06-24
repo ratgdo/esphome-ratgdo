@@ -149,6 +149,7 @@ public:
     observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
     observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };
     observable<DoorActionDelayed, RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS> door_action_delayed { DoorActionDelayed::NO };
+    observable<ManuallyOperatedState, RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS> manually_operated_state { ManuallyOperatedState::NO };
 
     unsigned long door_start_moving { 0 };
     float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -198,7 +199,11 @@ public:
 
     Result call_protocol(Args args);
 
+    void set_resolved_door_state(const DoorState door_state);
     void received(const DoorState door_state);
+#ifdef RATGDO_USE_ENCODER
+    void encoder_received(const DoorState door_state);
+#endif
     void received(const LightState light_state);
     void received(const LockState lock_state);
     void received(const ObstructionState obstruction_state);
@@ -425,6 +430,11 @@ protected:
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
     int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
     int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
+    DoorState protocol_door_state_ { DoorState::UNKNOWN };
+    uint32_t last_protocol_update_ms_ { 0 };
+    DoorState encoder_door_state_ { DoorState::UNKNOWN };
+
+    uint32_t current_rolling_code_ { 0 };
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
     bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
     int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close
