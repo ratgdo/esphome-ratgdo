@@ -34,6 +34,11 @@ void RATGDOBinarySensor::setup()
             this->publish_state(state == ButtonState::PRESSED);
         });
         break;
+    case SensorType::RATGDO_SENSOR_MANUALLY_OPERATED:
+        this->parent_->subscribe_manually_operated_state([this](ManuallyOperatedState state) {
+            this->publish_state(state == ManuallyOperatedState::YES);
+        });
+        break;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     case SensorType::RATGDO_SENSOR_VEHICLE_DETECTED:
         this->parent_->subscribe_vehicle_detected_state([this](VehicleDetectedState state) {
@@ -72,6 +77,9 @@ void RATGDOBinarySensor::dump_config()
         break;
     case SensorType::RATGDO_SENSOR_BUTTON:
         ESP_LOGCONFIG(TAG, "  Type: Button");
+        break;
+    case SensorType::RATGDO_SENSOR_MANUALLY_OPERATED:
+        ESP_LOGCONFIG(TAG, "  Type: Manually Operated");
         break;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     case SensorType::RATGDO_SENSOR_VEHICLE_DETECTED:

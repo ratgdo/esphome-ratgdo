@@ -24,6 +24,7 @@ class RATGDOData:
 
     door_state: int = 0
     door_action_delayed: int = 0
+    manually_operated: int = 0
     distance: int = 0
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
@@ -42,6 +43,10 @@ def subscribe_door_state() -> None:
 
 def subscribe_door_action_delayed() -> None:
     _get_data().door_action_delayed += 1
+
+
+def subscribe_manually_operated() -> None:
+    _get_data().manually_operated += 1
 
 
 def subscribe_distance() -> None:
@@ -68,6 +73,7 @@ async def _emit_subscriber_defines():
     cg.add_define(
         "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed
     )
+    cg.add_define("RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS", data.manually_operated)
     cg.add_define("RATGDO_MAX_DISTANCE_SUBSCRIBERS", data.distance)
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)

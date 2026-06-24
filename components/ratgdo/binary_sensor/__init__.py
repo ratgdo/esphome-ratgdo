@@ -7,6 +7,7 @@ from .. import (
     RATGDO_CLIENT_SCHMEA,
     ratgdo_ns,
     register_ratgdo_child,
+    subscribe_manually_operated,
     subscribe_vehicle_arriving,
     subscribe_vehicle_detected,
     subscribe_vehicle_leaving,
@@ -28,6 +29,7 @@ TYPES = {
     "obstruction": SensorType.RATGDO_SENSOR_OBSTRUCTION,
     "motor": SensorType.RATGDO_SENSOR_MOTOR,
     "button": SensorType.RATGDO_SENSOR_BUTTON,
+    "manually_operated": SensorType.RATGDO_SENSOR_MANUALLY_OPERATED,
     "vehicle_detected": SensorType.RATGDO_SENSOR_VEHICLE_DETECTED,
     "vehicle_arriving": SensorType.RATGDO_SENSOR_VEHICLE_ARRIVING,
     "vehicle_leaving": SensorType.RATGDO_SENSOR_VEHICLE_LEAVING,
@@ -75,3 +77,5 @@ async def to_code(config):
         subscribe_vehicle_arriving()
     elif sensor_type == "vehicle_leaving":
         subscribe_vehicle_leaving()
+    elif sensor_type == "manually_operated":
+        subscribe_manually_operated()
