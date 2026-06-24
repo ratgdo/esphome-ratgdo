@@ -43,6 +43,10 @@ static constexpr int SYNC_DELAY = 1000;
 // door state change.
 static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
+// Grace period for the opener to broadcast a state change after the encoder detects movement.
+// If movement continues without an opener update beyond this threshold, it is attributed to manual operation.
+static constexpr uint32_t PROTOCOL_STALE_MS = 500;
+
 using namespace scheduler_ids;
 
 void log_subscriber_overflow(const LogString* observable_name, uint32_t max)
@@ -228,7 +232,7 @@ void RATGDOComponent::encoder_received(const DoorState door_state)
 
     if ((door_state == DoorState::OPENING || door_state == DoorState::CLOSING) && (proto_state == DoorState::OPEN || proto_state == DoorState::CLOSED || proto_state == DoorState::STOPPED)) {
 
-        if (millis() - this->last_protocol_update_ms_ > 500) {
+        if (millis() - this->last_protocol_update_ms_ > PROTOCOL_STALE_MS) {
             if (*this->manually_operated_state != ManuallyOperatedState::YES) {
                 this->manually_operated_state = ManuallyOperatedState::YES;
             }
