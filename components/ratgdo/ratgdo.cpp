@@ -203,6 +203,47 @@ void RATGDOComponent::on_shutdown()
     }
 }
 
+void RATGDOComponent::received(const DoorState door_state)
+{
+    this->protocol_door_state_ = door_state;
+    this->last_protocol_update_ms_ = millis();
+
+    if (door_state == DoorState::OPENING || door_state == DoorState::CLOSING) {
+        if (*this->manually_operated_state != ManuallyOperatedState::NO) {
+            this->manually_operated_state = ManuallyOperatedState::NO;
+        }
+    }
+
+    this->set_resolved_door_state(door_state);
+}
+
+void RATGDOComponent::encoder_received(const DoorState door_state)
+{
+    this->encoder_door_state_ = door_state;
+
+    auto prev_door_state = *this->door_state;
+    auto proto_state = this->protocol_door_state_;
+
+    if ((door_state == DoorState::OPENING || door_state == DoorState::CLOSING) && (proto_state == DoorState::OPEN || proto_state == DoorState::CLOSED || proto_state == DoorState::STOPPED)) {
+
+        if (millis() - this->last_protocol_update_ms_ > 500) {
+            if (*this->manually_operated_state != ManuallyOperatedState::YES) {
+                this->manually_operated_state = ManuallyOperatedState::YES;
+            }
+            this->set_resolved_door_state(door_state);
+        }
+    } else if (door_state == DoorState::STOPPED) {
+        if (*this->manually_operated_state == ManuallyOperatedState::YES) {
+            this->set_resolved_door_state(door_state);
+        }
+    } else if (door_state == DoorState::OPEN || door_state == DoorState::CLOSED) {
+        if (*this->manually_operated_state == ManuallyOperatedState::YES) {
+            this->set_resolved_door_state(door_state);
+            this->manually_operated_state = ManuallyOperatedState::NO;
+        }
+    }
+}
+
 void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
 {
     auto prev_door_state = *this->door_state;
