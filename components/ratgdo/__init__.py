@@ -157,23 +157,19 @@ def validate_protocol(config):
             raise cv.Invalid(
                 "dry_contact_open_sensor and dry_contact_close_sensor must both be defined"
             )
-        if has_encoder:
-            has_pin_a = CONF_ENCODER_PIN_A in config
-            has_pin_b = CONF_ENCODER_PIN_B in config
-            if not has_pin_a or not has_pin_b:
-                raise cv.Invalid(
-                    "encoder_sensor requires both encoder_pin_a and "
-                    "encoder_pin_b to be defined in the ratgdo: config"
-                )
-    else:
-        if has_encoder:
+    elif has_open or has_close:
+        raise cv.Invalid(
+            "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
+            "when using protocol drycontact"
+        )
+
+    if has_encoder:
+        has_pin_a = CONF_ENCODER_PIN_A in config
+        has_pin_b = CONF_ENCODER_PIN_B in config
+        if not has_pin_a or not has_pin_b:
             raise cv.Invalid(
-                "encoder_sensor is only supported with protocol: drycontact"
-            )
-        if has_open or has_close:
-            raise cv.Invalid(
-                "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
-                "when using protocol drycontact"
+                "encoder_sensor requires both encoder_pin_a and "
+                "encoder_pin_b to be defined in the ratgdo: config"
             )
 
     if not has_encoder and (
