@@ -453,6 +453,13 @@ namespace secplus1 {
         if (cmd == CommandType::TOGGLE_DOOR_PRESS) {
             this->enqueue_transmit(CommandType::TOGGLE_DOOR_RELEASE, now + 500);
         } else if (cmd == CommandType::TOGGLE_LIGHT_PRESS) {
+            // On some Security+1 openers a single light press + single release
+            // (~500ms apart) does not produce a stable toggle: the light flips,
+            // then reverts. The HomeKit ratgdo firmware sends the press followed
+            // by >= 2 releases, and a real wall panel transmits the release state
+            // continuously. Send a second release to match that and get one
+            // reliable toggle.
+            this->enqueue_transmit(CommandType::TOGGLE_LIGHT_RELEASE, now + 250);
             this->enqueue_transmit(CommandType::TOGGLE_LIGHT_RELEASE, now + 500);
         } else if (cmd == CommandType::TOGGLE_LOCK_PRESS) {
             this->enqueue_transmit(CommandType::TOGGLE_LOCK_RELEASE, now + 3500);
