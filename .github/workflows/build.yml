@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -29,7 +29,7 @@ jobs:
           cache-dependency-path: '**/requirements*.txt'
 
       - name: Cache pip packages
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -118,7 +118,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Update external_components ref to current branch
         if: github.ref != 'refs/heads/main'
         run: |
@@ -152,7 +152,7 @@ jobs:
     needs: build
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Download built firmwares
         uses: actions/download-artifact@v8
         with:
@@ -195,7 +195,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Download built firmwares
         uses: actions/download-artifact@v8
