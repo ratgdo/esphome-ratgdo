@@ -16,6 +16,10 @@ namespace secplus1 {
     using namespace scheduler_ids;
     static const char* const TAG = "ratgdo_secplus1";
     static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
+    // After a light command, ignore polled light status this long so the opener's
+    // reporting latency cannot bounce the reported light state on/off/on while it
+    // settles.
+    static constexpr uint32_t LIGHT_CMD_SUPPRESS_MS = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -138,6 +142,9 @@ namespace secplus1 {
         }
         if (
             action == LightAction::TOGGLE || (action == LightAction::ON && this->light_state == LightState::OFF) || (action == LightAction::OFF && this->light_state == LightState::ON)) {
+            // Record when the command was issued so QUERY_OTHER_STATUS can
+            // briefly ignore stale readback and not bounce the reported state.
+            this->light_command_at_ = millis();
             this->toggle_light();
         }
     }
@@ -407,7 +414,15 @@ namespace secplus1 {
         } else if (cmd.req == CommandType::QUERY_OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
 
-            if (!this->flags_.is_0x37_panel && light_state != this->maybe_light_state) {
+            if (this->light_command_at_ != 0 && millis() - this->light_command_at_ < LIGHT_CMD_SUPPRESS_MS) {
+                // A light command was just issued and the opener is still
+                // settling. Track the reading but don't apply it, so a stale
+                // pre-command status can't bounce the reported state. The
+                // light_command_at_ != 0 guard keeps this from suppressing
+                // readback during the first seconds after boot (timestamp
+                // starts at 0).
+                this->maybe_light_state = light_state;
+            } else if (!this->flags_.is_0x37_panel && light_state != this->maybe_light_state) {
                 this->maybe_light_state = light_state;
             } else {
                 this->light_state = light_state;
