@@ -41,6 +41,7 @@ namespace secplus1 {
         }
         auto tx_cmd = this->pending_tx();
         if (
+            this->last_rx_ != 0 && // after boot, wait until we've heard the wall panel before transmitting, so we slot into the bus instead of colliding with an in-progress message
             (millis() - this->last_tx_) > 200 && // don't send twice in a period
             (millis() - this->last_rx_) > 50 && // time to send it
             tx_cmd && // have pending command
