@@ -63,9 +63,11 @@ namespace secplus2 {
 
     void Secplus2::dump_config()
     {
-        ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter_);
-        ESP_LOGCONFIG(TAG, "  Client ID: %d", this->client_id_);
-        ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v2");
+        ESP_LOGCONFIG(TAG,
+            "  Rolling Code Counter: %" PRIu32 "\n"
+            "  Client ID: %" PRIu64 "\n"
+            "  Protocol: SEC+ v2",
+            *this->rolling_code_counter_, this->client_id_);
     }
 
     void Secplus2::on_shutdown()
@@ -506,7 +508,7 @@ namespace secplus2 {
 
     void Secplus2::set_rolling_code_counter(uint32_t counter)
     {
-        ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
+        ESP_LOGV(TAG, "Set rolling code counter to %" PRIu32, counter);
         this->rolling_code_counter_ = counter;
     }
 
