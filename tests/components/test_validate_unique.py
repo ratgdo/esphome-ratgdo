@@ -8,6 +8,7 @@ then revalidate, so state stored outside CORE.data would raise false
 Regression test for https://github.com/ratgdo/esphome-ratgdo/issues/625.
 """
 
+from collections.abc import Generator
 from pathlib import Path
 import sys
 
@@ -23,32 +24,32 @@ from components.ratgdo import validate_unique  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
-def reset_core():
+def reset_core() -> Generator[None, None, None]:
     """Start and leave each test with clean per-run state."""
     CORE.reset()
     yield
     CORE.reset()
 
 
-def test_duplicate_within_run_raises():
+def test_duplicate_within_run_raises() -> None:
     validate_unique("sensor", "openings", "Only one openings sensor is allowed")
     with pytest.raises(cv.Invalid, match="Only one openings sensor is allowed"):
         validate_unique("sensor", "openings", "Only one openings sensor is allowed")
 
 
-def test_state_does_not_leak_across_runs():
+def test_state_does_not_leak_across_runs() -> None:
     validate_unique("sensor", "openings", "Only one openings sensor is allowed")
     CORE.reset()
     # A new validation run of the same config must pass
     validate_unique("sensor", "openings", "Only one openings sensor is allowed")
 
 
-def test_kinds_are_isolated():
+def test_kinds_are_isolated() -> None:
     # The same type name under different platforms must not collide
     validate_unique("sensor", "openings", "sensor dup")
     validate_unique("binary_sensor", "openings", "binary_sensor dup")
 
 
-def test_different_values_within_run_pass():
+def test_different_values_within_run_pass() -> None:
     validate_unique("sensor", "openings", "dup")
     validate_unique("sensor", "paired_devices_total", "dup")
