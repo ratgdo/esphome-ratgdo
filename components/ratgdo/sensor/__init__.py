@@ -2,20 +2,19 @@ import esphome.codegen as cg
 from esphome.components import sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.types import ConfigType
 
 from .. import (
     RATGDO_CLIENT_SCHMEA,
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_distance,
+    validate_unique,
 )
 
 CONF_DISTANCE = "distance"
 
 DEPENDENCIES = ["ratgdo"]
-
-# Track which sensor types have been used
-USED_TYPES: set[str] = set()
 
 RATGDOSensor = ratgdo_ns.class_("RATGDOSensor", sensor.Sensor, cg.Component)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
@@ -33,12 +32,12 @@ TYPES = {
 }
 
 
-def validate_unique_type(config):
+def validate_unique_type(config: ConfigType) -> ConfigType:
     """Validate that each sensor type is only used once."""
     sensor_type = config[CONF_TYPE]
-    if sensor_type in USED_TYPES:
-        raise cv.Invalid(f"Only one sensor of type '{sensor_type}' is allowed")
-    USED_TYPES.add(sensor_type)
+    validate_unique(
+        "sensor", sensor_type, f"Only one sensor of type '{sensor_type}' is allowed"
+    )
     return config
 
 
