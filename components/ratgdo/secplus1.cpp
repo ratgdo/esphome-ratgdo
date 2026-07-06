@@ -20,6 +20,11 @@ namespace secplus1 {
     // reporting latency cannot bounce the reported light state on/off/on while it
     // settles.
     static constexpr uint32_t LIGHT_CMD_SUPPRESS_MS = 2000;
+    // How long the bus must stay silent after boot before we conclude no wall
+    // panel is actively transmitting and allow our first transmit. A present,
+    // running panel is heard within milliseconds, so this only delays the
+    // first command on a silent bus.
+    static constexpr uint32_t BUS_QUIET_GRACE_MS = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -29,6 +34,10 @@ namespace secplus1 {
         this->rx_pin_ = rx_pin;
 
         this->uart_.begin(1200, RATGDO_UART_8E1, rx_pin->get_pin(), tx_pin->get_pin(), true);
+
+        // Anchor the quiet-bus grace window at listen start so it measures
+        // actual listening time; sync() re-anchors it shortly after.
+        this->wall_panel_emulation_start_ = millis();
 
         this->traits_.set_features(HAS_DOOR_STATUS | HAS_LIGHT_TOGGLE | HAS_LOCK_TOGGLE);
     }
@@ -41,7 +50,13 @@ namespace secplus1 {
         }
         auto tx_cmd = this->pending_tx();
         if (
-            this->last_rx_ != 0 && // after boot, wait until we've heard the wall panel before transmitting, so we slot into the bus instead of colliding with an in-progress message
+            // After boot, wait until we've heard the wall panel before transmitting,
+            // so we slot into the bus instead of colliding with an in-progress
+            // message. If the bus stays silent past the grace period there is no
+            // active panel (none installed, or it is still booting) and it is safe
+            // to transmit — without this, a no-panel setup would hold its first
+            // command until emulation engages (~35s after boot).
+            (this->last_rx_ != 0 || millis() - this->wall_panel_emulation_start_ > BUS_QUIET_GRACE_MS) &&
             (millis() - this->last_tx_) > 200 && // don't send twice in a period
             (millis() - this->last_rx_) > 50 && // time to send it
             tx_cmd && // have pending command
@@ -457,6 +472,13 @@ namespace secplus1 {
     {
         auto cmd = this->pop_pending_tx();
         if (cmd) {
+            if (cmd.value() == CommandType::TOGGLE_LIGHT_PRESS || cmd.value() == CommandType::TOGGLE_LIGHT_RELEASE) {
+                // Key the readback-suppression window to the actual send time of
+                // the last light byte — transmission can lag the request when the
+                // bus is busy, and the window must not expire before the opener
+                // has seen the full press/release sequence.
+                this->light_command_at_ = millis();
+            }
             this->enqueue_command_pair(cmd.value());
             this->transmit_byte(static_cast<uint32_t>(cmd.value()));
         }
