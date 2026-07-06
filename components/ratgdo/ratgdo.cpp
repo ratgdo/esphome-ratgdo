@@ -348,7 +348,7 @@ void RATGDOComponent::received(const ObstructionState obstruction_state)
 {
     if (!this->flags_.obstruction_sensor_detected) {
         ESP_LOGD(TAG, "Obstruction: state=%s",
-            LOG_STR_ARG(ObstructionState_to_string(*this->obstruction_state)));
+            LOG_STR_ARG(ObstructionState_to_string(obstruction_state)));
 
         this->obstruction_state = obstruction_state;
         // This isn't very fast to update, but its still better
@@ -360,21 +360,21 @@ void RATGDOComponent::received(const ObstructionState obstruction_state)
 void RATGDOComponent::received(const MotorState motor_state)
 {
     ESP_LOGD(TAG, "Motor: state=%s",
-        LOG_STR_ARG(MotorState_to_string(*this->motor_state)));
+        LOG_STR_ARG(MotorState_to_string(motor_state)));
     this->motor_state = motor_state;
 }
 
 void RATGDOComponent::received(const ButtonState button_state)
 {
     ESP_LOGD(TAG, "Button state=%s",
-        LOG_STR_ARG(ButtonState_to_string(*this->button_state)));
+        LOG_STR_ARG(ButtonState_to_string(button_state)));
     this->button_state = button_state;
 }
 
 void RATGDOComponent::received(const MotionState motion_state)
 {
     ESP_LOGD(TAG, "Motion: %s",
-        LOG_STR_ARG(MotionState_to_string(*this->motion_state)));
+        LOG_STR_ARG(MotionState_to_string(motion_state)));
     this->motion_state = motion_state;
     if (motion_state == MotionState::DETECTED) {
         this->set_timeout(TIMEOUT_CLEAR_MOTION, 3000,
@@ -586,8 +586,8 @@ void RATGDOComponent::obstruction_loop()
     // are tricky because the voltage drops slowly when falling asleep and is high
     // without pulses when waking up
 
-    // If at least 3 low pulses are counted within 50ms, the door is awake, not
-    // obstructed and we don't have to check anything else
+    // If more than PULSES_LOWER_LIMIT (i.e. 4+) low pulses are counted within
+    // 50ms, the door is awake, not obstructed and we don't have to check anything else
 
     constexpr uint32_t CHECK_PERIOD = 50;
     constexpr uint32_t PULSES_LOWER_LIMIT = 3;
