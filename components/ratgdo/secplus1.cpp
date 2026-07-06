@@ -56,8 +56,7 @@ namespace secplus1 {
             // active panel (none installed, or it is still booting) and it is safe
             // to transmit — without this, a no-panel setup would hold its first
             // command until emulation engages (~35s after boot).
-            (this->last_rx_ != 0 || millis() - this->wall_panel_emulation_start_ > BUS_QUIET_GRACE_MS) &&
-            (millis() - this->last_tx_) > 200 && // don't send twice in a period
+            (this->last_rx_ != 0 || millis() - this->wall_panel_emulation_start_ > BUS_QUIET_GRACE_MS) && (millis() - this->last_tx_) > 200 && // don't send twice in a period
             (millis() - this->last_rx_) > 50 && // time to send it
             tx_cmd && // have pending command
             !(this->flags_.is_0x37_panel && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) && this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING) {
