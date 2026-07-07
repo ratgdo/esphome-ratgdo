@@ -136,8 +136,20 @@ struct PairedDeviceCount {
     uint8_t count;
 };
 
-struct TimeToClose {
+struct TtcLimit {
     uint16_t seconds;
 };
+
+struct TtcCountdown {
+    uint16_t seconds;
+};
+
+struct TtcToggleHold {
+};
+
+ENUM(TtcState, uint8_t,
+    (UNKNOWN, 0),
+    (COUNTING, 1),
+    (HOLDING, 2))
 
 } // namespace esphome::ratgdo

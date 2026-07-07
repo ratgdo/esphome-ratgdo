@@ -23,6 +23,8 @@ enum RATGDOSensorType : uint8_t {
     RATGDO_PAIRED_ACCESSORIES,
     RATGDO_DISTANCE,
     RATGDO_ENCODER,
+    RATGDO_TTC_COUNTDOWN,
+    RATGDO_TTC_LIMIT,
 };
 
 class RATGDOSensor : public sensor::Sensor, public RATGDOClient, public Component {

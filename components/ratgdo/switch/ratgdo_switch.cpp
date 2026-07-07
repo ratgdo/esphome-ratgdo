@@ -19,6 +19,9 @@ void RATGDOSwitch::dump_config()
     case SwitchType::RATGDO_REVERSE_ENCODER:
         ESP_LOGCONFIG(TAG, "  Type: Reverse Encoder");
         break;
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        ESP_LOGCONFIG(TAG, "  Type: Auto Close");
+        break;
     default:
         break;
     }
@@ -53,6 +56,11 @@ void RATGDOSwitch::setup()
         }
         break;
 #endif
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        this->parent_->subscribe_ttc_state([this](TtcState state) {
+            this->publish_state(state == TtcState::COUNTING);
+        });
+        break;
     default:
         break;
     }
@@ -83,6 +91,12 @@ void RATGDOSwitch::write_state(bool state)
         this->publish_state(state);
         break;
 #endif
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        if (*this->parent_->ttc_state == TtcState::UNKNOWN) {
+            return;
+        }
+        this->parent_->ttc_toggle_hold();
+        break;
     default:
         break;
     }

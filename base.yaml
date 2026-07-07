@@ -52,6 +52,19 @@ ota:
 
 sensor:
   - platform: ratgdo
+    id: ${id_prefix}_ttc_countdown
+    type: ttc_countdown
+    name: "Auto close countdown"
+    unit_of_measurement: "s"
+    icon: mdi:timer-outline
+  - platform: ratgdo
+    id: ${id_prefix}_ttc_limit
+    type: ttc_limit
+    entity_category: diagnostic
+    name: "Auto close limit"
+    unit_of_measurement: "s"
+    icon: mdi:timer-cog-outline
+  - platform: ratgdo
     id: ${id_prefix}_openings
     type: openings
     entity_category: diagnostic
@@ -95,6 +108,11 @@ switch:
     name: "Learn"
     icon: mdi:plus-box
     entity_category: config
+  - platform: ratgdo
+    id: "${id_prefix}_auto_close"
+    type: auto_close
+    name: "Auto close"
+    icon: mdi:timer
 
 binary_sensor:
   - platform: ratgdo

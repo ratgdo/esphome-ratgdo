@@ -21,6 +21,7 @@ TYPES = {
     "learn": SwitchType.RATGDO_LEARN,
     "led": SwitchType.RATGDO_LED,
     "reverse_encoder": SwitchType.RATGDO_REVERSE_ENCODER,
+    "auto_close": SwitchType.RATGDO_AUTO_CLOSE,  # only meaningful with protocol: secplusv2
 }
 
 

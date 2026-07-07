@@ -196,6 +196,8 @@ namespace secplus2 {
             this->activate_learn();
         } else if (args.tag == Tag::inactivate_learn) {
             this->inactivate_learn();
+        } else if (args.tag == Tag::ttc_toggle_hold_tx) {
+            this->send_command(Command { CommandType::TTC_TOGGLE_HOLD, 1, 4, 0 });
         }
         return { };
     }
@@ -413,8 +415,12 @@ namespace secplus2 {
             this->ratgdo_->received(MotionState::DETECTED);
         } else if (cmd.type == CommandType::OPENINGS) {
             this->ratgdo_->received(Openings { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2), cmd.nibble });
-        } else if (cmd.type == CommandType::SET_TTC) {
-            this->ratgdo_->received(TimeToClose { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_SET_LIMIT) {
+            this->ratgdo_->received(TtcLimit { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_TOGGLE_HOLD) {
+            this->ratgdo_->received(TtcToggleHold { });
+        } else if (cmd.type == CommandType::TTC_COUNTDOWN) {
+            this->ratgdo_->received(TtcCountdown { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
         } else if (cmd.type == CommandType::PAIRED_DEVICES) {
             PairedDeviceCount pdc;
             pdc.kind = to_PairedDevice(cmd.nibble, PairedDevice::UNKNOWN);

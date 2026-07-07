@@ -326,6 +326,8 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
 
     if (door_state == DoorState::OPENING) {
         // door started opening
+        this->flags_.ttc_limit_learned = false; // force relearn ttc_limit from this cycle's broadcasts
+                                                // These can start before OPEN is reached
         if (prev_door_state == DoorState::CLOSING) {
             this->door_position_update();
             this->cancel_position_sync_callbacks();
@@ -382,6 +384,10 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
     } else if (door_state == DoorState::CLOSED) {
         this->door_position = 0.0;
         this->cancel_position_sync_callbacks();
+        this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_state = TtcState::UNKNOWN;
+        this->ttc_countdown = 0;
 #ifdef RATGDO_USE_ENCODER
         enc_intended_dir_ = 0; // close intent satisfied
 #endif
@@ -511,9 +517,54 @@ void RATGDOComponent::received(const PairedDeviceCount pdc)
     }
 }
 
-void RATGDOComponent::received(const TimeToClose ttc)
+void RATGDOComponent::received(const TtcLimit limit)
 {
-    ESP_LOGD(TAG, "Time to close (TTC): %ds", ttc.seconds);
+    ESP_LOGD(TAG, "Time to close (TTC) limit: %ds", limit.seconds);
+    this->ttc_limit = limit.seconds;
+    this->flags_.ttc_limit_learned = true;
+}
+
+void RATGDOComponent::received(const TtcCountdown countdown)
+{
+    ESP_LOGD(TAG, "TTC countdown broadcast: %ds remaining", countdown.seconds);
+    // First countdown broadcast of a cycle is highest count, so it tells us the limit.
+    // Or if this countdown is larger than our saved limit, we know our limit needs to be updated.
+    auto ds = *this->door_state;
+    if ((!this->flags_.ttc_limit_learned && (ds == DoorState::OPENING || ds == DoorState::OPEN))
+        || countdown.seconds > *this->ttc_limit) {
+        this->ttc_limit = countdown.seconds;
+        this->flags_.ttc_limit_learned = true;
+    }
+    this->ttc_countdown = countdown.seconds;
+    this->ttc_state = TtcState::COUNTING;
+    this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+    this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, 90000, [this]() {
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_countdown = 0;
+        this->ttc_state = TtcState::HOLDING;
+    });
+    this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+    this->set_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT, TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL * 1000, [this]() {
+        uint16_t current = *this->ttc_countdown;
+        this->ttc_countdown = current > TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL ? current - TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL : 0;
+    });
+}
+
+void RATGDOComponent::received(const TtcToggleHold)
+{
+    ESP_LOGD(TAG, "TTC_TOGGLE_HOLD observed");
+    if (*this->ttc_state == TtcState::COUNTING) {
+        // Wall panel paused the countdown; stop decrementing locally instead
+        // of waiting for the 90s watchdog to notice broadcasts stopped.
+        this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_countdown = 0;
+        this->ttc_state = TtcState::HOLDING;
+    } else if (*this->ttc_state == TtcState::HOLDING) {
+        // Held countdown is being released; the next countdown broadcast
+        // should be trusted even if it's lower than a stale limit.
+        this->flags_.ttc_limit_learned = false;
+    }
 }
 
 void RATGDOComponent::received(const BatteryState battery_state)
@@ -1036,6 +1087,25 @@ void RATGDOComponent::lock_toggle()
 {
     this->lock_state = lock_state_toggle(*this->lock_state);
     this->protocol_->lock_action(LockAction::TOGGLE);
+}
+
+void RATGDOComponent::ttc_toggle_hold()
+{
+    ESP_LOGD(TAG, "Toggle TTC");
+    this->protocol_->call(TtcToggleHoldTx { });
+    if (*this->ttc_state == TtcState::COUNTING) {
+        this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_countdown = 0;
+        this->ttc_state = TtcState::HOLDING;
+    } else if (*this->ttc_state == TtcState::HOLDING) {
+        this->ttc_state = TtcState::COUNTING;
+        this->flags_.ttc_limit_learned = false;
+        this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, 90000, [this]() {
+            this->ttc_countdown = 0;
+            this->ttc_state = TtcState::HOLDING;
+        });
+    }
 }
 
 // Learn functions
