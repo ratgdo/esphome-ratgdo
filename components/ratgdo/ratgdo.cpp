@@ -1272,35 +1272,48 @@ void RATGDOComponent::check_encoder_stopped()
         int16_t dist_closed = static_cast<int16_t>(std::abs(enc_last_ - target_closed));
         int16_t dist_open = static_cast<int16_t>(std::abs(enc_last_ - target_open));
 
-        // Check whether the door stopped beyond a known boundary (the boundary was set
-        // from a shorter travel and the door now opens/closes further). Extend the
-        // boundary to the new stopping position so calibration self-corrects over time.
-        const bool beyond_open = !decreasing && (enc_last_ > enc_max_);
-        const bool beyond_closed = decreasing && (enc_last_ < enc_min_);
+        // Define approaching flags dynamically
+        const bool approaching_closed = (decreasing == !flags_.reverse_encoder);
+        const bool approaching_open = (decreasing == flags_.reverse_encoder);
 
-        if (dist_closed <= 1 && dist_closed <= dist_open && decreasing) {
-            // Snap CLOSED boundary — only when approaching CLOSED (decreasing).
-            // Always update enc_min_ (the lower step variable).
-            enc_min_ = enc_last_;
+        // A door moving 'beyond' a limit is just moving towards it and overshooting.
+        // So beyond_open means it is approaching OPEN and overshot.
+        const bool beyond_open = approaching_open && (decreasing ? (enc_last_ < enc_min_) : (enc_last_ > enc_max_));
+        const bool beyond_closed = approaching_closed && (decreasing ? (enc_last_ < enc_min_) : (enc_last_ > enc_max_));
+
+        if (dist_closed <= 1 && dist_closed <= dist_open && approaching_closed) {
+            // Snap CLOSED boundary — only when approaching CLOSED.
+            if (decreasing)
+                enc_min_ = enc_last_;
+            else
+                enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: CLOSED boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
             this->encoder_received(DoorState::CLOSED);
-        } else if (dist_open <= 1 && dist_open < dist_closed && !decreasing) {
-            // Snap OPEN boundary — only when approaching OPEN (increasing).
-            // Always update enc_max_ (the upper step variable).
-            enc_max_ = enc_last_;
+        } else if (dist_open <= 1 && dist_open < dist_closed && approaching_open) {
+            // Snap OPEN boundary — only when approaching OPEN.
+            if (decreasing)
+                enc_min_ = enc_last_;
+            else
+                enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: OPEN boundary snapped to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
             this->encoder_received(DoorState::OPEN);
         } else if (beyond_open) {
             // Door stopped past the known OPEN boundary — extend it and snap OPEN.
-            enc_max_ = enc_last_;
+            if (decreasing)
+                enc_min_ = enc_last_;
+            else
+                enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: OPEN boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
             this->encoder_received(DoorState::OPEN);
         } else if (beyond_closed) {
             // Door stopped past the known CLOSED boundary — extend it and snap CLOSED.
-            enc_min_ = enc_last_;
+            if (decreasing)
+                enc_min_ = enc_last_;
+            else
+                enc_max_ = enc_last_;
             update_pref = true;
             ESP_LOGI(TAG, "Encoder: CLOSED boundary extended to %d (min=%d max=%d)", enc_last_, enc_min_, enc_max_);
             this->encoder_received(DoorState::CLOSED);
@@ -1319,6 +1332,7 @@ void RATGDOComponent::check_encoder_stopped()
         encoder_pref_.save(&s);
     }
 
+#if ENC_DIRECTION_CORRECTION_ENABLED
     // If a wrong-direction correction was pending, retry the intended action now that
     // the encoder has confirmed the door has actually stopped.
     if (enc_dir_correction_pending_) {
@@ -1330,6 +1344,7 @@ void RATGDOComponent::check_encoder_stopped()
             intended > 0 ? "OPEN" : "CLOSE");
         this->door_action(action);
     }
+#endif
 }
 
 void RATGDOComponent::reset_encoder_calibration()

@@ -14,7 +14,11 @@
 #pragma once
 
 #ifndef ENC_DIRECTION_CORRECTION_ENABLED
+#if defined(PROTOCOL_DRYCONTACT)
 #define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
+#else
+#define ENC_DIRECTION_CORRECTION_ENABLED 0
+#endif
 #endif
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
