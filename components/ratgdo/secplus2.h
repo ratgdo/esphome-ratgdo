@@ -57,9 +57,9 @@ namespace secplus2 {
 
         (PAIR_2, 0x400),
         (PAIR_2_RESP, 0x401),
-        (SET_TTC, 0x402), // ttc_in_seconds = (byte1<<8)+byte2
-        (CANCEL_TTC, 0x408), // ?
-        (TTC, 0x40a), // Time to close
+        (TTC_SET_LIMIT, 0x402), // Command to set TTC in seconds => (byte1<<8)+byte2
+        (TTC_TOGGLE_HOLD, 0x408), // Toggles TTC countdown between *hold* & *release*
+        (TTC_COUNTDOWN, 0x40a), // Periodic countdown broadcast message (sent every 60 seconds) while TTC counting down
         (GET_OPENINGS, 0x48b),
         (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
     )
