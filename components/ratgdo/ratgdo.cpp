@@ -82,6 +82,9 @@ void RATGDOComponent::setup()
     this->input_gdo_pin_->setup();
     this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
+    // We rely on the obstruction PIN config being correct in the YAML config to tell us if we need to
+    // invert logic and/or enable the internal pullup on this pin (hence no hard-coded `pin_mode` call here).
+    // This also ensures interrupts automatically consider the correct logic levels for edge detection.
     this->input_obst_pin_->setup();
     this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction,
         &this->isr_store_,
