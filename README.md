@@ -48,3 +48,23 @@ Most ESP32 boards use the **ESP-IDF** framework. The project originally depended
 The **v3.2 Disco** board uses the Arduino framework because its VL53L4CX distance sensor library and Wire I2C library require it.
 
 ESP8266 boards continue to use the Arduino framework as ESPHome requires it on that platform.
+
+## Troubleshooting
+
+### False obstruction events
+
+Starting with the v32 board series the obstruction sensor input uses circuitry that causes logic levels to be inverted. If the input pins for the obstruction sensor are not configured correctly this can cause misreads on the obstruction sensor in some instances.
+
+This is accounted for in the configurations provided in this repository. However, if you are creating a custom ESPHome configuration you need to ensure that the pin connected to the obstruction sensor is configured with the `mode` set to `INPUT_PULLUP` and the `inverted` flag set to `true` for these newer boards:
+
+```yaml
+ratgdo:
+  input_obst_pin:
+    number: GPIO4
+    mode: INPUT_PULLUP
+    inverted: true
+```
+> [!NOTE]
+> There were revisions in which this behavior was controlled using the `obst_sleep_low` flag on the `ratgdo` entry. This setting has been removed and the abovementioned configuration should be used instead. The example shown above is equivalent to `obst_sleep_low` being set to `false` when used with an ESP32 and `obst_sleep_low` being set to `true` when used with an ESP8266.
+>
+> If you were using `obst_sleep_low` to fix an issue previously, chances are that you don't have to configure anything additionally and you can just drop this setting from your config.
