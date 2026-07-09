@@ -3,6 +3,7 @@ from esphome.components import binary_sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
 import esphome.final_validate as fv
+from esphome.types import ConfigType
 
 from .. import (
     CONF_ENCODER_PIN_A,
@@ -15,12 +16,10 @@ from .. import (
     subscribe_vehicle_arriving,
     subscribe_vehicle_detected,
     subscribe_vehicle_leaving,
+    validate_unique,
 )
 
 DEPENDENCIES = ["ratgdo"]
-
-# Track which sensor types have been used
-USED_TYPES: set[str] = set()
 
 RATGDOBinarySensor = ratgdo_ns.class_(
     "RATGDOBinarySensor", binary_sensor.BinarySensor, cg.Component
@@ -43,12 +42,14 @@ TYPES = {
 VEHICLE_SENSOR_TYPES = {"vehicle_detected", "vehicle_arriving", "vehicle_leaving"}
 
 
-def validate_unique_type(config):
+def validate_unique_type(config: ConfigType) -> ConfigType:
     """Validate that each sensor type is only used once."""
     sensor_type = config[CONF_TYPE]
-    if sensor_type in USED_TYPES:
-        raise cv.Invalid(f"Only one binary sensor of type '{sensor_type}' is allowed")
-    USED_TYPES.add(sensor_type)
+    validate_unique(
+        "binary_sensor",
+        sensor_type,
+        f"Only one binary sensor of type '{sensor_type}' is allowed",
+    )
     return config
 
 
