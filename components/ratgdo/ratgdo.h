@@ -441,7 +441,7 @@ protected:
     int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
     int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
     DoorState protocol_door_state_ { DoorState::UNKNOWN };
-    uint32_t last_protocol_update_ms_ { 0 };
+    uint32_t last_protocol_state_change_ms_ { 0 };
     DoorState encoder_door_state_ { DoorState::UNKNOWN };
 
     uint32_t current_rolling_code_ { 0 };
