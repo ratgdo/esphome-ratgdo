@@ -81,7 +81,7 @@ switch:
 
 binary_sensor:
   - platform: ratgdo
-    type: manually_operated
+    type: manually_operated # latches until the door opener is cycled
     id: ${id_prefix}_manually_operated
     name: "Manually Operated"
     device_class: problem

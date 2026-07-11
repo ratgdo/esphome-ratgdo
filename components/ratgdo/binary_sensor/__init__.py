@@ -80,12 +80,18 @@ def final_validate(config):
         if isinstance(ratgdo_configs, dict):
             ratgdo_configs = [ratgdo_configs]
 
+        found_ratgdo = False
         has_encoder = False
         for cfg in ratgdo_configs:
             if cfg.get(CONF_ID) == ratgdo_id:
+                found_ratgdo = True
                 has_encoder = CONF_ENCODER_SENSOR in cfg or CONF_ENCODER_PIN_A in cfg
                 break
 
+        if not found_ratgdo:
+            raise cv.Invalid(
+                f"ratgdo component '{ratgdo_id}' not found in configuration."
+            )
         if not has_encoder:
             raise cv.Invalid(
                 "The manually_operated binary sensor requires an encoder to be configured "
