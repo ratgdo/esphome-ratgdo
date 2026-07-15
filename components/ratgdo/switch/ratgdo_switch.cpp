@@ -93,6 +93,9 @@ void RATGDOSwitch::write_state(bool state)
 #endif
     case SwitchType::RATGDO_AUTO_CLOSE:
         if (*this->parent_->ttc_state == TtcState::UNKNOWN) {
+            // no publish_state() here because doing so would make the switch
+            // "available" and we don't want it to be available unless
+            // we see TTC messages on the wire first.
             return;
         }
         this->parent_->ttc_toggle_hold();
