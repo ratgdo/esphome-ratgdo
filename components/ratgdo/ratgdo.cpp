@@ -541,19 +541,30 @@ void RATGDOComponent::received(const TtcCountdown countdown)
     this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, 90000, [this]() {
         this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
         this->ttc_countdown = 0;
-        this->ttc_state = TtcState::HOLDING;
+        // Was counting down but didn't see a TTC_COUNTDOWN message from the GDO
+        // in 90 seconds. Assume comms failure and transition to UNKNOWN state.
+        this->ttc_state = TtcState::UNKNOWN;
     });
     this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
     this->set_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT, TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL * 1000, [this]() {
         uint16_t current = *this->ttc_countdown;
-        this->ttc_countdown = current > TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL ? current - TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL : 0;
+        if (current > TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL) {
+            this->ttc_countdown = current - TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL;
+        } else {
+            // Local estimate ran out before either a new broadcast or the
+            // watchdog fired. From here we wait for the door close,
+            // or the watchdog timer to fire.
+            this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+            this->ttc_countdown = 0;
+            this->ttc_state = TtcState::COUNTING_FINISHED;
+        }
     });
 }
 
 void RATGDOComponent::received(const TtcToggleHold)
 {
     ESP_LOGD(TAG, "TTC_TOGGLE_HOLD observed");
-    if (*this->ttc_state == TtcState::COUNTING) {
+    if (*this->ttc_state == TtcState::COUNTING || *this->ttc_state == TtcState::COUNTING_FINISHED) {
         // Wall panel paused the countdown; stop decrementing locally instead
         // of waiting for the 90s watchdog to notice broadcasts stopped.
         this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
@@ -1093,7 +1104,7 @@ void RATGDOComponent::ttc_toggle_hold()
 {
     ESP_LOGD(TAG, "Toggle TTC");
     this->protocol_->call(TtcToggleHoldTx { });
-    if (*this->ttc_state == TtcState::COUNTING) {
+    if (*this->ttc_state == TtcState::COUNTING || *this->ttc_state == TtcState::COUNTING_FINISHED) {
         this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
         this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
         this->ttc_countdown = 0;
@@ -1102,8 +1113,11 @@ void RATGDOComponent::ttc_toggle_hold()
         this->ttc_state = TtcState::COUNTING;
         this->flags_.ttc_limit_learned = false;
         this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, 90000, [this]() {
+            // Sent TTC_TOGGLE_HOLD while HOLDING, transitioned to COUNTING state,
+            // but then didn't receive TTC_COUNTDOWN from GDO within 90 seconds.
+            // Assume comms failure and transition to UNKNOWN state.
             this->ttc_countdown = 0;
-            this->ttc_state = TtcState::HOLDING;
+            this->ttc_state = TtcState::UNKNOWN;
         });
     }
 }

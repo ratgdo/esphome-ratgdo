@@ -150,6 +150,7 @@ struct TtcToggleHold {
 ENUM(TtcState, uint8_t,
     (UNKNOWN, 0),
     (COUNTING, 1),
-    (HOLDING, 2))
+    (COUNTING_FINISHED, 2),
+    (HOLDING, 3))
 
 } // namespace esphome::ratgdo

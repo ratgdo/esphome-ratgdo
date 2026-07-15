@@ -58,7 +58,7 @@ void RATGDOSwitch::setup()
 #endif
     case SwitchType::RATGDO_AUTO_CLOSE:
         this->parent_->subscribe_ttc_state([this](TtcState state) {
-            this->publish_state(state == TtcState::COUNTING);
+            this->publish_state(state == TtcState::COUNTING || state == TtcState::COUNTING_FINISHED);
         });
         break;
     default:
