@@ -272,6 +272,7 @@ public:
 
     // TTC (time-to-close)
     void ttc_toggle_hold();
+    void start_or_sync_ttc_countdown(uint16_t seconds);
 
     // Learn & Paired
     void activate_learn();
