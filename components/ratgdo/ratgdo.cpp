@@ -216,6 +216,7 @@ void RATGDOComponent::received(const DoorState door_state)
     }
 
     if (door_state == DoorState::OPENING || door_state == DoorState::CLOSING || door_state == this->encoder_door_state_) {
+        this->encoder_motion_onset_ms_ = 0; // Protocol caught up, clear any pending manual operation trip
         if (*this->manually_operated_state != ManuallyOperatedState::NO) {
             this->manually_operated_state = ManuallyOperatedState::NO;
         }
@@ -237,16 +238,20 @@ void RATGDOComponent::encoder_received(const DoorState door_state)
     auto proto_state = this->protocol_door_state_;
 
     if ((door_state == DoorState::OPENING || door_state == DoorState::CLOSING) && (proto_state == DoorState::OPEN || proto_state == DoorState::CLOSED || proto_state == DoorState::STOPPED)) {
-
-        if (millis() - this->last_protocol_state_change_ms_ > PROTOCOL_STALE_MS) {
+        if (this->encoder_motion_onset_ms_ == 0) {
+            this->encoder_motion_onset_ms_ = millis();
+        } else if (millis() - this->encoder_motion_onset_ms_ > PROTOCOL_STALE_MS) {
             if (*this->manually_operated_state != ManuallyOperatedState::YES) {
                 this->manually_operated_state = ManuallyOperatedState::YES;
             }
             this->set_resolved_door_state(door_state);
         }
-    } else if (door_state == DoorState::STOPPED || door_state == DoorState::OPEN || door_state == DoorState::CLOSED) {
-        if (*this->manually_operated_state == ManuallyOperatedState::YES) {
-            this->set_resolved_door_state(door_state);
+    } else {
+        this->encoder_motion_onset_ms_ = 0;
+        if (door_state == DoorState::STOPPED || door_state == DoorState::OPEN || door_state == DoorState::CLOSED) {
+            if (*this->manually_operated_state == ManuallyOperatedState::YES) {
+                this->set_resolved_door_state(door_state);
+            }
         }
     }
 }

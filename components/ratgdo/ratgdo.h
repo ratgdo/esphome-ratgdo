@@ -443,6 +443,7 @@ protected:
     DoorState protocol_door_state_ { DoorState::UNKNOWN };
     uint32_t last_protocol_state_change_ms_ { 0 };
     DoorState encoder_door_state_ { DoorState::UNKNOWN };
+    uint32_t encoder_motion_onset_ms_ { 0 };
 
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
     bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
