@@ -197,6 +197,11 @@ namespace secplus2 {
         } else if (args.tag == Tag::inactivate_learn) {
             this->inactivate_learn();
         } else if (args.tag == Tag::ttc_toggle_hold_tx) {
+            // The "HOLD" and "REL" (release) buttons on an 880LM wall control were
+            // pressed repeatedly, and the resulting messages were captured from the wire
+            // as log messages in ratgdo's web console. The same message was observed
+            // for both the HOLD and REL-ease functions. Therefore it's a toggle function.
+            // nibble=1, byte1=4, byte2=0: These values were determined empirically.
             this->send_command(Command { CommandType::TTC_TOGGLE_HOLD, 1, 4, 0 });
         }
         return { };
