@@ -222,6 +222,7 @@ void RATGDOComponent::received(const DoorState door_state)
         }
     } else {
         if (*this->manually_operated_state == ManuallyOperatedState::YES) {
+            ESP_LOGW(TAG, "Dropping protocol state %s due to latched manual operation", LOG_STR_ARG(DoorState_to_string(door_state)));
             return;
         }
     }
