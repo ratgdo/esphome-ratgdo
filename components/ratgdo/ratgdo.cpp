@@ -210,12 +210,14 @@ void RATGDOComponent::on_shutdown()
 void RATGDOComponent::received(const DoorState door_state)
 {
 #ifdef RATGDO_USE_ENCODER
+    bool protocol_state_changed = false;
     if (this->protocol_door_state_ != door_state) {
+        protocol_state_changed = true;
         this->last_protocol_state_change_ms_ = millis();
         this->protocol_door_state_ = door_state;
     }
 
-    if (door_state == DoorState::OPENING || door_state == DoorState::CLOSING || door_state == this->encoder_door_state_) {
+    if (protocol_state_changed || door_state == DoorState::OPENING || door_state == DoorState::CLOSING || door_state == this->encoder_door_state_) {
         this->encoder_motion_onset_ms_ = 0; // Protocol caught up, clear any pending manual operation trip
         if (*this->manually_operated_state != ManuallyOperatedState::NO) {
             this->manually_operated_state = ManuallyOperatedState::NO;
