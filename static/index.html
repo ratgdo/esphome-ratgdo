@@ -350,7 +350,7 @@
         var hardware = document.querySelector('input[name="hardware"]:checked').value;
         var encoder_dropdown = document.getElementById('encoder_dropdown');
 
-        if (hardware !== 'v32board' && hardware !== 'v32disco') {
+        if (hardware !== 'v32board' && hardware !== 'v32disco' && hardware !== 'v25iboard') {
           encoder_dropdown.disabled = true;
           encoder_dropdown.value = "no";
         } else {
@@ -359,12 +359,6 @@
 
         var has_encoder = (encoder_dropdown.value === "yes");
 
-        if (has_encoder && (protocol === "secplusv1" || protocol === "secplusv2")) {
-          alert("The ratgdo encoder is currently only supported for Dry Contact. Security + 1.0 & 2.0 support will come soon!");
-          encoder_dropdown.value = "no";
-          has_encoder = false;
-          return;
-        }
 
         if (protocol !== "secplusv2" && (hardware === "v2board_esp8266_d1_mini" || hardware === "v2board_esp32_d1_mini")) {
           alert("ratgdo version 2.0 only works with Security + 2.0");

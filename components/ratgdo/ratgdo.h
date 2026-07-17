@@ -14,7 +14,11 @@
 #pragma once
 
 #ifndef ENC_DIRECTION_CORRECTION_ENABLED
+#if defined(PROTOCOL_DRYCONTACT)
 #define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
+#else
+#define ENC_DIRECTION_CORRECTION_ENABLED 0
+#endif
 #endif
 
 #include "esphome/components/binary_sensor/binary_sensor.h"
@@ -149,6 +153,9 @@ public:
     observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
     observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };
     observable<DoorActionDelayed, RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS> door_action_delayed { DoorActionDelayed::NO };
+#ifdef RATGDO_USE_ENCODER
+    observable<ManuallyOperatedState, RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS> manually_operated_state { ManuallyOperatedState::NO };
+#endif
 
     unsigned long door_start_moving { 0 };
     float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -198,7 +205,11 @@ public:
 
     Result call_protocol(Args args);
 
+    void set_resolved_door_state(const DoorState door_state);
     void received(const DoorState door_state);
+#ifdef RATGDO_USE_ENCODER
+    void encoder_received(const DoorState door_state);
+#endif
     void received(const LightState light_state);
     void received(const LockState lock_state);
     void received(const ObstructionState obstruction_state);
@@ -365,6 +376,10 @@ public:
     void subscribe_obstruction_state(F&& f);
     template <typename F>
     void subscribe_motor_state(F&& f);
+#ifdef RATGDO_USE_ENCODER
+    template <typename F>
+    void subscribe_manually_operated_state(F&& f);
+#endif
     template <typename F>
     void subscribe_button_state(F&& f);
     template <typename F>
@@ -425,6 +440,10 @@ protected:
     int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
     int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
     int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
+    DoorState protocol_door_state_ { DoorState::UNKNOWN };
+    DoorState encoder_door_state_ { DoorState::UNKNOWN };
+    uint32_t encoder_motion_onset_ms_ { 0 };
+
     int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
     bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
     int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close
@@ -435,6 +454,9 @@ protected:
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+#ifdef RATGDO_USE_ENCODER
+    uint8_t manually_operated_sub_num_ { 0 };
+#endif
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     uint8_t distance_sub_num_ { 0 };
 #endif
@@ -494,10 +516,16 @@ namespace scheduler_ids {
 #else
     inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
 #endif
-
+#ifdef RATGDO_USE_ENCODER
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_COUNT = RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS;
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_BASE = DEFER_VEHICLE_END;
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_MANUALLY_OPERATED_BASE + DEFER_MANUALLY_OPERATED_COUNT;
+#else
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_VEHICLE_END;
+#endif
     // Single-subscriber IDs
     enum : uint32_t {
-        DEFER_ROLLING_CODE = DEFER_VEHICLE_END,
+        DEFER_ROLLING_CODE = DEFER_MULTI_END,
         DEFER_OPENING_DURATION,
         DEFER_CLOSING_DURATION,
         DEFER_CLOSING_DELAY,
@@ -669,6 +697,18 @@ void RATGDOComponent::subscribe_motor_state(F&& f)
         defer(scheduler_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
     });
 }
+
+#ifdef RATGDO_USE_ENCODER
+template <typename F>
+void RATGDOComponent::subscribe_manually_operated_state(F&& f)
+{
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_MANUALLY_OPERATED_BASE, scheduler_ids::DEFER_MANUALLY_OPERATED_COUNT,
+        this->manually_operated_sub_num_, LOG_STR("manually_operated"));
+    this->manually_operated_state.subscribe([this, f, id](ManuallyOperatedState state) {
+        defer(id, [f, state] { f(state); });
+    });
+}
+#endif
 
 template <typename F>
 void RATGDOComponent::subscribe_button_state(F&& f)

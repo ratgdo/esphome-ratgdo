@@ -24,6 +24,7 @@ class RATGDOData:
 
     door_state: int = 0
     door_action_delayed: int = 0
+    manually_operated: int = 0
     distance: int = 0
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
@@ -43,6 +44,10 @@ def subscribe_door_state() -> None:
 
 def subscribe_door_action_delayed() -> None:
     _get_data().door_action_delayed += 1
+
+
+def subscribe_manually_operated() -> None:
+    _get_data().manually_operated += 1
 
 
 def subscribe_distance() -> None:
@@ -82,6 +87,7 @@ async def _emit_subscriber_defines():
     cg.add_define(
         "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed
     )
+    cg.add_define("RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS", data.manually_operated)
     cg.add_define("RATGDO_MAX_DISTANCE_SUBSCRIBERS", data.distance)
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
@@ -165,23 +171,19 @@ def validate_protocol(config):
             raise cv.Invalid(
                 "dry_contact_open_sensor and dry_contact_close_sensor must both be defined"
             )
-        if has_encoder:
-            has_pin_a = CONF_ENCODER_PIN_A in config
-            has_pin_b = CONF_ENCODER_PIN_B in config
-            if not has_pin_a or not has_pin_b:
-                raise cv.Invalid(
-                    "encoder_sensor requires both encoder_pin_a and "
-                    "encoder_pin_b to be defined in the ratgdo: config"
-                )
-    else:
-        if has_encoder:
+    elif has_open or has_close:
+        raise cv.Invalid(
+            "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
+            "when using protocol drycontact"
+        )
+
+    if has_encoder:
+        has_pin_a = CONF_ENCODER_PIN_A in config
+        has_pin_b = CONF_ENCODER_PIN_B in config
+        if not has_pin_a or not has_pin_b:
             raise cv.Invalid(
-                "encoder_sensor is only supported with protocol: drycontact"
-            )
-        if has_open or has_close:
-            raise cv.Invalid(
-                "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
-                "when using protocol drycontact"
+                "encoder_sensor requires both encoder_pin_a and "
+                "encoder_pin_b to be defined in the ratgdo: config"
             )
 
     if not has_encoder and (
