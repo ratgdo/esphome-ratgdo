@@ -60,6 +60,7 @@ void RATGDOBinarySensor::setup()
         break;
 #endif
     default:
+        ESP_LOGE(TAG, "Unknown binary sensor type in setup");
         break;
     }
 }
