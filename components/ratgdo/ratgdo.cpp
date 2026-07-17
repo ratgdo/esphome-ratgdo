@@ -213,7 +213,6 @@ void RATGDOComponent::received(const DoorState door_state)
     bool protocol_state_changed = false;
     if (this->protocol_door_state_ != door_state) {
         protocol_state_changed = true;
-        this->last_protocol_state_change_ms_ = millis();
         this->protocol_door_state_ = door_state;
     }
 
@@ -239,6 +238,11 @@ void RATGDOComponent::encoder_received(const DoorState door_state)
     this->encoder_door_state_ = door_state;
 
     auto proto_state = this->protocol_door_state_;
+
+    if (proto_state == DoorState::UNKNOWN) {
+        this->set_resolved_door_state(door_state);
+        return;
+    }
 
     if ((door_state == DoorState::OPENING || door_state == DoorState::CLOSING) && (proto_state == DoorState::OPEN || proto_state == DoorState::CLOSED || proto_state == DoorState::STOPPED)) {
         if (this->encoder_motion_onset_ms_ == 0) {
@@ -1189,35 +1193,34 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
         DoorState in_motion = (effective_dir > 0)
             ? (flags_.reverse_encoder ? DoorState::CLOSING : DoorState::OPENING)
             : (flags_.reverse_encoder ? DoorState::OPENING : DoorState::CLOSING);
-        if (this->encoder_door_state_ != in_motion) {
-            // Check if the door moved in the opposite direction from what was commanded.
+
+        // Check if the door moved in the opposite direction from what was commanded.
 #if ENC_DIRECTION_CORRECTION_ENABLED
-            if (enc_intended_dir_ != 0) {
-                bool correct = (in_motion == DoorState::OPENING) == (enc_intended_dir_ > 0);
-                if (!correct) {
-                    int8_t intended = enc_intended_dir_;
-                    enc_intended_dir_ = 0; // clear — correction is firing
-                    ESP_LOGD(TAG, "Wrong direction detected (wanted %s, got %s); stopping to correct",
-                        intended > 0 ? "open" : "close",
-                        in_motion == DoorState::OPENING ? "opening" : "closing");
-                    this->set_timeout(500, [this] {
-                        this->door_action(DoorAction::STOP);
-                    });
-                    // Cancel the door_open/door_close query-state safety timer so it
-                    // doesn't fire a spurious OPEN/CLOSED state after the correction cycle.
-                    this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
-                    // Defer the retry to check_encoder_stopped()
-                    enc_dir_correction_pending_ = true;
-                    enc_dir_correction_intended_ = intended;
-                }
-                // If correct direction: do NOT clear enc_intended_dir_ here.
-                // It stays set so a mid-travel reversal (confirmed after
-                // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
-                // the correction. check_encoder_stopped() clears it when the move ends.
+        if (enc_intended_dir_ != 0) {
+            bool correct = (in_motion == DoorState::OPENING) == (enc_intended_dir_ > 0);
+            if (!correct) {
+                int8_t intended = enc_intended_dir_;
+                enc_intended_dir_ = 0; // clear — correction is firing
+                ESP_LOGD(TAG, "Wrong direction detected (wanted %s, got %s); stopping to correct",
+                    intended > 0 ? "open" : "close",
+                    in_motion == DoorState::OPENING ? "opening" : "closing");
+                this->set_timeout(500, [this] {
+                    this->door_action(DoorAction::STOP);
+                });
+                // Cancel the door_open/door_close query-state safety timer so it
+                // doesn't fire a spurious OPEN/CLOSED state after the correction cycle.
+                this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
+                // Defer the retry to check_encoder_stopped()
+                enc_dir_correction_pending_ = true;
+                enc_dir_correction_intended_ = intended;
             }
-#endif // ENC_DIRECTION_CORRECTION_ENABLED
-            this->encoder_received(in_motion);
+            // If correct direction: do NOT clear enc_intended_dir_ here.
+            // It stays set so a mid-travel reversal (confirmed after
+            // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
+            // the correction. check_encoder_stopped() clears it when the move ends.
         }
+#endif // ENC_DIRECTION_CORRECTION_ENABLED
+        this->encoder_received(in_motion);
     }
 
     // Re-arm the stopped watchdog after the last pulse
