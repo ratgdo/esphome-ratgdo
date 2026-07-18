@@ -586,7 +586,7 @@ void RATGDOComponent::received(const TtcCountdown countdown)
 void RATGDOComponent::received(const TtcToggleHold)
 {
     ESP_LOGD(TAG, "TTC_TOGGLE_HOLD observed");
-    if (*this->ttc_state == TtcState::COUNTING || *this->ttc_state == TtcState::COUNTING_FINISHED) {
+    if (ttc_is_counting(*this->ttc_state)) {
         // Wall panel paused the countdown; stop decrementing locally,
         // cancel the countdown watchdog, and go to HOLDING state.
         this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
@@ -1127,7 +1127,7 @@ void RATGDOComponent::ttc_toggle_hold()
 {
     ESP_LOGD(TAG, "Toggle TTC");
     this->protocol_->call(TtcToggleHoldTx { });
-    if (*this->ttc_state == TtcState::COUNTING || *this->ttc_state == TtcState::COUNTING_FINISHED) {
+    if (ttc_is_counting(*this->ttc_state)) {
         this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
         this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
         this->ttc_countdown = 0;

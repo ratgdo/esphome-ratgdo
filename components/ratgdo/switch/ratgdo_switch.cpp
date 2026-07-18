@@ -58,7 +58,7 @@ void RATGDOSwitch::setup()
 #endif
     case SwitchType::RATGDO_AUTO_CLOSE:
         this->parent_->subscribe_ttc_state([this](TtcState state) {
-            this->publish_state(state == TtcState::COUNTING || state == TtcState::COUNTING_FINISHED);
+            this->publish_state(ttc_is_counting(state));
         });
         break;
     default:
@@ -92,13 +92,18 @@ void RATGDOSwitch::write_state(bool state)
         break;
 #endif
     case SwitchType::RATGDO_AUTO_CLOSE:
-        if (*this->parent_->ttc_state == TtcState::UNKNOWN) {
+        if (ttc_is_unknown(*this->parent_->ttc_state)) {
             // no publish_state() here because doing so would make the switch
             // "available" and we don't want it to be available unless
             // we see TTC messages on the wire first.
             return;
         }
-        this->parent_->ttc_toggle_hold();
+        if (state != ttc_is_counting(*this->parent_->ttc_state)) {
+            // The user interface is a switch, but the message protocol
+            // is toggle. So only send a ttc toggle message if the state
+            // really needs to change.
+            this->parent_->ttc_toggle_hold();
+        }
         break;
     default:
         break;
