@@ -214,14 +214,24 @@ void RATGDOComponent::on_shutdown()
 // Used both when the countdown is beginning fresh (a release) and when an
 // already-running countdown is being resynced to a fresh broadcast value,
 // so all three call sites behave identically.
+//
+// The watchdog's purpose is to handle comms failures. It needs to be long
+// enough that normal timing differences between the GDO and local countdown
+// don't set it off accidentally, but short enough that comms failures are
+// quickly and safely detected. The GDO nominally transmits TTC_COUNTDOWN
+// messages every minute, but in testing these were spaced 63 seconds apart.
+// Setting the watchdog to 90 seconds (TTC_COUNTDOWN_WATCHDOG_TIMEOUT)
+// allows 30 seconds of margin beyond the expected countdown message interval,
+// which is ten times larger than the 3 second variation observed in testing.
+//
 void RATGDOComponent::start_or_sync_ttc_countdown(uint16_t seconds)
 {
     this->ttc_countdown = seconds;
     this->ttc_state = TtcState::COUNTING;
     this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
-    this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, 90000, [this]() {
-        // Didn't see a TTC_COUNTDOWN broadcast to confirm this within 90
-        // seconds. Assume comms failure and transition to UNKNOWN state.
+    this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, TTC_COUNTDOWN_WATCHDOG_TIMEOUT * 1000, [this]() {
+        // Didn't see a TTC_COUNTDOWN broadcast within TTC_COUNTDOWN_WATCHDOG_TIMEOUT (90) seconds.
+        // Assume comms failure and transition to UNKNOWN state.
         this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
         this->ttc_countdown = 0;
         this->ttc_state = TtcState::UNKNOWN;
