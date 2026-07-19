@@ -586,19 +586,7 @@ void RATGDOComponent::received(const TtcCountdown countdown)
 void RATGDOComponent::received(const TtcToggleHold)
 {
     ESP_LOGD(TAG, "TTC_TOGGLE_HOLD observed");
-    if (ttc_is_counting(*this->ttc_state)) {
-        // Wall panel paused the countdown; stop decrementing locally,
-        // cancel the countdown watchdog, and go to HOLDING state.
-        this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
-        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
-        this->ttc_countdown = 0;
-        this->ttc_state = TtcState::HOLDING;
-    } else if (*this->ttc_state == TtcState::HOLDING) {
-        // Wall panel transmitted toggle TTC to release hold. Restart the local
-        // countdown and refresh the TTC limit from the next countdown broadcast.
-        this->flags_.ttc_limit_learned = false;
-        this->start_or_sync_ttc_countdown(*this->ttc_limit);
-    }
+    this->apply_ttc_toggle();
 }
 
 void RATGDOComponent::received(const BatteryState battery_state)
@@ -1127,14 +1115,24 @@ void RATGDOComponent::ttc_toggle_hold()
 {
     ESP_LOGD(TAG, "Toggle TTC");
     this->protocol_->call(TtcToggleHoldTx { });
+    this->apply_ttc_toggle();
+}
+
+// Shared pause/release state-machine transition for TTC hold, applied
+// whether the toggle was observed on the wire (from the wall panel) or
+// initiated by RATGDO.
+void RATGDOComponent::apply_ttc_toggle()
+{
     if (ttc_is_counting(*this->ttc_state)) {
+        // Pause the countdown: stop decrementing locally, cancel the
+        // countdown watchdog, and go to HOLDING state.
         this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
         this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
         this->ttc_countdown = 0;
         this->ttc_state = TtcState::HOLDING;
     } else if (*this->ttc_state == TtcState::HOLDING) {
-        // We are transmitting toggle TTC to release hold. Restart the local
-        // countdown and refresh the TTC limit from the next countdown broadcast.
+        // Release hold. Restart the local countdown and refresh the TTC
+        // limit from the next countdown broadcast.
         this->flags_.ttc_limit_learned = false;
         this->start_or_sync_ttc_countdown(*this->ttc_limit);
     }
