@@ -276,7 +276,7 @@
 
 
     <h2>Wiring Diagram</h2>
-    <img id="wiring_diagram" src="wiring_diagrams/v25iboard_secplus.png" alt="Security + 1 and 2 wiring diagram" />
+    <img id="wiring_diagram" src="wiring_diagrams/v32disco_secplus.png" alt="Security + 1 and 2 wiring diagram" />
 
     <h3>Documentation</h3>
     <ul>
@@ -379,7 +379,7 @@
         img.onerror = function () {
           console.log(`img not found: ${this.src}`);
           this.onerror = null;
-          this.src = `wiring_diagrams/v25iboard_${diagram_protocol}.png`;
+          this.src = `wiring_diagrams/v32disco_${diagram_protocol}.png`;
         }
         img.src = `wiring_diagrams/${diagram_hardware}_${diagram_protocol}.png`;
 
