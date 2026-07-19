@@ -1113,6 +1113,12 @@ void RATGDOComponent::lock_toggle()
 
 void RATGDOComponent::ttc_toggle_hold()
 {
+    if (ttc_is_unknown(*this->ttc_state)) {
+        // Don't transmit while we haven't observed any TTC activity on the
+        // wire this cycle: we can't meaningfully pause or resume something
+        // we have no confirmed state for.
+        return;
+    }
     ESP_LOGD(TAG, "Toggle TTC");
     this->protocol_->call(TtcToggleHoldTx { });
     this->apply_ttc_toggle();
