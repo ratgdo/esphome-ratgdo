@@ -119,19 +119,19 @@ jobs:
             name: V2.5i Board Security+ 2.0 (with Encoder)
             manifest_filename: v25iboard_enc-manifest.json
           - file: v32board_enc.yaml
-            name: V3.2 Board Security+ 2.0 (with Encoder)
+            name: V32 Board Security+ 2.0 (with Encoder)
             manifest_filename: v32board_enc-manifest.json
           - file: v32disco_enc.yaml
-            name: V3.2 Disco Security+ 2.0 (with Encoder)
+            name: V32 Disco Security+ 2.0 (with Encoder)
             manifest_filename: v32disco_enc-manifest.json
           - file: v25iboard_secplusv1_enc.yaml
             name: V2.5i Board Security+ 1.0 (with Encoder)
             manifest_filename: v25iboard_secplusv1_enc-manifest.json
           - file: v32board_secplusv1_enc.yaml
-            name: V3.2 Board Security+ 1.0 (with Encoder)
+            name: V32 Board Security+ 1.0 (with Encoder)
             manifest_filename: v32board_secplusv1_enc-manifest.json
           - file: v32disco_secplusv1_enc.yaml
-            name: V3.2 Disco Security+ 1.0 (with Encoder)
+            name: V32 Disco Security+ 1.0 (with Encoder)
             manifest_filename: v32disco_secplusv1_enc-manifest.json
       fail-fast: false
     steps:
