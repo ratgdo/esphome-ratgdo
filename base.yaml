@@ -56,6 +56,7 @@ sensor:
     type: ttc_countdown
     name: "Auto close countdown"
     unit_of_measurement: "s"
+    device_class: duration
     icon: mdi:timer-outline
   - platform: ratgdo
     id: ${id_prefix}_ttc_limit
@@ -63,6 +64,7 @@ sensor:
     entity_category: diagnostic
     name: "Auto close limit"
     unit_of_measurement: "s"
+    device_class: duration
     icon: mdi:timer-cog-outline
   - platform: ratgdo
     id: ${id_prefix}_openings
