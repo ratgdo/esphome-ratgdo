@@ -92,12 +92,11 @@ void RATGDOSwitch::write_state(bool state)
         break;
 #endif
     case SwitchType::RATGDO_AUTO_CLOSE:
-        if (ttc_is_unknown(*this->parent_->ttc_state)) {
-            // no publish_state() here because doing so would make the switch
-            // "available" and we don't want it to be available unless
-            // we see TTC messages on the wire first.
-            return;
-        }
+        // NOTE: No publish_state() call here: The auto_close switch's
+        // published state comes entirely from the subscribe_ttc_state()
+        // callback, not from write_state(). ttc_toggle_hold() guards
+        // against being called while ttc_state is UNKNOWN itself, so
+        // that doesn't need checking here either.
         if (state != ttc_is_counting(*this->parent_->ttc_state)) {
             // The user interface is a switch, but the message protocol
             // is toggle. So only send a ttc toggle message if the state
