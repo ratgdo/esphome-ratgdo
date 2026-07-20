@@ -149,9 +149,12 @@ jobs:
         # forwards CCACHE_DIR into its container, and the path sits
         # inside the container's $HOME bind mount. esphome enables
         # ccache automatically when the binary is on PATH (in the
-        # image base already): native ESP-IDF esp32 from the next
-        # release, esp8266 via esphome/esphome#17722.
-        run: echo "CCACHE_DIR=$HOME/.cache/esphome-ccache" >> "$GITHUB_ENV"
+        # image base already): native ESP-IDF esp32 today, esp8266
+        # once esphome/esphome#17722 ships. mkdir keeps the cache
+        # save from warning on boards that leave the dir unused.
+        run: |
+          echo "CCACHE_DIR=$HOME/.cache/esphome-ccache" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/.cache/esphome-ccache"
       - name: Cache ccache objects
         # Rolling key: restored from the newest prior entry for this
         # firmware on every run, saved fresh each run.
