@@ -144,12 +144,35 @@ jobs:
           echo ""
           echo "Changes made:"
           git diff --color=always
+      - name: Point ccache at a cached dir
+        # Exported via GITHUB_ENV so $HOME expands; the build action
+        # forwards CCACHE_DIR into its container, and the path sits
+        # inside the container's $HOME bind mount. esphome enables
+        # ccache automatically when the binary is on PATH (in the
+        # image base already): native ESP-IDF esp32 from the next
+        # release, esp8266 via esphome/esphome#17722.
+        run: echo "CCACHE_DIR=$HOME/.cache/esphome-ccache" >> "$GITHUB_ENV"
+      - name: Cache ccache objects
+        # Rolling key: restored from the newest prior entry for this
+        # firmware on every run, saved fresh each run.
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/esphome-ccache
+          key: ccache-${{ matrix.firmware.file }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-${{ matrix.firmware.file }}-
       - name: Build firmware
         uses: ratgdo/esphome-build-action@main
         id: esphome-build
         with:
           yaml-file: ${{ matrix.firmware.file }}
           version: latest
+      - name: Show ccache usage
+        # The host runner has no ccache binary; size + object count is
+        # the cheap stand-in for ccache -s.
+        run: |
+          du -sh "$HOME/.cache/esphome-ccache" 2>/dev/null || echo "ccache dir empty (esphome version predates ccache support)"
+          find "$HOME/.cache/esphome-ccache" -type f 2>/dev/null | wc -l
       - name: Copy firmware and manifest
         run: |
           mkdir output
