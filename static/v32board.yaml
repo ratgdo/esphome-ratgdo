@@ -29,12 +29,12 @@ esp32:
     type: esp-idf
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v32board.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v32board.yaml@throttle-distance-sensor-polling
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: main
+    ref: throttle-distance-sensor-polling
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include
