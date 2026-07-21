@@ -62,6 +62,16 @@ void RATGDOSensor::setup()
         this->parent_->set_encoder_sensor(this);
 #endif
         break;
+    case RATGDOSensorType::RATGDO_TTC_COUNTDOWN:
+        this->parent_->subscribe_ttc_countdown([this](uint16_t seconds) {
+            this->publish_state(seconds);
+        });
+        break;
+    case RATGDOSensorType::RATGDO_TTC_LIMIT:
+        this->parent_->subscribe_ttc_limit([this](uint16_t seconds) {
+            this->publish_state(seconds);
+        });
+        break;
     default:
         break;
     }
@@ -94,6 +104,12 @@ void RATGDOSensor::dump_config()
         break;
     case RATGDOSensorType::RATGDO_ENCODER:
         ESP_LOGCONFIG(TAG, "  Type: Encoder");
+        break;
+    case RATGDOSensorType::RATGDO_TTC_COUNTDOWN:
+        ESP_LOGCONFIG(TAG, "  Type: TTC Countdown");
+        break;
+    case RATGDOSensorType::RATGDO_TTC_LIMIT:
+        ESP_LOGCONFIG(TAG, "  Type: TTC Limit");
         break;
     default:
         break;

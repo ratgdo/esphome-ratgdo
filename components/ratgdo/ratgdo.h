@@ -169,6 +169,14 @@ public:
     single_observable<ButtonState> button_state { ButtonState::UNKNOWN };
     single_observable<MotionState> motion_state { MotionState::UNKNOWN };
     single_observable<LearnState> learn_state { LearnState::UNKNOWN };
+
+    single_observable<TtcState> ttc_state { TtcState::UNKNOWN };
+    single_observable<uint16_t> ttc_countdown { 0 };
+    single_observable<uint16_t> ttc_limit { 0 };
+
+    static constexpr uint16_t TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL = 5;
+    static constexpr uint16_t TTC_COUNTDOWN_WATCHDOG_TIMEOUT = 90; // for explanation, see start_or_sync_ttc_countdown()
+
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     observable<VehicleDetectedState, RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS> vehicle_detected_state { VehicleDetectedState::NO };
     observable<VehicleArrivingState, RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS> vehicle_arriving_state { VehicleArrivingState::NO };
@@ -219,7 +227,9 @@ public:
     void received(const MotionState motion_state);
     void received(const LearnState light_state);
     void received(const Openings openings);
-    void received(const TimeToClose ttc);
+    void received(const TtcLimit limit);
+    void received(const TtcCountdown countdown);
+    void received(const TtcToggleHold toggle_hold);
     void received(const PairedDeviceCount pdc);
     void received(const BatteryState pdc);
 
@@ -260,6 +270,12 @@ public:
     void lock_toggle();
     void lock();
     void unlock();
+
+    // TTC (time-to-close)
+    void ttc_toggle_hold();
+    void start_or_sync_ttc_countdown(uint16_t seconds);
+    void apply_ttc_toggle();
+    void reset_ttc_state();
 
     // Learn & Paired
     void activate_learn();
@@ -389,6 +405,12 @@ public:
     template <typename F>
     void subscribe_learn_state(F&& f);
     template <typename F>
+    void subscribe_ttc_state(F&& f);
+    template <typename F>
+    void subscribe_ttc_countdown(F&& f);
+    template <typename F>
+    void subscribe_ttc_limit(F&& f);
+    template <typename F>
     void subscribe_door_action_delayed(F&& f);
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     template <typename F>
@@ -419,6 +441,7 @@ protected:
     struct {
         uint8_t obstruction_sensor_detected : 1;
         uint8_t obst_sleep_low : 1;
+        uint8_t ttc_limit_learned : 1; // whether ttc_limit reflects the current open cycle
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
 #endif
@@ -542,6 +565,9 @@ namespace scheduler_ids {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+        DEFER_TTC_STATE,
+        DEFER_TTC_COUNTDOWN,
+        DEFER_TTC_LIMIT,
 
         // Named timeout IDs (replacing string-based names)
         TIMEOUT_DOOR_QUERY_STATE,
@@ -558,6 +584,8 @@ namespace scheduler_ids {
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
         TIMEOUT_ENCODER_STOPPED,
+        TTC_COUNTDOWN_WATCHDOG,
+        TTC_COUNTDOWN_LOCAL_DECREMENT,
     };
 } // namespace scheduler_ids
 
@@ -737,6 +765,30 @@ void RATGDOComponent::subscribe_learn_state(F&& f)
 {
     this->learn_state.subscribe([this, f](LearnState state) {
         defer(scheduler_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_state(F&& f)
+{
+    this->ttc_state.subscribe([this, f](TtcState state) {
+        defer(scheduler_ids::DEFER_TTC_STATE, [f, state] { f(state); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_countdown(F&& f)
+{
+    this->ttc_countdown.subscribe([this, f](uint16_t seconds) {
+        defer(scheduler_ids::DEFER_TTC_COUNTDOWN, [f, seconds] { f(seconds); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_limit(F&& f)
+{
+    this->ttc_limit.subscribe([this, f](uint16_t seconds) {
+        defer(scheduler_ids::DEFER_TTC_LIMIT, [f, seconds] { f(seconds); });
     });
 }
 

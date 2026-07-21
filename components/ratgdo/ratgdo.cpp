@@ -207,6 +207,51 @@ void RATGDOComponent::on_shutdown()
     }
 }
 
+// Common method to start or resynchronize the local TTC countdown.
+//  - sets COUNTING state
+//  - starts (or restarts) the 5s local decrement interval
+//  - starts (or restarts) the 90s countdown watchdog
+// Used both when the countdown is beginning fresh (a release) and when an
+// already-running countdown is being resynced to a fresh broadcast value,
+// so all three call sites behave identically.
+//
+// The watchdog's purpose is to handle comms failures. It needs to be long
+// enough that normal timing differences between the GDO and local countdown
+// don't set it off accidentally, but short enough that comms failures are
+// quickly and safely detected. The GDO nominally transmits TTC_COUNTDOWN
+// messages every minute, but in testing these were spaced 63 seconds apart.
+// Setting the watchdog to 90 seconds (TTC_COUNTDOWN_WATCHDOG_TIMEOUT)
+// allows 30 seconds of margin beyond the expected countdown message interval,
+// which is ten times larger than the 3 second variation observed in testing.
+//
+void RATGDOComponent::start_or_sync_ttc_countdown(uint16_t seconds)
+{
+    this->ttc_countdown = seconds;
+    this->ttc_state = TtcState::COUNTING;
+    this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+    this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, TTC_COUNTDOWN_WATCHDOG_TIMEOUT * 1000, [this]() {
+        // Didn't see a TTC_COUNTDOWN broadcast within TTC_COUNTDOWN_WATCHDOG_TIMEOUT (90) seconds.
+        // Assume comms failure and transition to UNKNOWN state.
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_countdown = 0;
+        this->ttc_state = TtcState::UNKNOWN;
+    });
+    this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+    this->set_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT, TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL * 1000, [this]() {
+        uint16_t current = *this->ttc_countdown;
+        if (current > TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL) {
+            this->ttc_countdown = current - TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL;
+        } else {
+            // Local estimate ran out before either a new broadcast or the
+            // watchdog fired. From here we wait for the door close,
+            // or the watchdog timer to fire.
+            this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+            this->ttc_countdown = 0;
+            this->ttc_state = TtcState::COUNTING_FINISHED;
+        }
+    });
+}
+
 void RATGDOComponent::received(const DoorState door_state)
 {
 #ifdef RATGDO_USE_ENCODER
@@ -326,6 +371,9 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
 
     if (door_state == DoorState::OPENING) {
         // door started opening
+        this->flags_.ttc_limit_learned = false; // force relearn ttc_limit from this cycle's broadcasts
+                                                // These can start before OPEN is reached
+        this->reset_ttc_state();
         if (prev_door_state == DoorState::CLOSING) {
             this->door_position_update();
             this->cancel_position_sync_callbacks();
@@ -344,6 +392,7 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
         }
     } else if (door_state == DoorState::CLOSING) {
         // door started closing
+        this->reset_ttc_state();
         if (prev_door_state == DoorState::OPENING) {
             this->door_position_update();
             this->cancel_position_sync_callbacks();
@@ -361,6 +410,7 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
                 this->schedule_door_position_sync();
         }
     } else if (door_state == DoorState::STOPPED) {
+        this->reset_ttc_state();
 #ifdef RATGDO_USE_ENCODER
         if (encoder_sensor_ == nullptr)
 #endif
@@ -382,6 +432,7 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
     } else if (door_state == DoorState::CLOSED) {
         this->door_position = 0.0;
         this->cancel_position_sync_callbacks();
+        this->reset_ttc_state();
 #ifdef RATGDO_USE_ENCODER
         enc_intended_dir_ = 0; // close intent satisfied
 #endif
@@ -511,9 +562,51 @@ void RATGDOComponent::received(const PairedDeviceCount pdc)
     }
 }
 
-void RATGDOComponent::received(const TimeToClose ttc)
+// The TTC_SET_LIMIT message is only transmitted by the wall control
+// when the user is changing the limit. So it might only ever be
+// transmitted one time when the GDO is installed. Therefore it might
+// seem hard to determine the ttc_limit. However, the ttc limit can
+// be inferred from the TTC_COUNTDOWN messages, because the first
+// TTC_COUNTDOWN broadcast of a cycle is equal to the configured
+// ttc_limit.
+//
+// So RATGDO captures and remembers the first TTC_COUNTDOWN value
+// after a door open (or release) as the ttc_limit value.
+// Alternatively, if a TTC_COUNTDOWN message contains a value larger
+// than the currently saved ttc_limit, then the saved ttc_limit must
+// be out of date, and it is updated accordingly.
+//
+// NOTE: The value of ttc_limit is only stored in RAM, so it is lost
+// during a reboot. If a reboot happens in the middle of a ttc
+// countdown, there's no way to know the true limit value (the limit
+// may have changed while ratgdo was offline). The logic described
+// above will incorrectly capture a too-small limit for this
+// cycle. This is acceptable because it self-corrects on the very next
+// release or door-open cycle, both of which set ttc_limit_learned=false
+// and let a fresh broadcast capture the real value.
+void RATGDOComponent::received(const TtcLimit limit)
 {
-    ESP_LOGD(TAG, "Time to close (TTC): %ds", ttc.seconds);
+    ESP_LOGD(TAG, "Time to close (TTC) limit: %ds", limit.seconds);
+    this->ttc_limit = limit.seconds;
+    this->flags_.ttc_limit_learned = true;
+}
+
+void RATGDOComponent::received(const TtcCountdown countdown)
+{
+    ESP_LOGD(TAG, "TTC countdown broadcast: %ds remaining", countdown.seconds);
+    auto ds = *this->door_state;
+    if ((!this->flags_.ttc_limit_learned && (ds == DoorState::OPENING || ds == DoorState::OPEN))
+        || countdown.seconds > *this->ttc_limit) {
+        this->ttc_limit = countdown.seconds;
+        this->flags_.ttc_limit_learned = true;
+    }
+    this->start_or_sync_ttc_countdown(countdown.seconds);
+}
+
+void RATGDOComponent::received(const TtcToggleHold)
+{
+    ESP_LOGD(TAG, "TTC_TOGGLE_HOLD observed");
+    this->apply_ttc_toggle();
 }
 
 void RATGDOComponent::received(const BatteryState battery_state)
@@ -1036,6 +1129,50 @@ void RATGDOComponent::lock_toggle()
 {
     this->lock_state = lock_state_toggle(*this->lock_state);
     this->protocol_->lock_action(LockAction::TOGGLE);
+}
+
+void RATGDOComponent::ttc_toggle_hold()
+{
+    if (ttc_is_unknown(*this->ttc_state)) {
+        // Don't transmit while we haven't observed any TTC activity on the
+        // wire this cycle: we can't meaningfully pause or resume something
+        // we have no confirmed state for.
+        return;
+    }
+    ESP_LOGD(TAG, "Toggle TTC");
+    this->protocol_->call(TtcToggleHoldTx { });
+    this->apply_ttc_toggle();
+}
+
+// Shared pause/release state-machine transition for TTC hold, applied
+// whether the toggle was observed on the wire (from the wall panel) or
+// initiated by RATGDO.
+void RATGDOComponent::apply_ttc_toggle()
+{
+    if (ttc_is_counting(*this->ttc_state)) {
+        // Pause the countdown: stop decrementing locally, cancel the
+        // countdown watchdog, and go to HOLDING state.
+        this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+        this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+        this->ttc_countdown = 0;
+        this->ttc_state = TtcState::HOLDING;
+    } else if (*this->ttc_state == TtcState::HOLDING) {
+        // Release hold. Restart the local countdown and refresh the TTC
+        // limit from the next countdown broadcast.
+        this->flags_.ttc_limit_learned = false;
+        this->start_or_sync_ttc_countdown(*this->ttc_limit);
+    }
+}
+
+// Resets local TTC state to UNKNOWN and cancels its timers.
+// TTC only runs while the door is fully open, so this is called
+// for all other states.
+void RATGDOComponent::reset_ttc_state()
+{
+    this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+    this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+    this->ttc_state = TtcState::UNKNOWN;
+    this->ttc_countdown = 0;
 }
 
 // Learn functions

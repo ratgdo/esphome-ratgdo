@@ -13,6 +13,7 @@ enum SwitchType {
     RATGDO_LEARN,
     RATGDO_LED,
     RATGDO_REVERSE_ENCODER,
+    RATGDO_AUTO_CLOSE,
 };
 
 class RATGDOSwitch : public switch_::Switch, public RATGDOClient, public Component {

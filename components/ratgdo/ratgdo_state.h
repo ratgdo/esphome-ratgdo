@@ -136,8 +136,33 @@ struct PairedDeviceCount {
     uint8_t count;
 };
 
-struct TimeToClose {
+struct TtcLimit {
     uint16_t seconds;
 };
+
+struct TtcCountdown {
+    uint16_t seconds;
+};
+
+struct TtcToggleHold {
+};
+
+ENUM(TtcState, uint8_t,
+    (UNKNOWN, 0),
+    (COUNTING, 1),
+    (COUNTING_FINISHED, 2),
+    (HOLDING, 3))
+
+// True before any TTC activity has been observed on the wire this cycle.
+inline constexpr bool ttc_is_unknown(TtcState state)
+{
+    return state == TtcState::UNKNOWN;
+}
+
+// True when counting down or just finished
+inline constexpr bool ttc_is_counting(TtcState state)
+{
+    return state == TtcState::COUNTING || state == TtcState::COUNTING_FINISHED;
+}
 
 } // namespace esphome::ratgdo

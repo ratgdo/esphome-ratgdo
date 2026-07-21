@@ -19,6 +19,9 @@ void RATGDOSwitch::dump_config()
     case SwitchType::RATGDO_REVERSE_ENCODER:
         ESP_LOGCONFIG(TAG, "  Type: Reverse Encoder");
         break;
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        ESP_LOGCONFIG(TAG, "  Type: Auto Close");
+        break;
     default:
         break;
     }
@@ -53,6 +56,11 @@ void RATGDOSwitch::setup()
         }
         break;
 #endif
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        this->parent_->subscribe_ttc_state([this](TtcState state) {
+            this->publish_state(ttc_is_counting(state));
+        });
+        break;
     default:
         break;
     }
@@ -83,6 +91,19 @@ void RATGDOSwitch::write_state(bool state)
         this->publish_state(state);
         break;
 #endif
+    case SwitchType::RATGDO_AUTO_CLOSE:
+        // NOTE: No publish_state() call here: The auto_close switch's
+        // published state comes entirely from the subscribe_ttc_state()
+        // callback, not from write_state(). ttc_toggle_hold() guards
+        // against being called while ttc_state is UNKNOWN itself, so
+        // that doesn't need checking here either.
+        if (state != ttc_is_counting(*this->parent_->ttc_state)) {
+            // The user interface is a switch, but the message protocol
+            // is toggle. So only send a ttc toggle message if the state
+            // really needs to change.
+            this->parent_->ttc_toggle_hold();
+        }
+        break;
     default:
         break;
     }
