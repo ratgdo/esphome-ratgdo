@@ -4,7 +4,13 @@ from esphome import automation, pins
 import esphome.codegen as cg
 from esphome.components import binary_sensor, sensor
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_TRIGGER_ID
+from esphome.const import (
+    CONF_ID,
+    CONF_INVERTED,
+    CONF_MODE,
+    CONF_NUMBER,
+    CONF_TRIGGER_ID,
+)
 from esphome.core import CORE
 from esphome.coroutine import CoroPriority, coroutine_with_priority
 import voluptuous as vol
@@ -106,8 +112,12 @@ DEFAULT_INPUT_GDO = (
 )
 CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
-
-CONF_OBST_SLEEP_LOW = "obst_sleep_low"
+# All v32 boards use inverted logic on GPIO4 for the obstruction sensor, so we set that as the default for ESP32 boards.
+DEFAULT_INPUT_OBST_ESP32 = {
+    CONF_NUMBER: "GPIO4",
+    CONF_MODE: "INPUT_PULLUP",
+    CONF_INVERTED: True,
+}
 
 CONF_DISCRETE_OPEN_PIN = "discrete_open_pin"
 CONF_DISCRETE_CLOSE_PIN = "discrete_close_pin"
@@ -205,10 +215,11 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(
                 CONF_INPUT_GDO, default=DEFAULT_INPUT_GDO
             ): pins.gpio_input_pin_schema,
-            cv.Optional(CONF_INPUT_OBST, default=DEFAULT_INPUT_OBST): cv.Any(
-                cv.none, pins.gpio_input_pin_schema
-            ),
-            cv.SplitDefault(CONF_OBST_SLEEP_LOW, esp32=False, esp8266=True): cv.boolean,
+            cv.SplitDefault(
+                CONF_INPUT_OBST,
+                esp32=DEFAULT_INPUT_OBST_ESP32,
+                esp8266=DEFAULT_INPUT_OBST,
+            ): cv.Any(cv.none, pins.gpio_input_pin_schema),
             cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
@@ -257,8 +268,6 @@ async def to_code(config):
     if config.get(CONF_INPUT_OBST):
         pin = await cg.gpio_pin_expression(config[CONF_INPUT_OBST])
         cg.add(var.set_input_obst_pin(pin))
-
-    cg.add(var.set_obst_sleep_low(config[CONF_OBST_SLEEP_LOW]))
 
     if config.get(CONF_DRY_CONTACT_OPEN_SENSOR):
         dry_contact_open_sensor = await cg.get_variable(
