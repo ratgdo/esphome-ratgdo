@@ -70,7 +70,12 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     uart_config.parity = (config == RATGDO_UART_8E1) ? UART_PARITY_EVEN : UART_PARITY_DISABLE;
     uart_config.stop_bits = UART_STOP_BITS_1;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-    uart_config.source_clk = UART_SCLK_APB;
+    #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)
+        uart_config.source_clk = UART_SCLK_DEFAULT,
+    #elif ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 3, 0)
+        uart_config.source_clk = UART_SCLK_APB,
+    #endif
+    
 
     ESP_ERROR_CHECK(
         uart_driver_install((uart_port_t)this->uart_num_, UART_RX_BUFFER_SIZE, 0, 0, NULL, 0));
