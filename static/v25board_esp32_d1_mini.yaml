@@ -29,7 +29,7 @@ esp32:
 
 dashboard_import:
   package_import_url: github://greyeey/esphome-ratgdo/v25board_esp32_d1_mini.yaml@main
-  
+
 
 packages:
   remote_package:
