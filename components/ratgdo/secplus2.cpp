@@ -196,6 +196,13 @@ namespace secplus2 {
             this->activate_learn();
         } else if (args.tag == Tag::inactivate_learn) {
             this->inactivate_learn();
+        } else if (args.tag == Tag::ttc_toggle_hold_tx) {
+            // The "HOLD" and "REL" (release) buttons on an 880LM wall control were
+            // pressed repeatedly, and the resulting messages were captured from the wire
+            // as log messages in ratgdo's web console. The same message was observed
+            // for both the HOLD and REL-ease functions. Therefore it's a toggle function.
+            // nibble=1, byte1=4, byte2=0: These values were determined empirically.
+            this->send_command(Command { CommandType::TTC_TOGGLE_HOLD, 1, 4, 0 });
         }
         return { };
     }
@@ -413,8 +420,12 @@ namespace secplus2 {
             this->ratgdo_->received(MotionState::DETECTED);
         } else if (cmd.type == CommandType::OPENINGS) {
             this->ratgdo_->received(Openings { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2), cmd.nibble });
-        } else if (cmd.type == CommandType::SET_TTC) {
-            this->ratgdo_->received(TimeToClose { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_SET_LIMIT) {
+            this->ratgdo_->received(TtcLimit { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_TOGGLE_HOLD) {
+            this->ratgdo_->received(TtcToggleHold { });
+        } else if (cmd.type == CommandType::TTC_COUNTDOWN) {
+            this->ratgdo_->received(TtcCountdown { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
         } else if (cmd.type == CommandType::PAIRED_DEVICES) {
             PairedDeviceCount pdc;
             pdc.kind = to_PairedDevice(cmd.nibble, PairedDevice::UNKNOWN);

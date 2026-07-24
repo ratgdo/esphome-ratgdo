@@ -29,6 +29,8 @@ TYPES = {
     "paired_devices_accessories": RATGDOSensorType.RATGDO_PAIRED_ACCESSORIES,
     "distance": RATGDOSensorType.RATGDO_DISTANCE,
     "encoder": RATGDOSensorType.RATGDO_ENCODER,
+    "ttc_countdown": RATGDOSensorType.RATGDO_TTC_COUNTDOWN,  # only meaningful with protocol: secplusv2
+    "ttc_limit": RATGDOSensorType.RATGDO_TTC_LIMIT,  # only meaningful with protocol: secplusv2
 }
 
 
