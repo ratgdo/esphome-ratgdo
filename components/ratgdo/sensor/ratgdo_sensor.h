@@ -38,7 +38,7 @@ protected:
     RATGDOSensorType ratgdo_sensor_type_;
 
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-    VL53L4CX distance_sensor_;
+    VL53L4CX* distance_sensor_ { nullptr };
 #endif
 };
 

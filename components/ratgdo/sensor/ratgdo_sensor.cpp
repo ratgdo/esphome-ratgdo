@@ -43,15 +43,16 @@ void RATGDOSensor::setup()
         break;
     case RATGDOSensorType::RATGDO_DISTANCE:
 #ifdef RATGDO_USE_DISTANCE_SENSOR
-        this->distance_sensor_.setI2cDevice(&I2C);
-        this->distance_sensor_.setXShutPin(32);
+        this->distance_sensor_ = new VL53L4CX();
+        this->distance_sensor_->setI2cDevice(&I2C);
+        this->distance_sensor_->setXShutPin(32);
         // I2C.begin(17,16);
         I2C.begin(19, 18);
-        this->distance_sensor_.begin();
-        this->distance_sensor_.VL53L4CX_Off();
-        this->distance_sensor_.InitSensor(0x59);
-        this->distance_sensor_.VL53L4CX_SetDistanceMode(VL53L4CX_DISTANCEMODE_LONG);
-        this->distance_sensor_.VL53L4CX_StartMeasurement();
+        this->distance_sensor_->begin();
+        this->distance_sensor_->VL53L4CX_Off();
+        this->distance_sensor_->InitSensor(0x59);
+        this->distance_sensor_->VL53L4CX_SetDistanceMode(VL53L4CX_DISTANCEMODE_LONG);
+        this->distance_sensor_->VL53L4CX_StartMeasurement();
         this->parent_->subscribe_distance_measurement([this](int16_t value) {
             this->publish_state(value);
         });
@@ -111,8 +112,8 @@ void RATGDOSensor::loop()
         int16_t maxDistance = -1;
         int status;
 
-        if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) == 0 && dataReady) {
-            status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
+        if (this->distance_sensor_->VL53L4CX_GetMeasurementDataReady(&dataReady) == 0 && dataReady) {
+            status = this->distance_sensor_->VL53L4CX_GetMultiRangingData(pDistanceData);
             objCount = pDistanceData->NumberOfObjectsFound;
 
             for (int i = 0; i < distanceData.NumberOfObjectsFound; i++) {
@@ -138,7 +139,7 @@ void RATGDOSensor::loop()
             // ESP_LOGD(TAG,"# obj found %d; distance %d",objCount, maxDistance);
 
             if (status == 0) {
-                status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
+                status = this->distance_sensor_->VL53L4CX_ClearInterruptAndStartMeasurement();
             }
         }
     }
