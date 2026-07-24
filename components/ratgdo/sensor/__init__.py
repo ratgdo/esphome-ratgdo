@@ -17,6 +17,7 @@ CONF_DISTANCE = "distance"
 DEPENDENCIES = ["ratgdo"]
 
 RATGDOSensor = ratgdo_ns.class_("RATGDOSensor", sensor.Sensor, cg.Component)
+RATGDODistanceSensor = ratgdo_ns.class_("RATGDODistanceSensor", RATGDOSensor)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
 CONF_TYPE = "type"
@@ -41,6 +42,13 @@ def validate_unique_type(config: ConfigType) -> ConfigType:
     return config
 
 
+def _select_sensor_class(config: ConfigType) -> ConfigType:
+    """Override the ID type for the distance sensor, which needs its own class/storage."""
+    if config[CONF_TYPE] == CONF_DISTANCE:
+        config[CONF_ID].type = RATGDODistanceSensor
+    return config
+
+
 CONFIG_SCHEMA = cv.All(
     sensor.sensor_schema(RATGDOSensor)
     .extend(
@@ -50,6 +58,7 @@ CONFIG_SCHEMA = cv.All(
     )
     .extend(RATGDO_CLIENT_SCHMEA),
     validate_unique_type,
+    _select_sensor_class,
 )
 
 
