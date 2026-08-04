@@ -16,6 +16,11 @@ void RATGDOSwitch::dump_config()
     case SwitchType::RATGDO_LED:
         ESP_LOGCONFIG(TAG, "  Type: LED");
         break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    case SwitchType::RATGDO_BEEP_ON_ARRIVAL:
+        ESP_LOGCONFIG(TAG, "  Type: Beep on arrival");
+        break;
+#endif
     case SwitchType::RATGDO_REVERSE_ENCODER:
         ESP_LOGCONFIG(TAG, "  Type: Reverse Encoder");
         break;
@@ -40,6 +45,16 @@ void RATGDOSwitch::setup()
         });
 #endif
         break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    case SwitchType::RATGDO_BEEP_ON_ARRIVAL: {
+        bool stored = true;
+        this->pref_ = this->make_entity_preference<bool>();
+        this->pref_.load(&stored);
+        this->parent_->set_beep_on_arrival(stored);
+        this->publish_state(stored);
+        break;
+    }
+#endif
 #ifdef RATGDO_USE_ENCODER
     case SwitchType::RATGDO_REVERSE_ENCODER:
         this->pref_ = global_preferences->make_preference<bool>(fnv1_hash("ratgdo_reverse_encoder"));
@@ -72,6 +87,16 @@ void RATGDOSwitch::write_state(bool state)
         this->pin_->digital_write(state);
         this->publish_state(state);
         break;
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+    case SwitchType::RATGDO_BEEP_ON_ARRIVAL:
+        if (!this->pref_.save(&state)) {
+            ESP_LOGW(TAG, "Failed to save beep_on_arrival preference.");
+            return;
+        }
+        this->parent_->set_beep_on_arrival(state);
+        this->publish_state(state);
+        break;
+#endif
 #ifdef RATGDO_USE_ENCODER
     case SwitchType::RATGDO_REVERSE_ENCODER:
         if (!this->pref_.save(&state)) {

@@ -12,6 +12,7 @@ namespace esphome::ratgdo {
 enum SwitchType {
     RATGDO_LEARN,
     RATGDO_LED,
+    RATGDO_BEEP_ON_ARRIVAL,
     RATGDO_REVERSE_ENCODER,
 };
 
