@@ -925,9 +925,14 @@ void RATGDOComponent::door_action(DoorAction action)
             this->door_action_delayed = DoorActionDelayed::NO;
 #ifdef RATGDO_USE_ENCODER
             // The command is only leaving now, so the intent window has to run
-            // from here rather than from when the delay was started. An intent
-            // that already lapsed during the delay stays dropped.
-            this->enc_intent_.refresh(millis());
+            // from here rather than from when the delay was started. Re-arm
+            // rather than refresh: closing_delay is user-settable and a value of
+            // EncoderIntent::TIMEOUT_MS or more would have lapsed the intent
+            // already, silently disabling the wrong-direction correction for
+            // every delayed command. This branch only ever defers a closing
+            // command, and an unarmed intent (a bare toggle) stays unarmed.
+            if (this->enc_intent_.direction() != 0)
+                this->enc_intent_.arm(-1, millis());
 #endif
             this->protocol_->door_action(action);
         });
@@ -1208,7 +1213,15 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
         // ignore CLOSE without obstruction sensors), and a command that was never
         // acted on must not reverse a later manual operation of the door.
         const uint32_t now = millis();
+        const int8_t armed = this->enc_intent_.direction();
         const int8_t intended = this->enc_intent_.active(now);
+        if (armed != 0 && intended == 0) {
+            // Say so, otherwise a disarmed correction is indistinguishable in
+            // the logs from a build that never armed an intent at all.
+            ESP_LOGD(TAG, "Intent to %s expired after %u ms without movement; wrong-direction correction disarmed",
+                armed > 0 ? "open" : "close",
+                static_cast<unsigned>(EncoderIntent::TIMEOUT_MS));
+        }
         if (intended != 0) {
             bool correct = (in_motion == DoorState::OPENING) == (intended > 0);
             if (!correct) {
