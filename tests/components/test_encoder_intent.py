@@ -4,9 +4,9 @@ The class is header-only and free of ESPHome dependencies, so its expiry rules
 can be exercised on the host with a plain C++ compiler.
 """
 
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 
