@@ -929,10 +929,12 @@ void RATGDOComponent::door_action(DoorAction action)
             // rather than refresh: closing_delay is user-settable and a value of
             // EncoderIntent::TIMEOUT_MS or more would have lapsed the intent
             // already, silently disabling the wrong-direction correction for
-            // every delayed command. This branch only ever defers a closing
-            // command, and an unarmed intent (a bare toggle) stays unarmed.
-            if (this->enc_intent_.direction() != 0)
-                this->enc_intent_.arm(-1, millis());
+            // every delayed command. Keep the armed direction: a TOGGLE can be
+            // deferred while an open intent is still armed, and an unarmed
+            // intent (a bare toggle) stays unarmed.
+            const int8_t dir = this->enc_intent_.direction();
+            if (dir != 0)
+                this->enc_intent_.arm(dir, millis());
 #endif
             this->protocol_->door_action(action);
         });
