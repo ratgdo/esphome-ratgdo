@@ -925,7 +925,8 @@ void RATGDOComponent::door_action(DoorAction action)
             this->door_action_delayed = DoorActionDelayed::NO;
 #ifdef RATGDO_USE_ENCODER
             // The command is only leaving now, so the intent window has to run
-            // from here rather than from when the delay was started.
+            // from here rather than from when the delay was started. An intent
+            // that already lapsed during the delay stays dropped.
             this->enc_intent_.refresh(millis());
 #endif
             this->protocol_->door_action(action);

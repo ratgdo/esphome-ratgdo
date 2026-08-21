@@ -45,6 +45,17 @@ static void test_expired_intent_cannot_be_refreshed()
     assert(intent.active(1000 + TIMEOUT) == 0);
 }
 
+static void test_refresh_alone_cannot_revive_a_lapsed_intent()
+{
+    // A command that produced no movement is never fed to active(), so refresh()
+    // has to notice the lapse on its own.
+    EncoderIntent intent;
+    intent.arm(1, 1000);
+    intent.refresh(1000 + TIMEOUT);
+    assert(intent.direction() == 0);
+    assert(intent.active(1000 + TIMEOUT) == 0);
+}
+
 static void test_refresh_extends_window()
 {
     EncoderIntent intent;
@@ -104,6 +115,7 @@ int main()
     test_arm_is_active_within_window();
     test_arm_expires_after_window();
     test_expired_intent_cannot_be_refreshed();
+    test_refresh_alone_cannot_revive_a_lapsed_intent();
     test_refresh_extends_window();
     test_refresh_on_disarmed_does_nothing();
     test_clear();
