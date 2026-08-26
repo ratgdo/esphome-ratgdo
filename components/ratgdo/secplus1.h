@@ -160,6 +160,7 @@ namespace secplus1 {
         uint32_t last_rx_ { 0 };
         uint32_t last_tx_ { 0 };
         uint32_t last_status_query_ { 0 };
+        uint32_t light_command_at_ { 0 }; // millis() of last light command (readback suppression)
 
         // Larger structures
         std::priority_queue<TxCommand, std::vector<TxCommand>, FirstToSend> pending_tx_;
