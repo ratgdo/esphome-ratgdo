@@ -13,7 +13,7 @@ void RATGDOOutput::setup()
     if (this->output_type_ == OutputType::RATGDO_BEEPER) {
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         this->parent_->subscribe_vehicle_arriving_state([this](VehicleArrivingState state) {
-            if (state == VehicleArrivingState::YES) {
+            if (state == VehicleArrivingState::YES && this->parent_->get_beep_on_arrival()) {
                 this->play();
             }
         });
@@ -21,8 +21,8 @@ void RATGDOOutput::setup()
 
         this->parent_->subscribe_door_action_delayed([this](DoorActionDelayed state) {
             if (state == DoorActionDelayed::YES) {
-                this->play();
                 this->repeat_ = true;
+                this->play();
             } else if (state == DoorActionDelayed::NO) {
                 this->repeat_ = false;
             }

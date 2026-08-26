@@ -118,6 +118,9 @@ class RATGDOComponent : public Component {
 public:
     RATGDOComponent()
     {
+#ifdef RATGDO_USE_VEHICLE_SENSORS
+        this->flags_.beep_on_arrival = true;
+#endif
     }
 
     void setup() override;
@@ -248,6 +251,8 @@ public:
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     void calculate_presence();
     void presence_change(bool sensor_value);
+    void set_beep_on_arrival(bool enabled) { this->flags_.beep_on_arrival = enabled; }
+    bool get_beep_on_arrival() const { return this->flags_.beep_on_arrival; }
 #endif
 
     // light
@@ -421,6 +426,7 @@ protected:
         uint8_t obst_sleep_low : 1;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
+        uint8_t beep_on_arrival : 1;
 #endif
 #ifdef RATGDO_USE_ENCODER
         uint8_t reverse_encoder : 1;
