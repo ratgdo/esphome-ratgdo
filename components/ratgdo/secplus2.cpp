@@ -14,6 +14,8 @@ extern "C" {
 #include "secplus.h"
 }
 
+#include <cinttypes>
+
 namespace esphome::ratgdo {
 namespace secplus2 {
 
@@ -374,10 +376,10 @@ namespace secplus2 {
         data &= ~0xf000; // clear parity nibble
 
         if ((fixed & 0xFFFFFFFF) == this->client_id_) { // my commands
-            ESP_LOG1(TAG, "[%ld] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOG1(TAG, "[%" PRIu32 "] received mine: rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
             return { };
         } else {
-            ESP_LOG1(TAG, "[%ld] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
+            ESP_LOG1(TAG, "[%" PRIu32 "] received rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), rolling, fixed, data);
         }
 
         CommandType cmd_type = to_CommandType(cmd, CommandType::UNKNOWN);
@@ -468,7 +470,7 @@ namespace secplus2 {
         uint64_t fixed = ((cmd & ~0xff) << 24) | this->client_id_;
         uint32_t data = (static_cast<uint64_t>(command.byte2) << 24) | (static_cast<uint64_t>(command.byte1) << 16) | (static_cast<uint64_t>(command.nibble) << 8) | (cmd & 0xff);
 
-        ESP_LOG2(TAG, "[%ld] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rolling_code_counter_, fixed, data);
+        ESP_LOG2(TAG, "[%" PRIu32 "] Encode for transmit rolling=%07" PRIx32 " fixed=%010" PRIx64 " data=%08" PRIx32, millis(), *this->rolling_code_counter_, fixed, data);
         encode_wireline(*this->rolling_code_counter_, fixed, data, packet);
     }
 
