@@ -113,6 +113,16 @@ switch:
     name: "Learn"
     icon: mdi:plus-box
     entity_category: config
+  - platform: ratgdo
+    id: ${id_prefix}_reverse_encoder
+    type: reverse_encoder
+    name: "Encoder Reverse"
+    entity_category: config
+  - platform: ratgdo
+    id: ${id_prefix}_prefer_encoder_status
+    type: prefer_encoder_status
+    name: "Prefer Encoder Door Status"
+    entity_category: config
 
 binary_sensor:
   - platform: ratgdo
