@@ -102,6 +102,9 @@ void RATGDOSwitch::write_state(bool state)
             return;
         }
         this->parent_->set_prefer_encoder_status(state);
+        if (state) {
+            this->parent_->recalculate_encoder_state();
+        }
         this->publish_state(state);
         break;
 #endif
