@@ -121,7 +121,7 @@ switch:
   - platform: ratgdo
     id: ${id_prefix}_prefer_encoder_status
     type: prefer_encoder_status
-    name: "Prefer Encoder Door Status"
+    name: "Encoder Prefer Door Status"
     entity_category: config
 
 binary_sensor:

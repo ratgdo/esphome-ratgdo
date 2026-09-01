@@ -744,32 +744,6 @@ void RATGDOComponent::sync()
     this->protocol_->sync();
 
 #ifdef RATGDO_USE_ENCODER
-    if (this->encoder_sensor_ != nullptr && this->flags_.prefer_encoder_status) {
-        if (this->flags_.enc_min_cal && this->flags_.enc_max_cal && this->enc_max_ != this->enc_min_) {
-            int16_t target_closed = this->flags_.reverse_encoder ? this->enc_max_ : this->enc_min_;
-            int16_t target_open = this->flags_.reverse_encoder ? this->enc_min_ : this->enc_max_;
-            int16_t dist_closed = static_cast<int16_t>(std::abs(this->enc_last_ - target_closed));
-            int16_t dist_open = static_cast<int16_t>(std::abs(this->enc_last_ - target_open));
-            float pos = (float)(this->enc_last_ - this->enc_min_) / (float)(this->enc_max_ - this->enc_min_);
-            if (this->flags_.reverse_encoder)
-                pos = 1.0f - pos;
-            this->door_position = clamp(pos, 0.0f, 1.0f);
-            if (dist_closed <= 1 && dist_closed <= dist_open) {
-                this->set_resolved_door_state(DoorState::CLOSED);
-            } else if (dist_open <= 1 && dist_open < dist_closed) {
-                this->set_resolved_door_state(DoorState::OPEN);
-            } else {
-                this->set_resolved_door_state(DoorState::STOPPED);
-            }
-        }
-    }
-#endif
-
-    // dry contact protocol:
-    // needed to trigger the initial state of the limit switch sensors
-    // ideally this would be in drycontact::sync
-#ifdef PROTOCOL_DRYCONTACT
-#ifdef RATGDO_USE_ENCODER
     if (this->encoder_sensor_ != nullptr) {
         // Power-loss detection: if the saved position is outside calibrated bounds,
         // the door was moved while powered off. Clear calibration and re-learn.
@@ -794,6 +768,35 @@ void RATGDOComponent::sync()
             // Publish the NVS-restored position
             encoder_sensor_->publish_state(static_cast<float>(enc_last_));
         }
+
+        if (this->flags_.prefer_encoder_status) {
+            if (this->flags_.enc_min_cal && this->flags_.enc_max_cal && this->enc_max_ != this->enc_min_) {
+                int16_t target_closed = this->flags_.reverse_encoder ? this->enc_max_ : this->enc_min_;
+                int16_t target_open = this->flags_.reverse_encoder ? this->enc_min_ : this->enc_max_;
+                int16_t dist_closed = static_cast<int16_t>(std::abs(this->enc_last_ - target_closed));
+                int16_t dist_open = static_cast<int16_t>(std::abs(this->enc_last_ - target_open));
+                float pos = (float)(this->enc_last_ - this->enc_min_) / (float)(this->enc_max_ - this->enc_min_);
+                if (this->flags_.reverse_encoder)
+                    pos = 1.0f - pos;
+                this->door_position = clamp(pos, 0.0f, 1.0f);
+                if (dist_closed <= 1 && dist_closed <= dist_open) {
+                    this->set_resolved_door_state(DoorState::CLOSED);
+                } else if (dist_open <= 1 && dist_open < dist_closed) {
+                    this->set_resolved_door_state(DoorState::OPEN);
+                } else {
+                    this->set_resolved_door_state(DoorState::STOPPED);
+                }
+            }
+        }
+    }
+#endif
+
+    // dry contact protocol:
+    // needed to trigger the initial state of the limit switch sensors
+    // ideally this would be in drycontact::sync
+#ifdef PROTOCOL_DRYCONTACT
+#ifdef RATGDO_USE_ENCODER
+    if (this->encoder_sensor_ != nullptr) {
         // Encoder mode: derive door state from saved calibration, no limit switches.
         if (this->flags_.enc_min_cal && this->flags_.enc_max_cal && this->enc_max_ != this->enc_min_) {
             int16_t range = static_cast<int16_t>(std::abs(this->enc_max_ - this->enc_min_));
