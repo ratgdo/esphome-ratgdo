@@ -194,6 +194,7 @@ public:
     // encoder methods
     void set_encoder_sensor(esphome::sensor::Sensor* s);
     void set_reverse_encoder(bool r) { this->flags_.reverse_encoder = r; }
+    void set_prefer_encoder_status(bool p) { this->flags_.prefer_encoder_status = p; }
     void reset_encoder_calibration();
     void on_encoder_update(int16_t raw);
     void check_encoder_stopped();
@@ -424,6 +425,7 @@ protected:
 #endif
 #ifdef RATGDO_USE_ENCODER
         uint8_t reverse_encoder : 1;
+        uint8_t prefer_encoder_status : 1;
         uint8_t enc_min_cal : 1;
         uint8_t enc_max_cal : 1;
         uint8_t enc_first_update : 1; // set in set_encoder_sensor(); flags_ zero-inits to 0

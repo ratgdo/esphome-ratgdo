@@ -19,6 +19,9 @@ void RATGDOSwitch::dump_config()
     case SwitchType::RATGDO_REVERSE_ENCODER:
         ESP_LOGCONFIG(TAG, "  Type: Reverse Encoder");
         break;
+    case SwitchType::RATGDO_PREFER_ENCODER_STATUS:
+        ESP_LOGCONFIG(TAG, "  Type: Prefer Encoder Status");
+        break;
     default:
         break;
     }
@@ -52,6 +55,17 @@ void RATGDOSwitch::setup()
             this->publish_state(stored);
         }
         break;
+    case SwitchType::RATGDO_PREFER_ENCODER_STATUS:
+        this->pref_ = global_preferences->make_preference<bool>(fnv1_hash("ratgdo_prefer_encoder_status"));
+        {
+            bool stored = false;
+            if (!this->pref_.load(&stored)) {
+                ESP_LOGW(TAG, "Failed to load prefer_encoder_status preference. Defaulting to false.");
+            }
+            this->parent_->set_prefer_encoder_status(stored);
+            this->publish_state(stored);
+        }
+        break;
 #endif
     default:
         break;
@@ -80,6 +94,14 @@ void RATGDOSwitch::write_state(bool state)
         }
         this->parent_->set_reverse_encoder(state);
         this->parent_->recalculate_encoder_state();
+        this->publish_state(state);
+        break;
+    case SwitchType::RATGDO_PREFER_ENCODER_STATUS:
+        if (!this->pref_.save(&state)) {
+            ESP_LOGW(TAG, "Failed to save prefer_encoder_status preference.");
+            return;
+        }
+        this->parent_->set_prefer_encoder_status(state);
         this->publish_state(state);
         break;
 #endif
