@@ -59,4 +59,3 @@ def test_switch_unique_types() -> None:
     validate_unique("switch", "prefer_encoder_status", "dup")
     with pytest.raises(cv.Invalid):
         validate_unique("switch", "prefer_encoder_status", "dup")
-
