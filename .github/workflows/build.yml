@@ -226,7 +226,7 @@ jobs:
         uses: actions/configure-pages@v6
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5.0.0
+        uses: actions/deploy-pages@v5.0.1
 
   release:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
