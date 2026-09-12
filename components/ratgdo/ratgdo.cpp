@@ -15,6 +15,8 @@
 #include "common.h"
 #include "ratgdo_state.h"
 
+#include <cinttypes>
+
 #ifdef PROTOCOL_DRYCONTACT
 #include "dry_contact.h"
 #endif
@@ -526,7 +528,7 @@ void RATGDOComponent::schedule_door_position_sync(float update_period)
 {
     ESP_LOG1(
         TAG,
-        "Schedule position sync: delta %f, start position: %f, start moving: %d",
+        "Schedule position sync: delta %f, start position: %f, start moving: %" PRIu32,
         this->door_move_delta, this->door_start_position,
         this->door_start_moving);
     auto duration = this->door_move_delta > 0 ? *this->opening_duration
@@ -557,7 +559,7 @@ void RATGDOComponent::door_position_update()
         return;
     }
     auto position = this->door_start_position + (now - this->door_start_moving) / (1000 * duration);
-    ESP_LOG2(TAG, "[%d] Position update: %f", now, position);
+    ESP_LOG2(TAG, "[%" PRIu32 "] Position update: %f", now, position);
     this->door_position = clamp(position, 0.0f, 1.0f);
 }
 
