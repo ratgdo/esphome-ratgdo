@@ -51,16 +51,20 @@ ESP8266 boards continue to use the Arduino framework as ESPHome requires it on t
 
 ## Troubleshooting
 
-### False obstruction events on ESP32 v2.5 boards
+### False obstruction events
 
-Some v2.5 boards using ESP32 D1 Mini controllers may report spurious obstruction events. This is caused by the obstruction sensor "asleep" detection logic being inverted on these boards.
+Starting with the v32 board series the obstruction sensor input uses circuitry that causes logic levels to be inverted. If the input pins for the obstruction sensor are not configured correctly this can cause misreads on the obstruction sensor in some instances.
 
-To fix this, add the following to your ESPHome config:
+This is accounted for in the configurations provided in this repository. However, if you are creating a custom ESPHome configuration you need to ensure that the pin connected to the obstruction sensor is configured with the `mode` set to `INPUT_PULLUP` and the `inverted` flag set to `true` for these newer boards:
 
 ```yaml
 ratgdo:
-  id: ratgdov25
-  obst_sleep_low: true
+  input_obst_pin:
+    number: GPIO4
+    mode: INPUT_PULLUP
+    inverted: true
 ```
-
-The `id` must match the `id` of the existing `ratgdo` component in your config (e.g. `ratgdov25` for v2.5 boards). This setting tells the obstruction sensor to treat LOW as the "asleep" state instead of the ESP32 default of HIGH.
+> [!NOTE]
+> There were revisions in which this behavior was controlled using the `obst_sleep_low` flag on the `ratgdo` entry. This setting has been removed and the abovementioned configuration should be used instead. The example shown above is equivalent to `obst_sleep_low` being set to `false` when used with an ESP32 and `obst_sleep_low` being set to `true` when used with an ESP8266.
+>
+> If you were using `obst_sleep_low` to fix an issue previously, chances are that you don't have to configure anything additionally and you can just drop this setting from your config.
