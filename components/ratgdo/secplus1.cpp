@@ -16,6 +16,15 @@ namespace secplus1 {
     using namespace scheduler_ids;
     static const char* const TAG = "ratgdo_secplus1";
     static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
+    // After a light command, ignore polled light status this long so the opener's
+    // reporting latency cannot bounce the reported light state on/off/on while it
+    // settles.
+    static constexpr uint32_t LIGHT_CMD_SUPPRESS_MS = 2000;
+    // How long the bus must stay silent after boot before we conclude no wall
+    // panel is actively transmitting and allow our first transmit. A present,
+    // running panel is heard within milliseconds, so this only delays the
+    // first command on a silent bus.
+    static constexpr uint32_t BUS_QUIET_GRACE_MS = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -25,6 +34,10 @@ namespace secplus1 {
         this->rx_pin_ = rx_pin;
 
         this->uart_.begin(1200, RATGDO_UART_8E1, rx_pin->get_pin(), tx_pin->get_pin(), true);
+
+        // Anchor the quiet-bus grace window at listen start so it measures
+        // actual listening time; sync() re-anchors it shortly after.
+        this->wall_panel_emulation_start_ = millis();
 
         this->traits_.set_features(HAS_DOOR_STATUS | HAS_LIGHT_TOGGLE | HAS_LOCK_TOGGLE);
     }
@@ -37,7 +50,13 @@ namespace secplus1 {
         }
         auto tx_cmd = this->pending_tx();
         if (
-            (millis() - this->last_tx_) > 200 && // don't send twice in a period
+            // After boot, wait until we've heard the wall panel before transmitting,
+            // so we slot into the bus instead of colliding with an in-progress
+            // message. If the bus stays silent past the grace period there is no
+            // active panel (none installed, or it is still booting) and it is safe
+            // to transmit — without this, a no-panel setup would hold its first
+            // command until emulation engages (~35s after boot).
+            (this->last_rx_ != 0 || millis() - this->wall_panel_emulation_start_ > BUS_QUIET_GRACE_MS) && (millis() - this->last_tx_) > 200 && // don't send twice in a period
             (millis() - this->last_rx_) > 50 && // time to send it
             tx_cmd && // have pending command
             !(this->flags_.is_0x37_panel && tx_cmd.value() == CommandType::TOGGLE_LOCK_PRESS) && this->wall_panel_emulation_state_ != WallPanelEmulationState::RUNNING) {
@@ -138,6 +157,9 @@ namespace secplus1 {
         }
         if (
             action == LightAction::TOGGLE || (action == LightAction::ON && this->light_state == LightState::OFF) || (action == LightAction::OFF && this->light_state == LightState::ON)) {
+            // Record when the command was issued so QUERY_OTHER_STATUS can
+            // briefly ignore stale readback and not bounce the reported state.
+            this->light_command_at_ = millis();
             this->toggle_light();
         }
     }
@@ -407,7 +429,15 @@ namespace secplus1 {
         } else if (cmd.req == CommandType::QUERY_OTHER_STATUS) {
             LightState light_state = to_LightState((cmd.resp >> 2) & 1, LightState::UNKNOWN);
 
-            if (!this->flags_.is_0x37_panel && light_state != this->maybe_light_state) {
+            if (this->light_command_at_ != 0 && millis() - this->light_command_at_ < LIGHT_CMD_SUPPRESS_MS) {
+                // A light command was just issued and the opener is still
+                // settling. Track the reading but don't apply it, so a stale
+                // pre-command status can't bounce the reported state. The
+                // light_command_at_ != 0 guard keeps this from suppressing
+                // readback during the first seconds after boot (timestamp
+                // starts at 0).
+                this->maybe_light_state = light_state;
+            } else if (!this->flags_.is_0x37_panel && light_state != this->maybe_light_state) {
                 this->maybe_light_state = light_state;
             } else {
                 this->light_state = light_state;
@@ -441,6 +471,13 @@ namespace secplus1 {
     {
         auto cmd = this->pop_pending_tx();
         if (cmd) {
+            if (cmd.value() == CommandType::TOGGLE_LIGHT_PRESS || cmd.value() == CommandType::TOGGLE_LIGHT_RELEASE) {
+                // Key the readback-suppression window to the actual send time of
+                // the last light byte — transmission can lag the request when the
+                // bus is busy, and the window must not expire before the opener
+                // has seen the full press/release sequence.
+                this->light_command_at_ = millis();
+            }
             this->enqueue_command_pair(cmd.value());
             this->transmit_byte(static_cast<uint32_t>(cmd.value()));
         }
@@ -453,6 +490,13 @@ namespace secplus1 {
         if (cmd == CommandType::TOGGLE_DOOR_PRESS) {
             this->enqueue_transmit(CommandType::TOGGLE_DOOR_RELEASE, now + 500);
         } else if (cmd == CommandType::TOGGLE_LIGHT_PRESS) {
+            // On some Security+1 openers a single light press + single release
+            // (~500ms apart) does not produce a stable toggle: the light flips,
+            // then reverts. The HomeKit ratgdo firmware sends the press followed
+            // by >= 2 releases, and a real wall panel transmits the release state
+            // continuously. Send a second release to match that and get one
+            // reliable toggle.
+            this->enqueue_transmit(CommandType::TOGGLE_LIGHT_RELEASE, now + 250);
             this->enqueue_transmit(CommandType::TOGGLE_LIGHT_RELEASE, now + 500);
         } else if (cmd == CommandType::TOGGLE_LOCK_PRESS) {
             this->enqueue_transmit(CommandType::TOGGLE_LOCK_RELEASE, now + 3500);
