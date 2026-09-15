@@ -165,8 +165,12 @@ int RatgdoUART::available()
     size_t length = 0;
     uart_get_buffered_data_len((uart_port_t)this->uart_num_, &length);
 
-    if (length >= UART_RX_BUFFER_SIZE) {
-        ESP_LOGD(TAG, "UART buffer overflow detected!");
+    if (length >= UART_RX_BUFFER_SIZE * 3 / 4) {
+        // Warn while nearing capacity. The IDF ring buffer never reports a
+        // completely full length, so the old "== buffer size" check could
+        // never fire. Diagnostic only — no flush, to avoid dropping a valid
+        // in-flight frame.
+        ESP_LOGW(TAG, "UART RX buffer high: %u/%u bytes", (unsigned)length, (unsigned)UART_RX_BUFFER_SIZE);
     }
 
     return length;
