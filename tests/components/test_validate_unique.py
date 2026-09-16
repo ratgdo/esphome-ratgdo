@@ -53,3 +53,9 @@ def test_kinds_are_isolated() -> None:
 def test_different_values_within_run_pass() -> None:
     validate_unique("sensor", "openings", "dup")
     validate_unique("sensor", "paired_devices_total", "dup")
+
+
+def test_switch_unique_types() -> None:
+    validate_unique("switch", "prefer_encoder_status", "dup")
+    with pytest.raises(cv.Invalid):
+        validate_unique("switch", "prefer_encoder_status", "dup")
