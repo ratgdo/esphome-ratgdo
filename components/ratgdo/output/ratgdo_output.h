@@ -24,7 +24,7 @@ protected:
     OutputType output_type_;
     rtttl::Rtttl* beeper_;
     std::string rtttlSong_;
-    bool repeat_;
+    bool repeat_ { false };
 };
 
 } // namespace esphome::ratgdo
