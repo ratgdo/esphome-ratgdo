@@ -186,7 +186,6 @@ namespace secplus2 {
 
         // Small members at the end
         uint16_t rx_byte_count_ { 0 };
-        LearnState learn_state_ { LearnState::UNKNOWN };
         struct {
             uint8_t transmit_pending : 1;
             uint8_t rx_reading_msg : 1;
