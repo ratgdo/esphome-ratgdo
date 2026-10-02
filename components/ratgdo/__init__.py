@@ -131,13 +131,16 @@ _PROTOCOL_SOURCE_FILES = {
 
 
 def FILTER_SOURCE_FILES() -> list[str]:
-    """Exclude protocol implementations that are not selected in YAML."""
+    """Exclude protocol and platform sources not used by this build."""
     selected = CORE.config.get(DOMAIN, {}).get(CONF_PROTOCOL, PROTOCOL_SECPLUSV2)
-    return [
+    excluded = [
         source
         for protocol, source in _PROTOCOL_SOURCE_FILES.items()
         if protocol != selected
     ]
+    if not CORE.is_esp32:
+        excluded.append("ratgdo_uart_esp32.cpp")
+    return excluded
 
 
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
