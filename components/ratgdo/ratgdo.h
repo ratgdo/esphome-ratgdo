@@ -128,6 +128,7 @@ public:
     void init_protocol();
 
     void obstruction_loop();
+    void update_normalized_pulse_average(float normalized_pulses);
 
     float start_opening { -1 };
     single_observable<float> opening_duration { 0 };
@@ -414,6 +415,11 @@ protected:
 
     // 4-byte members
     RATGDOStore isr_store_ { };
+    float normalized_pulse_average_ { 0 }; // obstruction pulses per CHECK_PERIOD, 0 until learned
+    float normalized_pulse_sum_ { 0 };
+
+    // 1-byte members
+    uint8_t normalized_pulse_samples_ { 0 };
 
     // Bool members packed into bitfield
     struct {
