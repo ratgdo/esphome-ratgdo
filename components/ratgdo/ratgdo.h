@@ -61,6 +61,9 @@
 #ifndef RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS
 #error "RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS must be defined by codegen"
 #endif
+#ifndef RATGDO_MAX_OBSTRUCTION_STATE_SUBSCRIBERS
+#error "RATGDO_MAX_OBSTRUCTION_STATE_SUBSCRIBERS must be defined by codegen"
+#endif
 
 namespace esphome {
 class InternalGPIOPin;
@@ -164,7 +167,7 @@ public:
 
     single_observable<LightState> light_state { LightState::UNKNOWN };
     single_observable<LockState> lock_state { LockState::UNKNOWN };
-    single_observable<ObstructionState> obstruction_state { ObstructionState::UNKNOWN };
+    observable<ObstructionState, RATGDO_MAX_OBSTRUCTION_STATE_SUBSCRIBERS> obstruction_state { ObstructionState::UNKNOWN };
     single_observable<MotorState> motor_state { MotorState::UNKNOWN };
     single_observable<ButtonState> button_state { ButtonState::UNKNOWN };
     single_observable<MotionState> motion_state { MotionState::UNKNOWN };
@@ -189,6 +192,15 @@ public:
     void set_dry_contact_close_sensor(esphome::binary_sensor::BinarySensor* dry_contact_close_sensor_);
     void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
     void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
+    void set_dry_contact_toggle_behavior(DryContactBehavior while_opening, DryContactBehavior while_closing,
+        DryContactBehavior while_stopped)
+    {
+        this->protocol_->set_toggle_behavior(while_opening, while_closing, while_stopped);
+    }
+    void set_dry_contact_obstruction_behavior(DryContactBehavior while_opening, DryContactBehavior while_closing)
+    {
+        this->protocol_->set_obstruction_behavior(while_opening, while_closing);
+    }
 
 #ifdef RATGDO_USE_ENCODER
     // encoder methods
@@ -230,6 +242,8 @@ public:
     void door_stop();
 
     void door_action(DoorAction action);
+    void set_open_endpoint_timer();
+    void set_closed_endpoint_timer();
     void ensure_door_action(DoorAction action, uint32_t delay = 1500);
     void door_move_to_position(float position);
     void set_door_position(float door_position) { this->door_position = door_position; }
@@ -298,6 +312,7 @@ public:
     void sync();
 
     using Component::cancel_interval;
+    using Component::cancel_timeout;
     using Component::set_interval;
     using Component::set_timeout;
 
@@ -454,6 +469,7 @@ protected:
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+    uint8_t obstruction_state_sub_num_ { 0 };
 #ifdef RATGDO_USE_ENCODER
     uint8_t manually_operated_sub_num_ { 0 };
 #endif
@@ -497,12 +513,15 @@ namespace scheduler_ids {
     inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS;
     inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
 
+    inline constexpr uint32_t DEFER_OBSTRUCTION_STATE_COUNT = RATGDO_MAX_OBSTRUCTION_STATE_SUBSCRIBERS;
+    inline constexpr uint32_t DEFER_OBSTRUCTION_STATE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     inline constexpr uint32_t DEFER_DISTANCE_COUNT = RATGDO_MAX_DISTANCE_SUBSCRIBERS;
-    inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+    inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_OBSTRUCTION_STATE_BASE + DEFER_OBSTRUCTION_STATE_COUNT;
     inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
 #else
-    inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+    inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_OBSTRUCTION_STATE_BASE + DEFER_OBSTRUCTION_STATE_COUNT;
 #endif
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
@@ -537,7 +556,6 @@ namespace scheduler_ids {
         DEFER_PAIRED_ACCESSORIES,
         DEFER_LIGHT_STATE,
         DEFER_LOCK_STATE,
-        DEFER_OBSTRUCTION_STATE,
         DEFER_MOTOR_STATE,
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
@@ -558,6 +576,7 @@ namespace scheduler_ids {
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
         TIMEOUT_ENCODER_STOPPED,
+        TIMEOUT_DRY_CONTACT_STEP,
     };
 } // namespace scheduler_ids
 
@@ -685,8 +704,10 @@ void RATGDOComponent::subscribe_lock_state(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_obstruction_state(F&& f)
 {
-    this->obstruction_state.subscribe([this, f](ObstructionState state) {
-        defer(scheduler_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_OBSTRUCTION_STATE_BASE, scheduler_ids::DEFER_OBSTRUCTION_STATE_COUNT,
+        this->obstruction_state_sub_num_, LOG_STR("obstruction_state"));
+    this->obstruction_state.subscribe([this, f, id](ObstructionState state) {
+        defer(id, [f, state] { f(state); });
     });
 }
 

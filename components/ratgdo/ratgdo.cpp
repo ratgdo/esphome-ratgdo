@@ -819,6 +819,11 @@ void RATGDOComponent::door_open()
     enc_intended_dir_ = 1;
 #endif
     this->door_action(DoorAction::OPEN);
+    this->set_open_endpoint_timer();
+}
+
+void RATGDOComponent::set_open_endpoint_timer()
+{
 
     if (*this->opening_duration > 0) {
         // query state in case we don't get a status message
@@ -888,6 +893,11 @@ void RATGDOComponent::door_close()
         ESP_LOGD(TAG, "No obstruction sensors detected. Close using TOGGLE.");
         this->door_action(DoorAction::TOGGLE);
     }
+    this->set_closed_endpoint_timer();
+}
+
+void RATGDOComponent::set_closed_endpoint_timer()
+{
 
     if (*this->closing_duration > 0) {
         // query state in case we don't get a status message
@@ -935,6 +945,9 @@ void RATGDOComponent::door_action(DoorAction action)
 
 void RATGDOComponent::door_move_to_position(float position)
 {
+    if (!this->protocol_->can_move_to_position(position)) {
+        return;
+    }
     if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
         this->door_action(DoorAction::STOP);
         this->on_door_state([this, position](DoorState s) {
