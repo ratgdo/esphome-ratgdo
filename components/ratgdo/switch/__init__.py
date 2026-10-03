@@ -20,6 +20,7 @@ CONF_TYPE = "type"
 TYPES = {
     "learn": SwitchType.RATGDO_LEARN,
     "led": SwitchType.RATGDO_LED,
+    "beep_on_arrival": SwitchType.RATGDO_BEEP_ON_ARRIVAL,
     "reverse_encoder": SwitchType.RATGDO_REVERSE_ENCODER,
 }
 
