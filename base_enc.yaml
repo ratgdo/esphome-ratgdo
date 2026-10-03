@@ -21,6 +21,11 @@ text_sensor:
   - platform: version
     id: ${id_prefix}_firmware_version
     name: "Firmware Version"
+  - platform: ratgdo
+    id: ${id_prefix}_ttc_state
+    type: ttc_state
+    name: "Auto close state"
+    icon: mdi:timer-outline
 
 ratgdo:
   id: ${id_prefix}
@@ -62,6 +67,21 @@ ota:
     id: ${id_prefix}_ratgdo_ota_ws
 
 sensor:
+  - platform: ratgdo
+    id: ${id_prefix}_ttc_countdown
+    type: ttc_countdown
+    name: "Auto close countdown"
+    unit_of_measurement: "s"
+    device_class: duration
+    icon: mdi:timer-outline
+  - platform: ratgdo
+    id: ${id_prefix}_ttc_limit
+    type: ttc_limit
+    entity_category: diagnostic
+    name: "Auto close limit"
+    unit_of_measurement: "s"
+    device_class: duration
+    icon: mdi:timer-cog-outline
   - platform: ratgdo
     id: ${id_prefix}_encoder
     type: encoder
@@ -246,3 +266,11 @@ button:
       then:
         lambda: !lambda |-
           id($id_prefix).door_toggle();
+
+  - platform: template
+    id: ${id_prefix}_auto_close_toggle
+    name: "Auto close toggle"
+    on_press:
+      then:
+        lambda: !lambda |-
+          id($id_prefix).ttc_toggle_hold();

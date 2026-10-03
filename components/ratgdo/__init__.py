@@ -29,6 +29,7 @@ class RATGDOData:
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
     vehicle_leaving: int = 0
+    ttc_state: int = 0
     used_types: dict[str, set[str]] = field(default_factory=dict)
 
 
@@ -66,6 +67,10 @@ def subscribe_vehicle_leaving() -> None:
     _get_data().vehicle_leaving += 1
 
 
+def subscribe_ttc_state() -> None:
+    _get_data().ttc_state += 1
+
+
 def validate_unique(kind: str, value: str, message: str) -> None:
     """Raise cv.Invalid if (kind, value) was already seen in this validation run.
 
@@ -92,6 +97,7 @@ async def _emit_subscriber_defines():
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
     cg.add_define("RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS", data.vehicle_leaving)
+    cg.add_define("RATGDO_MAX_TTC_STATE_SUBSCRIBERS", data.ttc_state)
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())

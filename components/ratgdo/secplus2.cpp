@@ -86,6 +86,18 @@ namespace secplus2 {
             this->query_openings();
             synced = false;
         }
+        if (*this->ratgdo_->ttc_state == TtcState::TTC_UNKNOWN) {
+            this->query_ttc_state();
+            synced = false;
+        }
+        if (*this->ratgdo_->ttc_limit == TTC_LIMIT_UNKNOWN) {
+            this->query_ttc_limit();
+            synced = false;
+        }
+        if (*this->ratgdo_->ttc_countdown == TTC_COUNTDOWN_UNKNOWN) {
+            this->query_ttc_countdown();
+            synced = false;
+        }
         if (*this->ratgdo_->paired_total == PAIRED_DEVICES_UNKNOWN) {
             this->query_paired_devices(PairedDevice::ALL);
             synced = false;
@@ -196,6 +208,16 @@ namespace secplus2 {
             this->activate_learn();
         } else if (args.tag == Tag::inactivate_learn) {
             this->inactivate_learn();
+        } else if (args.tag == Tag::ttc_action_tx) {
+            this->send_ttc_action(TtcActionCode::TTC_TOGGLE);
+        } else if (args.tag == Tag::query_ttc_state) {
+            this->query_ttc_state();
+        } else if (args.tag == Tag::query_ttc_limit) {
+            this->query_ttc_limit();
+        } else if (args.tag == Tag::set_ttc_limit) {
+            this->set_ttc_limit(args.value.set_ttc_limit.seconds);
+        } else if (args.tag == Tag::query_ttc_countdown) {
+            this->query_ttc_countdown();
         }
         return { };
     }
@@ -217,6 +239,50 @@ namespace secplus2 {
     void Secplus2::query_openings()
     {
         this->send_command(CommandType::GET_OPENINGS);
+    }
+
+    // These five TTC_* commands are all sent with nibble=1, matching what
+    // the wall control sends for the same commands.
+
+    // Both byte1 values were determined empirically. The "HOLD" and "REL"
+    // (release) buttons on an 880LM wall control were pressed repeatedly,
+    // and the resulting messages were captured as log messages in ratgdo's
+    // web console. The same message (byte1=4) was observed for both the HOLD
+    // and REL-ease functions, so it's a toggle. byte1=5 was found by probing
+    // other values and observing which one disabled TTC.
+    void Secplus2::send_ttc_action(TtcActionCode action)
+    {
+        this->send_command(Command { CommandType::TTC_ACTION, 1, static_cast<uint8_t>(action), 0 });
+    }
+
+    void Secplus2::query_ttc_state()
+    {
+        this->send_command(Command { CommandType::TTC_GET_STATE, 1 });
+    }
+
+    void Secplus2::query_ttc_limit()
+    {
+        this->send_command(Command { CommandType::TTC_GET_LIMIT, 1 });
+    }
+
+    // seconds == 0 disables TTC entirely (TTC_SET_LIMIT{0} has never been
+    // observed on the wire - TTC_ACTION(DISABLE) is the confirmed mechanism).
+    // nibble=1: matches every observed TTC_SET_LIMIT sender.
+    // Used from a local Web UI while reverse-engineering this protocol, but
+    // omitted from this feature for safety.
+    void Secplus2::set_ttc_limit(uint16_t seconds)
+    {
+        if (seconds == 0) {
+            this->send_ttc_action(TtcActionCode::TTC_DISABLE);
+        } else {
+            this->send_command(Command { CommandType::TTC_SET_LIMIT, 1,
+                static_cast<uint8_t>(seconds >> 8), static_cast<uint8_t>(seconds & 0xff) });
+        }
+    }
+
+    void Secplus2::query_ttc_countdown()
+    {
+        this->send_command(Command { CommandType::TTC_GET_COUNTDOWN, 1 });
     }
 
     void Secplus2::query_paired_devices()
@@ -358,6 +424,14 @@ namespace secplus2 {
         ESP_LOGD(TAG, "%s: [%s]", LOG_STR_ARG(prefix), format_hex_pretty_to(hex_buf, packet, PACKET_LENGTH));
     }
 
+    // fixed's low 32 bits are the sender's client_id. It is helpful to know
+    // what sender transmitted a packet because it helps understand what's
+    // going on on the wire - for TTC-related commands in particular,
+    // knowing whether a broadcast came from the GDO itself or from a
+    // wall control is useful context. It would also matter for firmware
+    // version number, but that isn't part of this feature.
+    static inline uint32_t sender_from_fixed(uint64_t fixed) { return fixed & 0xFFFFFFFF; }
+
     optional<Command> Secplus2::decode_packet(const WirePacket& packet) const
     {
         uint32_t rolling = 0;
@@ -385,7 +459,7 @@ namespace secplus2 {
         uint8_t byte1 = (data >> 16) & 0xff;
         uint8_t byte2 = (data >> 24) & 0xff;
 
-        ESP_LOG1(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x", cmd, LOG_STR_ARG(CommandType_to_string(cmd_type)), byte2, byte1, nibble);
+        ESP_LOG1(TAG, "cmd=%03x (%s) byte2=%02x byte1=%02x nibble=%01x sender=%08" PRIx32, cmd, LOG_STR_ARG(CommandType_to_string(cmd_type)), byte2, byte1, nibble, sender_from_fixed(fixed));
 
         return Command { cmd_type, nibble, byte1, byte2 };
     }
@@ -413,8 +487,14 @@ namespace secplus2 {
             this->ratgdo_->received(MotionState::DETECTED);
         } else if (cmd.type == CommandType::OPENINGS) {
             this->ratgdo_->received(Openings { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2), cmd.nibble });
-        } else if (cmd.type == CommandType::SET_TTC) {
-            this->ratgdo_->received(TimeToClose { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_LIMIT) {
+            this->ratgdo_->received(TtcLimit { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_ACTION) {
+            this->ratgdo_->received(TtcAction { cmd.byte1 });
+        } else if (cmd.type == CommandType::TTC_COUNTDOWN) {
+            this->ratgdo_->received(TtcCountdown { static_cast<uint16_t>((cmd.byte1 << 8) | cmd.byte2) });
+        } else if (cmd.type == CommandType::TTC_STATE) {
+            this->ratgdo_->received(TtcStateMsg { cmd.byte1 });
         } else if (cmd.type == CommandType::PAIRED_DEVICES) {
             PairedDeviceCount pdc;
             pdc.kind = to_PairedDevice(cmd.nibble, PairedDevice::UNKNOWN);
