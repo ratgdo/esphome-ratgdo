@@ -10,6 +10,8 @@
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
+#include <cinttypes>
+
 namespace esphome::ratgdo {
 namespace secplus1 {
 
@@ -260,14 +262,14 @@ namespace secplus1 {
 
                 if (ser_byte < 0x30 || ser_byte > 0x3A) {
                     char hex[format_hex_pretty_size(1)];
-                    ESP_LOG2(TAG, "[%d] Ignoring byte [%s], baud: %d", millis(), format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
+                    ESP_LOG2(TAG, "[%" PRIu32 "] Ignoring byte [%s], baud: %d", millis(), format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
                     this->rx_byte_count_ = 0;
                     continue;
                 }
                 this->rx_packet_[this->rx_byte_count_++] = ser_byte;
                 {
                     char hex[format_hex_pretty_size(1)];
-                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                    ESP_LOG2(TAG, "[%" PRIu32 "] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
                 }
                 this->flags_.rx_reading_msg = true;
 
@@ -277,7 +279,7 @@ namespace secplus1 {
                     this->rx_byte_count_ = 0;
                     {
                         char hex[format_hex_pretty_size(1)];
-                        ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                        ESP_LOG2(TAG, "[%" PRIu32 "] Received command: [%s]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
                     }
                     return this->decode_packet(this->rx_packet_);
                 }
@@ -292,7 +294,7 @@ namespace secplus1 {
                 this->rx_packet_[this->rx_byte_count_++] = ser_byte;
                 {
                     char hex[format_hex_pretty_size(1)];
-                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                    ESP_LOG2(TAG, "[%" PRIu32 "] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
                 }
 
                 if (this->rx_byte_count_ == RX_LENGTH) {
@@ -309,7 +311,7 @@ namespace secplus1 {
                 // discard it so we can read the following packet correctly
                 {
                     char hex[format_hex_pretty_size(1)];
-                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                    ESP_LOGW(TAG, "[%" PRIu32 "] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
                 }
                 this->flags_.rx_reading_msg = false;
                 this->rx_byte_count_ = 0;
@@ -323,14 +325,14 @@ namespace secplus1 {
     {
         constexpr size_t hex_size = format_hex_pretty_size(RX_LENGTH);
         char hex[hex_size];
-        ESP_LOG2(TAG, "[%d] Received packet: [%s]", millis(), format_hex_pretty_to(hex, packet, RX_LENGTH));
+        ESP_LOG2(TAG, "[%" PRIu32 "] Received packet: [%s]", millis(), format_hex_pretty_to(hex, packet, RX_LENGTH));
     }
 
     void Secplus1::print_tx_packet(const TxPacket& packet) const
     {
         constexpr size_t hex_size = format_hex_pretty_size(TX_LENGTH);
         char hex[hex_size];
-        ESP_LOG2(TAG, "[%d] Sending packet: [%s]", millis(), format_hex_pretty_to(hex, packet, TX_LENGTH));
+        ESP_LOG2(TAG, "[%" PRIu32 "] Sending packet: [%s]", millis(), format_hex_pretty_to(hex, packet, TX_LENGTH));
     }
 
     optional<RxCommand> Secplus1::decode_packet(const RxPacket& packet) const
@@ -502,7 +504,7 @@ namespace secplus1 {
         {
             uint8_t byte_val = static_cast<uint8_t>(value);
             char hex[format_hex_pretty_size(1)];
-            ESP_LOGD(TAG, "[%d] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &byte_val, 1));
+            ESP_LOGD(TAG, "[%" PRIu32 "] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &byte_val, 1));
         }
     }
 
