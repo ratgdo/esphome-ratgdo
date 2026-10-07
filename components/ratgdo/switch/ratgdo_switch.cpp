@@ -1,10 +1,11 @@
 #include "ratgdo_switch.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo.switch";
+ESPHOME_LOG_TAG(TAG, "ratgdo.switch");
 
 void RATGDOSwitch::dump_config()
 {

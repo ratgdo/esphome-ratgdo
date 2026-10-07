@@ -1,10 +1,11 @@
 #include "ratgdo_output.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* TAG = "ratgdo.output";
+ESPHOME_LOG_TAG(TAG, "ratgdo.output");
 
 void RATGDOOutput::setup()
 {

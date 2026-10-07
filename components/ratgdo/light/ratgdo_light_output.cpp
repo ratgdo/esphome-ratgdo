@@ -1,4 +1,5 @@
 #include "ratgdo_light_output.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
@@ -6,7 +7,7 @@ namespace esphome::ratgdo {
 
 using namespace esphome::light;
 
-static const char* const TAG = "ratgdo.light";
+ESPHOME_LOG_TAG(TAG, "ratgdo.light");
 
 void RATGDOLightOutput::dump_config()
 {
