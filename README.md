@@ -49,6 +49,28 @@ The **v3.2 Disco** board uses the Arduino framework because its VL53L4CX distanc
 
 ESP8266 boards continue to use the Arduino framework as ESPHome requires it on that platform.
 
+## Dry contact toggle behavior
+
+A dry contact opener on the single button input only understands toggle, and what a toggle does depends on the opener. These optional settings describe it; without them, behavior is unchanged.
+
+```yaml
+ratgdo:
+  id: ratgdov25i
+  toggle_while_opening: stop          # ignore, stop or reverse
+  toggle_while_closing: stop          # ignore, stop or reverse
+  toggle_while_stopped: reverse       # ignore or reverse (opposite to the last direction)
+  obstruction_while_opening: ignore   # ignore, stop or reverse
+  obstruction_while_closing: reverse  # ignore, stop or reverse
+```
+
+The example matches a Genie CM7600IC screw-drive opener.
+
+The three `toggle_while_*` settings go together. Open, Close and Stop then send as many toggles as needed; on the example opener, Close while opening sends one toggle to stop and a second to close. On the example opener, a toggle from a stopped door moves it opposite its last direction, so a request to continue in the last direction first moves the door briefly the wrong way, then stops and reverses it. A toggle that starts the door closing waits for the closing delay, if set. Stop is ignored if the opener stops on a toggle in neither direction. Pressing the wall button while the door moves can leave the inferred status wrong.
+
+`obstruction_while_*` requires the obstruction input. It describes what the opener does by itself when the sensor trips, and the inferred status follows: on the example opener, an obstruction while closing changes the status to opening.
+
+These settings are not available with an encoder.
+
 ## Troubleshooting
 
 ### False obstruction events on ESP32 v2.5 boards
