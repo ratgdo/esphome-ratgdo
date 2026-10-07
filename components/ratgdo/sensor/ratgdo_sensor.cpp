@@ -1,10 +1,11 @@
 #include "ratgdo_sensor.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo.sensor";
+ESPHOME_LOG_TAG(TAG, "ratgdo.sensor");
 
 void RATGDOSensor::setup()
 {

@@ -2,6 +2,7 @@
 
 #ifdef USE_ESP32
 
+#include "common.h"
 #include "esphome/core/application.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
@@ -18,7 +19,7 @@
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo_uart";
+ESPHOME_LOG_TAG(TAG, "ratgdo_uart");
 
 static constexpr size_t UART_RX_BUFFER_SIZE = 512;
 

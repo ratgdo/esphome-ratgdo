@@ -4,6 +4,7 @@
 #include "secplus2.h"
 #include "ratgdo.h"
 
+#include "common.h"
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/helpers.h"
@@ -29,7 +30,7 @@ namespace secplus2 {
     // expects.
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 60;
 
-    static const char* const TAG = "ratgdo_secplus2";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_secplus2");
 
     void Secplus2::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {

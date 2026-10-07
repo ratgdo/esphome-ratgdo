@@ -2,6 +2,7 @@
 #ifdef PROTOCOL_DRYCONTACT
 
 #include "dry_contact.h"
+#include "common.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
@@ -10,7 +11,7 @@
 namespace esphome::ratgdo {
 namespace dry_contact {
 
-    static const char* const TAG = "ratgdo_dry_contact";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_dry_contact");
 
     void DryContact::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
