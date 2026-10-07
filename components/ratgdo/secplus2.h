@@ -37,8 +37,9 @@ namespace secplus2 {
         (OBST_1, 0x084), // sent when an obstruction happens?
         (OBST_2, 0x085), // sent when an obstruction happens?
         (BATTERY_STATUS, 0x09d),
-        (PAIR_3, 0x0a0),
-        (PAIR_3_RESP, 0x0a1),
+
+        (TTC_GET_STATE, 0x0a0),
+        (TTC_STATE, 0x0a1),
 
         (LEARN, 0x181),
         (LOCK, 0x18c),
@@ -55,17 +56,51 @@ namespace secplus2 {
         (PING, 0x392),
         (PING_RESP, 0x393),
 
-        (PAIR_2, 0x400),
-        (PAIR_2_RESP, 0x401),
-        (SET_TTC, 0x402), // ttc_in_seconds = (byte1<<8)+byte2
-        (CANCEL_TTC, 0x408), // ?
-        (TTC, 0x40a), // Time to close
+        (TTC_GET_LIMIT, 0x400), // get current autoclose time limit
+        (TTC_LIMIT, 0x401), // current TTC limit in seconds => (byte1<<8)+byte2; same as TTC_SET_LIMIT
+        (TTC_SET_LIMIT, 0x402), // command to set TTC in seconds => (byte1<<8)+byte2
+        (TTC_ACTION, 0x408), // byte1 = TtcActionCode (TOGGLE or DISABLE)
+        (TTC_GET_COUNTDOWN, 0x409), // query current countdown; response is a normal TTC_COUNTDOWN broadcast - confirmed via live test
+        (TTC_COUNTDOWN, 0x40a), // Periodic countdown broadcast message (sent every 60 seconds) while TTC counting down
+
         (GET_OPENINGS, 0x48b),
         (OPENINGS, 0x48c), // openings = (byte1<<8)+byte2
     )
 
     inline bool operator==(const uint16_t cmd_i, const CommandType& cmd_e) { return cmd_i == static_cast<uint16_t>(cmd_e); }
     inline bool operator==(const CommandType& cmd_e, const uint16_t cmd_i) { return cmd_i == static_cast<uint16_t>(cmd_e); }
+
+    // Named values for TTC_ACTION message's byte1 - Found two that do something.
+    // Other values seem to be silently ignored by the GDO.
+    //
+    // Values are prefixed with TTC_ (unlike other enums in this file) because
+    // plain names can collide with #define macros in vendored ESP32 core
+    // headers on boards using framework: arduino - enum class scoping
+    // doesn't protect against the preprocessor, which substitutes any
+    // matching macro name wherever it appears as a token, including inside
+    // this ENUM_SPARSE() invocation.
+    ENUM_SPARSE(TtcActionCode, uint8_t,
+        (TTC_TOGGLE, 0x04), // pause/resume the countdown (HOLD <-> COUNTING/READY)
+        (TTC_DISABLE, 0x05)) // disable TTC entirely
+
+    inline bool operator==(const uint8_t val, const TtcActionCode& code) { return val == static_cast<uint8_t>(code); }
+    inline bool operator==(const TtcActionCode& code, const uint8_t val) { return val == static_cast<uint8_t>(code); }
+
+    // Named values for TTC_STATE message's byte1. (All are sent by GDO, except for 1.)
+    // See TtcActionCode above for why these are TTC_-prefixed.
+    ENUM_SPARSE(TtcStateCode, uint8_t,
+        (TTC_UNKNOWN, 0),
+        (TTC_WALL_CONTROL_ACK, 0x01), // sent by a wall control acknowledging a TTC_STATE broadcast
+        (TTC_ENABLED_COUNTING, 0x02), // TTC is configured and counting down
+        (TTC_DISABLED, 0x09), // TTC is disabled (limit is set to 0)
+        (TTC_ENABLED_HOLDING, 0x0a), // TTC is configured, but on hold
+        (TTC_CLOSING_ALERT, 0x0b), // Countdown ended, light-flash/beeper warning pre-close period
+        (TTC_ENABLED_READY, 0x0c), // TTC is configured, but not running
+        (TTC_INITIALIZING_ENABLED, 0x0d), // TTC starting up, will end up enabled. Transitions to ENABLED_* later.
+        (TTC_INITIALIZING_DISABLED, 0x0e)) // Same as TTC_INITIALIZING_ENABLED, but transitions to TTC_DISABLED later.
+
+    inline bool operator==(const uint8_t val, const TtcStateCode& code) { return val == static_cast<uint8_t>(code); }
+    inline bool operator==(const TtcStateCode& code, const uint8_t val) { return val == static_cast<uint8_t>(code); }
 
     enum class IncrementRollingCode {
         NO,
@@ -147,6 +182,11 @@ namespace secplus2 {
 
         void query_status();
         void query_openings();
+        void send_ttc_action(TtcActionCode action);
+        void query_ttc_state();
+        void query_ttc_limit();
+        void set_ttc_limit(uint16_t seconds);
+        void query_ttc_countdown();
         void query_paired_devices();
         void query_paired_devices(PairedDevice kind);
         void clear_paired_devices(PairedDevice kind);

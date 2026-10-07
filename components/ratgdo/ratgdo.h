@@ -74,6 +74,8 @@ typedef Parented<RATGDOComponent> RATGDOClient;
 const float DOOR_POSITION_UNKNOWN = -1.0;
 const float DOOR_DELTA_UNKNOWN = -2.0;
 const uint8_t PAIRED_DEVICES_UNKNOWN = 0xFF;
+const uint16_t TTC_LIMIT_UNKNOWN = 0xFFFF; // 0 is a valid limit (TTC disabled), so use 0xFFFF instead
+const uint16_t TTC_COUNTDOWN_UNKNOWN = 0xFFFF; // 0 is a valid countdown (not counting), so use 0xFFFF instead
 
 struct RATGDOStore {
     volatile uint32_t obstruction_low_count = 0; // count obstruction low pulses
@@ -169,6 +171,20 @@ public:
     single_observable<ButtonState> button_state { ButtonState::UNKNOWN };
     single_observable<MotionState> motion_state { MotionState::UNKNOWN };
     single_observable<LearnState> learn_state { LearnState::UNKNOWN };
+
+    observable<TtcState, RATGDO_MAX_TTC_STATE_SUBSCRIBERS> ttc_state { TtcState::TTC_UNKNOWN };
+    single_observable<uint16_t> ttc_countdown { TTC_COUNTDOWN_UNKNOWN };
+    single_observable<uint16_t> ttc_limit { TTC_LIMIT_UNKNOWN };
+
+    static constexpr uint16_t TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL = 5;
+    static constexpr uint16_t TTC_COUNTDOWN_WATCHDOG_TIMEOUT = 90; // for explanation, see restart_ttc_watchdog()
+
+    // Bounds/pacing for learning decrement_period_ms_ - see run_ttc_decrement_period_estimator()
+    static constexpr uint16_t TTC_DECREMENT_PERIOD_NOMINAL_MS = TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL * 1000;
+    static constexpr uint16_t TTC_DECREMENT_PERIOD_MIN_MS = TTC_DECREMENT_PERIOD_NOMINAL_MS * 90 / 100; // -10%
+    static constexpr uint16_t TTC_DECREMENT_PERIOD_MAX_MS = TTC_DECREMENT_PERIOD_NOMINAL_MS * 110 / 100; // +10%
+    static constexpr uint32_t TTC_DECREMENT_PERIOD_MIN_SAMPLE_INTERVAL = 50; // rate-limit: at most one update per 50s
+
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     observable<VehicleDetectedState, RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS> vehicle_detected_state { VehicleDetectedState::NO };
     observable<VehicleArrivingState, RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS> vehicle_arriving_state { VehicleArrivingState::NO };
@@ -219,7 +235,10 @@ public:
     void received(const MotionState motion_state);
     void received(const LearnState light_state);
     void received(const Openings openings);
-    void received(const TimeToClose ttc);
+    void received(const TtcLimit limit);
+    void received(const TtcCountdown countdown);
+    void received(const TtcAction action);
+    void received(const TtcStateMsg msg);
     void received(const PairedDeviceCount pdc);
     void received(const BatteryState pdc);
 
@@ -261,6 +280,15 @@ public:
     void lock();
     void unlock();
 
+    // TTC (time-to-close)
+    void ttc_toggle_hold();
+    void restart_ttc_watchdog();
+    void start_ttc_decrementer();
+    void stop_ttc_watchdog_and_decrementer();
+    void set_ttc_state_and_countdown(TtcState state, uint16_t countdown);
+    void init_ttc_decrement_period_estimator(uint16_t countdown_seconds, uint32_t now);
+    void run_ttc_decrement_period_estimator(uint16_t countdown_seconds, uint32_t now_ms);
+
     // Learn & Paired
     void activate_learn();
     void inactivate_learn();
@@ -296,6 +324,15 @@ public:
     void query_status();
     void query_openings();
     void sync();
+
+    // TTC diagnostics/config. Deliberately not exposed via a YAML entity
+    // to keep the UI simple and uncluttered. It doesn't seem like the
+    // hold/release feature needs to expose all of these to the user,
+    // but they were handy to have during test/debugging and development.
+    void query_ttc_state();
+    void query_ttc_limit();
+    void set_ttc_limit(uint16_t seconds);
+    void query_ttc_countdown();
 
     using Component::cancel_interval;
     using Component::set_interval;
@@ -389,6 +426,12 @@ public:
     template <typename F>
     void subscribe_learn_state(F&& f);
     template <typename F>
+    void subscribe_ttc_state(F&& f);
+    template <typename F>
+    void subscribe_ttc_countdown(F&& f);
+    template <typename F>
+    void subscribe_ttc_limit(F&& f);
+    template <typename F>
     void subscribe_door_action_delayed(F&& f);
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     template <typename F>
@@ -451,9 +494,25 @@ protected:
     InternalGPIOPin* enc_pin_b_ { nullptr };
 #endif
 
+    // Countdown value/time at the start of the current counting session's
+    // clock-skew measurement window. Reset to TTC_COUNTDOWN_UNKNOWN by
+    // stop_ttc_watchdog_and_decrementer() whenever counting stops, then
+    // actually (re)established by run_ttc_decrement_period_estimator() from
+    // the first real TTC_COUNTDOWN broadcast of the next session - not from
+    // the TTC_STATE transition that confirms counting has (re)started,
+    // since that broadcast's own arrival can itself be delayed (see
+    // ttc_toggle_hold()) or can even follow the first TTC_COUNTDOWN
+    // broadcast rather than precede it. The fixed origin received(TtcCountdown)
+    // measures the GDO's clock rate against, so the measurement window (and
+    // precision) grows for as long as the session continues.
+    uint16_t ttc_countdown_starting_value_ { TTC_COUNTDOWN_UNKNOWN };
+    uint32_t ttc_countdown_start_time_ms_ { 0 };
+    uint32_t ttc_decrement_last_update_time_ms_ { 0 }; // millis() of the last decrement_period_ms_ update; rate-limits sampling to >=50s apart
+    uint16_t decrement_period_ms_ { TTC_DECREMENT_PERIOD_NOMINAL_MS }; // real ms per decrementer tick, learned from the GDO's own clock - see run_ttc_decrement_period_estimator()
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+    uint8_t ttc_state_sub_num_ { 0 };
 #ifdef RATGDO_USE_ENCODER
     uint8_t manually_operated_sub_num_ { 0 };
 #endif
@@ -497,12 +556,15 @@ namespace scheduler_ids {
     inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_COUNT = RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS;
     inline constexpr uint32_t DEFER_DOOR_ACTION_DELAYED_BASE = DEFER_DOOR_STATE_BASE + DEFER_DOOR_STATE_COUNT;
 
+    inline constexpr uint32_t DEFER_TTC_STATE_COUNT = RATGDO_MAX_TTC_STATE_SUBSCRIBERS;
+    inline constexpr uint32_t DEFER_TTC_STATE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     inline constexpr uint32_t DEFER_DISTANCE_COUNT = RATGDO_MAX_DISTANCE_SUBSCRIBERS;
-    inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+    inline constexpr uint32_t DEFER_DISTANCE_BASE = DEFER_TTC_STATE_BASE + DEFER_TTC_STATE_COUNT;
     inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DISTANCE_BASE + DEFER_DISTANCE_COUNT;
 #else
-    inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_DOOR_ACTION_DELAYED_BASE + DEFER_DOOR_ACTION_DELAYED_COUNT;
+    inline constexpr uint32_t DEFER_DISTANCE_END = DEFER_TTC_STATE_BASE + DEFER_TTC_STATE_COUNT;
 #endif
 
 #ifdef RATGDO_USE_VEHICLE_SENSORS
@@ -542,6 +604,8 @@ namespace scheduler_ids {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+        DEFER_TTC_COUNTDOWN,
+        DEFER_TTC_LIMIT,
 
         // Named timeout IDs (replacing string-based names)
         TIMEOUT_DOOR_QUERY_STATE,
@@ -558,6 +622,8 @@ namespace scheduler_ids {
         TIMEOUT_SYNC,
         INTERVAL_STATUS_WATCHDOG,
         TIMEOUT_ENCODER_STOPPED,
+        TTC_COUNTDOWN_WATCHDOG,
+        TTC_COUNTDOWN_LOCAL_DECREMENT,
     };
 } // namespace scheduler_ids
 
@@ -737,6 +803,32 @@ void RATGDOComponent::subscribe_learn_state(F&& f)
 {
     this->learn_state.subscribe([this, f](LearnState state) {
         defer(scheduler_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_state(F&& f)
+{
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_TTC_STATE_BASE, scheduler_ids::DEFER_TTC_STATE_COUNT,
+        this->ttc_state_sub_num_, LOG_STR("ttc_state"));
+    this->ttc_state.subscribe([this, f, id](TtcState state) {
+        defer(id, [f, state] { f(state); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_countdown(F&& f)
+{
+    this->ttc_countdown.subscribe([this, f](uint16_t seconds) {
+        defer(scheduler_ids::DEFER_TTC_COUNTDOWN, [f, seconds] { f(seconds); });
+    });
+}
+
+template <typename F>
+void RATGDOComponent::subscribe_ttc_limit(F&& f)
+{
+    this->ttc_limit.subscribe([this, f](uint16_t seconds) {
+        defer(scheduler_ids::DEFER_TTC_LIMIT, [f, seconds] { f(seconds); });
     });
 }
 

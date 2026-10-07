@@ -207,6 +207,69 @@ void RATGDOComponent::on_shutdown()
     }
 }
 
+// (Re)starts the TTC watchdog
+//
+// Called for two cases
+//   1) To start, when TTC_STATE message transitions into COUNTING
+//   2) To re-start when TTC_COUNTDOWN broadcast arrives while counting
+//
+// The watchdog's purpose is to handle comms failures. It needs to be long
+// enough that normal timing differences between the GDO and local countdown
+// don't set it off accidentally, but short enough that comms failures are
+// promptly detected. The GDO nominally transmits TTC_COUNTDOWN
+// messages every minute, but in testing these were spaced 63 seconds apart.
+// Setting the watchdog to 90 seconds (TTC_COUNTDOWN_WATCHDOG_TIMEOUT)
+// allows ~30 seconds of margin beyond the expected countdown message interval,
+// which is ten times larger than the 3 second variation observed in testing.
+//
+void RATGDOComponent::restart_ttc_watchdog()
+{
+    this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+    this->set_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG, TTC_COUNTDOWN_WATCHDOG_TIMEOUT * 1000, [this]() {
+        // Assume comms failure - state, limit, and countdown are no longer
+        // trustworthy, so fall back to UNKNOWN and re-sync, same as during boot
+        this->stop_ttc_watchdog_and_decrementer();
+        this->set_ttc_state_and_countdown(TtcState::TTC_UNKNOWN, TTC_COUNTDOWN_UNKNOWN);
+        this->ttc_limit = TTC_LIMIT_UNKNOWN;
+        this->sync();
+    });
+}
+
+// Starts the ttc decrementer. The nominal period is 5000ms, but because
+// the GDO clock may be faster or slower than RATGDO, we adjust the period
+// based on TTC_COUNTDOWN messages broadcast by the GDO
+void RATGDOComponent::start_ttc_decrementer()
+{
+    ESP_LOGD(TAG, "Starting TTC decrementer, period=%dms", this->decrement_period_ms_);
+    this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+    this->set_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT, this->decrement_period_ms_, [this]() {
+        uint16_t current = *this->ttc_countdown;
+        if (current == TTC_COUNTDOWN_UNKNOWN) { // nothing to decrement, NO-OP
+            return;
+        }
+        if (current > TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL) {
+            this->set_ttc_state_and_countdown(*this->ttc_state, current - TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL);
+        } else {
+            // Local countdown ran out. No more decrement. Just wait for door to close.
+            // The GDO will send TTC_STATE(CLOSING_ALERT) while flashing lights and
+            // sounding the beeper for about 8 seconds.
+            this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+            this->set_ttc_state_and_countdown(*this->ttc_state, 0);
+        }
+    });
+}
+
+// Stops the local TTC watchdog and decrementer interval, and forgets the
+// current decrement-period-estimator baseline, so whichever TTC_COUNTDOWN
+// broadcast starts the next counting session establishes a fresh one -
+// see run_ttc_decrement_period_estimator().
+void RATGDOComponent::stop_ttc_watchdog_and_decrementer()
+{
+    this->cancel_timeout(scheduler_ids::TTC_COUNTDOWN_WATCHDOG);
+    this->cancel_interval(scheduler_ids::TTC_COUNTDOWN_LOCAL_DECREMENT);
+    this->ttc_countdown_starting_value_ = TTC_COUNTDOWN_UNKNOWN;
+}
+
 void RATGDOComponent::received(const DoorState door_state)
 {
 #ifdef RATGDO_USE_ENCODER
@@ -511,9 +574,223 @@ void RATGDOComponent::received(const PairedDeviceCount pdc)
     }
 }
 
-void RATGDOComponent::received(const TimeToClose ttc)
+void RATGDOComponent::received(const TtcLimit limit)
 {
-    ESP_LOGD(TAG, "Time to close (TTC): %ds", ttc.seconds);
+    ESP_LOGD(TAG, "Time to close (TTC) limit: %ds", limit.seconds);
+    this->ttc_limit = limit.seconds;
+}
+
+// Remember the starting countdown value and local time in ms when received.
+void RATGDOComponent::init_ttc_decrement_period_estimator(uint16_t countdown_seconds, uint32_t now)
+{
+    this->ttc_countdown_starting_value_ = countdown_seconds;
+    this->ttc_countdown_start_time_ms_ = now;
+    this->ttc_decrement_last_update_time_ms_ = now;
+}
+
+// Adjusts decrement_period_ms_ based on countdown broadcasts from GDO.
+// Computes the ratio of RATGDO's idea of elapsed time and the
+// GDO's idea of elapsed time. This ratio is multiplied by the
+// desired decrement period in ms. For safety, the range of period
+// values is clamped to within +/-10% of nominal.
+//
+// This only updates decrement_period_ms_ - it doesn't stop and restart
+// the already-running decrementer interval, which continues as-is until
+// it's stopped. The new estimate takes effect the next time the
+// decrementer is started, via start_ttc_decrementer().
+void RATGDOComponent::run_ttc_decrement_period_estimator(uint16_t countdown_seconds, uint32_t now_ms)
+{
+    if (this->ttc_countdown_starting_value_ == TTC_COUNTDOWN_UNKNOWN) {
+        // First TTC_COUNTDOWN broadcast since counting (re)started. Establish
+        // the baseline this session's ratio will be measured against using
+        // this broadcast's own value/timestamp - not the TTC_STATE
+        // transition's, which can itself arrive up to 25s late (see
+        // ttc_toggle_hold()).
+        this->init_ttc_decrement_period_estimator(countdown_seconds, now_ms);
+        return;
+    }
+
+    if (countdown_seconds >= this->ttc_countdown_starting_value_) {
+        return;
+    }
+
+    // calculate differences and time error
+    uint32_t elapsed_ratgdo_ms = now_ms - this->ttc_countdown_start_time_ms_;
+    uint32_t elapsed_gdo_s = this->ttc_countdown_starting_value_ - countdown_seconds;
+    int32_t error_ms = elapsed_ratgdo_ms - elapsed_gdo_s * 1000;
+
+    if (elapsed_gdo_s < TTC_DECREMENT_PERIOD_MIN_SAMPLE_INTERVAL) {
+        return;
+    }
+
+    uint32_t time_since_last_update_ms = now_ms - this->ttc_decrement_last_update_time_ms_;
+    if (time_since_last_update_ms < TTC_DECREMENT_PERIOD_MIN_SAMPLE_INTERVAL * 1000) {
+        return;
+    }
+    this->ttc_decrement_last_update_time_ms_ = now_ms;
+
+    // calculate a new estimate of the decrementer period
+    uint32_t new_decrement_period_estimate_ms = (TTC_COUNTDOWN_LOCAL_DECREMENT_INTERVAL * elapsed_ratgdo_ms) / elapsed_gdo_s;
+
+    // Real oscillator drift is well under 10%, so a raw sample outside this
+    // already-generous window is more likely a bad sample (e.g. a delayed
+    // processing tick skewing now_ms) than genuine new information about the
+    // GDO's clock - reject it outright rather than let it drag
+    // decrement_period_ms_ toward it.
+    if (new_decrement_period_estimate_ms < TTC_DECREMENT_PERIOD_MIN_MS || new_decrement_period_estimate_ms > TTC_DECREMENT_PERIOD_MAX_MS) {
+        ESP_LOGW(TAG, "Rejecting outlier decrementer period estimate: %ums is outside the allowed %u-%ums range - keeping %ums",
+            new_decrement_period_estimate_ms, TTC_DECREMENT_PERIOD_MIN_MS, TTC_DECREMENT_PERIOD_MAX_MS, this->decrement_period_ms_);
+        return;
+    }
+
+    // average with current value to filter out noise
+    this->decrement_period_ms_ = (this->decrement_period_ms_ + new_decrement_period_estimate_ms) / 2; // smoothing filter
+
+    ESP_LOGD(TAG, "RATGDO-GDO time diff=%dms over %us: new decrementer period estimate is %ums", error_ms, elapsed_gdo_s, this->decrement_period_ms_);
+}
+
+void RATGDOComponent::received(const TtcCountdown countdown)
+{
+    ESP_LOGD(TAG, "TTC countdown broadcast: %ds remaining", countdown.seconds);
+    if (countdown.seconds > *this->ttc_limit) {
+        // Shouldn't happen if ttc_limit is being learned correctly
+        ESP_LOGW(TAG, "TTC countdown (%ds) exceeds known ttc_limit (%ds)", countdown.seconds, *this->ttc_limit);
+        this->ttc_limit = countdown.seconds;
+    }
+    auto ds = *this->door_state;
+    if (countdown.seconds > 0 && (ds == DoorState::CLOSED || ds == DoorState::CLOSING)) {
+        // Shouldn't happen - TTC only runs while the door is open. Flag just in case.
+        ESP_LOGW(TAG, "Unexpected TTC countdown broadcast (%ds) received while door is %s", countdown.seconds, LOG_STR_ARG(DoorState_to_string(ds)));
+    }
+    // A TTC_COUNTDOWN broadcast only happens while the GDO is actually
+    // counting, so it's authoritative: correct a locally-optimistic HOLDING
+    // assumption (e.g. from a dropped TTC_ACTION toggle) rather than
+    // silently keeping it and hiding that the door is still counting down.
+    if (ttc_is_holding(*this->ttc_state)) {
+        ESP_LOGW(TAG, "TTC countdown broadcast received while holding - GDO is still counting; correcting local state");
+        this->set_ttc_state_and_countdown(TtcState::TTC_ENABLED_COUNTING, countdown.seconds);
+        this->start_ttc_decrementer();
+    } else {
+        this->set_ttc_state_and_countdown(*this->ttc_state, countdown.seconds);
+    }
+
+    // TTC_COUNTDOWN is only transmitted when the GDO is starting,
+    // continuing, or ending a countdown, so use it to estimate the GDO
+    // clock speed.
+    this->run_ttc_decrement_period_estimator(countdown.seconds, millis());
+
+    if (ttc_is_counting(*this->ttc_state)) {
+        this->restart_ttc_watchdog();
+    }
+}
+
+// Just log when we receive TtcAction (e.g. when wall control hold/release is pressed)
+// We don't do anything because the GDO will respond with an updated state,
+// and that's what we follow.
+void RATGDOComponent::received(const TtcAction action)
+{
+#ifdef PROTOCOL_SECPLUSV2
+    using secplus2::TtcActionCode;
+    using secplus2::TtcActionCode_to_string;
+    auto code = static_cast<TtcActionCode>(action.value);
+    ESP_LOGD(TAG, "TTC_ACTION from wire: %s (0x%02x)", LOG_STR_ARG(TtcActionCode_to_string(code)), action.value);
+#endif
+}
+
+// Handle TTC_STATE messages. Most are from the GDO, but some are not.
+// This is what RATGDO follows to know whether the TTC is disabled,
+// enabled, counting, holding, etc. The state value is in byte1.
+//
+// WALL_CONTROL_ACK is a wall control acknowledging a TTC_STATE broadcast -
+// in live captures, the ack always followed the COUNTING state by 0-200ms
+// (confirmed via live capture).
+// INITIALIZING_ENABLED/INITIALIZING_DISABLED are GDO-side TTC startup messages seen after reboot,
+// and progress forward by opening the door. CLOSING_ALERT is the GDO's
+// light-flash/beeper warning after the countdown ends, roughly 8s before
+// the door actually starts closing (confirmed via live capture).
+void RATGDOComponent::received(const TtcStateMsg msg)
+{
+#ifdef PROTOCOL_SECPLUSV2
+    using secplus2::TtcStateCode;
+    using secplus2::TtcStateCode_to_string;
+    auto code = static_cast<TtcStateCode>(msg.value);
+
+    ESP_LOGD(TAG, "TTC state from wire: %s (0x%02x)", LOG_STR_ARG(TtcStateCode_to_string(code)), msg.value);
+
+    TtcState state;
+    switch (code) {
+    case TtcStateCode::TTC_ENABLED_COUNTING:
+        state = TtcState::TTC_ENABLED_COUNTING;
+        break;
+    case TtcStateCode::TTC_ENABLED_HOLDING:
+        state = TtcState::TTC_ENABLED_HOLDING;
+        break;
+    case TtcStateCode::TTC_ENABLED_READY:
+        state = TtcState::TTC_ENABLED_READY;
+        break;
+    case TtcStateCode::TTC_DISABLED:
+        state = TtcState::TTC_DISABLED;
+        break;
+    case TtcStateCode::TTC_INITIALIZING_ENABLED:
+        state = TtcState::TTC_INITIALIZING_ENABLED;
+        break;
+    case TtcStateCode::TTC_INITIALIZING_DISABLED:
+        state = TtcState::TTC_INITIALIZING_DISABLED;
+        break;
+    case TtcStateCode::TTC_CLOSING_ALERT:
+        state = TtcState::TTC_CLOSING_ALERT;
+        break;
+    case TtcStateCode::TTC_WALL_CONTROL_ACK:
+        // Not a real TTC state - just a wall control acknowledging a
+        // TTC_STATE broadcast it observed. Nothing to update.
+        return;
+    default:
+        return; // genuinely unrecognized byte1 - already logged above
+    }
+
+    bool was_counting = ttc_is_counting(*this->ttc_state);
+
+    // Only COUNTING has a meaningful countdown - clear it otherwise
+    // (including during INITIALIZING) so a stale number from a prior
+    // session isn't left behind. This doesn't change what's displayed
+    // (the sensor already shows "unavailable" whenever ttc_is_counting()
+    // is false, regardless of the stored value) - it just avoids holding
+    // onto a meaningless leftover number.
+    uint16_t countdown = 0;
+    if (ttc_is_counting(state)) {
+        countdown = *this->ttc_countdown;
+    }
+
+    this->set_ttc_state_and_countdown(state, countdown);
+
+    // (Re)start or stop the watchdog/decrementer based on the COUNTING
+    // transition this TTC_STATE message represents. was_counting, captured
+    // above before this->ttc_state was updated, is what distinguishes "just
+    // started counting" (start the decrementer once) from "still counting"
+    // (only the watchdog needs restarting, on every message that confirms
+    // counting is still active).
+    if (ttc_is_counting(state)) {
+        if (!was_counting) {
+            // Only started once per counting session, not on every
+            // broadcast: set_interval()'s first firing lands after a
+            // random 0-2.5s offset (half of our 5s period), so restarting
+            // it on every TTC_COUNTDOWN broadcast would add up to 2.5s of
+            // jitter to when the local countdown actually decrements.
+            //
+            // No need to touch the decrement-period-estimator baseline here:
+            // stop_ttc_watchdog_and_decrementer() already reset it to
+            // TTC_COUNTDOWN_UNKNOWN when this session's counting last
+            // stopped (or it's still at its power-on default). Whichever
+            // TTC_COUNTDOWN broadcast establishes it next may arrive before
+            // or after this TTC_STATE transition - see received(TtcCountdown).
+            this->start_ttc_decrementer();
+        }
+        this->restart_ttc_watchdog();
+    } else if (!ttc_is_initializing(state)) {
+        // Not counting and not initializing (e.g. HOLD, READY, DISABLED)
+        this->stop_ttc_watchdog_and_decrementer();
+    }
+#endif
 }
 
 void RATGDOComponent::received(const BatteryState battery_state)
@@ -710,6 +987,29 @@ void RATGDOComponent::query_status() { this->protocol_->call(QueryStatus { }); }
 void RATGDOComponent::query_openings()
 {
     this->protocol_->call(QueryOpenings { });
+}
+
+void RATGDOComponent::query_ttc_state()
+{
+    this->protocol_->call(QueryTtcState { });
+}
+
+void RATGDOComponent::query_ttc_limit()
+{
+    this->protocol_->call(QueryTtcLimit { });
+}
+
+void RATGDOComponent::set_ttc_limit(uint16_t seconds)
+{
+    ESP_LOGD(TAG, "Set TTC limit: %ds", seconds);
+    this->protocol_->call(SetTtcLimit { seconds });
+    // The GDO normally confirms with a TTC_LIMIT broadcast, or
+    // when disabling, sends a special state value.
+}
+
+void RATGDOComponent::query_ttc_countdown()
+{
+    this->protocol_->call(QueryTtcCountdown { });
 }
 
 void RATGDOComponent::query_paired_devices()
@@ -1036,6 +1336,45 @@ void RATGDOComponent::lock_toggle()
 {
     this->lock_state = lock_state_toggle(*this->lock_state);
     this->protocol_->lock_action(LockAction::TOGGLE);
+}
+
+void RATGDOComponent::ttc_toggle_hold()
+{
+    if (!ttc_is_enabled(*this->ttc_state)) {
+        return;
+    }
+
+    ESP_LOGD(TAG, "Toggle TTC");
+    this->protocol_->call(TtcActionTx { });
+
+    // Fix: in a small fraction of observed cases, the GDO takes as long as
+    // 25 seconds to transmit the updated TTC_STATE after going into hold,
+    // leaving the UI stale. Apply the toggle locally rather than waiting for
+    // the GDO's broadcast, for a snappier UX.
+    //
+    // For releasing, we have to wait for the GDO to tell us what
+    // the next state is (COUNTING or READY) and when to start counting.
+    if (!ttc_is_holding(*this->ttc_state)) {
+        this->stop_ttc_watchdog_and_decrementer();
+        this->set_ttc_state_and_countdown(TtcState::TTC_ENABLED_HOLDING, 0);
+    }
+}
+
+// Sets ttc_state and ttc_countdown together.
+//
+// Force notify is needed for cases where countdown doesn't change but
+// state does change (e.g. changing from 0 to NA), because the plain
+// assignment won't trigger a notification when the raw ttc_countdown
+// stays the same, but it is needed to update the UI.
+void RATGDOComponent::set_ttc_state_and_countdown(TtcState state, uint16_t countdown)
+{
+    bool state_changed = (state != *this->ttc_state);
+    bool countdown_changed = (countdown != *this->ttc_countdown);
+    this->ttc_state = state;
+    this->ttc_countdown = countdown;
+    if (state_changed && !countdown_changed) {
+        this->ttc_countdown.notify();
+    }
 }
 
 // Learn functions
