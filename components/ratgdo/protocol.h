@@ -112,6 +112,9 @@ namespace protocol {
         virtual void set_close_limit(bool);
         virtual void set_discrete_open_pin(InternalGPIOPin* pin);
         virtual void set_discrete_close_pin(InternalGPIOPin* pin);
+        virtual void set_toggle_behavior(DryContactBehavior, DryContactBehavior, DryContactBehavior) { }
+        virtual void set_obstruction_behavior(DryContactBehavior, DryContactBehavior) { }
+        virtual bool can_move_to_position(float) { return true; }
 
         virtual const Traits& traits() const;
 

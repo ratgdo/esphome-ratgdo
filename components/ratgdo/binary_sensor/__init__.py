@@ -13,6 +13,7 @@ from .. import (
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_manually_operated,
+    subscribe_obstruction_state,
     subscribe_vehicle_arriving,
     subscribe_vehicle_detected,
     subscribe_vehicle_leaving,
@@ -122,3 +123,5 @@ async def to_code(config):
         subscribe_vehicle_leaving()
     elif sensor_type == "manually_operated":
         subscribe_manually_operated()
+    elif sensor_type == "obstruction":
+        subscribe_obstruction_state()

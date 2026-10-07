@@ -26,6 +26,12 @@ ENUM(DoorState, uint8_t,
     (OPENING, 4),
     (CLOSING, 5))
 
+ENUM(DryContactBehavior, uint8_t,
+    (UNSET, 0),
+    (IGNORE, 1),
+    (STOP, 2),
+    (REVERSE, 3))
+
 ENUM(DoorActionDelayed, uint8_t,
     (NO, 0),
     (YES, 1))
