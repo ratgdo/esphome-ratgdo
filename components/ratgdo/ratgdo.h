@@ -52,6 +52,10 @@
 #ifndef RATGDO_MAX_DISTANCE_SUBSCRIBERS
 #error "RATGDO_MAX_DISTANCE_SUBSCRIBERS must be defined by codegen"
 #endif
+#if !defined(RATGDO_MAX_PAIRED_REMOTES_SUBSCRIBERS) || !defined(RATGDO_MAX_PAIRED_KEYPADS_SUBSCRIBERS) \
+    || !defined(RATGDO_MAX_PAIRED_WALL_CONTROLS_SUBSCRIBERS) || !defined(RATGDO_MAX_PAIRED_ACCESSORIES_SUBSCRIBERS)
+#error "RATGDO_MAX_PAIRED_*_SUBSCRIBERS must be defined by codegen"
+#endif
 #ifndef RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS
 #error "RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS must be defined by codegen"
 #endif
@@ -145,10 +149,11 @@ public:
 
     single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
     single_observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
+    // Sized by codegen: 0 when no sensor of that kind is configured, so the unused callback slot compiles out
+    observable<uint8_t, RATGDO_MAX_PAIRED_REMOTES_SUBSCRIBERS> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+    observable<uint8_t, RATGDO_MAX_PAIRED_KEYPADS_SUBSCRIBERS> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+    observable<uint8_t, RATGDO_MAX_PAIRED_WALL_CONTROLS_SUBSCRIBERS> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+    observable<uint8_t, RATGDO_MAX_PAIRED_ACCESSORIES_SUBSCRIBERS> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
     observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
     observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };

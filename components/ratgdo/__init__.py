@@ -29,6 +29,7 @@ class RATGDOData:
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
     vehicle_leaving: int = 0
+    paired: dict[str, int] = field(default_factory=dict)
     used_types: dict[str, set[str]] = field(default_factory=dict)
 
 
@@ -66,6 +67,12 @@ def subscribe_vehicle_leaving() -> None:
     _get_data().vehicle_leaving += 1
 
 
+def subscribe_paired(kind: str) -> None:
+    """Count a subscriber of one paired device kind (remotes, keypads, ...)."""
+    paired = _get_data().paired
+    paired[kind] = paired.get(kind, 0) + 1
+
+
 def validate_unique(kind: str, value: str, message: str) -> None:
     """Raise cv.Invalid if (kind, value) was already seen in this validation run.
 
@@ -92,6 +99,10 @@ async def _emit_subscriber_defines():
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
     cg.add_define("RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS", data.vehicle_leaving)
+    for kind in ("remotes", "keypads", "wall_controls", "accessories"):
+        cg.add_define(
+            f"RATGDO_MAX_PAIRED_{kind.upper()}_SUBSCRIBERS", data.paired.get(kind, 0)
+        )
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())

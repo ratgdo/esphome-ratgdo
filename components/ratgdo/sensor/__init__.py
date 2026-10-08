@@ -9,6 +9,7 @@ from .. import (
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_distance,
+    subscribe_paired,
     validate_unique,
 )
 
@@ -78,5 +79,10 @@ async def to_code(config):
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
         subscribe_distance()
+    if (
+        config["type"].startswith("paired_devices_")
+        and config["type"] != "paired_devices_total"
+    ):
+        subscribe_paired(config["type"].removeprefix("paired_devices_"))
     if config["type"] == "encoder":
         cg.add_define("RATGDO_USE_ENCODER")
