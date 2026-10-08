@@ -29,7 +29,7 @@ class RATGDOData:
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
     vehicle_leaving: int = 0
-    paired: dict[str, int] = field(default_factory=dict)
+    observed: set[str] = field(default_factory=set)
     used_types: dict[str, set[str]] = field(default_factory=dict)
 
 
@@ -67,10 +67,18 @@ def subscribe_vehicle_leaving() -> None:
     _get_data().vehicle_leaving += 1
 
 
-def subscribe_paired(kind: str) -> None:
-    """Count a subscriber of one paired device kind (remotes, keypads, ...)."""
-    paired = _get_data().paired
-    paired[kind] = paired.get(kind, 0) + 1
+# single_observable members codegen marks observed only when something subscribes
+OPTIONAL_SINGLE_OBSERVABLES = (
+    "paired_remotes",
+    "paired_keypads",
+    "paired_wall_controls",
+    "paired_accessories",
+)
+
+
+def observe(name: str) -> None:
+    """Mark an optional single_observable as subscribed."""
+    _get_data().observed.add(name)
 
 
 def validate_unique(kind: str, value: str, message: str) -> None:
@@ -99,10 +107,8 @@ async def _emit_subscriber_defines():
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
     cg.add_define("RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS", data.vehicle_leaving)
-    for kind in ("remotes", "keypads", "wall_controls", "accessories"):
-        cg.add_define(
-            f"RATGDO_MAX_PAIRED_{kind.upper()}_SUBSCRIBERS", data.paired.get(kind, 0)
-        )
+    for name in OPTIONAL_SINGLE_OBSERVABLES:
+        cg.add_define(f"RATGDO_{name.upper()}_OBSERVED", int(name in data.observed))
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())

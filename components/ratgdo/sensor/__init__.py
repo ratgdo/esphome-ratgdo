@@ -6,10 +6,10 @@ from esphome.types import ConfigType
 
 from .. import (
     RATGDO_CLIENT_SCHMEA,
+    observe,
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_distance,
-    subscribe_paired,
     validate_unique,
 )
 
@@ -22,6 +22,13 @@ RATGDODistanceSensor = ratgdo_ns.class_("RATGDODistanceSensor", RATGDOSensor)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
 CONF_TYPE = "type"
+# Sensor types that subscribe to an optional single_observable in RATGDOComponent
+OBSERVED_BY_TYPE = {
+    "paired_devices_remotes": "paired_remotes",
+    "paired_devices_keypads": "paired_keypads",
+    "paired_devices_wall_controls": "paired_wall_controls",
+    "paired_devices_accessories": "paired_accessories",
+}
 TYPES = {
     "openings": RATGDOSensorType.RATGDO_OPENINGS,
     "paired_devices_total": RATGDOSensorType.RATGDO_PAIRED_DEVICES_TOTAL,
@@ -79,10 +86,7 @@ async def to_code(config):
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
         subscribe_distance()
-    if (
-        config["type"].startswith("paired_devices_")
-        and config["type"] != "paired_devices_total"
-    ):
-        subscribe_paired(config["type"].removeprefix("paired_devices_"))
+    if (observed := OBSERVED_BY_TYPE.get(config[CONF_TYPE])) is not None:
+        observe(observed)
     if config["type"] == "encoder":
         cg.add_define("RATGDO_USE_ENCODER")
