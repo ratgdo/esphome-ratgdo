@@ -5,6 +5,7 @@ from esphome.const import CONF_ID
 from esphome.types import ConfigType
 
 from .. import (
+    OBSERVED_BY_TYPE,
     RATGDO_CLIENT_SCHMEA,
     observe,
     ratgdo_ns,
@@ -22,13 +23,6 @@ RATGDODistanceSensor = ratgdo_ns.class_("RATGDODistanceSensor", RATGDOSensor)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
 CONF_TYPE = "type"
-# Sensor types that subscribe to an optional single_observable in RATGDOComponent
-OBSERVED_BY_TYPE = {
-    "paired_devices_remotes": "paired_remotes",
-    "paired_devices_keypads": "paired_keypads",
-    "paired_devices_wall_controls": "paired_wall_controls",
-    "paired_devices_accessories": "paired_accessories",
-}
 TYPES = {
     "openings": RATGDOSensorType.RATGDO_OPENINGS,
     "paired_devices_total": RATGDOSensorType.RATGDO_PAIRED_DEVICES_TOTAL,
@@ -77,7 +71,7 @@ async def to_code(config):
     cg.add(var.set_ratgdo_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
 
-    if config["type"] == "distance":
+    if config[CONF_TYPE] == "distance":
         cg.add_library(name="Wire", version=None)
         cg.add_library(
             name="vl53l4cx",
@@ -88,5 +82,5 @@ async def to_code(config):
         subscribe_distance()
     if (observed := OBSERVED_BY_TYPE.get(config[CONF_TYPE])) is not None:
         observe(observed)
-    if config["type"] == "encoder":
+    if config[CONF_TYPE] == "encoder":
         cg.add_define("RATGDO_USE_ENCODER")

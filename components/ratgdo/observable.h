@@ -166,33 +166,10 @@ private:
 
 // Nothing subscribes: keep only the value
 template <typename T>
-class single_observable<T, false> {
+class single_observable<T, false> : public observable<T, 0> {
 public:
-    single_observable(const T& value)
-        : value_(value)
-    {
-    }
-
-    template <typename U>
-    single_observable& operator=(U value)
-    {
-        this->value_ = value;
-        return *this;
-    }
-
-    T const* operator&() const { return &this->value_; }
-    T const& operator*() const { return this->value_; }
-
-    template <typename F>
-    void subscribe(F&&)
-    {
-        log_observer_overflow();
-    }
-
-    void notify() const { }
-
-private:
-    T value_;
+    using observable<T, 0>::observable;
+    using observable<T, 0>::operator=;
 };
 
 } // namespace esphome::ratgdo
