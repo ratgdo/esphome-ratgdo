@@ -5,7 +5,9 @@ from esphome.const import CONF_ID
 from esphome.types import ConfigType
 
 from .. import (
+    OBSERVED_BY_TYPE,
     RATGDO_CLIENT_SCHMEA,
+    observe,
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_distance,
@@ -69,7 +71,7 @@ async def to_code(config):
     cg.add(var.set_ratgdo_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
 
-    if config["type"] == "distance":
+    if config[CONF_TYPE] == "distance":
         cg.add_library(name="Wire", version=None)
         cg.add_library(
             name="vl53l4cx",
@@ -78,5 +80,7 @@ async def to_code(config):
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
         subscribe_distance()
-    if config["type"] == "encoder":
+    if (observed := OBSERVED_BY_TYPE.get(config[CONF_TYPE])) is not None:
+        observe(observed)
+    if config[CONF_TYPE] == "encoder":
         cg.add_define("RATGDO_USE_ENCODER")
