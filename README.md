@@ -41,6 +41,18 @@ The ESPHome firmware will allow you to open the door to any position after calib
 
 ![Home Assistant Screen Shot](static/hass.png)
 
+## Dry contact limit switch endpoints
+
+After Open or Close, ratgdo reports the door open or closed once the travel duration plus two seconds has passed, even if no limit switch changed; a door stopped at the wall button is then misreported. With wired limit switches, report OPEN and CLOSED only from the switches:
+
+```yaml
+ratgdo:
+  id: ratgdov25i
+  require_limit_switch_endpoints: true
+```
+
+Travel durations still drive the position estimate. A door stopped mid travel, or a missed limit switch signal, leaves the door reported opening or closing until the next limit switch change. Not available with an encoder.
+
 ## ESP32 Framework
 
 Most ESP32 boards use the **ESP-IDF** framework. The project originally depended on Arduino, but PR [#577](https://github.com/ratgdo/esphome-ratgdo/pull/577) replaced the SoftwareSerial dependency with hardware UART and RMT peripherals, eliminating the need for Arduino on ESP32. Removing the Arduino layer saves ~1.5KB RAM and ~44KB flash since Arduino is built as an IDF component on top of ESP-IDF, and the smaller firmware means faster OTA updates.
