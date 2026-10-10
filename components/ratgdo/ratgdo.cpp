@@ -86,12 +86,10 @@ void RATGDOComponent::setup()
     this->input_gdo_pin_->setup();
     this->input_gdo_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
 
+    // We rely on the obstruction PIN config being correct in the YAML config to tell us if we need to
+    // invert logic and/or enable the internal pullup on this pin (hence no hard-coded `pin_mode` call here).
+    // This also ensures interrupts automatically consider the correct logic levels for edge detection.
     this->input_obst_pin_->setup();
-#ifdef USE_ESP32
-    this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT | gpio::FLAG_PULLUP);
-#else
-    this->input_obst_pin_->pin_mode(gpio::FLAG_INPUT);
-#endif
     this->input_obst_pin_->attach_interrupt(RATGDOStore::isr_obstruction,
         &this->isr_store_,
         gpio::INTERRUPT_FALLING_EDGE);
@@ -689,7 +687,7 @@ void RATGDOComponent::obstruction_loop()
             this->flags_.obstruction_sensor_detected = true;
         } else if (this->isr_store_.obstruction_low_count == 0) {
             // if there have been no pulses the line is steady high or low
-            if (this->input_obst_pin_->digital_read() != this->flags_.obst_sleep_low) {
+            if (!this->input_obst_pin_->digital_read()) {
                 // asleep
                 last_asleep = current_millis;
             } else {
