@@ -1,4 +1,5 @@
 #include "ratgdo_number.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
@@ -16,7 +17,7 @@ float normalize_client_id(float client_id)
     return client_id;
 }
 
-static const char* const TAG = "ratgdo.number";
+ESPHOME_LOG_TAG(TAG, "ratgdo.number");
 
 void RATGDONumber::dump_config()
 {

@@ -4,6 +4,7 @@
 #include "secplus2.h"
 #include "ratgdo.h"
 
+#include "common.h"
 #include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/helpers.h"
@@ -29,7 +30,7 @@ namespace secplus2 {
     // expects.
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 60;
 
-    static const char* const TAG = "ratgdo_secplus2";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_secplus2");
 
     void Secplus2::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -63,9 +64,11 @@ namespace secplus2 {
 
     void Secplus2::dump_config()
     {
-        ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter_);
-        ESP_LOGCONFIG(TAG, "  Client ID: %d", this->client_id_);
-        ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v2");
+        ESP_LOGCONFIG(TAG,
+            "  Rolling Code Counter: %" PRIu32 "\n"
+            "  Client ID: %" PRIu64 "\n"
+            "  Protocol: SEC+ v2",
+            *this->rolling_code_counter_, this->client_id_);
     }
 
     void Secplus2::on_shutdown()
@@ -109,7 +112,7 @@ namespace secplus2 {
             return;
         }
 
-        if (tries == 2 && *this->ratgdo_->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
+        if (tries == 2) { // made a few attempts and no progress
             // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
             this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
         }
@@ -506,7 +509,7 @@ namespace secplus2 {
 
     void Secplus2::set_rolling_code_counter(uint32_t counter)
     {
-        ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
+        ESP_LOGV(TAG, "Set rolling code counter to %" PRIu32, counter);
         this->rolling_code_counter_ = counter;
     }
 

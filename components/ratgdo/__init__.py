@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from esphome import automation, pins
 import esphome.codegen as cg
-from esphome.components import binary_sensor
+from esphome.components import binary_sensor, sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_TRIGGER_ID
 from esphome.core import CORE
@@ -20,14 +20,17 @@ RATGDO = ratgdo_ns.class_("RATGDOComponent", cg.Component)
 
 @dataclass
 class RATGDOData:
-    """Track observable subscriber counts for compile-time sizing."""
+    """Per-run state: observable subscriber counts and used entity types."""
 
     door_state: int = 0
     door_action_delayed: int = 0
+    manually_operated: int = 0
     distance: int = 0
     vehicle_detected: int = 0
     vehicle_arriving: int = 0
     vehicle_leaving: int = 0
+    observed: set[str] = field(default_factory=set)
+    used_types: dict[str, set[str]] = field(default_factory=dict)
 
 
 def _get_data() -> RATGDOData:
@@ -42,6 +45,10 @@ def subscribe_door_state() -> None:
 
 def subscribe_door_action_delayed() -> None:
     _get_data().door_action_delayed += 1
+
+
+def subscribe_manually_operated() -> None:
+    _get_data().manually_operated += 1
 
 
 def subscribe_distance() -> None:
@@ -60,6 +67,33 @@ def subscribe_vehicle_leaving() -> None:
     _get_data().vehicle_leaving += 1
 
 
+# Sensor types that subscribe to an optional single_observable in RATGDOComponent
+OBSERVED_BY_TYPE = {
+    "paired_devices_remotes": "paired_remotes",
+    "paired_devices_keypads": "paired_keypads",
+    "paired_devices_wall_controls": "paired_wall_controls",
+    "paired_devices_accessories": "paired_accessories",
+}
+
+
+def observe(name: str) -> None:
+    """Mark an optional single_observable as subscribed."""
+    _get_data().observed.add(name)
+
+
+def validate_unique(kind: str, value: str, message: str) -> None:
+    """Raise cv.Invalid if (kind, value) was already seen in this validation run.
+
+    State lives in CORE.data (cleared by CORE.reset() between runs) rather than
+    a module-level global, which would leak across validation runs in
+    long-lived processes like the dashboard's `esphome vscode --ace` loop.
+    """
+    used = _get_data().used_types.setdefault(kind, set())
+    if value in used:
+        raise cv.Invalid(message)
+    used.add(value)
+
+
 @coroutine_with_priority(CoroPriority.FINAL)
 async def _emit_subscriber_defines():
     """Emit observable subscriber count defines after all children have registered."""
@@ -68,10 +102,13 @@ async def _emit_subscriber_defines():
     cg.add_define(
         "RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS", data.door_action_delayed
     )
+    cg.add_define("RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS", data.manually_operated)
     cg.add_define("RATGDO_MAX_DISTANCE_SUBSCRIBERS", data.distance)
     cg.add_define("RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS", data.vehicle_detected)
     cg.add_define("RATGDO_MAX_VEHICLE_ARRIVING_SUBSCRIBERS", data.vehicle_arriving)
     cg.add_define("RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS", data.vehicle_leaving)
+    for name in OBSERVED_BY_TYPE.values():
+        cg.add_define(f"RATGDO_{name.upper()}_OBSERVED", int(name in data.observed))
 
 
 SyncFailed = ratgdo_ns.class_("SyncFailed", automation.Trigger.template())
@@ -103,30 +140,79 @@ PROTOCOL_SECPLUSV2 = "secplusv2"
 PROTOCOL_DRYCONTACT = "drycontact"
 SUPPORTED_PROTOCOLS = [PROTOCOL_SECPLUSV1, PROTOCOL_SECPLUSV2, PROTOCOL_DRYCONTACT]
 
-CONF_FORCE_EMULATE = "force_emulate"
+_PROTOCOL_SOURCE_FILES = {
+    PROTOCOL_SECPLUSV1: "secplus1.cpp",
+    PROTOCOL_SECPLUSV2: "secplus2.cpp",
+    PROTOCOL_DRYCONTACT: "dry_contact.cpp",
+}
+
+
+def FILTER_SOURCE_FILES() -> list[str]:
+    """Exclude protocol and platform sources not used by this build."""
+    selected = CORE.config.get(DOMAIN, {}).get(CONF_PROTOCOL, PROTOCOL_SECPLUSV2)
+    excluded = [
+        source
+        for protocol, source in _PROTOCOL_SOURCE_FILES.items()
+        if protocol != selected
+    ]
+    if not CORE.is_esp32:
+        excluded.append("ratgdo_uart_esp32.cpp")
+    return excluded
+
 
 CONF_DRY_CONTACT_OPEN_SENSOR = "dry_contact_open_sensor"
 CONF_DRY_CONTACT_CLOSE_SENSOR = "dry_contact_close_sensor"
 CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
+CONF_ENCODER_PIN_A = "encoder_pin_a"
+CONF_ENCODER_PIN_B = "encoder_pin_b"
+CONF_ENCODER_SENSOR = "encoder_sensor"
+CONF_FORCE_EMULATE = "force_emulate"
 
 
 def validate_protocol(config):
-    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and (
-        CONF_DRY_CONTACT_CLOSE_SENSOR not in config
-        or CONF_DRY_CONTACT_OPEN_SENSOR not in config
+    is_dry = config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT
+    has_open = CONF_DRY_CONTACT_OPEN_SENSOR in config
+    has_close = CONF_DRY_CONTACT_CLOSE_SENSOR in config
+    has_encoder = CONF_ENCODER_SENSOR in config
+
+    if is_dry:
+        has_limits = has_open and has_close
+        if not has_limits and not has_encoder:
+            raise cv.Invalid(
+                "drycontact protocol requires either both "
+                "dry_contact_open_sensor and dry_contact_close_sensor, "
+                "or encoder_sensor"
+            )
+        if has_limits and has_encoder:
+            raise cv.Invalid(
+                "drycontact protocol cannot use both limit switch sensors "
+                "and encoder_sensor simultaneously"
+            )
+        if (has_open and not has_close) or (has_close and not has_open):
+            raise cv.Invalid(
+                "dry_contact_open_sensor and dry_contact_close_sensor must both be defined"
+            )
+    elif has_open or has_close:
+        raise cv.Invalid(
+            "dry_contact_open_sensor and dry_contact_close_sensor are only valid "
+            "when using protocol drycontact"
+        )
+
+    if has_encoder:
+        has_pin_a = CONF_ENCODER_PIN_A in config
+        has_pin_b = CONF_ENCODER_PIN_B in config
+        if not has_pin_a or not has_pin_b:
+            raise cv.Invalid(
+                "encoder_sensor requires both encoder_pin_a and "
+                "encoder_pin_b to be defined in the ratgdo: config"
+            )
+
+    if not has_encoder and (
+        CONF_ENCODER_PIN_A in config or CONF_ENCODER_PIN_B in config
     ):
         raise cv.Invalid(
-            "dry_contact_close_sensor and dry_contact_open_sensor are required when using protocol drycontact"
+            "encoder_pin_a and encoder_pin_b are only valid when using encoder_sensor"
         )
-    if config.get(CONF_PROTOCOL, None) != PROTOCOL_DRYCONTACT and (
-        CONF_DRY_CONTACT_CLOSE_SENSOR in config
-        or CONF_DRY_CONTACT_OPEN_SENSOR in config
-    ):
-        raise cv.Invalid(
-            "dry_contact_close_sensor and dry_contact_open_sensor are only valid when using protocol drycontact"
-        )
-    #    if config.get(CONF_PROTOCOL, None) == PROTOCOL_DRYCONTACT and CONF_DRY_CONTACT_OPEN_SENSOR not in config:
-    #        raise cv.Invalid("dry_contact_open_sensor is required when using protocol drycontact")
     return config
 
 
@@ -163,6 +249,9 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_DRY_CONTACT_CLOSE_SENSOR): cv.use_id(
                 binary_sensor.BinarySensor
             ),
+            cv.Optional(CONF_ENCODER_PIN_A): pins.internal_gpio_input_pin_schema,
+            cv.Optional(CONF_ENCODER_PIN_B): pins.internal_gpio_input_pin_schema,
+            cv.Optional(CONF_ENCODER_SENSOR): cv.use_id(sensor.Sensor),
         }
     ).extend(cv.COMPONENT_SCHEMA),
     validate_protocol,
@@ -204,6 +293,17 @@ async def to_code(config):
             config[CONF_DRY_CONTACT_CLOSE_SENSOR]
         )
         cg.add(var.set_dry_contact_close_sensor(dry_contact_close_sensor))
+
+    if config.get(CONF_ENCODER_SENSOR):
+        encoder_sensor = await cg.get_variable(config[CONF_ENCODER_SENSOR])
+        cg.add(var.set_encoder_sensor(encoder_sensor))
+
+    if config.get(CONF_ENCODER_PIN_A):
+        pin = await cg.gpio_pin_expression(config[CONF_ENCODER_PIN_A])
+        cg.add(var.set_encoder_pin_a(pin))
+    if config.get(CONF_ENCODER_PIN_B):
+        pin = await cg.gpio_pin_expression(config[CONF_ENCODER_PIN_B])
+        cg.add(var.set_encoder_pin_b(pin))
 
     for conf in config.get(CONF_ON_SYNC_FAILED, []):
         trigger = cg.new_Pvariable(conf[CONF_TRIGGER_ID], var)

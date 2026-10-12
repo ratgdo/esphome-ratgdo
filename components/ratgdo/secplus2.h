@@ -14,7 +14,6 @@
 namespace esphome {
 
 class Scheduler;
-class InternalGPIOPin;
 
 } // namespace esphome
 

@@ -62,6 +62,10 @@ ENUM(MotorState, uint8_t,
     (ON, 1),
     (UNKNOWN, 2))
 
+ENUM(ManuallyOperatedState, uint8_t,
+    (NO, 0),
+    (YES, 1))
+
 /// Enum for all states the button can be in.
 ENUM(ButtonState, uint8_t,
     (PRESSED, 0),

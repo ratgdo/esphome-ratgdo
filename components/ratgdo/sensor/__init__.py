@@ -2,22 +2,24 @@ import esphome.codegen as cg
 from esphome.components import sensor
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.types import ConfigType
 
 from .. import (
+    OBSERVED_BY_TYPE,
     RATGDO_CLIENT_SCHMEA,
+    observe,
     ratgdo_ns,
     register_ratgdo_child,
     subscribe_distance,
+    validate_unique,
 )
 
 CONF_DISTANCE = "distance"
 
 DEPENDENCIES = ["ratgdo"]
 
-# Track which sensor types have been used
-USED_TYPES: set[str] = set()
-
 RATGDOSensor = ratgdo_ns.class_("RATGDOSensor", sensor.Sensor, cg.Component)
+RATGDODistanceSensor = ratgdo_ns.class_("RATGDODistanceSensor", RATGDOSensor)
 RATGDOSensorType = ratgdo_ns.enum("RATGDOSensorType")
 
 CONF_TYPE = "type"
@@ -29,15 +31,23 @@ TYPES = {
     "paired_devices_wall_controls": RATGDOSensorType.RATGDO_PAIRED_WALL_CONTROLS,
     "paired_devices_accessories": RATGDOSensorType.RATGDO_PAIRED_ACCESSORIES,
     "distance": RATGDOSensorType.RATGDO_DISTANCE,
+    "encoder": RATGDOSensorType.RATGDO_ENCODER,
 }
 
 
-def validate_unique_type(config):
+def validate_unique_type(config: ConfigType) -> ConfigType:
     """Validate that each sensor type is only used once."""
     sensor_type = config[CONF_TYPE]
-    if sensor_type in USED_TYPES:
-        raise cv.Invalid(f"Only one sensor of type '{sensor_type}' is allowed")
-    USED_TYPES.add(sensor_type)
+    validate_unique(
+        "sensor", sensor_type, f"Only one sensor of type '{sensor_type}' is allowed"
+    )
+    return config
+
+
+def _select_sensor_class(config: ConfigType) -> ConfigType:
+    """Override the ID type for the distance sensor, which needs its own class/storage."""
+    if config[CONF_TYPE] == CONF_DISTANCE:
+        config[CONF_ID].type = RATGDODistanceSensor
     return config
 
 
@@ -50,6 +60,7 @@ CONFIG_SCHEMA = cv.All(
     )
     .extend(RATGDO_CLIENT_SCHMEA),
     validate_unique_type,
+    _select_sensor_class,
 )
 
 
@@ -60,7 +71,7 @@ async def to_code(config):
     cg.add(var.set_ratgdo_sensor_type(config[CONF_TYPE]))
     await register_ratgdo_child(var, config)
 
-    if config["type"] == "distance":
+    if config[CONF_TYPE] == "distance":
         cg.add_library(name="Wire", version=None)
         cg.add_library(
             name="vl53l4cx",
@@ -69,3 +80,7 @@ async def to_code(config):
         )
         cg.add_define("RATGDO_USE_DISTANCE_SENSOR")
         subscribe_distance()
+    if (observed := OBSERVED_BY_TYPE.get(config[CONF_TYPE])) is not None:
+        observe(observed)
+    if config[CONF_TYPE] == "encoder":
+        cg.add_define("RATGDO_USE_ENCODER")

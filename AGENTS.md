@@ -94,7 +94,7 @@ layer. Do not reintroduce Arduino-only APIs on ESP32 paths.
 
 Exceptions:
 
-- The **v3.2 Disco** board uses Arduino because its VL53L4CX
+- The **v32 Disco** board uses Arduino because its VL53L4CX
   distance sensor library and `Wire` I2C library require it.
 - All **ESP8266** boards use Arduino — ESPHome requires it on
   that platform.

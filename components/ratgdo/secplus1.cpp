@@ -4,6 +4,7 @@
 #include "secplus1.h"
 #include "ratgdo.h"
 
+#include "common.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/helpers.h"
@@ -14,7 +15,7 @@ namespace esphome::ratgdo {
 namespace secplus1 {
 
     using namespace scheduler_ids;
-    static const char* const TAG = "ratgdo_secplus1";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_secplus1");
     static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)

@@ -2,13 +2,11 @@ import esphome.codegen as cg
 from esphome.components import number
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.types import ConfigType
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, validate_unique
 
 DEPENDENCIES = ["ratgdo"]
-
-# Track which number types have been used
-USED_TYPES: set[str] = set()
 
 RATGDONumber = ratgdo_ns.class_("RATGDONumber", number.Number, cg.Component)
 NumberType = ratgdo_ns.enum("NumberType")
@@ -24,12 +22,12 @@ TYPES = {
 }
 
 
-def validate_unique_type(config):
+def validate_unique_type(config: ConfigType) -> ConfigType:
     """Validate that each number type is only used once."""
     number_type = config[CONF_TYPE]
-    if number_type in USED_TYPES:
-        raise cv.Invalid(f"Only one number of type '{number_type}' is allowed")
-    USED_TYPES.add(number_type)
+    validate_unique(
+        "number", number_type, f"Only one number of type '{number_type}' is allowed"
+    )
     return config
 
 

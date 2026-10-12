@@ -122,7 +122,7 @@ private:
     T value_;
 };
 
-template <typename T>
+template <typename T, bool Observed = true>
 class single_observable {
 public:
     single_observable(const T& value)
@@ -162,6 +162,14 @@ public:
 private:
     T value_;
     Callback<T> observer_ { };
+};
+
+// Nothing subscribes: keep only the value
+template <typename T>
+class single_observable<T, false> : public observable<T, 0> {
+public:
+    using observable<T, 0>::observable;
+    using observable<T, 0>::operator=;
 };
 
 } // namespace esphome::ratgdo

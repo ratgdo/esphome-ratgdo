@@ -1,10 +1,11 @@
 #include "observable.h"
 #include "callbacks.h"
+#include "common.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo.observable";
+ESPHOME_LOG_TAG(TAG, "ratgdo.observable");
 
 void log_multiple_subscribers()
 {

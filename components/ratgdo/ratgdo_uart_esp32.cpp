@@ -2,6 +2,7 @@
 
 #ifdef USE_ESP32
 
+#include "common.h"
 #include "esphome/core/application.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
@@ -18,7 +19,7 @@
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo_uart";
+ESPHOME_LOG_TAG(TAG, "ratgdo_uart");
 
 static constexpr size_t UART_RX_BUFFER_SIZE = 512;
 
@@ -70,7 +71,7 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
     uart_config.parity = (config == RATGDO_UART_8E1) ? UART_PARITY_EVEN : UART_PARITY_DISABLE;
     uart_config.stop_bits = UART_STOP_BITS_1;
     uart_config.flow_ctrl = UART_HW_FLOWCTRL_DISABLE;
-    uart_config.source_clk = UART_SCLK_APB;
+    uart_config.source_clk = UART_SCLK_DEFAULT;
 
     ESP_ERROR_CHECK(
         uart_driver_install((uart_port_t)this->uart_num_, UART_RX_BUFFER_SIZE, 0, 0, NULL, 0));

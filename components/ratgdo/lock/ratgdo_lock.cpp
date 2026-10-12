@@ -1,10 +1,11 @@
 #include "ratgdo_lock.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo.lock";
+ESPHOME_LOG_TAG(TAG, "ratgdo.lock");
 
 void RATGDOLock::dump_config()
 {

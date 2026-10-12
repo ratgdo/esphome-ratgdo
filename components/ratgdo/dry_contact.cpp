@@ -2,6 +2,7 @@
 #ifdef PROTOCOL_DRYCONTACT
 
 #include "dry_contact.h"
+#include "common.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
@@ -10,7 +11,7 @@
 namespace esphome::ratgdo {
 namespace dry_contact {
 
-    static const char* const TAG = "ratgdo_dry_contact";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_dry_contact");
 
     void DryContact::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -91,6 +92,20 @@ namespace dry_contact {
 
     void DryContact::door_action(DoorAction action)
     {
+        // Encoder builds do not have physical limit switches
+        // so `limits_` is never updated. Instead, we rely on the derived `door_state`
+        // which correctly reflects the software-calibrated limits.
+#ifdef RATGDO_USE_ENCODER
+        auto current_state = *this->ratgdo_->door_state;
+        if (action == DoorAction::OPEN && current_state == DoorState::OPEN) {
+            ESP_LOGW(TAG, "The door is already fully open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
+            return;
+        }
+        if (action == DoorAction::CLOSE && current_state == DoorState::CLOSED) {
+            ESP_LOGW(TAG, "The door is already fully closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
+            return;
+        }
+#else
         if (action == DoorAction::OPEN && this->limits_.open_limit_reached) {
             ESP_LOGW(TAG, "The door is already fully open. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
             return;
@@ -99,6 +114,7 @@ namespace dry_contact {
             ESP_LOGW(TAG, "The door is already fully closed. Ignoring door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
             return;
         }
+#endif
 
         ESP_LOG1(TAG, "Door action: %s", LOG_STR_ARG(DoorAction_to_string(action)));
 
