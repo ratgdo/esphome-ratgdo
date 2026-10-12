@@ -342,7 +342,6 @@ async def to_code(config):
     if config.get(CONF_FORCE_EMULATE):
         cg.add_build_flag("-DFORCE_EMULATIION")
 
-
     # RATGDOComponent::setup() subscribes to door_state
     subscribe_door_state()
 
