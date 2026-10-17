@@ -125,6 +125,7 @@ CONF_INPUT_OBST = "input_obst_pin"
 DEFAULT_INPUT_OBST = "D7"  # D7 black obstruction sensor terminal
 
 CONF_OBST_SLEEP_LOW = "obst_sleep_low"
+CONF_REQUIRE_LIMIT_SWITCH_ENDPOINTS = "require_limit_switch_endpoints"
 
 CONF_DISCRETE_OPEN_PIN = "discrete_open_pin"
 CONF_DISCRETE_CLOSE_PIN = "discrete_close_pin"
@@ -212,6 +213,12 @@ def validate_protocol(config):
         raise cv.Invalid(
             "encoder_pin_a and encoder_pin_b are only valid when using encoder_sensor"
         )
+
+    if config.get(CONF_REQUIRE_LIMIT_SWITCH_ENDPOINTS) and (not is_dry or has_encoder):
+        raise cv.Invalid(
+            f"{CONF_REQUIRE_LIMIT_SWITCH_ENDPOINTS} requires protocol drycontact "
+            "with dry_contact_open_sensor and dry_contact_close_sensor"
+        )
     return config
 
 
@@ -229,6 +236,7 @@ CONFIG_SCHEMA = cv.All(
                 cv.none, pins.gpio_input_pin_schema
             ),
             cv.SplitDefault(CONF_OBST_SLEEP_LOW, esp32=False, esp8266=True): cv.boolean,
+            cv.Optional(CONF_REQUIRE_LIMIT_SWITCH_ENDPOINTS): cv.boolean,
             cv.Optional(CONF_DISCRETE_OPEN_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_DISCRETE_CLOSE_PIN): pins.gpio_output_pin_schema,
             cv.Optional(CONF_ON_SYNC_FAILED): automation.validate_automation(
@@ -279,6 +287,8 @@ async def to_code(config):
         cg.add(var.set_input_obst_pin(pin))
 
     cg.add(var.set_obst_sleep_low(config[CONF_OBST_SLEEP_LOW]))
+    if config.get(CONF_REQUIRE_LIMIT_SWITCH_ENDPOINTS):
+        cg.add(var.set_require_limit_switch_endpoints(True))
 
     if config.get(CONF_DRY_CONTACT_OPEN_SENSOR):
         dry_contact_open_sensor = await cg.get_variable(
