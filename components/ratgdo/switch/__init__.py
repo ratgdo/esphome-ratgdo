@@ -21,6 +21,7 @@ TYPES = {
     "learn": SwitchType.RATGDO_LEARN,
     "led": SwitchType.RATGDO_LED,
     "reverse_encoder": SwitchType.RATGDO_REVERSE_ENCODER,
+    "prefer_encoder_status": SwitchType.RATGDO_PREFER_ENCODER_STATUS,
 }
 
 
