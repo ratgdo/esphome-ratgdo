@@ -350,19 +350,11 @@ namespace secplus1 {
     void Secplus1::handle_command(const RxCommand& cmd)
     {
         if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE || cmd.resp == 0x31) {
-            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING && this->door_state == DoorState::UNKNOWN && this->light_state == LightState::UNKNOWN) {
+            if (this->wall_panel_emulation_state_ == WallPanelEmulationState::WAITING) {
                 ESP_LOGD(TAG, "wall panel is starting");
                 this->flags_.wall_panel_starting = true;
             }
-            if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
-                this->ratgdo_->received(ButtonState::RELEASED);
-            }
-            return;
         } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
-            if ((cmd.resp & 0xF0) != 0x50) {
-                ESP_LOGW(TAG, "Ignoring invalid door status response: %02X", cmd.resp);
-                return;
-            }
             DoorState door_state;
             auto val = cmd.resp & 0x7;
             // 000 0x0 stopped
@@ -398,8 +390,6 @@ namespace secplus1 {
                 this->door_state = door_state;
                 if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
                     this->flags_.door_moving = false;
-                } else if (this->door_state == DoorState::OPENING || this->door_state == DoorState::CLOSING) {
-                    this->flags_.door_moving = true;
                 }
                 this->ratgdo_->received(door_state);
             }
@@ -442,8 +432,9 @@ namespace secplus1 {
                 this->ratgdo_->received(MotionState::DETECTED);
             }
         } else if (cmd.req == CommandType::TOGGLE_DOOR_PRESS) {
-            this->flags_.door_moving = true;
             this->ratgdo_->received(ButtonState::PRESSED);
+        } else if (cmd.req == CommandType::TOGGLE_DOOR_RELEASE) {
+            this->ratgdo_->received(ButtonState::RELEASED);
         }
     }
 

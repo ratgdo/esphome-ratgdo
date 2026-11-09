@@ -77,14 +77,6 @@ void RatgdoUART::begin(int baud, RatgdoUARTConfig config, int rx_pin,
         uart_driver_install((uart_port_t)this->uart_num_, UART_RX_BUFFER_SIZE, 0, 0, NULL, 0));
     ESP_ERROR_CHECK(uart_param_config((uart_port_t)this->uart_num_, &uart_config));
 
-    if (config == RATGDO_UART_8E1) {
-        // Security+ 1.0 uses 1- and 2-byte messages at 1200 baud (9.17ms/byte).
-        // The default 10-frame RX timeout delays 1-byte commands (like 0x37) by
-        // ~92ms, causing injected 0x38 queries to miss their window and collide
-        // with the wall panel. Wake on every byte instead.
-        ESP_ERROR_CHECK(uart_set_rx_full_threshold((uart_port_t)this->uart_num_, 1));
-    }
-
     // Wake the main loop from the UART rx ISR so bytes are consumed on the
     // next tick instead of waiting for the scheduler.
     uart_set_select_notif_callback((uart_port_t)this->uart_num_,
