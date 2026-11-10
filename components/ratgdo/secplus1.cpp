@@ -241,7 +241,9 @@ namespace secplus1 {
     void Secplus1::toggle_door()
     {
         this->enqueue_transmit(CommandType::TOGGLE_DOOR_PRESS);
-        this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS);
+        if (!this->flags_.is_0x37_panel) {
+            this->enqueue_transmit(CommandType::QUERY_DOOR_STATUS, millis() + 600);
+        }
         if (this->door_state == DoorState::STOPPED || this->door_state == DoorState::OPEN || this->door_state == DoorState::CLOSED) {
             this->flags_.door_moving = true;
         }
@@ -290,11 +292,32 @@ namespace secplus1 {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
-                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
                 {
                     char hex[format_hex_pretty_size(1)];
                     ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
                 }
+
+                if (ser_byte >= 0x30 && ser_byte <= 0x3A) {
+                    {
+                        char hex[format_hex_pretty_size(1)];
+                        ESP_LOG1(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                    }
+                    this->rx_packet_[0] = ser_byte;
+                    this->rx_byte_count_ = 1;
+                    if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
+                        this->rx_packet_[this->rx_byte_count_++] = 0;
+                        this->flags_.rx_reading_msg = false;
+                        this->rx_byte_count_ = 0;
+                        {
+                            char hex[format_hex_pretty_size(1)];
+                            ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                        }
+                        return this->decode_packet(this->rx_packet_);
+                    }
+                    continue;
+                }
+
+                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
 
                 if (this->rx_byte_count_ == RX_LENGTH) {
                     this->flags_.rx_reading_msg = false;
@@ -359,14 +382,10 @@ namespace secplus1 {
             }
             return;
         } else if (cmd.req == CommandType::QUERY_DOOR_STATUS) {
-            if ((cmd.resp & 0xF0) != 0x50) {
-                ESP_LOGW(TAG, "Ignoring invalid door status response: %02X", cmd.resp);
-                return;
-            }
             DoorState door_state;
             auto val = cmd.resp & 0x7;
             // 000 0x0 stopped
-            // 001 0x1 opening
+            // 001 0x1 opening (or closed at rest when bit 4 is set, e.g. 0x51 / 0xB1)
             // 010 0x2 open
             // 100 0x4 closing
             // 101 0x5 closed
@@ -379,11 +398,16 @@ namespace secplus1 {
             } else if (val == 0x0 || val == 0x6) {
                 door_state = DoorState::STOPPED;
             } else if (val == 0x1) {
-                door_state = DoorState::OPENING;
+                door_state = (cmd.resp & 0x10) ? DoorState::CLOSED : DoorState::OPENING;
             } else if (val == 0x4) {
                 door_state = DoorState::CLOSING;
             } else {
                 door_state = DoorState::UNKNOWN;
+            }
+
+            if ((cmd.resp >= 0x30 && cmd.resp <= 0x3A) || door_state == DoorState::UNKNOWN) {
+                ESP_LOG1(TAG, "Ignoring invalid door status response: %02X", cmd.resp);
+                return;
             }
 
             if (this->maybe_door_state != door_state) {
