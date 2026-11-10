@@ -667,12 +667,12 @@ void RATGDOComponent::subscribe_door_state(F&& f)
 {
     uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DOOR_STATE_BASE, scheduler_ids::DEFER_DOOR_STATE_COUNT,
         this->door_state_sub_num_, LOG_STR("door_state"));
-    this->door_state.subscribe([this, f, id](DoorState state) {
-        defer(id, [this, f, state] { f(state, *this->door_position); });
-    });
-    this->door_position.subscribe([this, f, id](float position) {
-        defer(id, [this, f, position] { f(*this->door_state, position); });
-    });
+    // Read both values when the defer runs: an 8 byte capture fits std::function without a heap allocation
+    auto notify = [this, f, id](auto) {
+        defer(id, [this, f] { f(*this->door_state, *this->door_position); });
+    };
+    this->door_state.subscribe(notify);
+    this->door_position.subscribe(notify);
 }
 
 template <typename F>
