@@ -13,13 +13,27 @@
 
 #pragma once
 
+#ifndef ENC_DIRECTION_CORRECTION_ENABLED
+#if defined(PROTOCOL_DRYCONTACT)
+#define ENC_DIRECTION_CORRECTION_ENABLED 1 // Set to 0 to disable the wrong-direction stop-and-retry logic
+#else
+#define ENC_DIRECTION_CORRECTION_ENABLED 0
+#endif
+#endif
+
 #include "esphome/components/binary_sensor/binary_sensor.h"
+#ifdef RATGDO_USE_ENCODER
+#include "esphome/components/sensor/sensor.h"
+#endif
 #include "esphome/core/component.h"
 #include "esphome/core/defines.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/preferences.h"
 
 #include <bitset>
+#include <type_traits>
+#include <utility>
 
 #include "callbacks.h"
 #include "macros.h"
@@ -38,6 +52,18 @@
 #ifndef RATGDO_MAX_DISTANCE_SUBSCRIBERS
 #error "RATGDO_MAX_DISTANCE_SUBSCRIBERS must be defined by codegen"
 #endif
+#ifndef RATGDO_PAIRED_REMOTES_OBSERVED
+#error "RATGDO_PAIRED_REMOTES_OBSERVED must be defined by codegen"
+#endif
+#ifndef RATGDO_PAIRED_KEYPADS_OBSERVED
+#error "RATGDO_PAIRED_KEYPADS_OBSERVED must be defined by codegen"
+#endif
+#ifndef RATGDO_PAIRED_WALL_CONTROLS_OBSERVED
+#error "RATGDO_PAIRED_WALL_CONTROLS_OBSERVED must be defined by codegen"
+#endif
+#ifndef RATGDO_PAIRED_ACCESSORIES_OBSERVED
+#error "RATGDO_PAIRED_ACCESSORIES_OBSERVED must be defined by codegen"
+#endif
 #ifndef RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS
 #error "RATGDO_MAX_VEHICLE_DETECTED_SUBSCRIBERS must be defined by codegen"
 #endif
@@ -47,10 +73,6 @@
 #ifndef RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS
 #error "RATGDO_MAX_VEHICLE_LEAVING_SUBSCRIBERS must be defined by codegen"
 #endif
-
-namespace esphome {
-class InternalGPIOPin;
-} // namespace esphome
 
 namespace esphome::ratgdo {
 
@@ -62,13 +84,40 @@ const float DOOR_DELTA_UNKNOWN = -2.0;
 const uint8_t PAIRED_DEVICES_UNKNOWN = 0xFF;
 
 struct RATGDOStore {
-    int obstruction_low_count = 0; // count obstruction low pulses
+    volatile uint32_t obstruction_low_count = 0; // count obstruction low pulses
 
     static void IRAM_ATTR HOT isr_obstruction(RATGDOStore* arg)
     {
         arg->obstruction_low_count++;
     }
+
+#ifdef RATGDO_USE_ENCODER
+    volatile int16_t enc_delta { 0 };
+    volatile uint8_t enc_prev_state { 0 };
+    // Signed net accumulator for ISR-level step filtering.
+    // Accumulates +1/-1 per valid quadrature transition; emits a verified step
+    // to enc_delta when the sum reaches ±4. Using a net sum (rather than a
+    // consecutive-count reset-on-reversal) means a single stray wrong-direction
+    // transition from noise delays the next emission by 2 counts
+    volatile int8_t enc_cycle_count { 0 };
+    ISRInternalGPIOPin enc_pin_a;
+    ISRInternalGPIOPin enc_pin_b;
+    static void IRAM_ATTR HOT isr_encoder(RATGDOStore* arg);
+#endif
 };
+
+#ifdef RATGDO_USE_ENCODER
+// Calibration data persisted in NVS.
+// int16_t is sufficient: typical travel is 12-18 pulses so even with decades
+// of floating-bound drift the values stay well within ±32767.
+struct __attribute__((packed)) RATGDOEncoderSettings {
+    int16_t min;
+    int16_t max;
+    int16_t last;
+    uint8_t min_calibrated;
+    uint8_t max_calibrated;
+};
+#endif
 
 using protocol::Args;
 using protocol::Result;
@@ -104,14 +153,18 @@ public:
 
     single_observable<uint16_t> openings { 0 }; // number of times the door has been opened
     single_observable<uint8_t> paired_total { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_remotes { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_keypads { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
-    single_observable<uint8_t> paired_accessories { PAIRED_DEVICES_UNKNOWN };
+    // Observed only when codegen saw a sensor of that kind; otherwise just the value
+    single_observable<uint8_t, RATGDO_PAIRED_REMOTES_OBSERVED> paired_remotes { PAIRED_DEVICES_UNKNOWN };
+    single_observable<uint8_t, RATGDO_PAIRED_KEYPADS_OBSERVED> paired_keypads { PAIRED_DEVICES_UNKNOWN };
+    single_observable<uint8_t, RATGDO_PAIRED_WALL_CONTROLS_OBSERVED> paired_wall_controls { PAIRED_DEVICES_UNKNOWN };
+    single_observable<uint8_t, RATGDO_PAIRED_ACCESSORIES_OBSERVED> paired_accessories { PAIRED_DEVICES_UNKNOWN };
 
     observable<DoorState, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_state { DoorState::UNKNOWN };
     observable<float, RATGDO_MAX_DOOR_STATE_SUBSCRIBERS> door_position { DOOR_POSITION_UNKNOWN };
     observable<DoorActionDelayed, RATGDO_MAX_DOOR_ACTION_DELAYED_SUBSCRIBERS> door_action_delayed { DoorActionDelayed::NO };
+#ifdef RATGDO_USE_ENCODER
+    observable<ManuallyOperatedState, RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS> manually_operated_state { ManuallyOperatedState::NO };
+#endif
 
     unsigned long door_start_moving { 0 };
     float door_start_position { DOOR_POSITION_UNKNOWN };
@@ -138,6 +191,7 @@ public:
     void set_output_gdo_pin(InternalGPIOPin* pin) { this->output_gdo_pin_ = pin; }
     void set_input_gdo_pin(InternalGPIOPin* pin) { this->input_gdo_pin_ = pin; }
     void set_input_obst_pin(InternalGPIOPin* pin) { this->input_obst_pin_ = pin; }
+    void set_obst_sleep_low(bool low) { this->flags_.obst_sleep_low = low; }
 
     // dry contact methods
     void set_dry_contact_open_sensor(esphome::binary_sensor::BinarySensor* dry_contact_open_sensor_);
@@ -145,9 +199,26 @@ public:
     void set_discrete_open_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_open_pin(pin); }
     void set_discrete_close_pin(InternalGPIOPin* pin) { this->protocol_->set_discrete_close_pin(pin); }
 
+#ifdef RATGDO_USE_ENCODER
+    // encoder methods
+    void set_encoder_sensor(esphome::sensor::Sensor* s);
+    void set_reverse_encoder(bool r) { this->flags_.reverse_encoder = r; }
+    void reset_encoder_calibration();
+    void on_encoder_update(int16_t raw);
+    void check_encoder_stopped();
+    void recalculate_encoder_state();
+    void encoder_apply_state(int16_t raw);
+    void set_encoder_pin_a(InternalGPIOPin* pin) { enc_pin_a_ = pin; }
+    void set_encoder_pin_b(InternalGPIOPin* pin) { enc_pin_b_ = pin; }
+#endif
+
     Result call_protocol(Args args);
 
+    void set_resolved_door_state(const DoorState door_state);
     void received(const DoorState door_state);
+#ifdef RATGDO_USE_ENCODER
+    void encoder_received(const DoorState door_state);
+#endif
     void received(const LightState light_state);
     void received(const LockState lock_state);
     void received(const ObstructionState obstruction_state);
@@ -235,7 +306,48 @@ public:
     void query_openings();
     void sync();
 
+    using Component::cancel_interval;
+    using Component::set_interval;
     using Component::set_timeout;
+
+    void set_door_state_expiry();
+    void cancel_door_state_expiry();
+
+    // Register a one-shot door state callback with automatic expiry.
+    //
+    // Handles secplus1's nested callback chains where opening from
+    // STOPPED requires multiple state transitions:
+    //
+    //   on_door_state(outer_cb)          // wait for CLOSING
+    //     → set_door_state_expiry()      // expiry A
+    //     → [door reports CLOSING]
+    //       → outer_cb fires, calls:
+    //         toggle_door()
+    //         on_door_state(inner_cb)    // wait for STOPPED
+    //           → set_door_state_expiry() // expiry B (replaces A)
+    //           → [door reports STOPPED]
+    //             → inner_cb fires
+    //               toggle_door()        // door now opening
+    //               count()==0 → cancel expiry B
+    //
+    // The user callback runs BEFORE the expiry check because it may
+    // re-arm the chain by calling on_door_state() again. If it does,
+    // the new call sets expiry B which replaces expiry A (same timeout
+    // ID = replace, not add). We only cancel expiry when count()==0,
+    // meaning no new callback was queued — otherwise we'd cancel
+    // expiry B here and leave the inner callback without protection.
+    template <typename F>
+    void on_door_state(F&& callback)
+    {
+        using Cb = std::decay_t<F>;
+        this->on_door_state_([this, cb = Cb(std::forward<F>(callback))](DoorState s) {
+            cb(s);
+            if (!this->on_door_state_.count()) {
+                this->cancel_door_state_expiry();
+            }
+        });
+        this->set_door_state_expiry();
+    }
 
     // children subscriptions — type-safe templates (no std::function)
     // Callbacks must be trivially copyable and fit in Callback storage
@@ -273,6 +385,10 @@ public:
     void subscribe_obstruction_state(F&& f);
     template <typename F>
     void subscribe_motor_state(F&& f);
+#ifdef RATGDO_USE_ENCODER
+    template <typename F>
+    void subscribe_manually_operated_state(F&& f);
+#endif
     template <typename F>
     void subscribe_button_state(F&& f);
     template <typename F>
@@ -311,17 +427,45 @@ protected:
     // Bool members packed into bitfield
     struct {
         uint8_t obstruction_sensor_detected : 1;
+        uint8_t obst_sleep_low : 1;
 #ifdef RATGDO_USE_VEHICLE_SENSORS
         uint8_t presence_detect_window_active : 1;
-        uint8_t reserved : 6; // Reserved for future use
-#else
-        uint8_t reserved : 7; // Reserved for future use
+#endif
+#ifdef RATGDO_USE_ENCODER
+        uint8_t reverse_encoder : 1;
+        uint8_t enc_min_cal : 1;
+        uint8_t enc_max_cal : 1;
+        uint8_t enc_first_update : 1; // set in set_encoder_sensor(); flags_ zero-inits to 0
+        uint8_t enc_position_stop_pending : 1;
 #endif
     } flags_ { 0 };
+
+#ifdef RATGDO_USE_ENCODER
+    esphome::sensor::Sensor* encoder_sensor_ { nullptr };
+    ESPPreferenceObject encoder_pref_;
+    int16_t enc_min_ { 0 };
+    int16_t enc_max_ { 0 };
+    int16_t enc_last_ { 0 };
+    int8_t enc_last_dir_ { 0 }; // sign of last delta: +1 increasing, -1 decreasing
+    int8_t enc_travel_dir_ { 0 }; // direction of current/last move, latched from first tick; immune to end-of-travel oscillation
+    int8_t enc_reverse_count_ { 0 }; // consecutive steps opposite to enc_travel_dir_; used to confirm real reversals
+    DoorState protocol_door_state_ { DoorState::UNKNOWN };
+    DoorState encoder_door_state_ { DoorState::UNKNOWN };
+    uint32_t encoder_motion_onset_ms_ { 0 };
+
+    int8_t enc_intended_dir_ { 0 }; // intended motion: +1=open, -1=close, 0=none
+    bool enc_dir_correction_pending_ { false }; // set when wrong direction detected and correction is pending
+    int8_t enc_dir_correction_intended_ { 0 }; // direction to retry: +1=open, -1=close
+    InternalGPIOPin* enc_pin_a_ { nullptr };
+    InternalGPIOPin* enc_pin_b_ { nullptr };
+#endif
 
     // Subscriber counters for defer name allocation
     uint8_t door_state_sub_num_ { 0 };
     uint8_t door_action_delayed_sub_num_ { 0 };
+#ifdef RATGDO_USE_ENCODER
+    uint8_t manually_operated_sub_num_ { 0 };
+#endif
 #ifdef RATGDO_USE_DISTANCE_SENSOR
     uint8_t distance_sub_num_ { 0 };
 #endif
@@ -329,12 +473,15 @@ protected:
     uint8_t vehicle_detected_sub_num_ { 0 };
     uint8_t vehicle_arriving_sub_num_ { 0 };
     uint8_t vehicle_leaving_sub_num_ { 0 };
+    int last_presence_percent_ { -1 };
+    int presence_off_counter_ { 0 };
+    DoorState last_door_state_for_presence_ { DoorState::UNKNOWN };
 #endif
 }; // RATGDOComponent
 
 void log_subscriber_overflow(const LogString* observable_name, uint32_t max);
 
-inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
+inline uint32_t get_scheduler_id(uint32_t base, uint32_t count, uint8_t& counter, const LogString* observable_name)
 {
     if (count == 0) {
         log_subscriber_overflow(observable_name, count);
@@ -347,9 +494,9 @@ inline uint32_t get_defer_id(uint32_t base, uint32_t count, uint8_t& counter, co
     return base + counter++;
 }
 
-// Defer IDs using uint32_t ranges to avoid heap allocations
+// Scheduler IDs using uint32_t ranges to avoid heap allocations
 // Bases are auto-generated from counts to prevent ID conflicts
-namespace defer_ids {
+namespace scheduler_ids {
     inline constexpr uint32_t INTERVAL_POSITION_SYNC = 0;
 
     // Multi-subscriber ranges — counts derived from codegen defines
@@ -378,10 +525,16 @@ namespace defer_ids {
 #else
     inline constexpr uint32_t DEFER_VEHICLE_END = DEFER_DISTANCE_END;
 #endif
-
+#ifdef RATGDO_USE_ENCODER
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_COUNT = RATGDO_MAX_MANUALLY_OPERATED_SUBSCRIBERS;
+    inline constexpr uint32_t DEFER_MANUALLY_OPERATED_BASE = DEFER_VEHICLE_END;
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_MANUALLY_OPERATED_BASE + DEFER_MANUALLY_OPERATED_COUNT;
+#else
+    inline constexpr uint32_t DEFER_MULTI_END = DEFER_VEHICLE_END;
+#endif
     // Single-subscriber IDs
     enum : uint32_t {
-        DEFER_ROLLING_CODE = DEFER_VEHICLE_END,
+        DEFER_ROLLING_CODE = DEFER_MULTI_END,
         DEFER_OPENING_DURATION,
         DEFER_CLOSING_DURATION,
         DEFER_CLOSING_DELAY,
@@ -398,8 +551,24 @@ namespace defer_ids {
         DEFER_BUTTON_STATE,
         DEFER_MOTION_STATE,
         DEFER_LEARN_STATE,
+
+        // Named timeout IDs (replacing string-based names)
+        TIMEOUT_DOOR_QUERY_STATE,
+        TIMEOUT_DOOR_ACTION,
+        TIMEOUT_MOVE_TO_POSITION,
+        TIMEOUT_CLEAR_MOTION,
+        // Shared by RATGDOComponent and Secplus1 — safe because only one
+        // protocol is compiled at a time (#ifdef PROTOCOL_SECPLUSV1) and
+        // both use ratgdo_ as the scheduler owner.
+        TIMEOUT_DOOR_STATE_EXPIRY,
+        TIMEOUT_PRESENCE_DETECT_WINDOW,
+        TIMEOUT_CLEAR_PRESENCE,
+        TIMEOUT_WALL_PANEL_EMULATION,
+        TIMEOUT_SYNC,
+        INTERVAL_STATUS_WATCHDOG,
+        TIMEOUT_ENCODER_STOPPED,
     };
-} // namespace defer_ids
+} // namespace scheduler_ids
 
 // Template implementations for subscribe methods.
 // Each wraps the callback in a deferred call so that if the observable
@@ -414,7 +583,7 @@ void RATGDOComponent::subscribe_rolling_code_counter(F&& f)
     auto counter = this->protocol_->call(protocol::GetRollingCodeCounter { });
     if (counter.tag == protocol::Result::Tag::rolling_code_counter) {
         counter.value.rolling_code_counter.value->subscribe([this, f](uint32_t state) {
-            defer(defer_ids::DEFER_ROLLING_CODE, [f, state] { f(state); });
+            defer(scheduler_ids::DEFER_ROLLING_CODE, [f, state] { f(state); });
         });
     }
 }
@@ -423,7 +592,7 @@ template <typename F>
 void RATGDOComponent::subscribe_opening_duration(F&& f)
 {
     this->opening_duration.subscribe([this, f](float state) {
-        defer(defer_ids::DEFER_OPENING_DURATION, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OPENING_DURATION, [f, state] { f(state); });
     });
 }
 
@@ -431,7 +600,7 @@ template <typename F>
 void RATGDOComponent::subscribe_closing_duration(F&& f)
 {
     this->closing_duration.subscribe([this, f](float state) {
-        defer(defer_ids::DEFER_CLOSING_DURATION, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_CLOSING_DURATION, [f, state] { f(state); });
     });
 }
 
@@ -440,7 +609,7 @@ template <typename F>
 void RATGDOComponent::subscribe_closing_delay(F&& f)
 {
     this->closing_delay.subscribe([this, f](uint32_t state) {
-        defer(defer_ids::DEFER_CLOSING_DELAY, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_CLOSING_DELAY, [f, state] { f(state); });
     });
 }
 #endif
@@ -449,7 +618,7 @@ template <typename F>
 void RATGDOComponent::subscribe_openings(F&& f)
 {
     this->openings.subscribe([this, f](uint16_t state) {
-        defer(defer_ids::DEFER_OPENINGS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OPENINGS, [f, state] { f(state); });
     });
 }
 
@@ -457,7 +626,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_devices_total(F&& f)
 {
     this->paired_total.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_TOTAL, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_TOTAL, [f, state] { f(state); });
     });
 }
 
@@ -465,7 +634,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_remotes(F&& f)
 {
     this->paired_remotes.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_REMOTES, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_REMOTES, [f, state] { f(state); });
     });
 }
 
@@ -473,7 +642,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_keypads(F&& f)
 {
     this->paired_keypads.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_KEYPADS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_KEYPADS, [f, state] { f(state); });
     });
 }
 
@@ -481,7 +650,7 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_wall_controls(F&& f)
 {
     this->paired_wall_controls.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_WALL_CONTROLS, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_WALL_CONTROLS, [f, state] { f(state); });
     });
 }
 
@@ -489,28 +658,28 @@ template <typename F>
 void RATGDOComponent::subscribe_paired_accessories(F&& f)
 {
     this->paired_accessories.subscribe([this, f](uint8_t state) {
-        defer(defer_ids::DEFER_PAIRED_ACCESSORIES, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_PAIRED_ACCESSORIES, [f, state] { f(state); });
     });
 }
 
 template <typename F>
 void RATGDOComponent::subscribe_door_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_STATE_BASE, defer_ids::DEFER_DOOR_STATE_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DOOR_STATE_BASE, scheduler_ids::DEFER_DOOR_STATE_COUNT,
         this->door_state_sub_num_, LOG_STR("door_state"));
-    this->door_state.subscribe([this, f, id](DoorState state) {
-        defer(id, [this, f, state] { f(state, *this->door_position); });
-    });
-    this->door_position.subscribe([this, f, id](float position) {
-        defer(id, [this, f, position] { f(*this->door_state, position); });
-    });
+    // Read both values when the defer runs: an 8 byte capture fits std::function without a heap allocation
+    auto notify = [this, f, id](auto) {
+        defer(id, [this, f] { f(*this->door_state, *this->door_position); });
+    };
+    this->door_state.subscribe(notify);
+    this->door_position.subscribe(notify);
 }
 
 template <typename F>
 void RATGDOComponent::subscribe_light_state(F&& f)
 {
     this->light_state.subscribe([this, f](LightState state) {
-        defer(defer_ids::DEFER_LIGHT_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LIGHT_STATE, [f, state] { f(state); });
     });
 }
 
@@ -518,7 +687,7 @@ template <typename F>
 void RATGDOComponent::subscribe_lock_state(F&& f)
 {
     this->lock_state.subscribe([this, f](LockState state) {
-        defer(defer_ids::DEFER_LOCK_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LOCK_STATE, [f, state] { f(state); });
     });
 }
 
@@ -526,7 +695,7 @@ template <typename F>
 void RATGDOComponent::subscribe_obstruction_state(F&& f)
 {
     this->obstruction_state.subscribe([this, f](ObstructionState state) {
-        defer(defer_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_OBSTRUCTION_STATE, [f, state] { f(state); });
     });
 }
 
@@ -534,15 +703,27 @@ template <typename F>
 void RATGDOComponent::subscribe_motor_state(F&& f)
 {
     this->motor_state.subscribe([this, f](MotorState state) {
-        defer(defer_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_MOTOR_STATE, [f, state] { f(state); });
     });
 }
+
+#ifdef RATGDO_USE_ENCODER
+template <typename F>
+void RATGDOComponent::subscribe_manually_operated_state(F&& f)
+{
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_MANUALLY_OPERATED_BASE, scheduler_ids::DEFER_MANUALLY_OPERATED_COUNT,
+        this->manually_operated_sub_num_, LOG_STR("manually_operated"));
+    this->manually_operated_state.subscribe([this, f, id](ManuallyOperatedState state) {
+        defer(id, [f, state] { f(state); });
+    });
+}
+#endif
 
 template <typename F>
 void RATGDOComponent::subscribe_button_state(F&& f)
 {
     this->button_state.subscribe([this, f](ButtonState state) {
-        defer(defer_ids::DEFER_BUTTON_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_BUTTON_STATE, [f, state] { f(state); });
     });
 }
 
@@ -550,7 +731,7 @@ template <typename F>
 void RATGDOComponent::subscribe_motion_state(F&& f)
 {
     this->motion_state.subscribe([this, f](MotionState state) {
-        defer(defer_ids::DEFER_MOTION_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_MOTION_STATE, [f, state] { f(state); });
     });
 }
 
@@ -564,14 +745,14 @@ template <typename F>
 void RATGDOComponent::subscribe_learn_state(F&& f)
 {
     this->learn_state.subscribe([this, f](LearnState state) {
-        defer(defer_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
+        defer(scheduler_ids::DEFER_LEARN_STATE, [f, state] { f(state); });
     });
 }
 
 template <typename F>
 void RATGDOComponent::subscribe_door_action_delayed(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DOOR_ACTION_DELAYED_BASE, defer_ids::DEFER_DOOR_ACTION_DELAYED_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DOOR_ACTION_DELAYED_BASE, scheduler_ids::DEFER_DOOR_ACTION_DELAYED_COUNT,
         this->door_action_delayed_sub_num_, LOG_STR("door_action_delayed"));
     this->door_action_delayed.subscribe([this, f, id](DoorActionDelayed state) {
         defer(id, [f, state] { f(state); });
@@ -582,7 +763,7 @@ void RATGDOComponent::subscribe_door_action_delayed(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_distance_measurement(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_DISTANCE_BASE, defer_ids::DEFER_DISTANCE_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_DISTANCE_BASE, scheduler_ids::DEFER_DISTANCE_COUNT,
         this->distance_sub_num_, LOG_STR("distance_measurement"));
     this->last_distance_measurement.subscribe([this, f, id](int16_t state) {
         defer(id, [f, state] { f(state); });
@@ -594,7 +775,7 @@ void RATGDOComponent::subscribe_distance_measurement(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_detected_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_DETECTED_BASE, defer_ids::DEFER_VEHICLE_DETECTED_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_DETECTED_BASE, scheduler_ids::DEFER_VEHICLE_DETECTED_COUNT,
         this->vehicle_detected_sub_num_, LOG_STR("vehicle_detected"));
     this->vehicle_detected_state.subscribe([this, f, id](VehicleDetectedState state) {
         defer(id, [f, state] { f(state); });
@@ -604,7 +785,7 @@ void RATGDOComponent::subscribe_vehicle_detected_state(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_arriving_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_ARRIVING_BASE, defer_ids::DEFER_VEHICLE_ARRIVING_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_ARRIVING_BASE, scheduler_ids::DEFER_VEHICLE_ARRIVING_COUNT,
         this->vehicle_arriving_sub_num_, LOG_STR("vehicle_arriving"));
     this->vehicle_arriving_state.subscribe([this, f, id](VehicleArrivingState state) {
         defer(id, [f, state] { f(state); });
@@ -614,7 +795,7 @@ void RATGDOComponent::subscribe_vehicle_arriving_state(F&& f)
 template <typename F>
 void RATGDOComponent::subscribe_vehicle_leaving_state(F&& f)
 {
-    uint32_t id = get_defer_id(defer_ids::DEFER_VEHICLE_LEAVING_BASE, defer_ids::DEFER_VEHICLE_LEAVING_COUNT,
+    uint32_t id = get_scheduler_id(scheduler_ids::DEFER_VEHICLE_LEAVING_BASE, scheduler_ids::DEFER_VEHICLE_LEAVING_COUNT,
         this->vehicle_leaving_sub_num_, LOG_STR("vehicle_leaving"));
     this->vehicle_leaving_state.subscribe([this, f, id](VehicleLeavingState state) {
         defer(id, [f, state] { f(state); });

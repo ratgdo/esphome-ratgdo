@@ -4,15 +4,19 @@
 #include "secplus1.h"
 #include "ratgdo.h"
 
+#include "common.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
 namespace esphome::ratgdo {
 namespace secplus1 {
 
-    static const char* const TAG = "ratgdo_secplus1";
+    using namespace scheduler_ids;
+    ESPHOME_LOG_TAG(TAG, "ratgdo_secplus1");
+    static constexpr uint32_t DOOR_STATE_CALLBACK_TIMEOUT = 2000;
 
     void Secplus1::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -59,7 +63,7 @@ namespace secplus1 {
         this->flags_.wall_panel_starting = false;
         this->door_state = DoorState::UNKNOWN;
         this->light_state = LightState::UNKNOWN;
-        this->scheduler_->cancel_timeout(this->ratgdo_, "wall_panel_emulation");
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION);
         this->wall_panel_emulation();
 
         this->ratgdo_->set_timeout(45000, [this] {
@@ -85,7 +89,7 @@ namespace secplus1 {
                 ESP_LOGD(TAG, "No wall panel detected. Switching to emulation mode.");
                 this->wall_panel_emulation_state_ = WallPanelEmulationState::RUNNING;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 2000, [this] {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION, 2000, [this] {
                 this->wall_panel_emulation();
             });
             return;
@@ -121,7 +125,7 @@ namespace secplus1 {
                     index = 15;
                 }
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "wall_panel_emulation", 250, [this, index] {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_WALL_PANEL_EMULATION, 250, [this, index] {
                 this->wall_panel_emulation(index);
             });
         }
@@ -151,6 +155,19 @@ namespace secplus1 {
         }
     }
 
+    void Secplus1::set_door_state_expiry()
+    {
+        this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY, DOOR_STATE_CALLBACK_TIMEOUT, [this]() {
+            ESP_LOGW(TAG, "Door state callback expired, clearing");
+            this->on_door_state_.clear();
+        });
+    }
+
+    void Secplus1::cancel_door_state_expiry()
+    {
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_DOOR_STATE_EXPIRY);
+    }
+
     void Secplus1::door_action(DoorAction action)
     {
         ESP_LOG1(TAG, "Door action: %s, door state: %s", LOG_STR_ARG(DoorAction_to_string(action)), LOG_STR_ARG(DoorState_to_string(this->door_state)));
@@ -166,11 +183,14 @@ namespace secplus1 {
                 this->toggle_door();
             } else if (this->door_state == DoorState::STOPPED) {
                 this->toggle_door(); // this starts closing door
-                this->on_door_state_([this](DoorState s) {
+                // When the outer callback fires and registers an inner callback,
+                // on_door_state() replaces the outer's expiry with a new one for
+                // the inner callback (same timeout ID = replace, not add).
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::CLOSING) {
                         // this changes direction of the door on some openers, on others it stops it
                         this->toggle_door();
-                        this->on_door_state_([this](DoorState s) {
+                        this->on_door_state([this](DoorState s) {
                             if (s == DoorState::STOPPED) {
                                 this->toggle_door();
                             }
@@ -184,7 +204,7 @@ namespace secplus1 {
             } else if (this->door_state == DoorState::OPENING) {
                 this->toggle_door(); // this switches to stopped
                 // another toggle needed to close
-                this->on_door_state_([this](DoorState s) {
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::STOPPED) {
                         this->toggle_door();
                     }
@@ -199,7 +219,7 @@ namespace secplus1 {
                 this->toggle_door(); // this switches to opening
 
                 // another toggle needed to stop
-                this->on_door_state_([this](DoorState s) {
+                this->on_door_state([this](DoorState s) {
                     if (s == DoorState::OPENING) {
                         this->toggle_door();
                     }
@@ -234,48 +254,53 @@ namespace secplus1 {
 
     optional<RxCommand> Secplus1::read_command()
     {
-        static bool reading_msg = false;
-        static uint32_t msg_start = 0;
-        static uint16_t byte_count = 0;
-        static RxPacket rx_packet;
-
-        if (!reading_msg) {
+        if (!this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
 
                 if (ser_byte < 0x30 || ser_byte > 0x3A) {
-                    ESP_LOG2(TAG, "[%d] Ignoring byte [%02X], baud: %d", millis(), ser_byte, this->uart_.baudRate());
-                    byte_count = 0;
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Ignoring byte [%s], baud: %d", millis(), format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
+                    this->rx_byte_count_ = 0;
                     continue;
                 }
-                rx_packet[byte_count++] = ser_byte;
-                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
-                reading_msg = true;
+                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                }
+                this->flags_.rx_reading_msg = true;
 
                 if (ser_byte == 0x37 || (ser_byte >= 0x30 && ser_byte <= 0x35)) {
-                    rx_packet[byte_count++] = 0;
-                    reading_msg = false;
-                    byte_count = 0;
-                    ESP_LOG2(TAG, "[%d] Received command: [%02X]", millis(), rx_packet[0]);
-                    return this->decode_packet(rx_packet);
+                    this->rx_packet_[this->rx_byte_count_++] = 0;
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
+                    {
+                        char hex[format_hex_pretty_size(1)];
+                        ESP_LOG2(TAG, "[%d] Received command: [%s]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                    }
+                    return this->decode_packet(this->rx_packet_);
                 }
 
                 break;
             }
         }
-        if (reading_msg) {
+        if (this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
                 this->last_rx_ = millis();
-                rx_packet[byte_count++] = ser_byte;
-                ESP_LOG2(TAG, "[%d] Received byte: [%02X]", millis(), ser_byte);
+                this->rx_packet_[this->rx_byte_count_++] = ser_byte;
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOG2(TAG, "[%d] Received byte: [%s]", millis(), format_hex_pretty_to(hex, &ser_byte, 1));
+                }
 
-                if (byte_count == RX_LENGTH) {
-                    reading_msg = false;
-                    byte_count = 0;
-                    this->print_rx_packet(rx_packet);
-                    return this->decode_packet(rx_packet);
+                if (this->rx_byte_count_ == RX_LENGTH) {
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
+                    this->print_rx_packet(this->rx_packet_);
+                    return this->decode_packet(this->rx_packet_);
                 }
             }
 
@@ -283,9 +308,12 @@ namespace secplus1 {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%02X ...]", millis(), rx_packet[0]);
-                reading_msg = false;
-                byte_count = 0;
+                {
+                    char hex[format_hex_pretty_size(1)];
+                    ESP_LOGW(TAG, "[%d] Discard incomplete packet: [%s ...]", millis(), format_hex_pretty_to(hex, &this->rx_packet_[0], 1));
+                }
+                this->flags_.rx_reading_msg = false;
+                this->rx_byte_count_ = 0;
             }
         }
 
@@ -294,12 +322,16 @@ namespace secplus1 {
 
     void Secplus1::print_rx_packet(const RxPacket& packet) const
     {
-        ESP_LOG2(TAG, "[%d] Received packet: [%02X %02X]", millis(), packet[0], packet[1]);
+        constexpr size_t hex_size = format_hex_pretty_size(RX_LENGTH);
+        char hex[hex_size];
+        ESP_LOG2(TAG, "[%d] Received packet: [%s]", millis(), format_hex_pretty_to(hex, packet, RX_LENGTH));
     }
 
     void Secplus1::print_tx_packet(const TxPacket& packet) const
     {
-        ESP_LOG2(TAG, "[%d] Sending packet: [%02X %02X]", millis(), packet[0], packet[1]);
+        constexpr size_t hex_size = format_hex_pretty_size(TX_LENGTH);
+        char hex[hex_size];
+        ESP_LOG2(TAG, "[%d] Sending packet: [%s]", millis(), format_hex_pretty_to(hex, packet, TX_LENGTH));
     }
 
     optional<RxCommand> Secplus1::decode_packet(const RxPacket& packet) const
@@ -468,7 +500,11 @@ namespace secplus1 {
         if (!enable_rx) {
             this->uart_.enableIntTx(true);
         }
-        ESP_LOGD(TAG, "[%d] Sent byte: [%02X]", millis(), value);
+        {
+            uint8_t byte_val = static_cast<uint8_t>(value);
+            char hex[format_hex_pretty_size(1)];
+            ESP_LOGD(TAG, "[%d] Sent byte: [%s]", millis(), format_hex_pretty_to(hex, &byte_val, 1));
+        }
     }
 
 } // namespace secplus1

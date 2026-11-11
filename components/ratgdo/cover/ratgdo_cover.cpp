@@ -1,4 +1,5 @@
 #include "ratgdo_cover.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
@@ -6,7 +7,7 @@ namespace esphome::ratgdo {
 
 using namespace esphome::cover;
 
-static const char* const TAG = "ratgdo.cover";
+ESPHOME_LOG_TAG(TAG, "ratgdo.cover");
 
 void RATGDOCover::dump_config()
 {
@@ -50,6 +51,7 @@ void RATGDOCover::on_door_state(DoorState state, float position)
     case DoorState::STOPPED:
         this->current_operation = COVER_OPERATION_IDLE;
         this->position = position;
+        break;
     case DoorState::UNKNOWN:
     default:
         this->current_operation = COVER_OPERATION_IDLE;

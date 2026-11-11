@@ -2,23 +2,18 @@ import esphome.codegen as cg
 from esphome.components import lock
 import esphome.config_validation as cv
 from esphome.const import CONF_ID
+from esphome.types import ConfigType
 
-from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child
+from .. import RATGDO_CLIENT_SCHMEA, ratgdo_ns, register_ratgdo_child, validate_unique
 
 DEPENDENCIES = ["ratgdo"]
-
-# Track if lock has been used
-USED_LOCKS: set[str] = set()
 
 RATGDOLock = ratgdo_ns.class_("RATGDOLock", lock.Lock, cg.Component)
 
 
-def validate_single_lock(config):
+def validate_single_lock(config: ConfigType) -> ConfigType:
     """Validate that only one RATGDO lock is configured."""
-    lock_id = "ratgdo_lock"
-    if lock_id in USED_LOCKS:
-        raise cv.Invalid("Only one RATGDO lock is allowed")
-    USED_LOCKS.add(lock_id)
+    validate_unique("lock", "ratgdo_lock", "Only one RATGDO lock is allowed")
     return config
 
 

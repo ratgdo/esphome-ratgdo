@@ -18,7 +18,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
-  min_version: 2026.2.0
+  min_version: 2026.4.0
   project:
     name: ratgdo.v32board_secplusv1
     version: "32.0"
@@ -26,7 +26,7 @@ esphome:
 esp32:
   board: esp32dev
   framework:
-    type: arduino
+    type: esp-idf
 
 dashboard_import:
   package_import_url: github://ratgdo/esphome-ratgdo/v32board_secplusv1.yaml@throttle-distance-sensor-polling
@@ -44,7 +44,9 @@ switch:
   - platform: ratgdo
     id: ${id_prefix}_led
     type: led
-    pin: GPIO2
+    pin:
+      number: GPIO2
+      ignore_strapping_warning: true
     name: "LED"
     entity_category: config
 

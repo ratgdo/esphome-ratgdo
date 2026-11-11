@@ -19,7 +19,7 @@ esphome:
   name: ${id_prefix}
   friendly_name: ${friendly_name}
   name_add_mac_suffix: true
-  min_version: 2026.2.0
+  min_version: 2026.4.0
   project:
     name: ratgdo.v32disco_secplus2
     version: "32disco"
@@ -106,12 +106,18 @@ output:
 rtttl:
   - id: ${id_prefix}_rtttl
     output: ${id_prefix}_ledc
+    on_finished_playback:
+      then:
+        lambda: !lambda |-
+          id(${id_prefix}_beeper).finished_playback();
 
 switch:
   - platform: ratgdo
     id: ${id_prefix}_led
     type: led
-    pin: GPIO2
+    pin:
+      number: GPIO2
+      ignore_strapping_warning: true
     name: "LED"
     entity_category: config
   - platform: ratgdo

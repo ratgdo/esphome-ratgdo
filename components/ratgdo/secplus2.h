@@ -14,7 +14,6 @@
 namespace esphome {
 
 class Scheduler;
-class InternalGPIOPin;
 
 } // namespace esphome
 
@@ -26,6 +25,8 @@ namespace secplus2 {
     using namespace esphome::ratgdo::protocol;
 
     static const uint8_t PACKET_LENGTH = 19;
+    static constexpr uint32_t STATUS_WATCHDOG_TIMEOUT = 360000; // 6 min. status updates are normally every ~5 min
+    static constexpr uint32_t STATUS_WATCHDOG_POLL = 60000; // check once per minute
     typedef uint8_t WirePacket[PACKET_LENGTH];
 
     ENUM_SPARSE(CommandType, uint16_t,
@@ -124,6 +125,17 @@ namespace secplus2 {
         template <typename F>
         void send_command(Command cmd, IncrementRollingCode increment, F&& on_sent)
         {
+            // Only register the callback if the command will be accepted.
+            // If transmit_pending is set the command will be dropped, and
+            // a stale callback would fire when the previous pending packet
+            // transmits -- executing logic (e.g. the second phase of a
+            // door_command) at the wrong time.
+            //
+            // Register before send_command() because transmit_packet() may
+            // succeed immediately and call on_command_sent_.trigger() inline.
+            if (this->flags_.transmit_pending) {
+                return;
+            }
             this->on_command_sent_(std::forward<F>(on_sent));
             this->send_command(cmd, increment);
         }
@@ -144,6 +156,7 @@ namespace secplus2 {
         optional<Command> decode_packet(const WirePacket& packet) const;
 
         void sync_helper(uint32_t start, uint32_t delay, uint8_t tries);
+        void start_status_watchdog();
 
         // 8-byte member first (may require 8-byte alignment on some 32-bit systems)
         uint64_t client_id_ { 0x539 };
@@ -156,6 +169,9 @@ namespace secplus2 {
 
         // 4-byte members
         uint32_t transmit_pending_start_ { 0 };
+        uint32_t rx_msg_start_ { 0 };
+        uint32_t rx_last_read_ { 0 };
+        uint32_t last_status_ms_ { 0 };
 
         // Larger structures
         single_observable<uint32_t> rolling_code_counter_ { 0 };
@@ -163,14 +179,17 @@ namespace secplus2 {
         Traits traits_;
         RatgdoUART uart_;
 
-        // 19-byte array
+        // 19-byte arrays
         WirePacket tx_packet_;
+        WirePacket rx_packet_;
 
         // Small members at the end
+        uint16_t rx_byte_count_ { 0 };
         LearnState learn_state_ { LearnState::UNKNOWN };
         struct {
             uint8_t transmit_pending : 1;
-            uint8_t reserved : 7; // Reserved for future use
+            uint8_t rx_reading_msg : 1;
+            uint8_t reserved : 6; // Reserved for future use
         } flags_ { 0 };
     };
 } // namespace secplus2

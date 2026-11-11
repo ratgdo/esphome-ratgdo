@@ -4,7 +4,10 @@
 #include "secplus2.h"
 #include "ratgdo.h"
 
+#include "common.h"
+#include "esphome/core/application.h"
 #include "esphome/core/gpio.h"
+#include "esphome/core/helpers.h"
 #include "esphome/core/log.h"
 #include "esphome/core/scheduler.h"
 
@@ -14,6 +17,8 @@ extern "C" {
 
 namespace esphome::ratgdo {
 namespace secplus2 {
+
+    using namespace scheduler_ids;
 
     // MAX_CODES_WITHOUT_FLASH_WRITE is a bit of a guess
     // since we write the flash at most every every 1min
@@ -25,7 +30,7 @@ namespace secplus2 {
     // expects.
     static const uint8_t MAX_CODES_WITHOUT_FLASH_WRITE = 60;
 
-    static const char* const TAG = "ratgdo_secplus2";
+    ESPHOME_LOG_TAG(TAG, "ratgdo_secplus2");
 
     void Secplus2::setup(RATGDOComponent* ratgdo, Scheduler* scheduler, InternalGPIOPin* rx_pin, InternalGPIOPin* tx_pin)
     {
@@ -39,6 +44,8 @@ namespace secplus2 {
         this->uart_.enableAutoBaud(true);
 
         this->traits_.set_features(Traits::all());
+        this->last_status_ms_ = App.get_loop_component_start_time();
+        this->start_status_watchdog();
     }
 
     void Secplus2::loop()
@@ -57,9 +64,11 @@ namespace secplus2 {
 
     void Secplus2::dump_config()
     {
-        ESP_LOGCONFIG(TAG, "  Rolling Code Counter: %d", *this->rolling_code_counter_);
-        ESP_LOGCONFIG(TAG, "  Client ID: %d", this->client_id_);
-        ESP_LOGCONFIG(TAG, "  Protocol: SEC+ v2");
+        ESP_LOGCONFIG(TAG,
+            "  Rolling Code Counter: %" PRIu32 "\n"
+            "  Client ID: %" PRIu64 "\n"
+            "  Protocol: SEC+ v2",
+            *this->rolling_code_counter_, this->client_id_);
     }
 
     void Secplus2::on_shutdown()
@@ -103,7 +112,7 @@ namespace secplus2 {
             return;
         }
 
-        if (tries == 2 && *this->ratgdo_->door_state == DoorState::UNKNOWN) { // made a few attempts and no progress (door state is the first sync request)
+        if (tries == 2) { // made a few attempts and no progress
             // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
             this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
         }
@@ -116,7 +125,7 @@ namespace secplus2 {
             if (tries % 3 == 0) {
                 delay *= 1.5;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, "sync", delay, [this, start, delay, tries]() {
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_SYNC, delay, [this, start, delay, tries]() {
                 this->sync_helper(start, delay, tries + 1);
             });
         };
@@ -124,8 +133,21 @@ namespace secplus2 {
 
     void Secplus2::sync()
     {
-        this->scheduler_->cancel_timeout(this->ratgdo_, "sync");
+        this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_SYNC);
         this->sync_helper(millis(), 500, 0);
+    }
+
+    void Secplus2::start_status_watchdog()
+    {
+        this->ratgdo_->set_interval(INTERVAL_STATUS_WATCHDOG, STATUS_WATCHDOG_POLL, [this]() {
+            // Rollover-safe: unsigned subtraction wraps correctly across millis() overflow.
+            const uint32_t now = App.get_loop_component_start_time();
+            if (static_cast<uint32_t>(now - this->last_status_ms_) > STATUS_WATCHDOG_TIMEOUT) {
+                ESP_LOGW(TAG, "No status received in 6 minutes, querying status");
+                this->query_status();
+                this->last_status_ms_ = now;
+            }
+        });
     }
 
     void Secplus2::light_action(LightAction action)
@@ -261,61 +283,69 @@ namespace secplus2 {
 
     optional<Command> Secplus2::read_command()
     {
-        static bool reading_msg = false;
-        static uint32_t msg_start = 0;
-        static uint16_t byte_count = 0;
-        static WirePacket rx_packet;
-        static uint32_t last_read = 0;
-
-        if (!reading_msg) {
+        if (!this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
-                last_read = millis();
+                this->rx_last_read_ = millis();
 
                 if (ser_byte != 0x55 && ser_byte != 0x01 && ser_byte != 0x00) {
-                    ESP_LOG2(TAG, "Ignoring byte (%d): %02X, baud: %d", byte_count, ser_byte, this->uart_.baudRate());
-                    byte_count = 0;
+                    {
+                        char hex[format_hex_pretty_size(1)];
+                        ESP_LOG2(TAG, "Ignoring byte (%d): %s, baud: %d", this->rx_byte_count_, format_hex_pretty_to(hex, &ser_byte, 1), this->uart_.baudRate());
+                    }
+                    this->rx_byte_count_ = 0;
                     continue;
                 }
-                msg_start = ((msg_start << 8) | ser_byte) & 0xffffff;
-                byte_count++;
+                this->rx_msg_start_ = ((this->rx_msg_start_ << 8) | ser_byte) & 0xffffff;
+                this->rx_byte_count_++;
 
                 // if we are at the start of a message, capture the next 16 bytes
-                if (msg_start == 0x550100) {
+                if (this->rx_msg_start_ == 0x550100) {
                     ESP_LOG1(TAG, "Baud: %d", this->uart_.baudRate());
-                    rx_packet[0] = 0x55;
-                    rx_packet[1] = 0x01;
-                    rx_packet[2] = 0x00;
-                    byte_count = 3;
+                    this->rx_packet_[0] = 0x55;
+                    this->rx_packet_[1] = 0x01;
+                    this->rx_packet_[2] = 0x00;
+                    this->rx_byte_count_ = 3;
 
-                    reading_msg = true;
+                    this->flags_.rx_reading_msg = true;
                     break;
                 }
             }
         }
-        if (reading_msg) {
+        if (this->flags_.rx_reading_msg) {
             while (this->uart_.available()) {
                 uint8_t ser_byte = this->uart_.read();
-                last_read = millis();
-                rx_packet[byte_count] = ser_byte;
-                byte_count++;
-                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", byte_count, ser_byte, this->uart_.baudRate());
+                this->rx_last_read_ = millis();
+                this->rx_packet_[this->rx_byte_count_] = ser_byte;
+                this->rx_byte_count_++;
 
-                if (byte_count == PACKET_LENGTH) {
-                    reading_msg = false;
-                    byte_count = 0;
-                    this->print_packet(LOG_STR("Received packet: "), rx_packet);
-                    return this->decode_packet(rx_packet);
+                this->rx_msg_start_ = ((this->rx_msg_start_ << 8) | ser_byte) & 0xffffff;
+                if (this->rx_msg_start_ == 0x550100) {
+                    ESP_LOGD(TAG, "Sync sequence found mid-packet. Discarding %d bytes and restarting.", this->rx_byte_count_ - 3);
+                    this->rx_packet_[0] = 0x55;
+                    this->rx_packet_[1] = 0x01;
+                    this->rx_packet_[2] = 0x00;
+                    this->rx_byte_count_ = 3;
+                    continue;
+                }
+
+                // ESP_LOG2(TAG, "Received byte (%d): %02X, baud: %d", this->rx_byte_count_, ser_byte, this->uart_.baudRate());
+
+                if (this->rx_byte_count_ == PACKET_LENGTH) {
+                    this->flags_.rx_reading_msg = false;
+                    this->rx_byte_count_ = 0;
+                    this->print_packet(LOG_STR("Received packet"), this->rx_packet_);
+                    return this->decode_packet(this->rx_packet_);
                 }
             }
 
-            if (millis() - last_read > 100) {
+            if (millis() - this->rx_last_read_ > 100) {
                 // if we have a partial packet and it's been over 100ms since last byte was read,
                 // the rest is not coming (a full packet should be received in ~20ms),
                 // discard it so we can read the following packet correctly
-                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", byte_count);
-                reading_msg = false;
-                byte_count = 0;
+                ESP_LOGW(TAG, "Discard incomplete packet, length: %d", this->rx_byte_count_);
+                this->flags_.rx_reading_msg = false;
+                this->rx_byte_count_ = 0;
             }
         }
 
@@ -324,27 +354,9 @@ namespace secplus2 {
 
     void Secplus2::print_packet(const esphome::LogString* prefix, const WirePacket& packet) const
     {
-        ESP_LOGD(TAG, "%s: [%02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X]",
-            LOG_STR_ARG(prefix),
-            packet[0],
-            packet[1],
-            packet[2],
-            packet[3],
-            packet[4],
-            packet[5],
-            packet[6],
-            packet[7],
-            packet[8],
-            packet[9],
-            packet[10],
-            packet[11],
-            packet[12],
-            packet[13],
-            packet[14],
-            packet[15],
-            packet[16],
-            packet[17],
-            packet[18]);
+        constexpr size_t hex_size = format_hex_pretty_size(PACKET_LENGTH);
+        char hex_buf[hex_size];
+        ESP_LOGD(TAG, "%s: [%s]", LOG_STR_ARG(prefix), format_hex_pretty_to(hex_buf, packet, PACKET_LENGTH));
     }
 
     optional<Command> Secplus2::decode_packet(const WirePacket& packet) const
@@ -384,7 +396,7 @@ namespace secplus2 {
         ESP_LOG1(TAG, "Handle command: %s", LOG_STR_ARG(CommandType_to_string(cmd.type)));
 
         if (cmd.type == CommandType::STATUS) {
-
+            this->last_status_ms_ = App.get_loop_component_start_time();
             this->ratgdo_->received(to_DoorState(cmd.nibble, DoorState::UNKNOWN));
             this->ratgdo_->received(to_LightState((cmd.byte2 >> 1) & 1, LightState::UNKNOWN));
             this->ratgdo_->received(to_LockState((cmd.byte2 & 1), LockState::UNKNOWN));
@@ -428,7 +440,12 @@ namespace secplus2 {
 
     void Secplus2::send_command(Command command, IncrementRollingCode increment)
     {
-        ESP_LOGD(TAG, "Send command: %s, data: %02X%02X%02X", LOG_STR_ARG(CommandType_to_string(command.type)), command.byte2, command.byte1, command.nibble);
+        {
+            uint8_t data[] = { command.byte2, command.byte1, command.nibble };
+            constexpr size_t hex_size = format_hex_pretty_size(3);
+            char hex[hex_size];
+            ESP_LOGD(TAG, "Send command: %s, data: %s", LOG_STR_ARG(CommandType_to_string(command.type)), format_hex_pretty_to(hex, data, 3));
+        }
         if (!this->flags_.transmit_pending) { // have an untransmitted packet
             this->encode_packet(command, this->tx_packet_);
             if (increment == IncrementRollingCode::YES) {
@@ -492,7 +509,7 @@ namespace secplus2 {
 
     void Secplus2::set_rolling_code_counter(uint32_t counter)
     {
-        ESP_LOGV(TAG, "Set rolling code counter to %d", counter);
+        ESP_LOGV(TAG, "Set rolling code counter to %" PRIu32, counter);
         this->rolling_code_counter_ = counter;
     }
 

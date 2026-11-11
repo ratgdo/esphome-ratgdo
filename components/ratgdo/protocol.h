@@ -1,12 +1,13 @@
 #pragma once
 
+#include "esphome/core/gpio.h"
+
 #include "common.h"
 #include "ratgdo_state.h"
 
 namespace esphome {
 
 class Scheduler;
-class InternalGPIOPin;
 
 } // namespace esphome
 

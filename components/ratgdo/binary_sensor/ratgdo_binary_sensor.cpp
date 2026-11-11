@@ -1,10 +1,11 @@
 #include "ratgdo_binary_sensor.h"
+#include "../common.h"
 #include "../ratgdo_state.h"
 #include "esphome/core/log.h"
 
 namespace esphome::ratgdo {
 
-static const char* const TAG = "ratgdo.binary_sensor";
+ESPHOME_LOG_TAG(TAG, "ratgdo.binary_sensor");
 
 void RATGDOBinarySensor::setup()
 {
@@ -34,6 +35,13 @@ void RATGDOBinarySensor::setup()
             this->publish_state(state == ButtonState::PRESSED);
         });
         break;
+#ifdef RATGDO_USE_ENCODER
+    case SensorType::RATGDO_SENSOR_MANUALLY_OPERATED:
+        this->parent_->subscribe_manually_operated_state([this](ManuallyOperatedState state) {
+            this->publish_state(state == ManuallyOperatedState::YES);
+        });
+        break;
+#endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     case SensorType::RATGDO_SENSOR_VEHICLE_DETECTED:
         this->parent_->subscribe_vehicle_detected_state([this](VehicleDetectedState state) {
@@ -53,6 +61,7 @@ void RATGDOBinarySensor::setup()
         break;
 #endif
     default:
+        ESP_LOGE(TAG, "Unknown binary sensor type in setup");
         break;
     }
 }
@@ -73,6 +82,11 @@ void RATGDOBinarySensor::dump_config()
     case SensorType::RATGDO_SENSOR_BUTTON:
         ESP_LOGCONFIG(TAG, "  Type: Button");
         break;
+#ifdef RATGDO_USE_ENCODER
+    case SensorType::RATGDO_SENSOR_MANUALLY_OPERATED:
+        ESP_LOGCONFIG(TAG, "  Type: Manually Operated");
+        break;
+#endif
 #ifdef RATGDO_USE_VEHICLE_SENSORS
     case SensorType::RATGDO_SENSOR_VEHICLE_DETECTED:
         ESP_LOGCONFIG(TAG, "  Type: VehicleDetected");
