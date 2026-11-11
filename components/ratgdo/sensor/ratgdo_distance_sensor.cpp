@@ -10,11 +10,23 @@ namespace esphome::ratgdo {
 ESPHOME_LOG_TAG(TAG, "ratgdo.sensor");
 static const int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
 static const int MAX_DISTANCE = 4500; // default maximum distance
+static const uint8_t XSHUT_PIN = 32;
+static const uint8_t INTERRUPT_PIN = 35;
+static const uint8_t INTERRUPT_DETECT_SAMPLES = 3;
+static const uint32_t DISTANCE_POLL_INTERVAL_MS = 50;
+static const uint32_t DISTANCE_INTERRUPT_WATCHDOG_MS = 250;
+
+void IRAM_ATTR RATGDODistanceSensor::isr_data_ready(void* arg)
+{
+    (void)arg;
+    App.wake_loop_any_context();
+}
 
 void RATGDODistanceSensor::setup()
 {
+    pinMode(INTERRUPT_PIN, INPUT);
     this->distance_sensor_.setI2cDevice(&I2C);
-    this->distance_sensor_.setXShutPin(32);
+    this->distance_sensor_.setXShutPin(XSHUT_PIN);
     // I2C.begin(17,16);
     I2C.begin(19, 18);
     this->distance_sensor_.begin();
@@ -33,25 +45,43 @@ void RATGDODistanceSensor::dump_config()
     ESP_LOGCONFIG(TAG, "  Type: Distance");
 }
 
-static const uint32_t DISTANCE_POLL_INTERVAL_MS = 50;
-
 void RATGDODistanceSensor::loop()
 {
     uint32_t now = App.get_loop_component_start_time();
-    if (now - this->last_distance_poll_ms_ < DISTANCE_POLL_INTERVAL_MS)
-        return;
-    this->last_distance_poll_ms_ = now;
-
-    VL53L4CX_MultiRangingData_t distanceData;
-    VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
     uint8_t dataReady = 0;
-    int objCount = 0;
-    int16_t maxDistance = -1;
-    int status;
 
-    if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) == 0 && dataReady) {
-        status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
-        objCount = pDistanceData->NumberOfObjectsFound;
+    if (this->interrupt_mode_ == InterruptMode::MODE_INTERRUPT) {
+        if (digitalRead(INTERRUPT_PIN) == LOW) {
+            dataReady = 1;
+            this->last_distance_poll_ms_ = now;
+        } else if (now - this->last_distance_poll_ms_ >= DISTANCE_INTERRUPT_WATCHDOG_MS) {
+            this->last_distance_poll_ms_ = now;
+            if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) != 0) {
+                dataReady = 0;
+            }
+        } else {
+            return;
+        }
+    } else {
+        if (now - this->last_distance_poll_ms_ < DISTANCE_POLL_INTERVAL_MS)
+            return;
+        this->last_distance_poll_ms_ = now;
+        if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) != 0) {
+            dataReady = 0;
+        }
+    }
+
+    if (dataReady) {
+        bool low_before_clear = false;
+        if (this->interrupt_mode_ == InterruptMode::MODE_PROBING) {
+            low_before_clear = (digitalRead(INTERRUPT_PIN) == LOW);
+        }
+
+        VL53L4CX_MultiRangingData_t distanceData;
+        VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
+        int16_t maxDistance = -1;
+        int status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
+        int objCount = pDistanceData->NumberOfObjectsFound;
 
         for (int i = 0; i < distanceData.NumberOfObjectsFound; i++) {
             VL53L4CX_TargetRangeData_t* d = &pDistanceData->RangeData[i];
@@ -79,6 +109,22 @@ void RATGDODistanceSensor::loop()
 
         if (status == 0) {
             status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
+        }
+
+        if (this->interrupt_mode_ == InterruptMode::MODE_PROBING) {
+            delayMicroseconds(2);
+            bool high_after_clear = (status == 0 && digitalRead(INTERRUPT_PIN) == HIGH);
+            if (low_before_clear && high_after_clear) {
+                this->interrupt_probe_count_++;
+                if (this->interrupt_probe_count_ >= INTERRUPT_DETECT_SAMPLES) {
+                    this->interrupt_mode_ = InterruptMode::MODE_INTERRUPT;
+                    attachInterruptArg(INTERRUPT_PIN, &RATGDODistanceSensor::isr_data_ready, this, FALLING);
+                    ESP_LOGI(TAG, "VL53L4CX interrupt detected on GPIO%u", INTERRUPT_PIN);
+                }
+            } else {
+                this->interrupt_mode_ = InterruptMode::MODE_POLLING;
+                ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling every %ums", DISTANCE_POLL_INTERVAL_MS);
+            }
         }
     }
 }
