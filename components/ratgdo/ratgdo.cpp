@@ -371,19 +371,19 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
         this->cancel_position_sync_callbacks();
         this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
 #ifdef RATGDO_USE_ENCODER
-        enc_intended_dir_ = 0; // intent expires when door comes to rest
+        this->enc_intent_.clear(); // intent expires when door comes to rest
 #endif
     } else if (door_state == DoorState::OPEN) {
         this->door_position = 1.0;
         this->cancel_position_sync_callbacks();
 #ifdef RATGDO_USE_ENCODER
-        enc_intended_dir_ = 0; // open intent satisfied
+        this->enc_intent_.clear(); // open intent satisfied
 #endif
     } else if (door_state == DoorState::CLOSED) {
         this->door_position = 0.0;
         this->cancel_position_sync_callbacks();
 #ifdef RATGDO_USE_ENCODER
-        enc_intended_dir_ = 0; // close intent satisfied
+        this->enc_intent_.clear(); // close intent satisfied
 #endif
     }
 
@@ -816,7 +816,7 @@ void RATGDOComponent::door_open()
 
 #ifdef RATGDO_USE_ENCODER
     // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
-    enc_intended_dir_ = 1;
+    this->enc_intent_.arm(1, millis());
 #endif
     this->door_action(DoorAction::OPEN);
 
@@ -849,7 +849,7 @@ void RATGDOComponent::door_close()
         // so we retry once the door comes to rest (the move_to_position timer may
         // stop it before it reaches fully closed).
 #ifdef RATGDO_USE_ENCODER
-        enc_intended_dir_ = -1;
+        this->enc_intent_.arm(-1, millis());
         this->on_door_state([this](DoorState s) {
             if (s == DoorState::STOPPED) {
                 this->door_close();
@@ -876,7 +876,7 @@ void RATGDOComponent::door_close()
     // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
     // Set unconditionally here — mirrors door_open() — so the intent is captured regardless
     // of whether an obstruction sensor is present.
-    enc_intended_dir_ = -1;
+    this->enc_intent_.arm(-1, millis());
 #endif
     if (this->flags_.obstruction_sensor_detected) {
         this->door_action(DoorAction::CLOSE);
@@ -923,6 +923,19 @@ void RATGDOComponent::door_action(DoorAction action)
         this->door_action_delayed = DoorActionDelayed::YES;
         this->set_timeout(TIMEOUT_DOOR_ACTION, *this->closing_delay * 1000, [this, action] {
             this->door_action_delayed = DoorActionDelayed::NO;
+#ifdef RATGDO_USE_ENCODER
+            // The command is only leaving now, so the intent window has to run
+            // from here rather than from when the delay was started. Re-arm
+            // rather than refresh: closing_delay is user-settable and a value of
+            // EncoderIntent::TIMEOUT_MS or more would have lapsed the intent
+            // already, silently disabling the wrong-direction correction for
+            // every delayed command. Keep the armed direction: a TOGGLE can be
+            // deferred while an open intent is still armed, and an unarmed
+            // intent (a bare toggle) stays unarmed.
+            const int8_t dir = this->enc_intent_.direction();
+            if (dir != 0)
+                this->enc_intent_.arm(dir, millis());
+#endif
             this->protocol_->door_action(action);
         });
     } else {
@@ -966,7 +979,7 @@ void RATGDOComponent::door_move_to_position(float position)
     // Record intended direction so on_encoder_update can detect a wrong-way GDO response.
     // door_move_to_position calls door_action() directly (not door_open/door_close)
     // so we must set this here as well.
-    enc_intended_dir_ = (delta > 0) ? 1 : -1;
+    this->enc_intent_.arm((delta > 0) ? 1 : -1, millis());
 #endif
     this->door_action(delta > 0 ? DoorAction::OPEN : DoorAction::CLOSE);
     this->set_timeout(TIMEOUT_MOVE_TO_POSITION, operation_time,
@@ -988,11 +1001,11 @@ void RATGDOComponent::cancel_position_sync_callbacks()
         this->door_start_moving = 0;
         this->door_start_position = DOOR_POSITION_UNKNOWN;
         this->door_move_delta = DOOR_DELTA_UNKNOWN;
-        // enc_intended_dir_ is intentionally NOT cleared here.
-        // It persists until the direction is confirmed (first correct-direction encoder
-        // tick clears it) or the door reaches the commanded boundary (received(OPEN/CLOSED)).
-        // Clearing it here was wiping intent set by a close/open command that arrived
-        // just before the door came to rest.
+        // The encoder intent is intentionally NOT cleared here.
+        // It persists until the door reaches the commanded boundary
+        // (received(OPEN/CLOSED)), the encoder reports the door stopped, or the
+        // intent window lapses. Clearing it here was wiping intent set by a
+        // close/open command that arrived just before the door came to rest.
     }
 }
 
@@ -1196,11 +1209,25 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
 
         // Check if the door moved in the opposite direction from what was commanded.
 #if ENC_DIRECTION_CORRECTION_ENABLED
-        if (enc_intended_dir_ != 0) {
-            bool correct = (in_motion == DoorState::OPENING) == (enc_intended_dir_ > 0);
+        // An intent that has produced no movement of its own within
+        // EncoderIntent::TIMEOUT_MS is dropped here. Openers do not always act on a
+        // command (dry contact builds swallow OPEN at the open limit, ROW openers
+        // ignore CLOSE without obstruction sensors), and a command that was never
+        // acted on must not reverse a later manual operation of the door.
+        const uint32_t now = millis();
+        const int8_t armed = this->enc_intent_.direction();
+        const int8_t intended = this->enc_intent_.active(now);
+        if (armed != 0 && intended == 0) {
+            // Say so, otherwise a disarmed correction is indistinguishable in
+            // the logs from a build that never armed an intent at all.
+            ESP_LOGD(TAG, "Intent to %s expired after %u ms without movement; wrong-direction correction disarmed",
+                armed > 0 ? "open" : "close",
+                static_cast<unsigned>(EncoderIntent::TIMEOUT_MS));
+        }
+        if (intended != 0) {
+            bool correct = (in_motion == DoorState::OPENING) == (intended > 0);
             if (!correct) {
-                int8_t intended = enc_intended_dir_;
-                enc_intended_dir_ = 0; // clear — correction is firing
+                this->enc_intent_.clear(); // clear — correction is firing
                 ESP_LOGD(TAG, "Wrong direction detected (wanted %s, got %s); stopping to correct",
                     intended > 0 ? "open" : "close",
                     in_motion == DoorState::OPENING ? "opening" : "closing");
@@ -1213,11 +1240,14 @@ void RATGDOComponent::on_encoder_update(int16_t raw)
                 // Defer the retry to check_encoder_stopped()
                 enc_dir_correction_pending_ = true;
                 enc_dir_correction_intended_ = intended;
+            } else {
+                // Door is travelling the intended way. Push the expiry out so the
+                // intent lasts for the whole move and a mid-travel reversal
+                // (confirmed after ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can
+                // still trigger the correction. check_encoder_stopped() clears the
+                // intent when the move ends.
+                this->enc_intent_.refresh(now);
             }
-            // If correct direction: do NOT clear enc_intended_dir_ here.
-            // It stays set so a mid-travel reversal (confirmed after
-            // ENC_DIRECTION_CHANGE_THRESHOLD opposite ticks) can still trigger
-            // the correction. check_encoder_stopped() clears it when the move ends.
         }
 #endif // ENC_DIRECTION_CORRECTION_ENABLED
         this->encoder_received(in_motion);
@@ -1240,9 +1270,9 @@ void RATGDOComponent::check_encoder_stopped()
     // Clear enc_travel_dir_ now so the next move starts with a fresh latch.
     enc_travel_dir_ = 0;
     enc_reverse_count_ = 0;
-    // Clear enc_intended_dir_ so a stale intent from a previous ratgdo command
-    // cannot trigger the wrong-direction correction on a subsequent wall-control command
-    enc_intended_dir_ = 0;
+    // Clear the intent so a stale one from a previous ratgdo command cannot
+    // trigger the wrong-direction correction on a subsequent wall-control command
+    this->enc_intent_.clear();
     const DoorState boundary_state = decreasing
         ? (flags_.reverse_encoder ? DoorState::OPEN : DoorState::CLOSED)
         : (flags_.reverse_encoder ? DoorState::CLOSED : DoorState::OPEN);
