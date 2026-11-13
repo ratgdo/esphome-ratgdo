@@ -166,6 +166,7 @@ CONF_DRY_CONTACT_SENSOR_GROUP = "dry_contact_sensor_group"
 CONF_ENCODER_PIN_A = "encoder_pin_a"
 CONF_ENCODER_PIN_B = "encoder_pin_b"
 CONF_ENCODER_SENSOR = "encoder_sensor"
+CONF_FORCE_EMULATE = "force_emulate"
 
 
 def validate_protocol(config):
@@ -239,6 +240,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_PROTOCOL, default=PROTOCOL_SECPLUSV2): cv.All(
                 vol.In(SUPPORTED_PROTOCOLS)
             ),
+            cv.Optional(CONF_FORCE_EMULATE, default=False): cv.boolean,
             # cv.Inclusive(CONF_DRY_CONTACT_OPEN_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
             # cv.Inclusive(CONF_DRY_CONTACT_CLOSE_SENSOR,CONF_DRY_CONTACT_SENSOR_GROUP): cv.use_id(binary_sensor.BinarySensor),
             cv.Optional(CONF_DRY_CONTACT_OPEN_SENSOR): cv.use_id(
@@ -336,6 +338,9 @@ async def to_code(config):
     elif config[CONF_PROTOCOL] == PROTOCOL_DRYCONTACT:
         cg.add_build_flag("-DPROTOCOL_DRYCONTACT")
     cg.add(var.init_protocol())
+
+    if config.get(CONF_FORCE_EMULATE):
+        cg.add_build_flag("-DFORCE_EMULATIION")
 
     # RATGDOComponent::setup() subscribes to door_state
     subscribe_door_state()
