@@ -78,6 +78,16 @@ switch:
         output: true
     name: "Status obstruction"
     entity_category: diagnostic
+  - platform: ratgdo
+    id: ${id_prefix}_reverse_encoder
+    type: reverse_encoder
+    name: "Encoder Reverse"
+    entity_category: config
+  - platform: ratgdo
+    id: ${id_prefix}_prefer_encoder_status
+    type: prefer_encoder_status
+    name: "Encoder Prefer Door Status"
+    entity_category: config
 
 binary_sensor:
   - platform: ratgdo
