@@ -120,14 +120,6 @@ sensor:
 
 number:
   - platform: ratgdo
-    id: ${id_prefix}_rolling_code_counter
-    type: rolling_code_counter
-    entity_category: config
-    name: "Rolling code counter"
-    mode: box
-    unit_of_measurement: "codes"
-
-  - platform: ratgdo
     id: ${id_prefix}_opening_duration
     type: opening_duration
     entity_category: config
