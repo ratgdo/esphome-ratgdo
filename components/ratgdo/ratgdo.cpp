@@ -899,11 +899,12 @@ void RATGDOComponent::door_close()
         this->set_timeout(
             TIMEOUT_DOOR_QUERY_STATE, (closing_delay_s + *this->closing_duration + 2) * 1000,
             [this]() {
-                // OPENING means the door reversed; it is not closed
-                if (*this->door_state != DoorState::CLOSED
+                if (*this->door_state == DoorState::OPENING) {
+                    // the door reversed, so it is not closed; query in case the final OPEN was missed
+                    this->query_status();
+                } else if (*this->door_state != DoorState::CLOSED
                     && *this->door_state != DoorState::STOPPED
-                    && *this->door_state != DoorState::OPEN
-                    && *this->door_state != DoorState::OPENING) {
+                    && *this->door_state != DoorState::OPEN) {
                     this->received(DoorState::CLOSED); // probably missed a status
                                                        // message, assume it's closed
                     this->query_status(); // query in case we're wrong and it's stopped
@@ -927,6 +928,10 @@ void RATGDOComponent::door_action(DoorAction action)
 {
 #ifdef RATGDO_USE_CLOSING_DELAY
     if (*this->closing_delay > 0 && (action == DoorAction::CLOSE || (action == DoorAction::TOGGLE && *this->door_state != DoorState::CLOSED))) {
+        if (*this->door_action_delayed == DoorActionDelayed::YES) {
+            // replacing a pending close moves its start, so its fallback deadline no longer holds
+            this->cancel_timeout(TIMEOUT_DOOR_QUERY_STATE);
+        }
         this->door_action_delayed = DoorActionDelayed::YES;
         this->set_timeout(TIMEOUT_DOOR_ACTION, *this->closing_delay * 1000, [this, action] {
             this->door_action_delayed = DoorActionDelayed::NO;
