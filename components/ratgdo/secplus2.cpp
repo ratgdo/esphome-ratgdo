@@ -222,7 +222,11 @@ namespace secplus2 {
 
     void Secplus2::query_paired_devices()
     {
-        // ALL through ACCESSORY are 0 to 4; a counted loop keeps an initializer list out of RAM on ESP8266
+        // A counted loop keeps an initializer list out of RAM on ESP8266
+        static_assert(static_cast<uint8_t>(PairedDevice::ALL) == 0 && static_cast<uint8_t>(PairedDevice::REMOTE) == 1
+                && static_cast<uint8_t>(PairedDevice::KEYPAD) == 2 && static_cast<uint8_t>(PairedDevice::WALL_CONTROL) == 3
+                && static_cast<uint8_t>(PairedDevice::ACCESSORY) == 4,
+            "the loop below queries ALL through ACCESSORY as 0 to 4");
         uint32_t timeout = 0;
         for (uint8_t i = static_cast<uint8_t>(PairedDevice::ALL); i <= static_cast<uint8_t>(PairedDevice::ACCESSORY); i++) {
             timeout += 200;
