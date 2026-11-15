@@ -210,6 +210,20 @@ void RATGDOComponent::on_shutdown()
 void RATGDOComponent::received(const DoorState door_state)
 {
 #ifdef RATGDO_USE_ENCODER
+    if (this->flags_.prefer_encoder_status && this->encoder_sensor_ != nullptr) {
+        // If our current resolved door state is still UNKNOWN on boot,
+        // let the initial sync establish the initial resting state.
+        if (*this->door_state == DoorState::UNKNOWN) {
+            this->protocol_door_state_ = door_state;
+            this->set_resolved_door_state(door_state);
+            return;
+        }
+        // When preferring encoder during operation, track protocol state internally for diagnostics
+        // but do not override the resolved door state.
+        this->protocol_door_state_ = door_state;
+        return;
+    }
+
     bool protocol_state_changed = false;
     if (this->protocol_door_state_ != door_state) {
         protocol_state_changed = true;
@@ -236,6 +250,11 @@ void RATGDOComponent::received(const DoorState door_state)
 void RATGDOComponent::encoder_received(const DoorState door_state)
 {
     this->encoder_door_state_ = door_state;
+
+    if (this->flags_.prefer_encoder_status) {
+        this->set_resolved_door_state(door_state);
+        return;
+    }
 
     auto proto_state = this->protocol_door_state_;
 
@@ -1400,11 +1419,11 @@ void RATGDOComponent::encoder_apply_state(int16_t raw)
         raw, enc_min_, enc_max_, dist_closed, dist_open, flags_.reverse_encoder);
 
     if (dist_closed <= 1 && dist_closed <= dist_open) {
-        this->received(DoorState::CLOSED);
+        this->encoder_received(DoorState::CLOSED);
     } else if (dist_open <= 1 && dist_open < dist_closed) {
-        this->received(DoorState::OPEN);
+        this->encoder_received(DoorState::OPEN);
     } else {
-        this->received(DoorState::STOPPED);
+        this->encoder_received(DoorState::STOPPED);
     }
 }
 
