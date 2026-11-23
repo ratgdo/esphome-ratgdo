@@ -8,13 +8,12 @@
 namespace esphome::ratgdo {
 
 ESPHOME_LOG_TAG(TAG, "ratgdo.sensor");
-static const int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
-static const int MAX_DISTANCE = 4500; // default maximum distance
-static const uint8_t XSHUT_PIN = 32;
-static const uint8_t INTERRUPT_PIN = 35;
-static const uint8_t INTERRUPT_DETECT_SAMPLES = 3;
-static const uint32_t DISTANCE_POLL_INTERVAL_MS = 50;
-static const uint32_t DISTANCE_INTERRUPT_WATCHDOG_MS = 250;
+static constexpr int MIN_DISTANCE = 100; // ignore bugs crawling on the distance sensor & dust protection film
+static constexpr int MAX_DISTANCE = 4500; // default maximum distance
+static constexpr uint8_t XSHUT_PIN = 32;
+static constexpr uint8_t INTERRUPT_PIN = 35;
+static constexpr uint8_t INTERRUPT_DETECT_SAMPLES = 3;
+static constexpr uint32_t DISTANCE_INTERRUPT_WATCHDOG_MS = 250;
 
 void IRAM_ATTR RATGDODistanceSensor::isr_data_ready(void* arg)
 {
@@ -64,13 +63,8 @@ void RATGDODistanceSensor::loop()
         } else {
             return;
         }
-    } else {
-        if (now - this->last_distance_poll_ms_ < DISTANCE_POLL_INTERVAL_MS)
-            return;
-        this->last_distance_poll_ms_ = now;
-        if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) != 0) {
-            dataReady = 0;
-        }
+    } else if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) != 0) {
+        dataReady = 0;
     }
 
     if (dataReady) {
@@ -125,7 +119,7 @@ void RATGDODistanceSensor::loop()
                 }
             } else {
                 this->interrupt_mode_ = InterruptMode::MODE_POLLING;
-                ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling every %ums", DISTANCE_POLL_INTERVAL_MS);
+                ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling");
             }
         }
     }
