@@ -27,12 +27,12 @@ esp8266:
   restore_from_flash: true
 
 dashboard_import:
-  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard.yaml@main
+  package_import_url: github://ratgdo/esphome-ratgdo/v25iboard.yaml@throttle-distance-sensor-polling
 
 packages:
   remote_package:
     url: https://github.com/ratgdo/esphome-ratgdo
-    ref: main
+    ref: throttle-distance-sensor-polling
     files: [base.yaml]
     refresh: 1s
   # remote_package: !include
