@@ -17,8 +17,7 @@ static constexpr uint32_t DISTANCE_INTERRUPT_WATCHDOG_MS = 250;
 
 void IRAM_ATTR RATGDODistanceSensor::isr_data_ready(void* arg)
 {
-    (void)arg;
-    App.wake_loop_any_context();
+    static_cast<RATGDODistanceSensor*>(arg)->enable_loop_soon_any_context();
 }
 
 void RATGDODistanceSensor::setup()
@@ -61,68 +60,72 @@ void RATGDODistanceSensor::loop()
                 dataReady = 0;
             }
         } else {
+            // Nothing pending; the ISR or the watchdog interval re-enables the loop
+            this->disable_loop();
             return;
         }
     } else if (this->distance_sensor_.VL53L4CX_GetMeasurementDataReady(&dataReady) != 0) {
         dataReady = 0;
     }
 
-    if (dataReady) {
-        bool low_before_clear = false;
-        if (this->interrupt_mode_ == InterruptMode::MODE_PROBING) {
-            low_before_clear = (digitalRead(INTERRUPT_PIN) == LOW);
-        }
+    if (!dataReady)
+        return;
 
-        VL53L4CX_MultiRangingData_t distanceData;
-        VL53L4CX_MultiRangingData_t* pDistanceData = &distanceData;
-        int16_t maxDistance = -1;
-        int status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(pDistanceData);
-        int objCount = pDistanceData->NumberOfObjectsFound;
+    bool low_before_clear = false;
+    if (this->interrupt_mode_ == InterruptMode::MODE_PROBING) {
+        low_before_clear = (digitalRead(INTERRUPT_PIN) == LOW);
+    }
 
-        for (int i = 0; i < distanceData.NumberOfObjectsFound; i++) {
-            VL53L4CX_TargetRangeData_t* d = &pDistanceData->RangeData[i];
-            if (d->RangeStatus == 0) {
-                maxDistance = std::max(maxDistance, d->RangeMilliMeter);
-                maxDistance = maxDistance <= MIN_DISTANCE ? -1 : maxDistance;
-            }
-        }
+    VL53L4CX_MultiRangingData_t distanceData;
+    int16_t maxDistance = -1;
+    int status = this->distance_sensor_.VL53L4CX_GetMultiRangingData(&distanceData);
+    int objCount = distanceData.NumberOfObjectsFound;
 
-        if (maxDistance < 0)
-            maxDistance = MAX_DISTANCE;
-
-        // maxDistance = objCount == 0 ? -1 : pDistanceData->RangeData[objCount - 1].RangeMilliMeter;
-        /*
-         * if the sensor is pointed at glass, there are many error -1 readings which will fill the
-         * vector with out of range data. The sensor should be sensitive enough to detect the floor
-         * in most situations, but daylight and/or really high ceilings can cause long distance
-         * measurements to be out of range.
-         */
-        if (maxDistance != this->last_distance_) {
-            ESP_LOGI(TAG, "distance changed: %d -> %d (obj=%d)", this->last_distance_, maxDistance, objCount);
-            this->last_distance_ = maxDistance;
-        }
-        this->parent_->set_distance_measurement(maxDistance);
-
-        if (status == 0) {
-            status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
-        }
-
-        if (this->interrupt_mode_ == InterruptMode::MODE_PROBING) {
-            delayMicroseconds(2);
-            bool high_after_clear = (status == 0 && digitalRead(INTERRUPT_PIN) == HIGH);
-            if (low_before_clear && high_after_clear) {
-                this->interrupt_probe_count_++;
-                if (this->interrupt_probe_count_ >= INTERRUPT_DETECT_SAMPLES) {
-                    this->interrupt_mode_ = InterruptMode::MODE_INTERRUPT;
-                    attachInterruptArg(INTERRUPT_PIN, &RATGDODistanceSensor::isr_data_ready, this, FALLING);
-                    ESP_LOGI(TAG, "VL53L4CX interrupt detected on GPIO%u", INTERRUPT_PIN);
-                }
-            } else {
-                this->interrupt_mode_ = InterruptMode::MODE_POLLING;
-                ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling");
-            }
+    for (int i = 0; i < objCount; i++) {
+        VL53L4CX_TargetRangeData_t* d = &distanceData.RangeData[i];
+        if (d->RangeStatus == 0) {
+            maxDistance = std::max(maxDistance, d->RangeMilliMeter);
+            maxDistance = maxDistance <= MIN_DISTANCE ? -1 : maxDistance;
         }
     }
+
+    if (maxDistance < 0)
+        maxDistance = MAX_DISTANCE;
+
+    /*
+     * if the sensor is pointed at glass, there are many error -1 readings which will fill the
+     * vector with out of range data. The sensor should be sensitive enough to detect the floor
+     * in most situations, but daylight and/or really high ceilings can cause long distance
+     * measurements to be out of range.
+     */
+    if (maxDistance != this->last_distance_) {
+        ESP_LOGI(TAG, "distance changed: %d -> %d (obj=%d)", this->last_distance_, maxDistance, objCount);
+        this->last_distance_ = maxDistance;
+    }
+    this->parent_->set_distance_measurement(maxDistance);
+
+    if (status == 0) {
+        status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
+    }
+
+    if (this->interrupt_mode_ != InterruptMode::MODE_PROBING)
+        return;
+
+    delayMicroseconds(2);
+    bool high_after_clear = (status == 0 && digitalRead(INTERRUPT_PIN) == HIGH);
+    if (!low_before_clear || !high_after_clear) {
+        this->interrupt_mode_ = InterruptMode::MODE_POLLING;
+        ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling");
+        return;
+    }
+    if (++this->interrupt_probe_count_ < INTERRUPT_DETECT_SAMPLES)
+        return;
+
+    this->interrupt_mode_ = InterruptMode::MODE_INTERRUPT;
+    attachInterruptArg(INTERRUPT_PIN, &RATGDODistanceSensor::isr_data_ready, this, FALLING);
+    // Wakes the loop so the watchdog poll still runs if an interrupt is missed
+    this->set_interval(DISTANCE_INTERRUPT_WATCHDOG_MS, [this]() { this->enable_loop(); });
+    ESP_LOGI(TAG, "VL53L4CX interrupt detected on GPIO%u", INTERRUPT_PIN);
 }
 
 } // namespace esphome::ratgdo
