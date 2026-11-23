@@ -222,16 +222,15 @@ namespace secplus2 {
 
     void Secplus2::query_paired_devices()
     {
-        const auto kinds = {
-            PairedDevice::ALL,
-            PairedDevice::REMOTE,
-            PairedDevice::KEYPAD,
-            PairedDevice::WALL_CONTROL,
-            PairedDevice::ACCESSORY
-        };
+        // A counted loop keeps an initializer list out of RAM on ESP8266
+        static_assert(static_cast<uint8_t>(PairedDevice::ALL) == 0 && static_cast<uint8_t>(PairedDevice::REMOTE) == 1
+                && static_cast<uint8_t>(PairedDevice::KEYPAD) == 2 && static_cast<uint8_t>(PairedDevice::WALL_CONTROL) == 3
+                && static_cast<uint8_t>(PairedDevice::ACCESSORY) == 4,
+            "the loop below queries ALL through ACCESSORY as 0 to 4");
         uint32_t timeout = 0;
-        for (auto kind : kinds) {
+        for (uint8_t i = static_cast<uint8_t>(PairedDevice::ALL); i <= static_cast<uint8_t>(PairedDevice::ACCESSORY); i++) {
             timeout += 200;
+            auto kind = static_cast<PairedDevice>(i);
             this->ratgdo_->set_timeout(timeout, [this, kind] { this->query_paired_devices(kind); });
         }
     }

@@ -29,6 +29,8 @@ void RATGDODistanceSensor::setup()
     this->distance_sensor_.setXShutPin(XSHUT_PIN);
     // I2C.begin(17,16);
     I2C.begin(19, 18);
+    // Wire defaults to 100 kHz, where each reading spends about 19 ms on the bus; the sensor supports 400 kHz
+    I2C.setClock(400000);
     this->distance_sensor_.begin();
     this->distance_sensor_.VL53L4CX_Off();
     this->distance_sensor_.InitSensor(0x59);
