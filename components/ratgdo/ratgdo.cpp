@@ -374,7 +374,7 @@ void RATGDOComponent::set_resolved_door_state(const DoorState door_state)
         enc_intended_dir_ = 0; // intent expires when door comes to rest
 #endif
     } else if (door_state == DoorState::OPEN) {
-        this->door_position = 1.0;
+        this->door_position_update();
         this->cancel_position_sync_callbacks();
 #ifdef RATGDO_USE_ENCODER
         enc_intended_dir_ = 0; // open intent satisfied
@@ -930,6 +930,14 @@ void RATGDOComponent::door_action(DoorAction action)
     }
 #else
     this->protocol_->door_action(action);
+#endif
+#ifdef PROTOCOL_DRYCONTACT
+    if (action == DoorAction::STOP || action == DoorAction::TOGGLE) {
+        // Door will likely be open partially unless closed
+        if (*this->door_state == DoorState::OPENING || *this->door_state == DoorState::CLOSING) {
+            this->received(DoorState::OPEN);
+        }
+    }
 #endif
 }
 
