@@ -13,6 +13,7 @@ static constexpr int MAX_DISTANCE = 4500; // default maximum distance
 static constexpr uint8_t XSHUT_PIN = 32;
 static constexpr uint8_t INTERRUPT_PIN = 35;
 static constexpr uint8_t INTERRUPT_DETECT_SAMPLES = 3;
+static constexpr uint8_t INTERRUPT_PROBE_MAX_FAILURES = 3;
 static constexpr uint32_t DISTANCE_INTERRUPT_WATCHDOG_MS = 250;
 
 void IRAM_ATTR RATGDODistanceSensor::isr_data_ready(void* arg)
@@ -108,14 +109,25 @@ void RATGDODistanceSensor::loop()
         status = this->distance_sensor_.VL53L4CX_ClearInterruptAndStartMeasurement();
     }
 
+    if (status != 0) {
+        // Without a successful clear the pin stays low, so in interrupt mode retry on the
+        // watchdog interval instead of on every loop. An I2C error says nothing about the
+        // pin either, so it does not count as a probe sample.
+        if (this->interrupt_mode_ == InterruptMode::MODE_INTERRUPT)
+            this->disable_loop();
+        return;
+    }
+
     if (this->interrupt_mode_ != InterruptMode::MODE_PROBING)
         return;
 
     delayMicroseconds(2);
-    bool high_after_clear = (status == 0 && digitalRead(INTERRUPT_PIN) == HIGH);
-    if (!low_before_clear || !high_after_clear) {
-        this->interrupt_mode_ = InterruptMode::MODE_POLLING;
-        ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling");
+    if (!low_before_clear || digitalRead(INTERRUPT_PIN) != HIGH) {
+        this->interrupt_probe_count_ = 0;
+        if (++this->interrupt_probe_failures_ >= INTERRUPT_PROBE_MAX_FAILURES) {
+            this->interrupt_mode_ = InterruptMode::MODE_POLLING;
+            ESP_LOGI(TAG, "VL53L4CX interrupt not detected, polling");
+        }
         return;
     }
     if (++this->interrupt_probe_count_ < INTERRUPT_DETECT_SAMPLES)

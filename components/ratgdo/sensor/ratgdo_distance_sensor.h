@@ -29,6 +29,7 @@ protected:
     int16_t last_distance_ { -1 };
     InterruptMode interrupt_mode_ { InterruptMode::MODE_PROBING };
     uint8_t interrupt_probe_count_ { 0 };
+    uint8_t interrupt_probe_failures_ { 0 };
 };
 
 } // namespace esphome::ratgdo
