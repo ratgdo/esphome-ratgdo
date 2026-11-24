@@ -825,17 +825,8 @@ void RATGDOComponent::door_open()
         this->set_timeout(
             TIMEOUT_DOOR_QUERY_STATE, (*this->opening_duration + 2) * 1000,
             [this]() {
-                if (*this->door_state != DoorState::OPEN
-                    && *this->door_state != DoorState::STOPPED
-#ifdef RATGDO_USE_ENCODER
-                    // If the encoder confirmed CLOSED the door did not open silently;
-                    // don't override with a spurious OPEN assumption.
-                    && *this->door_state != DoorState::CLOSED
-#endif
-                ) {
-                    this->received(DoorState::OPEN); // probably missed a status message,
-                                                     // assume it's open
-                    this->query_status(); // query in case we're wrong and it's stopped
+                if (*this->door_state != DoorState::OPEN) {
+                    this->query_status();
                 }
             });
     }
@@ -890,16 +881,17 @@ void RATGDOComponent::door_close()
     }
 
     if (*this->closing_duration > 0) {
+        float closing_delay_s = 0;
+#ifdef RATGDO_USE_CLOSING_DELAY
+        // door_action() holds the close back by closing_delay before the door starts moving
+        closing_delay_s = *this->closing_delay;
+#endif
         // query state in case we don't get a status message
         this->set_timeout(
-            TIMEOUT_DOOR_QUERY_STATE, (*this->closing_duration + 2) * 1000,
+            TIMEOUT_DOOR_QUERY_STATE, (closing_delay_s + *this->closing_duration + 2) * 1000,
             [this]() {
-                if (*this->door_state != DoorState::CLOSED
-                    && *this->door_state != DoorState::STOPPED
-                    && *this->door_state != DoorState::OPEN) {
-                    this->received(DoorState::CLOSED); // probably missed a status
-                                                       // message, assume it's closed
-                    this->query_status(); // query in case we're wrong and it's stopped
+                if (*this->door_state != DoorState::CLOSED) {
+                    this->query_status();
                 }
             });
     }
