@@ -56,6 +56,9 @@ improv_ble:
 wifi:
   ap:
 
+network:
+  enable_ipv6: true
+
 logger:
   logs:
     sensor: NONE

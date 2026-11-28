@@ -72,6 +72,9 @@ wifi:
   ap:
     ssid: "ratgdo"
 
+network:
+  enable_ipv6: true
+
 captive_portal:
 
 logger:
