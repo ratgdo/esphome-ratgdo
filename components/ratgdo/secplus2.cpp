@@ -76,7 +76,7 @@ namespace secplus2 {
         this->uart_.on_shutdown();
     }
 
-    void Secplus2::sync_helper(uint32_t start, uint32_t delay, uint8_t tries)
+    void Secplus2::sync_helper()
     {
         bool synced = true;
         if (*this->ratgdo_->door_state == DoorState::UNKNOWN) {
@@ -112,29 +112,32 @@ namespace secplus2 {
             return;
         }
 
-        if (tries == 2) { // made a few attempts and no progress
+        if (this->sync_tries_ == 2) { // made a few attempts and no progress
             // increment rolling code counter by some amount in case we crashed without writing to flash the latest value
             this->increment_rolling_code_counter(MAX_CODES_WITHOUT_FLASH_WRITE);
         }
 
         // not sync-ed after 30s, notify failure
-        if (millis() - start > 30000) {
+        if (millis() - this->sync_start_ > 30000) {
             ESP_LOGW(TAG, "Triggering sync failed actions.");
             this->ratgdo_->sync_failed = true;
         } else {
-            if (tries % 3 == 0) {
-                delay *= 1.5;
+            if (this->sync_tries_ % 3 == 0) {
+                this->sync_delay_ += this->sync_delay_ / 2;
             }
-            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_SYNC, delay, [this, start, delay, tries]() {
-                this->sync_helper(start, delay, tries + 1);
-            });
+            this->sync_tries_++;
+            // Capture only this so the callback stays within the scheduler's inline storage
+            this->scheduler_->set_timeout(this->ratgdo_, TIMEOUT_SYNC, this->sync_delay_, [this]() { this->sync_helper(); });
         };
     }
 
     void Secplus2::sync()
     {
         this->scheduler_->cancel_timeout(this->ratgdo_, TIMEOUT_SYNC);
-        this->sync_helper(millis(), 500, 0);
+        this->sync_start_ = millis();
+        this->sync_delay_ = 500;
+        this->sync_tries_ = 0;
+        this->sync_helper();
     }
 
     void Secplus2::start_status_watchdog()
