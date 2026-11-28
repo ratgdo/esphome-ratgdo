@@ -155,7 +155,7 @@ namespace secplus2 {
         void print_packet(const esphome::LogString* prefix, const WirePacket& packet) const;
         optional<Command> decode_packet(const WirePacket& packet) const;
 
-        void sync_helper(uint32_t start, uint32_t delay, uint8_t tries);
+        void sync_helper();
         void start_status_watchdog();
 
         // 8-byte member first (may require 8-byte alignment on some 32-bit systems)
@@ -172,6 +172,8 @@ namespace secplus2 {
         uint32_t rx_msg_start_ { 0 };
         uint32_t rx_last_read_ { 0 };
         uint32_t last_status_ms_ { 0 };
+        uint32_t sync_start_ { 0 };
+        uint32_t sync_delay_ { 0 };
 
         // Larger structures
         single_observable<uint32_t> rolling_code_counter_ { 0 };
@@ -186,6 +188,7 @@ namespace secplus2 {
         // Small members at the end
         uint16_t rx_byte_count_ { 0 };
         LearnState learn_state_ { LearnState::UNKNOWN };
+        uint8_t sync_tries_ { 0 };
         struct {
             uint8_t transmit_pending : 1;
             uint8_t rx_reading_msg : 1;
